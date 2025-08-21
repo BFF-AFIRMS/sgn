@@ -465,6 +465,7 @@ sub _is_valid_type {
         Screenhouse => 1,
         Lab => 1,
         Storage => 1,
+        Region => 1,
         Other => 1
     );
     if (!$valid_types{$type}) {
