@@ -455,10 +455,11 @@ sub save_trial {
     }
 
     my $design_type = $self->get_design_type();
-    if ($design_type eq 'greenhouse') {
-        my $has_plants_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'project_has_plant_entries', 'project_property');
-        $project->create_projectprops({ $has_plants_cvterm->name() => 'varies' });
-    }
+    # Setting greenhouse plants parameter to 'varies' causes a bug where the buttons to upload plants does not appear
+    # if ($design_type eq 'greenhouse') {
+    #     my $has_plants_cvterm = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'project_has_plant_entries', 'project_property');
+    #     $project->create_projectprops({ $has_plants_cvterm->name() => 'varies' });
+    # }
 
     print STDERR "NOW CALLING TRIAl DESIGN STORE...\n";
     my $trial_design_store = CXGN::Trial::TrialDesignStore->new({
