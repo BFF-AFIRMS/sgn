@@ -256,7 +256,8 @@ rect.bordered {
                                         <input class="form-control" id="new_trial_field_size" name="new_trial_field_size" type="text" />
                                     </div>
                                 </div>
-                                <div class="form-group">
+                                <!-- Hide this dialogue, as it causes errors, particularly when using a greenhouse design -->
+                                <div class="form-group" style="display: none;">
                                     <label class="col-sm-3 control-label">Plants per Plot: </label>
                                     <div class="col-sm-9">
                                         <input class="form-control" id="add_plant_entries" name="add_plant_entries" type="text" />
