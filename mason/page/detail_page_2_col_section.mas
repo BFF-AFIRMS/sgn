@@ -5,7 +5,8 @@ $stock_id => undef
 $stock_uniquename => undef
 $col1_width_class => "col-sm-1"
 $col2_width_class => "col-sm-11"
-$icon_class => "glyphicon glyphicon-th"
+$col2_no_icon_width_class => "col-sm-12"
+$icon_class => undef
 $info_section_collapsible => 1
 $info_section_collapsed => 1
 $info_section_id => "2col_id"
@@ -170,15 +171,18 @@ $field_headers => ()
   entries => ["sequenced_accessions"]
 &>
 
-<div class="row">
+<div class="row" id="row_<% $info_section_id %>">
     <div class="col-sm-12">
         <div class="well">
             <div class="row">
+% if ($icon_class) {
                 <div class="<% $col1_width_class %>">
                     <span style="font-size:3.5em;" class="<% $icon_class %>"></span>
                 </div>
                 <div class="<% $col2_width_class %>">
-
+% } else {
+                <div class="<% $col2_no_icon_width_class %>">
+% }
                     <&| /page/info_section.mas, id => $info_section_id, title => $info_section_title, collapsible=>$info_section_collapsible, collapsed => $info_section_collapsed, subtitle=> $info_section_subtitle &>
 
 % if ($buttons_html){

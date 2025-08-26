@@ -1,0 +1,65 @@
+/* App Window */
+
+.app {
+    display: flex;
+    gap: 20px;
+    margin-top: -15px;
+}
+
+
+/* Sidebar Navigation */
+
+.sidebar {
+    background-color: white;
+    min-width: 200px;
+    width: 200px;
+    border-radius: 10px;
+    background-color: rgb(241, 241, 241);
+    padding: 10px;
+}
+
+.sidebar-title {
+    font-size: 24px;
+}
+
+.sidebar-button {
+    margin:0px; 
+    width: 100%;
+    padding: 4px;
+    border: none;
+    background-color: inherit;
+}
+
+.sidebar-button-text {
+    float: left;
+    display: inline;
+}
+
+.sidebar-button-icon {
+    color:black;
+    float:right;
+    font-size: 12px;
+}
+
+/* Mainpanel content */
+
+.main-panel {
+    width: 100%;
+}
+
+.main-panel-title {
+    width: 100%;
+    color:black;
+}
+
+.main-panel-title-text {
+    color:black;
+    padding: 10px;
+}
+
+.main-panel-section {
+    background-color: rgb(57, 141, 29);
+    width: 100%;
+    border-radius: 10px;
+    margin-bottom: 20px;
+}

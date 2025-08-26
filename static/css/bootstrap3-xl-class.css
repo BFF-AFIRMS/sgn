@@ -44,6 +44,9 @@
 
     .col-xl-11 {
         width: 91.66666667%;
+  margin: auto;
+  border: 3px solid green;
+  padding: 10px;        
     }
 
     .col-xl-10 {
