@@ -1,11 +1,14 @@
 <%init>
-  my $tag;
+    my $repo;
+    my $tag;
     my $commit;
     my $updated;
 
+    $ENV{HOME} = '/home/production';
     system("git -C . rev-parse 2>/dev/null");
     my $isGit = `echo $?`;
     if($isGit == 0) {
+        $repo = `git remote -v | grep -m 1 origin | cut -f 2 | sed -E 's/ .*//g'`;
         $tag = `git describe --abbrev=0 --tags`;
         $commit = `git rev-parse --short HEAD`;
         $updated = `git log -1 --format=%cd`;
@@ -22,31 +25,39 @@
   <br />
     <div class="container-fluid"> 
       <div class="row">
-          <div class="col-12 col-md-9">
-            <span style="font-face:arial;font-size:10pt;color:darkgreen;font-weight:light;">Best Future Forests</span> is located at the <a href="https://ualberta.ca">University of Alberta</a>.<br /><br/>
-            <a href="https://ualberta.ca"><img src="/static/img/UofA_logo.png" width="200"></a>
-          </div>
 
+        <!-- Insitution Specific Logo -->
+        <div class="col-12 col-md-3" style="text-align:center">
+          <span style="font-face:arial;font-size:10pt;color:darkgreen;font-weight:light;">Best Future Forests</span> is located at the <a href="https://ualberta.ca">University of Alberta</a>.<br /><br/>
+          <a href="https://ualberta.ca"><img src="/static/img/UofA_logo.png" height="60"></a>
+        </div>
 
-          <div class="col-12 col-md-3">
-            <div class="git-version">
-              <p>
-                <strong>Version</strong>
-                <br />
+        <!-- Breedbase, BTI, BRAPI -->
+        <div class="col-12 col-md-6" style="text-align:center">
+          Powered by the <span style="font-face:arial;font-size:10pt;color:darkgreen;font-weight:light;">BREE<b>DB</b>ASE</span> ecosystem.
+          <br />
+          <a href="https://breedbase.org/"><img src="/static/img/Breedbase_HighRes.png" height="100"></a>
+          <a href="https://breedbase.org/"><img src="/static/img/BTIFullLogo.png" height="80"></a>
+          <a href="https://breedbase.org/"><img src="/documents/img/brapi-logo.svg" height="40"></a>
+        </div>
+
+        <!-- Version Information -->
+        <div class="col-12 col-md-3">
+          <div class="git-version">
+            <p>
 % if($isGit == 0) {
-                <span class="git-version-commit"><a href="https://github.com/solgenomics/sgn/commits/<% $commit %>"><% $commit %></a></span>&nbsp;
-                <span class="git-version-tag"><a href="https://github.com/solgenomics/sgn/commits/<% $tag %>"><% $tag %></a></span>
+              <span class="git-version-repo">Repository: <a href="<% $repo %>"><% $repo %></a></span><br/>
+              <span class="git-version-commit">Commit: <a href="<% $repo %>/commit/<% $commit %>"><% $commit %></a></span><br/>
+              <span class="git-version-tag">Tag: <a href="<% $repo %>/tree/<% $tag %>"><% $tag %></a></span>
 % } else {
-                <span class=""><% $tag %></span>&nbsp;
+              <span class=""><% $tag %></span>&nbsp;
 % }
-                <br />
-                <span class="git-version-updated"><% $updated %></span>
-		<br /><br />
-		<a target="_new" href="https://brapi.org/"><img src="/documents/img/brapi-logo.svg" width="160" /></a> 
-              </p>
-            </div>
+              <br />
+              <span class="git-version-updated">Updated: <% $updated %></span>
+            </p>
           </div>
         </div>
+      </div>
     </div>
 
 </div>
@@ -77,7 +88,9 @@
   .git-version a {
     color: #aaa
   }
+  /*
   span.git-version-tag {
     float: right;
   }
+  */
 </style>
