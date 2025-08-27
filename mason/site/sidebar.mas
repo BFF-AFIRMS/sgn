@@ -90,22 +90,18 @@
     </a>
 
     <!-- Calendar -->
-    <a href="">
-        <div class="sidebar-item sidebar-hover">
-            <span class="sidebar-item-icon"></span><i data-lucide="calendar"></i>
-            <span class="sidebar-item-name">Calendar</span>
-        </div>
-    </a>    
+    <button id="sidebar-calendar" class="sidebar-item sidebar-item-button sidebar-item-hover" name="personal_calendar_link" >
+        <i data-lucide="calendar"></i>
+        <span class="sidebar-item-name">Calendar</span>
+    </button>   
 
     <hr class="sidebar-divider">
 
-    <!-- Logout Menu -->
-    <a href="" onclick="logout()">
-        <div class="sidebar-item sidebar-hover">
-            <span class="sidebar-item-icon"></span><i data-lucide="log-out"></i>
-            <span class="sidebar-item-name">Logout</span>
-        </div>   
-    </a>
+    <!-- Logout -->
+    <button id="sidebar-logout" class="sidebar-item sidebar-item-button sidebar-item-hover" onclick="logout()">
+        <i data-lucide="log-out"></i>
+        <span class="sidebar-item-name">Logout</span>
+    </button> 
 
             <!-- <span class="dropdown"><a class="menu_click_dropdown dropdown-toggle" data-toggle="dropdown">Search</a>
                 <ul class="dropdown-menu">

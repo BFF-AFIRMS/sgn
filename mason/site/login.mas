@@ -1,7 +1,3 @@
-
-<span id="login_button_html_div" style="white-space:nowrap;width:200;float:right"><button class="btn btn-primary disabled" type="button" style="margin: 7px 7px 0px 0px">Login</button></span>
-
-
 <script>
 
   // Add URL paths to this array that should not have the login dialog shown
