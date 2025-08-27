@@ -17,7 +17,6 @@
 
 <div class="app">
   <& sidebar.mas &>
-  <& sidebar_extended.mas &>
 
   <div class="main-panel">
 

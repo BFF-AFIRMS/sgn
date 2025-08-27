@@ -1,0 +1,10 @@
+<%args>
+    $url => undef;
+    $name => undef;
+</%args>
+
+<a id="sidebar-extended-search-bulk" href="<% $url %>">
+    <div class="sidebar-item sidebar-extended-item sidebar-extended-hover">
+        <span class="sidebar-item-name"><% $name %></span>
+    </div>
+</a>

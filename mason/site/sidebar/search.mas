@@ -1,0 +1,23 @@
+<div id="sidebar-extended-search" class="sidebar-extended" style="display: none" >
+
+    <br/>
+    <span class="sidebar-extended-title">Search</span>
+    <br/>
+
+
+    <& link.mas, name => "Wizard",               url=> "/breeders/search" &>
+    <& link.mas, name => "Bulk Search",          url=> "/search/bulk" &>
+    <& link.mas, name => "Stock",                url=> "/search/stocks" &>
+    <& link.mas, name => "Organism",             url=> "/search/organisms" &>
+    <& link.mas, name => "Crosses",              url=> "/search/cross" &>
+    <& link.mas, name => "Field Trials",         url=> "/search/trials" &>
+    <& link.mas, name => "Traits",               url=> "/search/traits" &>
+    <& link.mas, name => "Genotyping Protocols", url=> "/search/genotyping_protocols" &>
+    <& link.mas, name => "Genotyping Projects",  url=> "/search/genotyping_data_projects" &>
+    <& link.mas, name => "Genotyping Plates",    url=> "/search/genotyping_trials" &>
+    <& link.mas, name => "Stocks By Genotype",   url=> "/search/stocks_using_genotypes" &>
+    <& link.mas, name => "Vector Constructs",    url=> "/search/vectors" &>
+    <& link.mas, name => "Markers",              url=> "/search/markers" &>
+    <& link.mas, name => "Images",               url=> "/search/images" &>
+    <& link.mas, name => "People",               url=> "/search/people" &>
+</div>

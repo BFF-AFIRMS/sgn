@@ -1,4 +1,0 @@
-<div id="sidebar-extended" style="display:flex">
-    <& sidebar_extended/search.mas &>
-    <& sidebar_extended/manage.mas &>
-</div>

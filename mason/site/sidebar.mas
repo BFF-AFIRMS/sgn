@@ -147,6 +147,12 @@
     </button> -->
 </div>
 
+<div id="sidebar-extended" style="display:flex">
+    <& sidebar/search.mas &>
+    <& sidebar/manage.mas &>
+</div>
+
+
 <script>
     lucide.createIcons();
 
