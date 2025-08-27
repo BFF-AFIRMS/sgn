@@ -51,3 +51,4 @@ sgn.iml
 docs/*
 !docs/r_markdown_docs
 .idea/
+node_modules/

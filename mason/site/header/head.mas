@@ -25,6 +25,11 @@
   <!-- <link rel="stylesheet" href="/documents/inc/colorbox/colorbox.css" type="text/css" /> -->
   <!-- <link rel="stylesheet" type="text/css" href="/css/dataTables.bootstrap.min.css"> -->
 
+<!-- Development version -->
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+<!-- Production version -->
+<!-- <script src="https://unpkg.com/lucide@latest"></script> -->
+
 <script language="javascript" type="text/javascript">
    JSAN = {};
    JSAN.use = function() {};
