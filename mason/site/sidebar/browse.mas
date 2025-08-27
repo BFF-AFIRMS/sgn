@@ -2,7 +2,7 @@
   <ul class="dropdown-menu">
     <li><a href="/breeders/search">Wizard</a></li>
     <li><a href="/search/bulk">Bulk Search</a></li>
-    <li><a href="/search/stocks">Accessions and Plots</a></li>
+    <!-- <li><a href="/search/stocks">Accessions and Plots</a></li>
     <li><a href="/search/organisms">Organisms</a></li>
     <li><a href="/search/cross">Progenies, Parents, Crosses</a></li>
     <li><a href="/search/trials">Field Trials</a></li>
@@ -19,6 +19,6 @@
     <li><a href="/search/markers">Markers</a></li>
     <li><a href="/search/images">Images</a></li>
     <li><a href="/search/people">People</a></li>
-    <li><a href="/help/faq.pl">FAQ</a></li>
+    <li><a href="/help/faq.pl">FAQ</a></li> -->
   </ul>
 </li>

@@ -16,18 +16,21 @@
 
 <div class="app">
   <& sidebar.mas &>
+  <& sidebar_extended.mas &>
 
   <div class="main-panel">
 
-  <!-- START CONTENT WRAPPER -->
+    <br style="line-height:var(--padding-large)"/>
 
-  <div id="wrapper" class="container-fluid">
-    <div id="main_row" class="row">
-      <div class="col-md-1 col-lg-1 col-xl-2">
+    <!-- START CONTENT WRAPPER -->
+
+    <div id="wrapper" class="container-fluid">
+      <div id="main_row" class="row">
+        <div class="col-md-1 col-lg-1 col-xl-2">
+        </div>
+        <div class="col-sm-12 col-md-10 col-lg-10 col-xl-9">
+        </div>
       </div>
-      <div class="col-sm-12 col-md-10 col-lg-10 col-xl-10">
-  </div>
-</div>
 
 
 <& /cookie_popup.mas &>

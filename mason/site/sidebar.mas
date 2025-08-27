@@ -1,21 +1,23 @@
 <%init>
     my $first_name = undef;
+    my $first_letter = undef;
     my $sp_person_id = undef;
 
     if ($c->_user){ 
         my $user = $c->_user->{user};
         $first_name = $user->{first_name};
+        $first_letter = substr($first_name, 0, 1);
         $sp_person_id = $user->{sp_person_id};
     };
 </%init>
 
-<div class="sidebar">
+<div class="sidebar" id="sidebar">
 
     <!-- Profile Menu -->
-    <a href="/solpeople/profile/<% $sp_person_id %>">
+    <a href="/solpeople/profile/<% $sp_person_id %>" id="sidebar-profile">
         <div class="sidebar-item sidebar-hover sidebar-item-profile">
             <div class="sidebar-profile-icon">
-                <span class="sidebar-profile-icon-text">K</span>
+                <span class="sidebar-profile-icon-text"><% $first_letter %></span>
             </div>
             <div class="sidebar-profile-name">
                 <span class="sidebar-profile-name-text"><% $first_name %></span>
@@ -26,21 +28,32 @@
     <!-- Spacing between profile section and main menu -->
     <hr class="sidebar-divider">
 
-    <!-- Browse Menu -->
-    <a href="/breeders/search">
+    <!-- Home Menu -->
+    <a href="/" id="sidebar-home">
         <div class="sidebar-item sidebar-hover">
-            <span class="sidebar-item-icon"></span><i data-lucide="search"></i>
-            <span class="sidebar-item-name">Browse</span>
+            <span class="sidebar-item-icon"></span><i data-lucide="home"></i>
+            <span class="sidebar-item-name">Home</span>
         </div>
     </a>
 
-    <!-- Manage Menu -->
-    <a href="/breeders/home">
+    <!-- Search -->
+    <button class="sidebar-item sidebar-item-button sidebar-item-hover" onclick="toggleSidebarExtended(this, 'sidebar-extended-search')">
+        <i data-lucide="search"></i>
+        <span class="sidebar-item-name">Search</span>
+    </button>
+
+    <!-- Manage -->
+    <button class="sidebar-item sidebar-item-button sidebar-item-hover" onclick="toggleSidebarExtended(this, 'sidebar-extended-manage')">
+        <i data-lucide="pencil"></i>
+        <span class="sidebar-item-name">Manage</span>
+    </button>
+     
+    <!-- <a href="/breeders/home" >
         <div class="sidebar-item sidebar-hover">
             <span class="sidebar-item-icon"></span><i data-lucide="pencil"></i>
             <span class="sidebar-item-name">Manage</span>
         </div>
-    </a>
+    </a> -->
 
     <!-- Analyze Menu -->
     <a href="/analyses">
@@ -60,13 +73,39 @@
 
     <hr class="sidebar-divider">
 
+
+    <!-- Lists Menu -->
+    <button id="sidebar-list" class="sidebar-item sidebar-item-button sidebar-item-hover" onclick="show_lists()">
+        <i data-lucide="list"></i>
+        <span class="sidebar-item-name">List</span>
+    </button>    
+
+
+    <!-- Datasets Menu -->
+    <a href="/search/datasets">
+        <div class="sidebar-item sidebar-hover">
+            <span class="sidebar-item-icon"></span><i data-lucide="table-properties"></i>
+            <span class="sidebar-item-name">Datasets</span>
+        </div>
+    </a>
+
+    <!-- Calendar -->
+    <a href="">
+        <div class="sidebar-item sidebar-hover">
+            <span class="sidebar-item-icon"></span><i data-lucide="calendar"></i>
+            <span class="sidebar-item-name">Calendar</span>
+        </div>
+    </a>    
+
+    <hr class="sidebar-divider">
+
     <!-- Logout Menu -->
     <a href="" onclick="logout()">
         <div class="sidebar-item sidebar-hover">
             <span class="sidebar-item-icon"></span><i data-lucide="log-out"></i>
             <span class="sidebar-item-name">Logout</span>
         </div>   
-    </a>    
+    </a>
 
             <!-- <span class="dropdown"><a class="menu_click_dropdown dropdown-toggle" data-toggle="dropdown">Search</a>
                 <ul class="dropdown-menu">
@@ -114,4 +153,27 @@
 
 <script>
     lucide.createIcons();
+
+    var sidebar_extended_open = null;
+
+    function toggleSidebarExtended(source, target) {
+
+        /* a differenet submenu is already open */
+        if (sidebar_extended_open != null && sidebar_extended_open != target ){
+            var el = document.getElementById(sidebar_extended_open);
+            el.style.display = 'none';
+            sidebar_extended_open = null;
+        } 
+        var el = document.getElementById(target);
+        var isHidden = el.style.display == 'none';
+        if (isHidden){
+            el.style.display = 'table';
+            sidebar_extended_open = target;
+        } else {
+            el.style.display = 'none';
+            sidebar_extended_open = null;
+        }
+
+        console.log(sidebar_extended_open);
+    }
 </script>

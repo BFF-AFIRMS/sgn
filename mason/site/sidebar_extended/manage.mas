@@ -1,0 +1,13 @@
+<div id="sidebar-extended-manage" class="sidebar-extended" style="display: none">
+
+    <br/>
+    <span class="sidebar-extended-title">Manage</span>
+    <br/>
+
+    <!-- User Roles -->
+    <a id="sidebar-extended-search-wizard" href="/breeders/manage_roles">
+        <div class="sidebar-item sidebar-extended-item sidebar-extended-hover">
+            <span class="sidebar-item-name">User Roles</span>
+        </div>
+    </a>
+</div>
