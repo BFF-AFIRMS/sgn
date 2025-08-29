@@ -26,6 +26,7 @@
     --font-size-medium: 16px;
     --font-size-small: 14px;
     --font-size-smaller: 12px;
+    --font-bold: 500;
 
     --sidebar-width: 160px;
     --footer-height: 100px;
@@ -54,11 +55,13 @@ body, a, th, td, span {
     line-height:1.5;
 }
 
-a:link {
-  color: var(--color-1);
+h1,h2,h3,h4,h5,h6 {
+    font-family: var(--font-family);
+    font-weight: var(--font-bold);
 }
 
-a:visited {
+
+a, a:link, a:visited {
   color: var(--color-1);
 }
 
@@ -110,6 +113,14 @@ button.modesel_hi {
   display: block;
 }
 
+.page-title-underline {
+    margin-top: 25px;
+    height:1px;
+    border:none;
+    color:var(--text-color-2);
+    background-color: var(--text-color-2);
+}
+
 /*
 -------------------------------------------------------------------------------
 App Window
@@ -127,7 +138,7 @@ App Window
 /*
 -------------------------------------------------------------------------------
 Sidebar (Left Panel)
-------------------------------------f-------------------------------------------
+-------------------------------------------------------------------------------
 */
 
 .sidebar {
@@ -344,7 +355,7 @@ Footer
     box-shadow: var(--box-shadow-footer);
 }
 
-.footer span, a {
+.footer span, .footer a {
     font-size: var(--font-size-small);
 }
 
@@ -378,6 +389,12 @@ Footer
 .filter-dark {
     filter: invert(12%) sepia(0%) saturate(167%) hue-rotate(206deg) brightness(92%) contrast(77%);
 }
+
+/*
+-------------------------------------------------------------------------------
+Tutorial
+-------------------------------------------------------------------------------
+*/
 
 /*
 -------------------------------------------------------------------------------

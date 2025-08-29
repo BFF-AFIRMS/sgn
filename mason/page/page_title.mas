@@ -1,4 +1,8 @@
 <%args>
   $title
 </%args>
-<div id="pagetitle" class="main-panel-title"><h3 id="pagetitle_h3" style="padding:10px"><% $title %></h3></div>
+<div id="pagetitle" class="main-panel-title">
+    <h1 id="pagetitle_h1" style="padding:10px"><% $title %></h1>
+</div>
+
+<hr class="page-title-underline">

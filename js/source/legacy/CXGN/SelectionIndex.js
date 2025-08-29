@@ -10,7 +10,7 @@ jQuery(document).ready(function() {
             $span.find('i').removeClass('glyphicon-chevron-up').addClass('glyphicon-chevron-down');
         })
 
-    jQuery('#pagetitle_h3').append('&nbsp;<a id="selection_index_more_info" href="#"><span class="glyphicon glyphicon-info-sign"></span></a>');
+    jQuery('#pagetitle_h1').append('&nbsp;<a id="selection_index_more_info" href="#"><span class="glyphicon glyphicon-info-sign"></span></a>');
 
     jQuery('#select_trial_for_selection_index').change( // update selection index options when trial selection changes
         function() {
