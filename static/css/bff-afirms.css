@@ -52,6 +52,37 @@ a:visited {
   color: var(--color-1);
 }
 
+/*
+-------------------------------------------------------------------------------
+Components
+-------------------------------------------------------------------------------
+*/
+
+.btn, button.modesel {
+    background-color: var(--color-gray-2);
+    color: var(--text-color-1);
+    border-color: var(--color-gray-1);
+}
+
+.btn:hover, button.modesel:hover {
+    background-color: var(--color-2);
+    color: var(--text-color-4);
+    border-color: var(--color-gray-2);
+}
+
+button.modesel_hi {
+    background-color: var(--color-1);
+    color: var(--text-color-4);
+    border-color: var(--color-1);
+
+}
+
+/*
+-------------------------------------------------------------------------------
+App Window
+-------------------------------------------------------------------------------
+*/
+
 .app {
     display: flex;
     gap: 0px;
@@ -66,22 +97,15 @@ Sidebar (Left Panel)
 */
 
 .sidebar {
-    /* Will need to be wide enough to accomodate long first names */
-    min-width: 160px;
+    /* Fixed width to ensure consistent rendering */
+    width: 160px;
     background-color: #00A040;
     padding: 10px;
     border: 1px solid var(--text-color-2);
 }
 
-.sidebar a:hover { 
-  text-decoration: none;
-}
-
-.sidebar-hover:hover { 
-  text-decoration: none;
-  background-color: var(--color-3);
-  color: var(--text-color-1);
-  font-weight: 600;
+.sidebar a {
+    text-decoration: none;
 }
 
 .sidebar-divider {
@@ -102,22 +126,15 @@ Sidebar Extended
     display: block;
 }
 
-.sidebar-extended a:hover { 
+.sidebar-extended a { 
   text-decoration: none;
-}
-
-.sidebar-extended-hover:hover { 
-  text-decoration: none;
-  background-color: var(--text-color-3);
-  color: var(--text-color-1);
-  font-weight: 600;
 }
 
 .sidebar-extended-title {
     display: block;
-    font-size: var(--font-size-medium);
     text-align: center;
     font-weight: 600;
+    font-size: var(--font-size-medium);
 }
 
 /*
@@ -126,7 +143,7 @@ Sidebar Item
 -------------------------------------------------------------------------------
 */
 
-.sidebar-item {
+.sidebar-item, .sidebar-extended-item {
     display: flex;
     margin-left:15px;
     border-radius: var(--border-radius);
@@ -138,19 +155,19 @@ Sidebar Item
     font-size: var(--font-size-medium);
 }
 
-.sidebar-item-hover:hover {
-    font-weight: 600;
+.sidebar-item:hover {
+  background-color: var(--color-3);
+  color: var(--text-color-1);
+  font-weight: 600;
 }
 
-/*
--------------------------------------------------------------------------------
-Sidebar Item Profile
--------------------------------------------------------------------------------
-*/
+.sidebar-item-icon {
+    text-align: center;
+    color: var(--text-color-4);
+}
 
-.sidebar-item-profile {
-    margin-left: 0px;
-    margin-top: 10px;
+.sidebar-item-text {
+    padding-left: 10px;
 }
 
 /*
@@ -165,26 +182,12 @@ Used when the menu item should be a button instead of a link.
     width:123px;
 }
 
-/* .sidebar button:focus {
-    background-color: var(--text-color-4);
-    border: 1px var(--text-color-1) solid;
-} */
-
-.sidebar button:hover,button:focus {
-    background-color: var(--color-3);
-    color:  var(--text-color-1);
-    font-weight: 600;
+.sidebar button:hover, button:focus {
+  background-color: var(--color-3);
+  color: var(--text-color-1);
+  font-weight: 600;
 }
 
-
-.sidebar-item-icon {
-    text-align: center;
-    color: var(--text-color-4);
-}
-
-.sidebar-item-name {
-    padding-left: 10px;
-}
 
 /*
 -------------------------------------------------------------------------------
@@ -193,44 +196,45 @@ Sidebar Extended Item
 */
 
 .sidebar-extended-item {
-    margin-left:0px;
+    margin-left:var(--padding-small);
     color: var(--text-color-1);
     font-size:var(--font-size-small);
 }
 
-
-/* .sidebar-item-name:hover {
-    color: red;
-} */
-
-/* Sidebar Profile */
-
-.sidebar-profile-name {
-    margin-left:10px;
-    font-size: 20px;
-    font-weight: 600;
+.sidebar-extended-item:hover {
+  background-color: var(--text-color-3);
+  color: var(--text-color-4);
+  font-weight: 600;
 }
 
-/* .sidebar-profile-name:hover {
-    color: var(--text-color-1);
-} */
+/*
+-------------------------------------------------------------------------------
+Sidebar Profile
+-------------------------------------------------------------------------------
+*/
 
 .sidebar-profile-icon {
     background-color: var(--color-4);
     border-radius: var(--border-radius);
-    padding: var(--padding-small);
-    width: 30px;
-    height: 30px;
+    padding-bottom: 0px;
+    width: 25px;
+    height: 25px;
     text-align: center;
+    color: var(--color-1);
+    font-weight: 600;
 }
 
-.sidebar-profile-icon-text {
-    color: var(--text-color-1);
-    font-weight: bold;
-    font-size: 16px;
+.sidebar-item:hover .sidebar-profile-icon {
+    background-color: var(--text-color-3);
+    color: var(--text-color-4);
 }
 
-/* Mainpanel content */
+
+/*
+-------------------------------------------------------------------------------
+Main Panel
+-------------------------------------------------------------------------------
+*/
 
 .main-panel {
     width: 100%;

@@ -13,16 +13,8 @@
 
 <div class="sidebar" id="sidebar">
 
-    <!-- Profile Menu -->
-    <a href="/solpeople/profile/<% $sp_person_id %>" id="sidebar-profile">
-        <div class="sidebar-item sidebar-hover sidebar-item-profile">
-            <div class="sidebar-profile-icon">
-                <span class="sidebar-profile-icon-text"><% $first_letter %></span>
-            </div>
-            <div class="sidebar-profile-name">
-                <span class="sidebar-profile-name-text"><% $first_name %></span>
-            </div>
-        </div>
+    <a href="/" alt="Best Future Forests Home">
+        <img src="/static/documents/img/BFF-AFIRMS_logo.png" alt="Best Future Forests logo" style="max-width:140px; padding:var(--padding-small); display: block; margin: auto"></img>
     </a>
 
     <!-- Spacing between profile section and main menu -->
@@ -30,44 +22,38 @@
 
     <!-- Home Menu -->
     <a href="/" id="sidebar-home">
-        <div class="sidebar-item sidebar-hover">
+        <div class="sidebar-item">
             <span class="sidebar-item-icon"></span><i data-lucide="home"></i>
-            <span class="sidebar-item-name">Home</span>
+            <span class="sidebar-item-text">Home</span>
         </div>
     </a>
 
     <!-- Search -->
-    <button class="sidebar-item sidebar-item-button sidebar-item-hover" onclick="toggleSidebarExtended(this, 'sidebar-extended-search')">
+    <button class="sidebar-item sidebar-item-button" onclick="toggleSidebarExtended(this, 'sidebar-extended-search')">
         <i data-lucide="search"></i>
-        <span class="sidebar-item-name">Search</span>
+        <span class="sidebar-item-text">Search</span>
     </button>
 
     <!-- Manage -->
-    <button class="sidebar-item sidebar-item-button sidebar-item-hover" onclick="toggleSidebarExtended(this, 'sidebar-extended-manage')">
+    <button class="sidebar-item sidebar-item-button" onclick="toggleSidebarExtended(this, 'sidebar-extended-manage')">
         <i data-lucide="pencil"></i>
-        <span class="sidebar-item-name">Manage</span>
+        <span class="sidebar-item-text">Manage</span>
     </button>
-     
-    <!-- <a href="/breeders/home" >
-        <div class="sidebar-item sidebar-hover">
-            <span class="sidebar-item-icon"></span><i data-lucide="pencil"></i>
-            <span class="sidebar-item-name">Manage</span>
-        </div>
-    </a> -->
+
 
     <!-- Analyze Menu -->
     <a href="/analyses">
-        <div class="sidebar-item sidebar-hover">
+        <div class="sidebar-item">
             <span class="sidebar-item-icon"></span><i data-lucide="chart-no-axes-combined"></i>
-            <span class="sidebar-item-name">Analyze</span>
+            <span class="sidebar-item-text">Analyze</span>
         </div>   
     </a>
 
     <!-- About Menu -->
     <a href="/about">
-        <div class="sidebar-item sidebar-hover">
+        <div class="sidebar-item">
             <span class="sidebar-item-icon"></span><i data-lucide="info"></i>
-            <span class="sidebar-item-name">About</span>
+            <span class="sidebar-item-text">About</span>
         </div>
     </a>
 
@@ -75,32 +61,49 @@
 
 
     <!-- Lists Menu -->
-    <button id="sidebar-list" class="sidebar-item sidebar-item-button sidebar-item-hover" onclick="show_lists()">
+    <button id="sidebar-list" class="sidebar-item sidebar-item-button" onclick="show_lists()">
         <i data-lucide="list"></i>
-        <span class="sidebar-item-name">List</span>
+        <span class="sidebar-item-text">Lists</span>
     </button>    
 
 
     <!-- Datasets Menu -->
     <a href="/search/datasets">
-        <div class="sidebar-item sidebar-hover">
+        <div class="sidebar-item">
             <span class="sidebar-item-icon"></span><i data-lucide="table-properties"></i>
-            <span class="sidebar-item-name">Datasets</span>
+            <span class="sidebar-item-text">Datasets</span>
         </div>
     </a>
 
     <!-- Calendar -->
-    <button id="sidebar-calendar" class="sidebar-item sidebar-item-button sidebar-item-hover" name="personal_calendar_link" >
+    <button id="sidebar-calendar" class="sidebar-item sidebar-item-button" name="personal_calendar_link" >
         <i data-lucide="calendar"></i>
-        <span class="sidebar-item-name">Calendar</span>
+        <span class="sidebar-item-text">Calendar</span>
     </button>   
 
     <hr class="sidebar-divider">
 
+    <!-- Profile -->
+    <a href="/solpeople/profile/<% $sp_person_id %>" id="sidebar-profile">
+        <div class="sidebar-item">
+            <span class="sidebar-profile-icon">K</span>
+            <span class="sidebar-item-text">My Profile</span>
+        </div>
+    </a>
+
+    <!-- <a href="/solpeople/profile/<% $sp_person_id %>" id="sidebar-profile">
+        <div class="sidebar-item sidebar-item-profile">
+            <div class="sidebar-profile-icon">
+                <span class="sidebar-profile-icon-text"><% $first_letter %></span>
+            </div>
+            <span class="sidebar-item-text">Profile</span>
+        </div>
+    </a> -->
+
     <!-- Logout -->
-    <button id="sidebar-logout" class="sidebar-item sidebar-item-button sidebar-item-hover" onclick="logout()">
+    <button id="sidebar-logout" class="sidebar-item sidebar-item-button" onclick="logout()">
         <i data-lucide="log-out"></i>
-        <span class="sidebar-item-name">Logout</span>
+        <span class="sidebar-item-text">Logout</span>
     </button> 
 
 </div>
