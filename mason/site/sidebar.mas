@@ -1,5 +1,7 @@
 <%init>
+    my $logged_in;
     if ($c->_user){ 
+        $logged_in = 'true';
     };
 </%init>
 
@@ -14,20 +16,21 @@
     <br/><br/>
 
     <& sidebar/link.mas,   text => "Home",    icon=> "house",                  url => "/" &>
-    <& sidebar/button.mas, text => "Search",  icon=> "search" &>
-    <& sidebar/button.mas, text => "Manage",  icon=> "pencil" &>
+    <& sidebar/button.mas, text => "Search",  icon=> "search", fn => "toggleSidebarExtended(this, 'sidebar-extended-search')" &>
+    <& sidebar/button.mas, text => "Manage",  icon=> "pencil", fn => "toggleSidebarExtended(this, 'sidebar-extended-manage')" &>
     <& sidebar/link.mas,   text => "Analyze", icon=> "chart-no-axes-combined", url => "/analyses" &>
     <& sidebar/link.mas,   text => "About",   icon=> "info",                   url => "/about"&>
 
     <hr class="sidebar-divider">
 
-    <& sidebar/button.mas, text => "Lists",    icon=> "list" &>
+    <& sidebar/button.mas, text => "Lists",    icon=> "list", fn => "show_lists()" &>
     <& sidebar/link.mas,   text => "Datasets", icon=> "table-properties",    url => "/search/datasets" &>
-    <& sidebar/button.mas, text => "Calendar", icon=> "calendar" &>
+    <& sidebar/button.mas, text => "Calendar", icon=> "calendar", extra => "name='personal_calendar_link'" &>
     <hr class="sidebar-divider">
-
+% if ($logged_in) {
     <& sidebar/profile.mas &>
-    <& sidebar/button.mas, text => "Logout", icon=> "logout" &>
+% }
+    <& sidebar/button.mas, text => "Logout", icon=> "logout", fn => "logout()" &>
 
 </div>
 
