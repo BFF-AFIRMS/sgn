@@ -8,10 +8,10 @@
 <div class="sidebar" id="sidebar">
 
     <a href="/" alt="Best Future Forests Home">
-        <img src="/static/documents/img/BFF-AFIRMS_logo.png" alt="Best Future Forests logo" style="max-width:140px; padding:var(--padding-small); display: block; margin: auto"></img>
+        <img src="/static/img/BFF-AFIRMS_logo.png" alt="Best Future Forests logo" class="sidebar-logo"></img>
     </a>
 
-    <hr class="sidebar-divider">
+    <br/><br/>
 
     <& sidebar/link.mas,   text => "Home",    icon=> "house",                  url => "/" &>
     <& sidebar/button.mas, text => "Search",  icon=> "search" &>
@@ -44,7 +44,7 @@
 
     function toggleSidebarExtended(source, target) {
 
-        /* a differenet submenu is already open */
+        /* a different submenu is already open */
         if (sidebar_extended_open != null && sidebar_extended_open != target ){
             var el = document.getElementById(sidebar_extended_open);
             el.style.display = 'none';
@@ -53,7 +53,7 @@
         var el = document.getElementById(target);
         var isHidden = el.style.display == 'none';
         if (isHidden){
-            el.style.display = 'table';
+            el.style.display = 'block';
             sidebar_extended_open = target;
         } else {
             el.style.display = 'none';

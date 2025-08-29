@@ -15,10 +15,10 @@
 <& header/body.mas &>
 <& login.mas &>
 
-<div class="app">
+<div id="app" class="app">
   <& sidebar.mas &>
 
-  <div class="main-panel">
+  <div id="main-panel" class="main-panel">
 
     <br style="line-height:var(--padding-large)"/>
 
