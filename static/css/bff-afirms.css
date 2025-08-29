@@ -29,7 +29,11 @@
 
     --sidebar-width: 160px;
     --footer-height: 100px;
-    --box-shadow-sidebar: inset 5px 5px 10px rgba(0,0,0,.15), inset -5px 5px 10px rgba(0,0,0,.15), inset 5px -5px 10px rgba(0,0,0,.15); 
+    /* --box-shadow-sidebar: inset 5px 5px 10px rgba(0,0,0,.15), inset -5px 5px 10px rgba(0,0,0,.15), inset 5px -5px 10px rgba(0,0,0,.15);  */
+    --box-shadow-sidebar-outer: 5px 5px 10px rgba(0,0,0,.35);
+    --box-shadow-sidebar-inner: inset -5px 5px 10px rgba(0, 0, 0, 0.25), inset 5px 5px 10px rgba(0, 0, 0, 0.05);
+    --box-shadow-footer: 0px -5px 10px rgba(0, 0, 0, 0.15), inset 0px 5px 10px rgba(0, 0, 0, 0.05);
+    /* --box-shadow-main-panel: inset 5px 5px 10px rgba(0,0,0,.15), inset -5px 5px 10px rgba(0,0,0,.15), inset 5px -5px 10px rgba(0,0,0,.15);  */
     /* --box-shadow-button: 1px 1px 2px rgba(0, 0, 0, 0.25); */
 }
 
@@ -132,7 +136,8 @@ Sidebar (Left Panel)
     background-color: #00A040;
     padding: var(--padding-large);
     height: 100vh;
-    box-shadow: var(--box-shadow-sidebar);
+    box-shadow: var(--box-shadow-sidebar-outer), var(--box-shadow-sidebar-inner);
+    z-index: 1;
 }
 
 .sidebar a {
@@ -155,7 +160,7 @@ Sidebar Logo
     padding: 10px;
     margin:-10px;
     background-color: var(--color-gray-2);
-    box-shadow:  var(--box-shadow-sidebar);
+    box-shadow:  var(--box-shadow-sidebar-inner);
 }
 
 /*
@@ -336,6 +341,7 @@ Footer
     box-shadow: inset 0 1px 1px rgba(0,0,0,.05);
     display: block;
     overflow: auto;
+    box-shadow: var(--box-shadow-footer);
 }
 
 .footer span, a {
@@ -358,6 +364,11 @@ Footer
 
 .footer-arrow-img:active {
     filter: brightness(0) invert(1);
+}
+
+.footer-logo {
+    display:block;
+    z-index: 0;
 }
 
 .filter-light {

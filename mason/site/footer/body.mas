@@ -27,7 +27,7 @@
         <img src="/static/img/icons/lucide/24x24/arrow-down.svg" class="filter-dark footer-arrow-img"/>
     </button>   
 
-    <div id="footer-logo" style="display:block; z-index: 0" >
+    <div id="footer-logo" class="footer-logo" >
         <!-- Insitution Specific Logo -->
         <div class="col-12 col-md-3" style="text-align:center">
             <span>Located at the University of Alberta.</span>
