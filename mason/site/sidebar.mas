@@ -1,15 +1,9 @@
 <%init>
-    my $first_name = undef;
-    my $first_letter = undef;
-    my $sp_person_id = undef;
-
     if ($c->_user){ 
-        my $user = $c->_user->{user};
-        $first_name = $user->{first_name};
-        $first_letter = substr($first_name, 0, 1);
-        $sp_person_id = $user->{sp_person_id};
     };
 </%init>
+
+<!-- The sidebar menu on the left hand side -->
 
 <div class="sidebar" id="sidebar">
 
@@ -17,105 +11,34 @@
         <img src="/static/documents/img/BFF-AFIRMS_logo.png" alt="Best Future Forests logo" style="max-width:140px; padding:var(--padding-small); display: block; margin: auto"></img>
     </a>
 
-    <!-- Spacing between profile section and main menu -->
     <hr class="sidebar-divider">
 
-    <!-- Home Menu -->
-    <a href="/" id="sidebar-home">
-        <div class="sidebar-item">
-            <span class="sidebar-item-icon"></span><i data-lucide="home"></i>
-            <span class="sidebar-item-text">Home</span>
-        </div>
-    </a>
-
-    <!-- Search -->
-    <button class="sidebar-item sidebar-item-button" onclick="toggleSidebarExtended(this, 'sidebar-extended-search')">
-        <i data-lucide="search"></i>
-        <span class="sidebar-item-text">Search</span>
-    </button>
-
-    <!-- Manage -->
-    <button class="sidebar-item sidebar-item-button" onclick="toggleSidebarExtended(this, 'sidebar-extended-manage')">
-        <i data-lucide="pencil"></i>
-        <span class="sidebar-item-text">Manage</span>
-    </button>
-
-
-    <!-- Analyze Menu -->
-    <a href="/analyses">
-        <div class="sidebar-item">
-            <span class="sidebar-item-icon"></span><i data-lucide="chart-no-axes-combined"></i>
-            <span class="sidebar-item-text">Analyze</span>
-        </div>   
-    </a>
-
-    <!-- About Menu -->
-    <a href="/about">
-        <div class="sidebar-item">
-            <span class="sidebar-item-icon"></span><i data-lucide="info"></i>
-            <span class="sidebar-item-text">About</span>
-        </div>
-    </a>
+    <& sidebar/link.mas,   text => "Home",    icon=> "house",                  url => "/" &>
+    <& sidebar/button.mas, text => "Search",  icon=> "search" &>
+    <& sidebar/button.mas, text => "Manage",  icon=> "pencil" &>
+    <& sidebar/link.mas,   text => "Analyze", icon=> "chart-no-axes-combined", url => "/analyses" &>
+    <& sidebar/link.mas,   text => "About",   icon=> "info",                   url => "/about"&>
 
     <hr class="sidebar-divider">
 
-
-    <!-- Lists Menu -->
-    <button id="sidebar-list" class="sidebar-item sidebar-item-button" onclick="show_lists()">
-        <i data-lucide="list"></i>
-        <span class="sidebar-item-text">Lists</span>
-    </button>    
-
-
-    <!-- Datasets Menu -->
-    <a href="/search/datasets">
-        <div class="sidebar-item">
-            <span class="sidebar-item-icon"></span><i data-lucide="table-properties"></i>
-            <span class="sidebar-item-text">Datasets</span>
-        </div>
-    </a>
-
-    <!-- Calendar -->
-    <button id="sidebar-calendar" class="sidebar-item sidebar-item-button" name="personal_calendar_link" >
-        <i data-lucide="calendar"></i>
-        <span class="sidebar-item-text">Calendar</span>
-    </button>   
-
+    <& sidebar/button.mas, text => "Lists",    icon=> "list" &>
+    <& sidebar/link.mas,   text => "Datasets", icon=> "table-properties",    url => "/search/datasets" &>
+    <& sidebar/button.mas, text => "Calendar", icon=> "calendar" &>
     <hr class="sidebar-divider">
 
-    <!-- Profile -->
-    <a href="/solpeople/profile/<% $sp_person_id %>" id="sidebar-profile">
-        <div class="sidebar-item">
-            <span class="sidebar-profile-icon">K</span>
-            <span class="sidebar-item-text">My Profile</span>
-        </div>
-    </a>
-
-    <!-- <a href="/solpeople/profile/<% $sp_person_id %>" id="sidebar-profile">
-        <div class="sidebar-item sidebar-item-profile">
-            <div class="sidebar-profile-icon">
-                <span class="sidebar-profile-icon-text"><% $first_letter %></span>
-            </div>
-            <span class="sidebar-item-text">Profile</span>
-        </div>
-    </a> -->
-
-    <!-- Logout -->
-    <button id="sidebar-logout" class="sidebar-item sidebar-item-button" onclick="logout()">
-        <i data-lucide="log-out"></i>
-        <span class="sidebar-item-text">Logout</span>
-    </button> 
+    <& sidebar/profile.mas &>
+    <& sidebar/button.mas, text => "Logout", icon=> "logout" &>
 
 </div>
+
+<!-- The extended sidebar to the right of the sidebar. Provides additional options for Search, Manage, etc. -->
 
 <div id="sidebar-extended" style="display:flex">
     <& sidebar/search.mas &>
     <& sidebar/manage.mas &>
 </div>
 
-
 <script>
-    lucide.createIcons();
 
     var sidebar_extended_open = null;
 

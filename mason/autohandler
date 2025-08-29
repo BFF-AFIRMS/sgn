@@ -6,6 +6,8 @@ use utf8;
 
 <& /site/header.mas &>
 
+<& /site/body.mas &>
+
 % $m->call_next;
 
 <& /site/footer.mas &>

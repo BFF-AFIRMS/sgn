@@ -1,8 +1,13 @@
+
 <%args>
     $url => undef;
-    $name => undef;
+    $text => undef;
+    $icon => undef;
 </%args>
 
-<a id="sidebar-extended-search-bulk" href="<% $url %>">
-    <span class="sidebar-extended-item"><% $name %></span>
+<a href="<% $url %>" id="sidebar-<% $text %>">
+    <div class="sidebar-item">
+        <img class="sidebar-item-icon" src="/static/img/icons/lucide/24x24/<% $icon %>.svg" alt="<% $text %> icon">
+        <span class="sidebar-item-text"><% $text %></span>
+    </div>
 </a>

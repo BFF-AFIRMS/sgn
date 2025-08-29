@@ -1,0 +1,9 @@
+<%args>
+    $text => undef;
+    $icon => undef;
+</%args>
+
+<button class="sidebar-item sidebar-item-button" onclick="toggleSidebarExtended(this, 'sidebar-extended-<% lc($text) %>')">
+    <img class="sidebar-item-icon" src="/static/img/icons/lucide/24x24/\<% $icon %>.svg" alt="<% $text %> icon">
+    <span class="sidebar-item-text"><% $text %></span>
+</button>

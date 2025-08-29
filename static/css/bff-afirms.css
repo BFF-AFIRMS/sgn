@@ -143,7 +143,7 @@ Sidebar Item
 -------------------------------------------------------------------------------
 */
 
-.sidebar-item, .sidebar-extended-item {
+.sidebar-item, .sidebar-item-button, .sidebar-extended-item {
     display: flex;
     margin-left:15px;
     border-radius: var(--border-radius);
@@ -163,11 +163,19 @@ Sidebar Item
 
 .sidebar-item-icon {
     text-align: center;
-    color: var(--text-color-4);
+    filter: brightness(0) invert(1);
+}
+
+.sidebar button:focus .sidebar-item-icon {
+    filter: invert(12%) sepia(0%) saturate(167%) hue-rotate(206deg) brightness(92%) contrast(77%);
 }
 
 .sidebar-item-text {
     padding-left: 10px;
+}
+
+.sidebar-item:hover .sidebar-item-icon {
+    filter: invert(12%) sepia(0%) saturate(167%) hue-rotate(206deg) brightness(92%) contrast(77%);
 }
 
 /*
@@ -257,3 +265,24 @@ Main Panel
     margin-bottom: 20px;
 }
 
+.test1 {
+    color: red;
+}
+
+.test2 {
+    background-color: blue;
+}
+
+
+.test3 {
+  @extend .test1;
+  @extend .test2;
+}
+
+.filter-light {
+    filter: brightness(0) invert(1);
+}
+
+.filter-dark {
+    filter: invert(12%) sepia(0%) saturate(167%) hue-rotate(206deg) brightness(92%) contrast(77%);
+}

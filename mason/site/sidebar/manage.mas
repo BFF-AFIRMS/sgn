@@ -5,8 +5,8 @@
     <br/>
 
     <!-- User Roles -->
-    <& link.mas, name => "User Roles",        url=> "/breeders/manage_roles" &>
-    <& link.mas, name => "Breeding Programs", url=> "/breeders/manage_programs" &>
+    <& extended/link.mas, name => "User Roles",        url=> "/breeders/manage_roles" &>
+    <& extended/link.mas, name => "Breeding Programs", url=> "/breeders/manage_programs" &>
 
 </div>
 
