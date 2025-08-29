@@ -23,11 +23,11 @@
 <!-- Arrow down to collapse -->
 <div id="pagefooter" class="footer">
 
-    <button id="footer-arrow" style="border: none; padding: 0px; float: left; background-color: transparent" onclick="toggleFooter(this)">
-        <img src="/static/img/icons/lucide/24x24/arrow-down.svg" class="filter-dark footer-arrow"/>
+    <button id="footer-arrow" class="footer-arrow-button" onclick="toggleFooter(this)">
+        <img src="/static/img/icons/lucide/24x24/arrow-down.svg" class="filter-dark footer-arrow-img"/>
     </button>   
 
-    <div id="footer-logo" style="display:block">
+    <div id="footer-logo" style="display:block; z-index: 0" >
         <!-- Insitution Specific Logo -->
         <div class="col-12 col-md-3" style="text-align:center">
             <span>Located at the University of Alberta.</span>
@@ -38,7 +38,7 @@
         </div>
 
         <!-- Breedbase, BTI, BRAPI -->
-        <div style="text-align:center">
+        <div class="col-12 col-md-5" style="text-align:center">
             <span>Powered by the <span style="color:darkgreen;font-weight:light;">BREE<b>DB</b>ASE</span> ecosystem.</span>
             <br />
             <a href="https://breedbase.org/"><img src="/static/img/Breedbase_HighRes.png" height="60"></a>
@@ -47,7 +47,7 @@
         </div>
 
         <!-- Version Information -->
-        <div class="col-12 col-md-3">
+        <div class="col-12 col-md-3"  style="text-align:left">
 % if($isGit == 0) {
             <span>Repository: <a href="<% $repo %>"><% $repo %></a></span><br/>
             <span>Commit: <a href="<% $repo %>/commit/<% $commit %>"><% $commit %></a></span><br/>

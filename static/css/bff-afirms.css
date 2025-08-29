@@ -29,6 +29,8 @@
 
     --sidebar-width: 160px;
     --footer-height: 100px;
+    --box-shadow-sidebar: inset 5px 5px 10px rgba(0,0,0,.15), inset -5px 5px 10px rgba(0,0,0,.15), inset 5px -5px 10px rgba(0,0,0,.15); 
+    /* --box-shadow-button: 1px 1px 2px rgba(0, 0, 0, 0.25); */
 }
 
 /*
@@ -66,6 +68,7 @@ Components
     background-color: var(--color-gray-2);
     color: var(--text-color-1);
     border-color: var(--color-gray-1);
+    box-shadow: var(--box-shadow-button);
 }
 
 .btn:hover, button.modesel:hover {
@@ -129,6 +132,7 @@ Sidebar (Left Panel)
     background-color: #00A040;
     padding: var(--padding-large);
     height: 100vh;
+    box-shadow: var(--box-shadow-sidebar);
 }
 
 .sidebar a {
@@ -147,15 +151,12 @@ Sidebar Logo
 */
 
 .sidebar-logo {
-    width: calc(160px - 1px);
+    width: calc(160px - 0px);
     padding: 10px;
     margin:-10px;
     background-color: var(--color-gray-2);
+    box-shadow:  var(--box-shadow-sidebar);
 }
-
-/* .sidebar-logo {
-    style="max-width:140px; padding:var(--padding-small); display: block; margin: auto"
-} */
 
 /*
 -------------------------------------------------------------------------------
@@ -204,7 +205,7 @@ Sidebar Item
     font-size: var(--font-size-medium);
 }
 
-.sidebar-item:hover, .footer .footer-arrow:hover {
+.sidebar-item:hover, .footer .footer-arrow-img:hover {
   background-color: var(--color-3);
   color: var(--text-color-1);
   font-weight: 600;
@@ -341,14 +342,21 @@ Footer
     font-size: var(--font-size-small);
 }
 
-
-.footer-arrow {
+.footer-arrow-button {
+    position: relative;
+    z-index: 1;
+    border: none;
+    padding: 0px;
     float: right;
+    background-color: transparent
+}
+
+.footer-arrow-img {
     border:1px solid;
     border-radius: var(--border-radius);
 }
 
-.footer-arrow:active {
+.footer-arrow-img:active {
     filter: brightness(0) invert(1);
 }
 
