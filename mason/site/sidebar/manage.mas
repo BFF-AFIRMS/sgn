@@ -4,17 +4,14 @@
     <span class="sidebar-extended-title">Manage</span>
     <br/>
 
-    <!-- User Roles -->
     <& extended/link.mas, name => "User Roles",        url=> "/breeders/manage_roles" &>
     <& extended/link.mas, name => "Breeding Programs", url=> "/breeders/manage_programs" &>
+    <& extended/link.mas, name => "Locations",         url=> "/breeders/locations" &>
 
 </div>
 
 <!--
 
-    <li><a href="/breeders/manage_roles/">User Roles</a></li>
-    <li><a href="/breeders/manage_programs/">Breeding Programs</a></li>
-    <li><a href="/breeders/locations">Locations</a></li>
     <li><a href="/tools/report/">Report Factory</a></li>
 
     <li role="separator" class="divider"></li>

@@ -86,7 +86,7 @@ Components
     box-shadow: var(--box-shadow-button);
 }
 
-.btn-xs {
+.btn-xs, .btn-sm {
     font-size: var(--font-size-smaller);
 }
 
@@ -446,6 +446,14 @@ td.sub_infosectionsubtitle,
  {
   width: 50%;
   white-space: normal;
+}
+
+td, td a {
+    font-size: var(--font-size-small);
+}
+
+th {
+    font-size: var(--font-size-small);
 }
 
 /*
