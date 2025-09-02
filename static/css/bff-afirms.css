@@ -29,10 +29,13 @@
     --font-bold: 500;
 
     --sidebar-width: 160px;
+    --sidebar-logo-height: 116px; /* Specific to the logo used */
+
     --footer-height: 100px;
+    --footer-arrow-height: 30px;
     /* --box-shadow-sidebar: inset 5px 5px 10px rgba(0,0,0,.15), inset -5px 5px 10px rgba(0,0,0,.15), inset 5px -5px 10px rgba(0,0,0,.15);  */
     --box-shadow-sidebar-outer: 5px 5px 10px rgba(0,0,0,.35);
-    --box-shadow-sidebar-inner: inset -5px 5px 10px rgba(0, 0, 0, 0.25), inset 5px 5px 10px rgba(0, 0, 0, 0.05);
+    --box-shadow-sidebar-inner: inset -5px 5px 10px rgba(0, 0, 0, 0.15), inset 5px 5px 10px rgba(0, 0, 0, 0.05);
     --box-shadow-footer: 0px -5px 10px rgba(0, 0, 0, 0.15), inset 0px 5px 10px rgba(0, 0, 0, 0.05);
     /* --box-shadow-main-panel: inset 5px 5px 10px rgba(0,0,0,.15), inset -5px 5px 10px rgba(0,0,0,.15), inset 5px -5px 10px rgba(0,0,0,.15);  */
     /* --box-shadow-button: 1px 1px 2px rgba(0, 0, 0, 0.25); */
@@ -167,7 +170,7 @@ Sidebar Logo
 */
 
 .sidebar-logo {
-    width: calc(160px - 0px);
+    width: var(--sidebar-width);
     padding: 10px;
     margin:-10px;
     background-color: var(--color-gray-2);
@@ -311,19 +314,14 @@ Main Panel
 */
 
 .main-panel {
-    width: 100%;
-    max-height: calc(100vh - var(--footer-height));
-    overflow: auto;
+    width: calc(100vw - var(--sidebar-width));
+    height: calc(100vh - var(--footer-height));
+    padding: calc(var(--padding-large) * 2);
 }
 
 .main-panel-title {
     width: 100%;
-    color:black;
-}
-
-.main-panel-title-text {
-    color:black;
-    padding: var(--padding-large);
+    color:var(--text-color-1);
 }
 
 .main-panel-section {
@@ -333,6 +331,12 @@ Main Panel
     margin-bottom: 20px;
 }
 
+.main-panel-container {
+    height: 100%;
+    overflow: auto;
+}
+
+
 
 /*
 -------------------------------------------------------------------------------
@@ -341,8 +345,9 @@ Footer
 */
 
 .footer {
-    max-height: var(--footer-height);
-    padding: 4px;
+    margin-left: var(--sidebar-width);
+    height: var(--footer-height);
+    padding: var(--padding-small);
     width: calc(100vw - var(--sidebar-width));
     text-align: center;
     border:  var(--color-gray-1);
@@ -365,12 +370,13 @@ Footer
     border: none;
     padding: 0px;
     float: right;
-    background-color: transparent
+    background-color: transparent;
 }
 
 .footer-arrow-img {
     border:1px solid;
     border-radius: var(--border-radius);
+    height: var(--footer-arrow-height);    
 }
 
 .footer-arrow-img:active {
@@ -392,9 +398,30 @@ Footer
 
 /*
 -------------------------------------------------------------------------------
-Tutorial
+Help
 -------------------------------------------------------------------------------
 */
+
+.manual {
+    width: 100%;
+    height: calc(100% - var(--padding-large));
+    border: 1px blue dashed;
+}
+
+/*
+-------------------------------------------------------------------------------
+Tables
+-------------------------------------------------------------------------------
+*/
+
+td.infosectionsubtitle,
+td.sub_infosectionsubtitle,
+.infosectionsubtitle_empty,
+.sub_infosectionsubtitle_empty
+ {
+  width: 50%;
+  white-space: normal;
+}
 
 /*
 -------------------------------------------------------------------------------
@@ -409,7 +436,6 @@ Testing
 .test2 {
     background-color: blue;
 }
-
 
 .test3 {
   @extend .test1;

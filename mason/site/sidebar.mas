@@ -28,7 +28,7 @@
     <& sidebar/button.mas, text => "Calendar", icon=> "calendar", extra => "name='personal_calendar_link'" &>
     <hr class="sidebar-divider">
     <& sidebar/link.mas,   text => "Tutorials", icon=> "graduation-cap",    url => "/help/tutorials" &>
-    <& sidebar/link.mas,   text => "Manual",    icon=> "book-open",    url => "https://solgenomics.github.io/sgn/" &>    
+    <& sidebar/link.mas,   text => "Manual",    icon=> "book-open",         url => "/help/manual" &>    
     <hr class="sidebar-divider">
 % if ($logged_in) {
     <& sidebar/profile.mas &>

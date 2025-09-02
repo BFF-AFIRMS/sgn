@@ -20,17 +20,16 @@
 
   <div id="main-panel" class="main-panel">
 
-    <br style="line-height:var(--padding-large)"/>
+    <!-- <br style="line-height:var(--padding-large)"/> -->
 
     <!-- START CONTENT WRAPPER -->
 
-    <div id="wrapper" class="container-fluid">
+    <div id="wrapper" class="container-fluid main-panel-container">
       <div id="main_row" class="row">
-        <div class="col-md-1 col-lg-1 col-xl-2">
-        </div>
-        <div class="col-sm-12 col-md-10 col-lg-10 col-xl-9">
-        </div>
+        <div class="col-md-1 col-lg-1 col-xl-2"></div>
+        <div class="col-sm-12 col-md-10 col-lg-10 col-xl-9"></div>
       </div>
+
 
 
 <& /cookie_popup.mas &>

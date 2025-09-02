@@ -47,7 +47,7 @@
         </div>
 
         <!-- Version Information -->
-        <div class="col-12 col-md-3"  style="text-align:left">
+        <div class="col-12 col-md-3"  style="text-align:center">
 % if($isGit == 0) {
             <span>Repository: <a href="<% $repo %>"><% $repo %></a></span><br/>
             <span>Commit: <a href="<% $repo %>/commit/<% $commit %>"><% $commit %></a></span><br/>
@@ -102,36 +102,26 @@
         var el = document.getElementById('footer-logo');
         var isHidden = el.style.display == 'none';
         var img = source.children[0];
-        // var mainPanel = document.getElementById('main-panel');
-        // var mainPanelHeight = mainPanel.getBoundingClientRect().height;
-        // var footer = document.getElementById('pagefooter');
-        // var footerPreHeight = footer.getBoundingClientRect().height;
-        // 
+
+        var mainPanel = document.getElementById('main-panel');
+        var mainPanelHeight = mainPanel.getBoundingClientRect().height;
+
+        var footer = document.getElementById('pagefooter');
+        var footerHeightDiff = "calc(var(--footer-height) - var(--footer-arrow-height))";
 
         /* Show footer, shrink main panel */
         if (isHidden){
             el.style.display = 'block';
             img.src = '/static/img/icons/lucide/24x24/arrow-down.svg';
+            footer.style.height = "calc(var(--footer-height) + var(--padding-small) * 2)";
+            // mainPanel.style.height = "calc(" + mainPanelHeight +  "px - " + footerHeightDiff + ")";
         } 
         /* Hide footer, expand main panel */
         else {
             el.style.display = 'none';
-            img.src = '/static/img/icons/lucide/24x24/arrow-up.svg';
+            img.src = '/static/img/icons/lucide/24x24/arrow-up.svg';          
+            footer.style.height = "calc(var(--footer-arrow-height) + var(--padding-small) * 2)";
+            /*mainPanel.style.height = "calc(" + mainPanelHeight +  "px + " + footerHeightDiff + ")";*/
         }
-
-        /* Adjust main panel */
-        // var footerPostHeight = footer.getBoundingClientRect().height;
-        // var footerDiffHeight = footerPostHeight - footerPreHeight;
-        // var mainPanelNewHeight = mainPanelHeight;
-
-        // if (el.style.display == 'block') {
-        //     mainPanelNewHeight = mainPanelHeight + footerDiffHeight;
-        // } else {
-        //     mainPanelNewHeight = mainPanelHeight - footerDiffHeight;
-        // }
-        // mainPanel.style['max-height'] = mainPanelNewHeight + 'px';
-        // console.log(mainPanel.style);
-        
-        
     }
 </script>
