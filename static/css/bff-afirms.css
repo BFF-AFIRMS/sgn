@@ -29,13 +29,14 @@
     --font-bold: 500;
 
     --sidebar-width: 160px;
+    --sidebar-collapsed-width: 40px;
     --sidebar-logo-height: 116px; /* Specific to the logo used */
 
     --footer-height: 100px;
     --footer-arrow-height: 30px;
     /* --box-shadow-sidebar: inset 5px 5px 10px rgba(0,0,0,.15), inset -5px 5px 10px rgba(0,0,0,.15), inset 5px -5px 10px rgba(0,0,0,.15);  */
     --box-shadow-sidebar-outer: 5px 5px 10px rgba(0,0,0,.35);
-    --box-shadow-sidebar-inner: inset -5px 5px 10px rgba(0, 0, 0, 0.15), inset 5px 5px 10px rgba(0, 0, 0, 0.05);
+    --box-shadow-sidebar-inner: inset -5px 5px 10px rgba(0, 0, 0, 0.15), inset 5px 5px 10px rgba(0, 0, 0, 0.15);
     --box-shadow-footer: 0px -5px 10px rgba(0, 0, 0, 0.15), inset 0px 5px 10px rgba(0, 0, 0, 0.05);
     /* --box-shadow-main-panel: inset 5px 5px 10px rgba(0,0,0,.15), inset -5px 5px 10px rgba(0,0,0,.15), inset 5px -5px 10px rgba(0,0,0,.15);  */
     /* --box-shadow-button: 1px 1px 2px rgba(0, 0, 0, 0.25); */
@@ -166,19 +167,6 @@ Sidebar (Left Panel)
     z-index: 1;
 }
 
-@media only screen and (max-width: 1080px) {
-    #sidebar {
-        display: none;
-    }
-    #main-panel {
-        width: 100vw;
-    }
-    #pagefooter {
-        margin-left: 0px;
-        width: 100vw;
-    }
-}
-
 .sidebar a {
     text-decoration: none;
     width: inherit;
@@ -194,12 +182,21 @@ Sidebar Logo
 -------------------------------------------------------------------------------
 */
 
-.sidebar-logo {
+.sidebar-logo-img, .sidebar-logo-collapsed {
     width: var(--sidebar-width);
+    height: var(--sidebar-logo-height);
     padding: 10px;
-    margin:-10px;
+    margin-top: -10px;    
+    margin-left:-10px;
     background-color: var(--color-gray-2);
     box-shadow:  var(--box-shadow-sidebar-inner);
+}
+
+.sidebar-logo-collapsed {
+    display: none;
+    width: var(--sidebar-collapsed-width);
+    height: 60px;
+    margin-left: -10px;
 }
 
 /*
@@ -243,7 +240,7 @@ Sidebar Item
     padding: var(--padding-small);
     color: var(--text-color-4);
     font-size: 16px;
-    background-color: inherit;
+    background-color: transparent;
     border: 0px;
     font-size: var(--font-size-medium);
 }
@@ -279,8 +276,12 @@ Used when the menu item should be a button instead of a link.
 -------------------------------------------------------------------------------
 */
 
-.sidebar-item-button {
+/* .sidebar-item-button {
     width:123px;
+} */
+
+.sidebar-item-button {
+    width:90%;
 }
 
 .sidebar button:hover, button:focus {
@@ -456,6 +457,47 @@ Other
 .login-text {
     font-size: var(--font-size-small);
 }
+
+/*
+-------------------------------------------------------------------------------
+Dynamic Media
+-------------------------------------------------------------------------------
+*/
+
+@media only screen and (max-width: 1080px) {
+    .sidebar {
+        width: var(--sidebar-collapsed-width);
+    }
+    .sidebar-logo-img {
+        display: none;
+    }
+    .sidebar-logo-collapsed {
+        display: block;
+    }
+    .sidebar-item-text {
+        display: none;
+    }
+    .sidebar-item {
+        margin-left: -6px;
+        width: 30px;
+    }
+    .sidebar-profile-icon {
+        padding: 0px;
+        margin-left: 0px;
+    }
+    .sidebar-divider {
+        margin-left: calc(-1 * var(--padding-small));
+        width: 26px;
+    }
+    .main-panel {
+        width: calc(100vw - var(--sidebar-collapsed-width));
+    }
+    .footer {
+        margin-left: 0px;
+        width: calc(100vw - var(--sidebar-collapsed-width));
+    }
+}
+
 
 /*
 -------------------------------------------------------------------------------

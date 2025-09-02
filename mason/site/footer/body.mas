@@ -35,6 +35,7 @@
             <a href="https://ualberta.ca" alt="University of Alberta Logo">
                 <img src="/static/img/UofA_logo.png" style="margin: 10px; height: 40px"/>
             </a>
+            <br/>
         </div>
 
         <!-- Breedbase, BTI, BRAPI -->
@@ -48,11 +49,11 @@
         </div>
 
         <!-- Version Information -->
-        <div class="col-12 col-md-3"  style="text-align:center">
+        <div class="col-12 col-md-3
+        "  style="text-align:center">
 % if($isGit == 0) {
             <span>Repository: <a href="<% $repo %>"><% $repo %></a></span><br/>
-            <span>Commit: <a href="<% $repo %>/commit/<% $commit %>"><% $commit %></a></span><br/>
-            <span >Tag: <a href="<% $repo %>/tree/<% $tag %>"><% $tag %></a></span>
+            <span>Commit: <a href="<% $repo %>/commit/<% $commit %>"><% $commit %></a>, Tag: <a href="<% $repo %>/tree/<% $tag %>"><% $tag %></a></span>
 % } else {
             <span><% $tag %></span>&nbsp;
 % }
