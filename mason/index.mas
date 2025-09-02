@@ -10,10 +10,20 @@ $editable_stock_props => {}
 <h1>Best Future Forests</h1>
 Advanced Forest Genomics and Integrative Resource Management System
 
-<div style="border:0px solid;text-align:center;">
-      <!-- span style="font-face:arial;font-size:48pt;color:darkgreen;font-weight:light;">BREE<b>DB</b>ASE</span -->
-      <img src="/img/BFF-AFIRMS_logo.png" width="400" />
-</div>
+<br/><br/>
+
+<img src="/img/trees.png" style="width: 100%; max-width: 720px; height: auto"/>
+
+<!-- <img src="/img/trees.png" style="max-width: 100%; height: auto"/> -->
+<br/>
+<span class="caption"><i>Photo courtesy of the
+<a 
+  href="https://www.ualberta.ca/en/agriculture-life-environment-sciences/programs/graduate-programs/prospective-students/renewable-resources/course-based-master-degrees.html"
+  alt="Forest landscape"
+  class="caption"
+>
+Department of Renewable Resources
+</a></i></span>
 
 <div>
 <h3>What is BFF-AFIRMS?</h3>

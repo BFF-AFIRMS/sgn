@@ -11,7 +11,7 @@ $goto_url => '/'
 
 <div class="modal fade" id="site_login_dialog" name="site_login_dialog" tabindex="-1" role="dialog" aria-labelledby="site_login_dialog_title">
     <div class="modal-dialog modal-sm" role="document">
-        <div class="modal-content">
+        <div class="modal-content" style="max-width: 360px">
             <div class="modal-header" style="text-align:center">
 %  if (!$c->config->{require_login}) {
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
@@ -20,27 +20,24 @@ $goto_url => '/'
             </div>
             <div class="modal-body">
                 <form id="login_form" name="login_form">
-                    <div class="container-fluid">
+                    <div class="container-fluid" style="display:grid; row-gap: var(--padding-small)">
 
 % if ($c->config->{default_login_janedoe}) {
                         <input class="form-control" style="width:240px" id="username" name="username" placeholder="Username" type="text" value="janedoe"/>
                         <br />
                         <input class="form-control" style="width:240px" id="password" name="password" placeholder="Password" type="password" value="secretpw"/>
 % } else {
-                        <input class="form-control" id="username" name="username" placeholder="Username" type="text" tabindex="1" />
-                        <br />
-                        <input class="form-control" id="password" name="password" placeholder="Password" type="password" tabindex="2" />
+                        <input class="form-control login-text" id="username" name="username" placeholder="Username" type="text" tabindex="1" />
+                        <input class="form-control login-text" id="password" name="password" placeholder="Password" type="password" tabindex="2" />
 % }
 
                         <div>
-                            <input type="checkbox" id="show_password"> Show Password
+                            <input type="checkbox" id="show_password">
+                            <span  class="login-text">Show Password</span>
                         </div>
-                        <br />
 
-                        <a id="forgot_username_modal_show">Forgot Username</a>
-                        <br/>
-                        <a id="reset_password_modal_show">Reset Password</a>
-                        <br/><br/>
+                        <a id="forgot_username_modal_show" class="login-text">Forgot Username</a>
+                        <a id="reset_password_modal_show" class="login-text">Reset Password</a>
 
                         <input type="hidden" value="<% $goto_url %>" id="goto_url" name="goto_url" />
 

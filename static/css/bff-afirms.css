@@ -22,10 +22,10 @@
     --padding-large: 10px;
     --border-radius: 5px;
 
-    --font-family: "Segoe UI","Helvetica Neue",Helvetica,Arial,sans-serif;
-    --font-size-medium: 16px;
-    --font-size-small: 14px;
-    --font-size-smaller: 12px;
+    --font-family: "Source Sans 3", "Segoe UI","Helvetica Neue",Helvetica,Arial,sans-serif;
+    --font-size-medium: 18px;
+    --font-size-small: 16px;
+    --font-size-smaller: 14px;
     --font-bold: 500;
 
     --sidebar-width: 160px;
@@ -49,13 +49,14 @@ Default Classes
 
 body {
     background-color:#fff;
-    color: var(--text-color-primary);      
+    color: var(--text-color-primary); 
 }
 
 body, a, th, td, span {
     font-family: var(--font-family);
     font-size: var(--font-size-medium);
     line-height:1.5;
+    font-weight: 400;    
 }
 
 h1,h2,h3,h4,h5,h6 {
@@ -63,6 +64,9 @@ h1,h2,h3,h4,h5,h6 {
     font-weight: var(--font-bold);
 }
 
+h1 {
+    font-weight: 600;
+}
 
 a, a:link, a:visited {
   color: var(--color-1);
@@ -79,6 +83,10 @@ Components
     color: var(--text-color-1);
     border-color: var(--color-gray-1);
     box-shadow: var(--box-shadow-button);
+}
+
+.btn-xs {
+    font-size: var(--font-size-smaller);
 }
 
 .btn:hover, button.modesel:hover {
@@ -124,6 +132,10 @@ button.modesel_hi {
     background-color: var(--text-color-2);
 }
 
+.caption {
+    font-size: var(--font-size-small);
+}
+
 /*
 -------------------------------------------------------------------------------
 App Window
@@ -152,6 +164,19 @@ Sidebar (Left Panel)
     height: 100vh;
     box-shadow: var(--box-shadow-sidebar-outer), var(--box-shadow-sidebar-inner);
     z-index: 1;
+}
+
+@media only screen and (max-width: 1080px) {
+    #sidebar {
+        display: none;
+    }
+    #main-panel {
+        width: 100vw;
+    }
+    #pagefooter {
+        margin-left: 0px;
+        width: 100vw;
+    }
 }
 
 .sidebar a {
@@ -185,7 +210,6 @@ Sidebar Extended
 
 .sidebar-extended {
     background-color:var(--color-gray-2);
-    /* border: 1px solid var(--text-color-3); */
     width: 160px;
     margin-left: 0px;
     display: block;
@@ -405,7 +429,7 @@ Help
 .manual {
     width: 100%;
     height: calc(100% - var(--padding-large));
-    border: 1px blue dashed;
+    border: 0px;
 }
 
 /*
@@ -421,6 +445,16 @@ td.sub_infosectionsubtitle,
  {
   width: 50%;
   white-space: normal;
+}
+
+/*
+-------------------------------------------------------------------------------
+Other
+-------------------------------------------------------------------------------
+*/
+
+.login-text {
+    font-size: var(--font-size-small);
 }
 
 /*

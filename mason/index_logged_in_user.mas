@@ -22,7 +22,7 @@ $editable_stock_props => {}
 <h3>Welcome back <% $first_name %>!</h3>
 
 Your status is currently "<% $role %>".
-
+<br/><br/>
 <!-- table id="manage_user_role_table" class="table table-bordered" width="100%" >
 <thead>
 <tr><th>User</th><th>Your currently assigned roles</th></tr>
@@ -34,7 +34,7 @@ Your status is currently "<% $role %>".
 
 % if ($role ne "user") {
 
-<&|  /page/info_section.mas, title => "<b><font size=\"3\">Continue where you left off</font></b>", collapsible => 1, collapsed => 1 &>
+<&|  /page/info_section.mas, title => "<b><font size=\"3\"></font>Continue where you left off</font></b>", collapsible => 1, collapsed => 1 &>
 
 <h4>Continue where you left off:</h4>
 Interval:&nbsp;
