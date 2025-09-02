@@ -137,6 +137,10 @@ button.modesel_hi {
     font-size: var(--font-size-small);
 }
 
+div .infosectioncontent {
+    margin: 0;
+}
+
 /*
 -------------------------------------------------------------------------------
 App Window
@@ -439,6 +443,20 @@ Tables
 -------------------------------------------------------------------------------
 */
 
+.table {
+    border: 1px solid var(--color-gray-1);
+    border-radius: var(--border-radius);
+}
+
+thead {
+    background-color: var(--color-gray-2);
+}
+
+tr td {
+    padding: var(--padding-small) !important;
+    margin: var(--padding-small) !important;
+}
+
 td.infosectionsubtitle,
 td.sub_infosectionsubtitle,
 .infosectionsubtitle_empty,
@@ -454,6 +472,23 @@ td, td a {
 
 th {
     font-size: var(--font-size-small);
+}
+
+.dropdown-menu {
+    padding: var(--padding-large);
+}
+
+.dropdown-menu>.active>a {
+    border-radius: var(--border-radius);
+    color: var(--text-color-4);
+    width: 100%;
+    background-color: var(--color-1);
+}
+
+.dropdown-menu>.active>a:hover {
+  background-color: var(--color-2);
+  color: var(--text-color-1);
+  font-weight: 600;
 }
 
 /*
