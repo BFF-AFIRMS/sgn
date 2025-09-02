@@ -1,9 +1,26 @@
+<%init>
+    my $logged_in = 'false';
+    if ($c->_user){ 
+        $logged_in = 'true';
+    };
+
+    my $r = $c->request;
+    my @test = (keys %$r);
+    my $k = join(",", @test);
+</%init>
+
 <script>
+
+  /* TBD: Redirect users who are not logged in to the home page*/
+  if (!<% $logged_in %> && window.location.pathname != "/"){
+    console.log("you are not logged in:", window.location.pathname);
+    window.location.replace("/");
+  }
 
   // Add URL paths to this array that should not have the login dialog shown
   // when the config `require_login` is set
   const PATHS_TO_NOT_REQUIRE_LOGIN = ["/user/reset_password_form"];
-
+  
   function update_login_button() { 
 
     jQuery.ajax( { 

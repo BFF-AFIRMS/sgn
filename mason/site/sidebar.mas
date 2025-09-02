@@ -1,5 +1,5 @@
 <%init>
-    my $logged_in;
+    my $logged_in = 'false';
     if ($c->_user){ 
         $logged_in = 'true';
     };
