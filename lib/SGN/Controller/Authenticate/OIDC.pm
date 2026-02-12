@@ -445,7 +445,6 @@ sub set_cookie {
         path     => $path,
         samesite => 'Lax',
         httponly => 1,
-        secure   => 1,
         expires  => '+5m',
     };
 }
@@ -455,7 +454,13 @@ sub fetch_json {
     my ($url) = @_;
     my $ua = LWP::UserAgent->new();
     my $response = $ua->get($url);
-    my $content = decode_json $response->{_content};
+    my $content;
+    try {
+        $content = decode_json $response->{_content};
+    } catch {
+        $content->{error} = "Failed to fetch the well known configuration.";
+        $content->{error_description} = $response->{_content};
+    };
     return $content
 }
 
