@@ -53,9 +53,6 @@ jobs:
 
       keycloak:
         image: quay.io/keycloak/keycloak:26.5.1-0
-        depends_on:
-          keycloak_db:
-            condition: service_healthy
         env:
           KC_DB:              postgres
           KC_DB_URL:          jdbc:postgresql://keycloak_db:5432/keycloak
