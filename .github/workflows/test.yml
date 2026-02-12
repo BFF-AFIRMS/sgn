@@ -45,11 +45,11 @@ jobs:
         env:
           POSTGRES_DB: keycloak
           POSTGRES_PASSWORD: postgres
-        healthcheck:
-          test: [ "CMD-SHELL", "psql -U postgres -q keycloak -c '\\dt'"]
-          interval: 5s
-          timeout: 5s
-          retries: 30
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
       keycloak:
         image: quay.io/keycloak/keycloak:26.5.1-0
@@ -69,16 +69,12 @@ jobs:
           KC_HTTP_RELATIVE_PATH:           /auth
           KC_HOSTNAME_BACKCHANNEL_DYNAMIC: true
           KC_PROXY_HEADERS:                xforwarded
-        command: ['start-dev', '--import-realm']
         volumes:
-          - ./cxgn/sgn/.github/keycloak/themes:/opt/keycloak/themes
-          - ./cxgn/sgn/.github/keycloak/import:/opt/keycloak/data/import
-        healthcheck:
-          test: timeout 10s bash -c ':> /dev/tcp/localhost/9080'
-          interval: 10s
-          timeout: 5s
-          retries: 30
-          start_period: 5s
+          - ${{ github.workspace }}/.github/keycloak/themes:/opt/keycloak/themes
+          - ${{ github.workspace }}/.github/keycloak/import:/opt/keycloak/data/import
+          - ${{ github.workspace }}/.github/keycloak/entrypoint.sh:/entrypoint.sh
+        options: >-
+          --entrypoint /entrypoint.sh
 
     steps:
       - name: Checkout sgn
