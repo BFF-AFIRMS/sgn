@@ -8,16 +8,16 @@ use SGN::Test::WWW::WebDriver;
 use Selenium::Firefox;
 use Selenium::Firefox::Profile;
 
-my $profile = Selenium::Firefox::Profile->new;
-$profile->set_preference( 'browser.download.folderList', 2 ); # Use custom download folder
-$profile->set_preference( 'browser.download.dir', '/tmp/download.txt' );
-$profile->set_preference( 'browser.download.manager.showWhenStarting', 0 );
-$profile->set_preference( 'browser.helperApps.neverAsk.saveToDisk', 'application/octet-stream,text/csv,application/zip,text/plain' );
+# my $profile = Selenium::Firefox::Profile->new;
+# $profile->set_preference( 'browser.download.folderList', 2 ); # Use custom download folder
+# $profile->set_preference( 'browser.download.dir', '/tmp/download.txt' );
+# $profile->set_preference( 'browser.download.manager.showWhenStarting', 0 );
+# $profile->set_preference( 'browser.helperApps.neverAsk.saveToDisk', 'application/octet-stream,text/csv,application/zip,text/plain' );
 
-my $driver = Selenium::Remote::Driver->new(firefox_profile => $profile, base_url => $ENV{SGN_TEST_SERVER}, remote_server_addr => $ENV{SGN_REMOTE_SERVER_ADDR} || 'localhost');
+#my $driver = Selenium::Remote::Driver->new(firefox_profile => $profile, base_url => $ENV{SGN_TEST_SERVER}, remote_server_addr => $ENV{SGN_REMOTE_SERVER_ADDR} || 'localhost');
 
 my $d = SGN::Test::WWW::WebDriver->new();
-$d->driver($driver);
+#$d->driver($driver);
 
 $d->while_logged_in_as("submitter", sub {
     # sleep(1);

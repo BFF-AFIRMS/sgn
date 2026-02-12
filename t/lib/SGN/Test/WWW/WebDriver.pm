@@ -69,7 +69,11 @@ has 'host' => ( is => 'rw',
 
 has 'driver' => ( is => 'rw',
 		  isa => 'Selenium::Remote::Driver',
-		  default => sub { Selenium::Remote::Driver->new('base_url' => $ENV{SGN_TEST_SERVER}, 'remote_server_addr' => $ENV{SGN_REMOTE_SERVER_ADDR} || 'localhost') },
+		  default => sub {
+		  my $driver = Selenium::Remote::Driver->new('base_url' => $ENV{SGN_TEST_SERVER}, 'remote_server_addr' => $ENV{SGN_REMOTE_SERVER_ADDR} || 'localhost');
+		  $driver->commands->{_cmds}->{uploadFile}->{url} = 'session/:sessionId/se/file';
+		  return $driver;
+        },
     );
 
 has 'user_data' => ( is => 'rw',

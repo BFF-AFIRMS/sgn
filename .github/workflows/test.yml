@@ -34,10 +34,12 @@ jobs:
           --health-retries 5
 
       selenium:
-        image: selenium/standalone-firefox:3.141.59
+        image: selenium/standalone-firefox:147.0-20260202
         volumes:
           - ${{ github.workspace }}:/home/production/cxgn/sgn
           - ${{ github.workspace }}:/home/vagrant/cxgn/sgn
+        env:
+          SE_NODE_MAX_SESSIONS: 4
         options: --health-cmd="curl --silent --head http://localhost:4444 || exit 1"
 
     steps:

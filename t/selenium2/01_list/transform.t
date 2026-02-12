@@ -52,6 +52,8 @@ $d->while_logged_in_as('submitter', sub {
 
     print "Delete test list...\n";
 
+    sleep(1);
+
     my $delete_link = $d->find_element_ok("delete_list_new_test_list_transform", "id", "find delete test list button");
 
     $delete_link->click() if $delete_link;
