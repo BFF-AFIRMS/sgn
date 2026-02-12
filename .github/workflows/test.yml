@@ -67,9 +67,9 @@ jobs:
           KC_HOSTNAME_BACKCHANNEL_DYNAMIC: true
           KC_PROXY_HEADERS:                xforwarded
         volumes:
-          - ${{ github.workspace }}/.github/keycloak/themes:/opt/keycloak/themes
-          - ${{ github.workspace }}/.github/keycloak/import:/opt/keycloak/data/import
-          - ${{ github.workspace }}/.github/keycloak/entrypoint.sh:/entrypoint.sh
+          - ./.github/keycloak/themes:/opt/keycloak/themes
+          - ./.github/keycloak/import:/opt/keycloak/data/import
+          - ./.github/keycloak/entrypoint.sh:/entrypoint.sh
         options: >-
           --entrypoint /entrypoint.sh
 
