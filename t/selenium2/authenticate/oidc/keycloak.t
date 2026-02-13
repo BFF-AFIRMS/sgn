@@ -5,8 +5,6 @@ use Test::More 'tests' => 11;
 use SGN::Test::WWW::WebDriver;
 use Selenium::Waiter qw/wait_until/;
 
-use Data::Dumper;
-
 my $d = SGN::Test::WWW::WebDriver->new();
 
 # Raise error if any command takes longer than 1 minute
