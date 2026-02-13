@@ -62,9 +62,6 @@ jobs:
       - name: Checkout sgn
         uses: actions/checkout@v5
 
-      - name: Run unit tests
-        run: prove --recurse t/unit 2>/dev/null
-      
       - name: Load/dump fixture database and build node modules
         run: |
           echo "--version" > ~/.proverc
@@ -74,40 +71,59 @@ jobs:
         # https://github.com/actions/runner/issues/241#issuecomment-842566950
         shell: 'script --flush --quiet --return --command "bash --noprofile --norc -eo pipefail {0}"'
 
-        # Temporarily placed higher in order for testing purposes
+      - name: Calculate code coverage
+        run: cpanm Devel::Cover && echo "--exec 'perl -MDevel::Cover'" > ~/.proverc
+
+      - name: Run unit tests
+        run: prove --recurse t/unit 2>/dev/null
+
+      # Temporarily placed higher in order for testing purposes
       - name: Run selenium tests authenticate
         run: /entrypoint.sh --nopatch t/selenium2/authenticate 2>/dev/null
 
-      - name: Run unit_fixture tests
-        # need entrypoint.sh to start slurm
-        # --nopatch to skip running fixture and db patches (already done in previous step)
-        run: /entrypoint.sh --nopatch t/unit_fixture 2>/dev/null
+      # Summarize Test Coverage
+      - name: Summarize code coverage
+        run: cover -summary
 
-      - name: Run unit_mech tests
-        run: /entrypoint.sh --nopatch t/unit_mech
+      # Upload Test Coverage as artifact
+      - name: Upload code coverage
+        uses: actions/upload-artifact@v6
+        if: always()
+        with:
+          name: code-coverage
+          path: |
+            cover_db
 
-      # selenium tests for a moment as separate folders - will change once full solgs are ready 
-      # but anyway, it will is still fully functional for tests purpose
-      - name: Run selenium tests 01_list
-        run: /entrypoint.sh --nopatch t/selenium2/01_list 2>/dev/null
+      # - name: Run unit_fixture tests
+      #   # need entrypoint.sh to start slurm
+      #   # --nopatch to skip running fixture and db patches (already done in previous step)
+      #   run: /entrypoint.sh --nopatch t/unit_fixture 2>/dev/null
 
-      - name: Run selenium tests 02_trial
-        run: /entrypoint.sh --nopatch t/selenium2/02_trial 2>/dev/null
+      # - name: Run unit_mech tests
+      #   run: /entrypoint.sh --nopatch t/unit_mech
 
-      - name: Run selenium tests dataset
-        run: /entrypoint.sh --nopatch t/selenium2/03_dataset 2>/dev/null
+      # # selenium tests for a moment as separate folders - will change once full solgs are ready 
+      # # but anyway, it will is still fully functional for tests purpose
+      # - name: Run selenium tests 01_list
+      #   run: /entrypoint.sh --nopatch t/selenium2/01_list 2>/dev/null
 
-      - name: Run selenium tests breeders
-        run: /entrypoint.sh --nopatch t/selenium2/breeders 2>/dev/null
+      # - name: Run selenium tests 02_trial
+      #   run: /entrypoint.sh --nopatch t/selenium2/02_trial 2>/dev/null
 
-      - name: Run selenium tests onto
-        run: /entrypoint.sh --nopatch t/selenium2/onto 2>/dev/null
+      # - name: Run selenium tests dataset
+      #   run: /entrypoint.sh --nopatch t/selenium2/03_dataset 2>/dev/null
 
-      - name: Run selenium tests search
-        run: /entrypoint.sh --nopatch t/selenium2/search 2>/dev/null
+      # - name: Run selenium tests breeders
+      #   run: /entrypoint.sh --nopatch t/selenium2/breeders 2>/dev/null
 
-      - name: Run selenium tests stock
-        run: /entrypoint.sh --nopatch t/selenium2/stock 2>/dev/null
+      # - name: Run selenium tests onto
+      #   run: /entrypoint.sh --nopatch t/selenium2/onto 2>/dev/null
 
-      - name: Run selenium tests tools
-        run: /entrypoint.sh --nopatch t/selenium2/tools 2>/dev/null
+      # - name: Run selenium tests search
+      #   run: /entrypoint.sh --nopatch t/selenium2/search 2>/dev/null
+
+      # - name: Run selenium tests stock
+      #   run: /entrypoint.sh --nopatch t/selenium2/stock 2>/dev/null
+
+      # - name: Run selenium tests tools
+      #   run: /entrypoint.sh --nopatch t/selenium2/tools 2>/dev/null

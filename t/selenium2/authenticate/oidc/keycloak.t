@@ -5,6 +5,9 @@ use Test::More 'tests' => 11;
 use SGN::Test::WWW::WebDriver;
 use Selenium::Waiter qw/wait_until/;
 
+# Import target modules for code coverage
+use SGN::Controller::Authenticate::OIDC;
+
 my $d = SGN::Test::WWW::WebDriver->new();
 
 # Raise error if any command takes longer than 1 minute
