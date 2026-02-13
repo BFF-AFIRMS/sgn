@@ -51,31 +51,12 @@ jobs:
           --health-timeout 5s
           --health-retries 5
 
-      keycloak:
-        image: quay.io/keycloak/keycloak:26.5.1-0
-        env:
-          KC_DB:              postgres
-          KC_DB_URL:          jdbc:postgresql://keycloak_db:5432/keycloak
-          KC_DB_USERNAME:     postgres
-          KC_DB_PASSWORD:     postgres
-          KC_BOOTSTRAP_ADMIN_USERNAME:     admin
-          KC_BOOTSTRAP_ADMIN_PASSWORD:     password
-          KC_HTTP_ENABLED:                 true
-          KC_HTTP_PORT:                    9080
-          KC_HOSTNAME:                     http://keycloak:9080/auth
-          KC_HTTP_RELATIVE_PATH:           /auth
-          KC_HOSTNAME_BACKCHANNEL_DYNAMIC: true
-          KC_PROXY_HEADERS:                xforwarded
-        volumes:
-          - ./.github/keycloak/themes:/opt/keycloak/themes
-          - ./.github/keycloak/import:/opt/keycloak/data/import
-          - ./.github/keycloak/entrypoint.sh:/entrypoint.sh
-        options: >-
-          --entrypoint /entrypoint.sh
-
     steps:
       - name: Checkout sgn
         uses: actions/checkout@v5
+
+      - name: Start keycloak
+        run: .github/keycloak/run.sh ${{ job.container.network }}
     
       - name: Run unit tests
         run: prove --recurse t/unit 2>/dev/null
