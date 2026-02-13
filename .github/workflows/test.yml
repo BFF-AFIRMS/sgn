@@ -71,8 +71,10 @@ jobs:
         # https://github.com/actions/runner/issues/241#issuecomment-842566950
         shell: 'script --flush --quiet --return --command "bash --noprofile --norc -eo pipefail {0}"'
 
-      - name: Calculate code coverage
-        run: cpanm Devel::Cover && echo "--exec 'perl -MDevel::Cover'" > ~/.proverc
+      - name: Install code coverage
+        run: |
+          cpanm Devel::Cover
+          echo "--exec 'perl -MDevel::Cover'" > ~/.proverc
 
       - name: Run unit tests
         run: prove --recurse t/unit 2>/dev/null
@@ -80,19 +82,6 @@ jobs:
       # Temporarily placed higher in order for testing purposes
       - name: Run selenium tests authenticate
         run: /entrypoint.sh --nopatch t/selenium2/authenticate 2>/dev/null
-
-      # Summarize Test Coverage
-      - name: Summarize code coverage
-        run: cover -summary
-
-      # Upload Test Coverage as artifact
-      - name: Upload code coverage
-        uses: actions/upload-artifact@v6
-        if: always()
-        with:
-          name: code-coverage
-          path: |
-            cover_db
 
       # - name: Run unit_fixture tests
       #   # need entrypoint.sh to start slurm
@@ -127,3 +116,16 @@ jobs:
 
       # - name: Run selenium tests tools
       #   run: /entrypoint.sh --nopatch t/selenium2/tools 2>/dev/null
+
+      # Summarize Test Coverage
+      - name: Summarize code coverage
+        run: cover -select_re='lib/.*' -summary -report html
+
+      # Upload Test Coverage as artifact
+      - name: Upload code coverage artifact
+        uses: actions/upload-artifact@v6
+        if: always()
+        with:
+          name: code-coverage
+          path: |
+            cover_db
