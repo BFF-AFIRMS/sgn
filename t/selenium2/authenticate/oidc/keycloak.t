@@ -10,6 +10,8 @@ use Try::Tiny;
 # Set up the web driver
 my $d = SGN::Test::WWW::WebDriver->new();
 
+$d->driver->set_implicit_wait_timeout(1000);
+
 # Set up the DB connection
 my $f = SGN::Test::Fixture->new();
 my $dbh = $f->bcs_schema->storage->dbh;
