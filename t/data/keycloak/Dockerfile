@@ -1,7 +1,7 @@
 FROM keycloak/keycloak:26.5.1-0
 
-COPY themes/ /opt/keycloak/themes
-COPY import/ /opt/keycloak/data/import
+RUN mkdir -p /opt/keycloak/data/import
+COPY realm.json /opt/keycloak/data/import/realm.json
 
 ENV KC_DB=postgres
 ENV KC_DB_URL=jdbc:postgresql://keycloak_db:5432/keycloak
