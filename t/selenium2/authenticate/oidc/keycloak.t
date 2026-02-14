@@ -5,6 +5,7 @@ use Test::More;
 use SGN::Test::Fixture;
 use SGN::Test::WWW::WebDriver;
 use Selenium::Waiter qw/wait_until/;
+use Try::Tiny;
 
 # Set up the web driver
 my $d = SGN::Test::WWW::WebDriver->new();
@@ -69,7 +70,7 @@ ok(wait_until { $d->driver->get_page_source() } =~/You are logged out/, 'locate 
 # -----------------------------------------------------------------------------
 
 # Give johndoe and janedoe the same email address
-my $q = "update sgn_people.sp_person set pending_email = 'janedoe\@janedoe.test' where username = ?";
+my $q = "update sgn_people.sp_person set private_email = 'janedoe\@janedoe.test' where username = ?";
 $dbh->prepare($q)->execute($submitter->{username});
 
 # Load the login dialog box
@@ -96,7 +97,7 @@ ok(wait_until { $d->driver->dismiss_alert }, 'dismiss error multiple users');
 ok(wait_until { $d->driver->navigate('/user/login'); }, 'open login dialog');
 
 # Click the "Login with Keycloak" button
-ok(wait_until { $d->driver->find_element_by_id('login_with_keycloak_no_auto_provision')->click() }, 'click login button');
+ok(wait_until { $d->driver->find_element_by_id('login_with_keycloak-no-auto-provision')->click() }, 'click login button');
 
 # Enter Keycloak Username and Password and then click "Sign In" button
 ok(wait_until { $d->driver->find_element_by_id('username')->send_keys("newuser") },  'enter username');
