@@ -1,17 +1,8 @@
-# on:
-#   pull_request:
-#     paths-ignore:
-#       - 'docs/**'
-#       - '**.md'
 on:
-  push:
-    branches:
-      - '*'
   pull_request:
-    branches:
-      - '*'
-  release:
-    types: [published]
+    paths-ignore:
+      - 'docs/**'
+      - '**.md'
 
 jobs:
   test_breedbase:
