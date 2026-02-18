@@ -649,7 +649,7 @@
         "http://localhost:3010",
         "http://localhost:8080",
         "http://breedbase:3010",
-        "http://breedbase:8080"        
+        "http://breedbase:8080"
       ],
       "notBefore": 0,
       "bearerOnly": false,
