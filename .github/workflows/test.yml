@@ -94,7 +94,7 @@ jobs:
         run: /entrypoint.sh --nopatch t/selenium2/03_dataset 2>/dev/null
 
       - name: Run selenium tests authenticate
-        run: /entrypoint.sh --nopatch t/selenium2/authenticate 2>/dev/null        
+        run: /entrypoint.sh --nopatch t/selenium2/authenticate 2>/dev/null
 
       - name: Run selenium tests breeders
         run: /entrypoint.sh --nopatch t/selenium2/breeders 2>/dev/null
