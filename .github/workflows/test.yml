@@ -74,9 +74,6 @@ jobs:
         # https://github.com/actions/runner/issues/241#issuecomment-842566950
         shell: 'script --flush --quiet --return --command "bash --noprofile --norc -eo pipefail {0}"'
 
-      - name: Run selenium tests authenticate
-        run: /entrypoint.sh --nopatch t/selenium2/authenticate 2>/dev/null
-
       - name: Run unit_fixture tests
         # need entrypoint.sh to start slurm
         # --nopatch to skip running fixture and db patches (already done in previous step)
@@ -95,6 +92,9 @@ jobs:
 
       - name: Run selenium tests dataset
         run: /entrypoint.sh --nopatch t/selenium2/03_dataset 2>/dev/null
+
+      - name: Run selenium tests authenticate
+        run: /entrypoint.sh --nopatch t/selenium2/authenticate 2>/dev/null
 
       - name: Run selenium tests breeders
         run: /entrypoint.sh --nopatch t/selenium2/breeders 2>/dev/null
