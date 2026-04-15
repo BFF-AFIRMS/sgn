@@ -10,8 +10,6 @@ import {
 import type { Route } from "./+types/root"
 import "./app.css"
 
-import {App as AppLayout} from "@/components/ui/App"
-
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
@@ -22,7 +20,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Links />
       </head>
       <body>
-        <AppLayout>{children}</AppLayout>
+        {/* <AppLayout>{children}</AppLayout> */}
+        {children}
         <ScrollRestoration />
         <Scripts />
       </body>

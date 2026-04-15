@@ -1,6 +1,7 @@
 import {Navbar} from "@/components/ui/Navbar"
+import { Outlet } from "react-router";
 
-export function App({children}) {
+export default function Layout() {
 
     const style = { "min_width": "var(--breakpoint-xs)" } as React.CSSProperties;
 
@@ -8,7 +9,7 @@ export function App({children}) {
         <div className="text-center">
             <div className="overflow-auto w-full h-screen" style={style}>
                 <Navbar/>
-                {children}
+                <Outlet />
             </div>
         </div>
     )

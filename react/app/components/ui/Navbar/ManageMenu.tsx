@@ -25,8 +25,9 @@ export default function ManageMenu() {
                     <MenuItem text="Field"/>
                     <MenuItem text="Genotyping Projects"/>
                     <MenuItem text="Tissue Samples"/>
-                    <MenuItem text="Table" link="/table"/>
+                    <MenuItem text="Table" link={`/table`}/>
                 </DropdownMenuGroup>
+
 
             </MenuContent>
         </DropdownMenu>

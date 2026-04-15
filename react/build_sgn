@@ -15,5 +15,5 @@ cd ../
 echo -e "---------------------------------------------------------"
 echo -e "Symlinking build"
 
-ln -f -s ../react/client static/react
-ln -f -s ../react/client mason/react
+ln -f -s ../react/build/client/react/ mason/react
+ln -f -s ../react/build/client/ static/react
