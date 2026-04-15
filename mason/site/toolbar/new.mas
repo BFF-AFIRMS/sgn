@@ -1,0 +1,8 @@
+<li class="dropdown"><a class="menu_click_dropdown dropdown-toggle button btn" data-toggle="dropdown" >New</a>
+  <ul class="dropdown-menu">
+    <li><a href="/svelte/breeders/manage_programs">Breeding Programs</a></li>
+    <li><a href="/svelte/search/organisms">Organisms</a></li>
+    <li><a href="/nuxt/">Nuxt</a></li>
+    <li><a href="/nuxt/about">Nuxt About</a></li>
+  </ul>
+</li>
