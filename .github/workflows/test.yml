@@ -20,7 +20,7 @@ jobs:
       image: bffafirms/breedbase:latest
       env:
         SYSTEM:                   GITACTION
-        USER_GROUP_ID:            1001:121
+        USER_GROUP_ID:            1001:1001
         MODE:                     TESTING
         HOME:                     /home/sgn
         DOMAIN_NAME:              localhost
