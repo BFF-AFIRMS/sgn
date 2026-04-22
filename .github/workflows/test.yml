@@ -5,17 +5,37 @@ on:
       - '**.md'
 
 jobs:
+  check_user_id:
+    runs-on: ubuntu-latest
+  steps:
+    - name: check user id
+      run: echo "USER_ID=$(id -u)"
+
+    - name: check group id
+      run: echo "GROUP_ID=$(id -g)"
+
   test_breedbase:
     runs-on: ubuntu-latest
     container:
-      image: breedbase/breedbase:latest
+      image: bffafirms/breedbase:latest
       env:
-        HOME: /root
-        MODE: 'TESTING'
-        SYSTEM: 'GITACTION'
-        PGPASSWORD: postgres
-        SGN_TEST_SERVER: http://test_breedbase:3010
-        SGN_REMOTE_SERVER_ADDR: selenium
+        SYSTEM:                   GITACTION
+        USER_GROUP_ID:            1001:121
+        MODE:                     TESTING
+        HOME:                     /home/sgn
+        DOMAIN_NAME:              localhost
+        PSQL_PAGER:               cat
+        HISTTIMEFORMAT:           "%Y-%m-%d %T "
+        SGN_TEST_SERVER:          http://test_breedbase:3010
+        SGN_REMOTE_SERVER_ADDR:   selenium
+        DBIC_TRACE:               0
+        # Database credentials
+        PGHOST:                   breedbase_db
+        PGDATABASE:               breedbase
+        PGUSER:                   postgres
+        PGPASSWORD:               postgres
+        WEB_USR_PASSWORD:         postgres
+        ADMIN_PASSWORD:           password
       volumes:
         - ${{ github.workspace }}:/home/production/cxgn/sgn
         - ${{ github.workspace }}:/home/vagrant/cxgn/sgn
