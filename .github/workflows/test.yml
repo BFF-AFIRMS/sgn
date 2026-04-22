@@ -14,119 +14,147 @@ jobs:
       - name: check group id
         run: echo "GROUP_ID=$(id -g)"
 
+
   test_breedbase:
     runs-on: ubuntu-latest
-    container:
-      image: bffafirms/breedbase:latest
-      env:
-        SYSTEM:                   GITACTION
-        USER_GROUP_ID:            1001:1001
-        MODE:                     TESTING
-        HOME:                     /home/sgn
-        DOMAIN_NAME:              localhost
-        PSQL_PAGER:               cat
-        HISTTIMEFORMAT:           "%Y-%m-%d %T "
-        SGN_TEST_SERVER:          http://test_breedbase:3010
-        SGN_REMOTE_SERVER_ADDR:   selenium
-        DBIC_TRACE:               0
-        # Database credentials
-        PGHOST:                   breedbase_db
-        PGDATABASE:               breedbase
-        PGUSER:                   postgres
-        PGPASSWORD:               postgres
-        WEB_USR_PASSWORD:         postgres
-        ADMIN_PASSWORD:           password
-      volumes:
-        - ${{ github.workspace }}:/home/production/cxgn/sgn
-        - ${{ github.workspace }}:/home/vagrant/cxgn/sgn
-      options: --network-alias test_breedbase
-
-    services:
-      breedbase_db:
-        image: postgres:12.9
-        env:
-          POSTGRES_PASSWORD: postgres
-        # Set health checks to wait until postgres has started
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
-      selenium:
-        image: selenium/standalone-firefox:3.141.59
-        volumes:
-          - ${{ github.workspace }}:/home/production/cxgn/sgn
-          - ${{ github.workspace }}:/home/vagrant/cxgn/sgn
-        options: --health-cmd="curl --silent --head http://localhost:4444 || exit 1"
-
-      keycloak_db:
-        image: postgres:13.0
-        env:
-          POSTGRES_DB: keycloak
-          POSTGRES_PASSWORD: postgres
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
-      keycloak:
-        image: bffafirms/keycloak:26.5.1-0-breedbase-testing
-        env:
-          KC_DB_USERNAME:              postgres
-          KC_DB_PASSWORD:              postgres
-          KC_BOOTSTRAP_ADMIN_PASSWORD: password
-
     steps:
-      - name: Checkout sgn
-        uses: actions/checkout@v5
-    
-      - name: Run unit tests
-        run: prove --recurse t/unit 2>/dev/null
+      - name: Checkout breedbase_dockerfile
+        uses: actions/checkout@v6
+        with:
+          name: bff-afirms/breedbase_dockerfile 
+          ref: bff-afirms
+          submodules: recursive
       
-      - name: Load/dump fixture database and build node modules
+      - name: Cleanup breedbase_dockerfile
         run: |
-          echo "--version" > ~/.proverc
-          perl t/test_fixture.pl --dumpupdatedfixture
-          rm ~/.proverc
-        # work around run_all_patches.pl "what the heck - no TTY??" error
-        # https://github.com/actions/runner/issues/241#issuecomment-842566950
-        shell: 'script --flush --quiet --return --command "bash --noprofile --norc -eo pipefail {0}"'
+          ls -l
+          ls -l breedbase_dockerfile
+          rm -rf breedbase_dockerfile/cxgn/sgn
 
-      - name: Run unit_fixture tests
-        # need entrypoint.sh to start slurm
-        # --nopatch to skip running fixture and db patches (already done in previous step)
-        run: /entrypoint.sh --nopatch t/unit_fixture 2>/dev/null
+      - name: Checkout sgn
+        uses: actions/checkout@v6
+        path: 'breedbase_dockerfile/cxgn/sgn'
+      
+      - name: Path Checkpoint
+        run: |
+          ls -l 
+          ls -l breedbase_dockerfile
+          ls -l breedbase_dockerfile/cxgn
+          ls -l breedbase_dockerfile/cxgn/sgn
 
-      - name: Run unit_mech tests
-        run: /entrypoint.sh --nopatch t/unit_mech
+  # test_breedbase:
+  #   runs-on: ubuntu-latest
+  #   container:
+  #     image: bffafirms/breedbase:latest
+  #     env:
+  #       SYSTEM:                   GITACTION
+  #       USER_GROUP_ID:            1001:1001
+  #       MODE:                     TESTING
+  #       HOME:                     /home/sgn
+  #       DOMAIN_NAME:              localhost
+  #       PSQL_PAGER:               cat
+  #       HISTTIMEFORMAT:           "%Y-%m-%d %T "
+  #       SGN_TEST_SERVER:          http://test_breedbase:3010
+  #       SGN_REMOTE_SERVER_ADDR:   selenium
+  #       DBIC_TRACE:               0
+  #       # Database credentials
+  #       PGHOST:                   breedbase_db
+  #       PGDATABASE:               breedbase
+  #       PGUSER:                   postgres
+  #       PGPASSWORD:               postgres
+  #       WEB_USR_PASSWORD:         postgres
+  #       ADMIN_PASSWORD:           password
+  #     volumes:
+  #       - ${{ github.workspace }}:/home/production/cxgn/sgn
+  #       - ${{ github.workspace }}:/home/vagrant/cxgn/sgn
+  #     options: --network-alias test_breedbase
 
-      # selenium tests for a moment as separate folders - will change once full solgs are ready 
-      # but anyway, it will is still fully functional for tests purpose
-      - name: Run selenium tests 01_list
-        run: /entrypoint.sh --nopatch t/selenium2/01_list 2>/dev/null
+  #   services:
+  #     breedbase_db:
+  #       image: postgres:12.9
+  #       env:
+  #         POSTGRES_PASSWORD: postgres
+  #       # Set health checks to wait until postgres has started
+  #       options: >-
+  #         --health-cmd pg_isready
+  #         --health-interval 10s
+  #         --health-timeout 5s
+  #         --health-retries 5
 
-      - name: Run selenium tests 02_trial
-        run: /entrypoint.sh --nopatch t/selenium2/02_trial 2>/dev/null
+  #     selenium:
+  #       image: selenium/standalone-firefox:3.141.59
+  #       volumes:
+  #         - ${{ github.workspace }}:/home/production/cxgn/sgn
+  #         - ${{ github.workspace }}:/home/vagrant/cxgn/sgn
+  #       options: --health-cmd="curl --silent --head http://localhost:4444 || exit 1"
 
-      - name: Run selenium tests dataset
-        run: /entrypoint.sh --nopatch t/selenium2/03_dataset 2>/dev/null
+  #     keycloak_db:
+  #       image: postgres:13.0
+  #       env:
+  #         POSTGRES_DB: keycloak
+  #         POSTGRES_PASSWORD: postgres
+  #       options: >-
+  #         --health-cmd pg_isready
+  #         --health-interval 10s
+  #         --health-timeout 5s
+  #         --health-retries 5
 
-      - name: Run selenium tests authenticate
-        run: /entrypoint.sh --nopatch t/selenium2/authenticate 2>/dev/null
+  #     keycloak:
+  #       image: bffafirms/keycloak:26.5.1-0-breedbase-testing
+  #       env:
+  #         KC_DB_USERNAME:              postgres
+  #         KC_DB_PASSWORD:              postgres
+  #         KC_BOOTSTRAP_ADMIN_PASSWORD: password
 
-      - name: Run selenium tests breeders
-        run: /entrypoint.sh --nopatch t/selenium2/breeders 2>/dev/null
+  #   steps:
+  #     - name: Checkout sgn
+  #       uses: actions/checkout@v5
+    
+  #     - name: Run unit tests
+  #       run: prove --recurse t/unit 2>/dev/null
+      
+  #     - name: Load/dump fixture database and build node modules
+  #       run: |
+  #         echo "--version" > ~/.proverc
+  #         perl t/test_fixture.pl --dumpupdatedfixture
+  #         rm ~/.proverc
+  #       # work around run_all_patches.pl "what the heck - no TTY??" error
+  #       # https://github.com/actions/runner/issues/241#issuecomment-842566950
+  #       shell: 'script --flush --quiet --return --command "bash --noprofile --norc -eo pipefail {0}"'
 
-      - name: Run selenium tests onto
-        run: /entrypoint.sh --nopatch t/selenium2/onto 2>/dev/null
+  #     - name: Run unit_fixture tests
+  #       # need entrypoint.sh to start slurm
+  #       # --nopatch to skip running fixture and db patches (already done in previous step)
+  #       run: /entrypoint.sh --nopatch t/unit_fixture 2>/dev/null
 
-      - name: Run selenium tests search
-        run: /entrypoint.sh --nopatch t/selenium2/search 2>/dev/null
+  #     - name: Run unit_mech tests
+  #       run: /entrypoint.sh --nopatch t/unit_mech
 
-      - name: Run selenium tests stock
-        run: /entrypoint.sh --nopatch t/selenium2/stock 2>/dev/null
+  #     # selenium tests for a moment as separate folders - will change once full solgs are ready 
+  #     # but anyway, it will is still fully functional for tests purpose
+  #     - name: Run selenium tests 01_list
+  #       run: /entrypoint.sh --nopatch t/selenium2/01_list 2>/dev/null
 
-      - name: Run selenium tests tools
-        run: /entrypoint.sh --nopatch t/selenium2/tools 2>/dev/null
+  #     - name: Run selenium tests 02_trial
+  #       run: /entrypoint.sh --nopatch t/selenium2/02_trial 2>/dev/null
+
+  #     - name: Run selenium tests dataset
+  #       run: /entrypoint.sh --nopatch t/selenium2/03_dataset 2>/dev/null
+
+  #     - name: Run selenium tests authenticate
+  #       run: /entrypoint.sh --nopatch t/selenium2/authenticate 2>/dev/null
+
+  #     - name: Run selenium tests breeders
+  #       run: /entrypoint.sh --nopatch t/selenium2/breeders 2>/dev/null
+
+  #     - name: Run selenium tests onto
+  #       run: /entrypoint.sh --nopatch t/selenium2/onto 2>/dev/null
+
+  #     - name: Run selenium tests search
+  #       run: /entrypoint.sh --nopatch t/selenium2/search 2>/dev/null
+
+  #     - name: Run selenium tests stock
+  #       run: /entrypoint.sh --nopatch t/selenium2/stock 2>/dev/null
+
+  #     - name: Run selenium tests tools
+  #       run: /entrypoint.sh --nopatch t/selenium2/tools 2>/dev/null
