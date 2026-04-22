@@ -24,7 +24,7 @@ jobs:
       - name: Checkout breedbase_dockerfile
         uses: actions/checkout@v6
         with:
-          name: bff-afirms/breedbase_dockerfile 
+          repository: bff-afirms/breedbase_dockerfile
           ref: bff-afirms
           submodules: recursive
       
