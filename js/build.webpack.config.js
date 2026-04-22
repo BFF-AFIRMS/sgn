@@ -12,9 +12,9 @@ module.exports = {
     target: 'web',
     entry: (() => {
         var entries = {};
-        glob.sync(path.resolve(entryPath, "**/*.js")).forEach(val => {
+        glob.sync(path.resolve(entryPath, "**/*.{js,jsx,ts,tsx}")).forEach(val => {
             var prekey = val.replace(entryPath+"/","");
-            var key = prekey.match(/(.*)\.js$/)[1];
+            var key = prekey.match(/(.*)\.(js|jsx|ts|tsx)$/)[1];
             entries[key] = val;
         });
         return entries;
@@ -32,16 +32,17 @@ module.exports = {
     module: {
         rules: [
             {
-                test: /\.js$/,
+                test: /\.(js|jsx|ts|tsx)$/,
                 exclude: /(node_modules|bower_components)/,
                 use: [{
                     loader: 'babel-loader',
                     options: {
                         sourceType: "unambiguous",
-                        presets: [['@babel/preset-env',{
-                            "useBuiltIns": "usage",
-			                "corejs": "3"
-                        }]]
+                        presets: [
+                            ['@babel/preset-env', { "useBuiltIns": "usage", "corejs": "3" }],
+                            ['@babel/preset-react', { "runtime": "automatic" }],
+                            '@babel/preset-typescript' 
+                        ]
                     }
                 },{
                     loader: path.resolve(__dirname,"./webpack_util/jsan-preprocess-loader.js"),

@@ -16,6 +16,10 @@
   "devDependencies": {
     "@babel/core": "^7",
     "@babel/preset-env": "^7",
+    "@babel/preset-react": "^7.28.5",
+    "@babel/preset-typescript": "^7.28.5",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
     "babel-loader": "^10",
     "deepmerge": "^4.3.1",
     "del": "^8.0.1",
@@ -39,7 +43,9 @@
     "d3-path": "^3.1.0",
     "d3-sankey": "^0.12.3",
     "d3-shape": "^3.2.0",
-    "internmap": "^2.0.3"
+    "internmap": "^2.0.3",
+    "react": "^19.2.5",
+    "react-dom": "^19.2.5"
   },
   "engines": {
     "node": ">=10.6.0",
