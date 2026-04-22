@@ -8,15 +8,6 @@ on:
       - '**.md'
 
 jobs:
-  check_user_id:
-    runs-on: ubuntu-latest
-    steps:
-      - name: check user id
-        run: echo "USER_ID=$(id -u)"
-
-      - name: check group id
-        run: echo "GROUP_ID=$(id -g)"
-
 
   test_breedbase:
     runs-on: ubuntu-latest
@@ -31,20 +22,19 @@ jobs:
       - name: Cleanup breedbase_dockerfile
         run: |
           ls -l
-          ls -l breedbase_dockerfile
-          rm -rf breedbase_dockerfile/cxgn/sgn
+          ls -l cxgn
+          rm -rf cxgn/sgn
 
       - name: Checkout sgn
         uses: actions/checkout@v6
         with:
-          path: 'breedbase_dockerfile/cxgn/sgn'
+          path: 'cxgn/sgn'
       
       - name: Path Checkpoint
         run: |
           ls -l 
-          ls -l breedbase_dockerfile
-          ls -l breedbase_dockerfile/cxgn
-          ls -l breedbase_dockerfile/cxgn/sgn
+          ls -l cxgn
+          ls -l cxgn/sgn
 
   # test_breedbase:
   #   runs-on: ubuntu-latest
