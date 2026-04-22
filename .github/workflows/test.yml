@@ -7,12 +7,12 @@ on:
 jobs:
   check_user_id:
     runs-on: ubuntu-latest
-  steps:
-    - name: check user id
-      run: echo "USER_ID=$(id -u)"
+    steps:
+      - name: check user id
+        run: echo "USER_ID=$(id -u)"
 
-    - name: check group id
-      run: echo "GROUP_ID=$(id -g)"
+      - name: check group id
+        run: echo "GROUP_ID=$(id -g)"
 
   test_breedbase:
     runs-on: ubuntu-latest
