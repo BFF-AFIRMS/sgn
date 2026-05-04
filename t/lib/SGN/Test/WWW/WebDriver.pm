@@ -233,6 +233,10 @@ sub set_value_ok {
     $self->driver->execute_script("arguments[0].value = arguments[1];", $element, $value);
     $self->driver->execute_script("arguments[0].dispatchEvent(new Event('change'));", $element);
 
+    # Determined empirically; give the page some time to settle so button presses
+    # immediately after will still register
+    sleep(1); 
+
     return $element;
 }
 

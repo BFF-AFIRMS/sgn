@@ -39,8 +39,6 @@ $d->while_logged_in_as('submitter', sub {
     my $trials_list = "Kasese solgs trial\ntrial2 NaCRRI";
     $d->set_value_ok("dialog_add_list_item", "id", "add trial test list", $trials_list);
 
-    sleep(1); # Determined empirically; needed so the following button click will register
-
     $d->find_element_ok("dialog_add_list_item_button", "id", "find dialog_add_list_item_button test")->click();
     wait_until { 
         my @rows = $d->driver->find_elements('//table[@id="list_item_dialog_datatable"]/tbody/tr', "xpath");
