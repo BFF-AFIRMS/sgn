@@ -60,11 +60,18 @@ sub patch {
 
     my $trait_ontology = SGN::Model::Cvterm->get_cvterm_row($schema, 'trait_ontology', 'composable_cvtypes')->cvterm_id();
     my $method_ontology = SGN::Model::Cvterm->get_cvterm_row($schema, 'method_ontology', 'composable_cvtypes')->cvterm_id();
-    my $object_ontology = SGN::Model::Cvterm->get_cvterm_row($schema, 'object_ontology', 'composable_cvtypes')->cvterm_id();
+    my $tissue_ontology = SGN::Model::Cvterm->get_cvterm_row($schema, 'object_ontology', 'composable_cvtypes')->cvterm_id();
     my $unit_ontology = SGN::Model::Cvterm->get_cvterm_row($schema, 'unit_ontology', 'composable_cvtypes')->cvterm_id();
+    my $treatment_ontology = SGN::Model::Cvterm->get_cvterm_row($schema, 'experiment_treatment_ontology', 'composable_cvtypes')->cvterm_id();
 
-    my $db = $schema->resultset('General::Db')->find_or_create({ name => 'TI', description => 'Tree Improvement' });
-    my $treatment_db = $schema->resultset('General::Db')->find({ name => 'EXPERIMENT_TREATMENT'});
+    # ---------------------------------------------------
+    # Databases
+
+    my $trait_db = $schema->resultset('General::Db')->find_or_create({ name => 'TI_TRAIT', description => 'Tree Improvement Trait' });
+    my $method_db = $schema->resultset('General::Db')->find_or_create({ name => 'TI_METHOD', description => 'Tree Improvement Method' });
+    my $tissue_db = $schema->resultset('General::Db')->find_or_create({ name => 'TI_TISSUE', description => 'Tree Improvement Tissue' });
+    my $unit_db = $schema->resultset('General::Db')->find_or_create({ name => 'TI_UNIT', description => 'Tree Improvement Unit' });
+    my $treatment_db = $schema->resultset('General::Db')->find_or_create({ name => 'TI_TREATMENT', description => 'Tree Improvement Treatment' });
 
     # ---------------------------------------------------
     # Top Level Ontologies
@@ -73,23 +80,46 @@ sub patch {
     my $method_cv = $schema->resultset('Cv::Cv')->find_or_create({ name => 'tree_improvement_method' });
     my $tissue_cv = $schema->resultset('Cv::Cv')->find_or_create({ name => 'tree_improvement_tissue' });
     my $unit_cv   = $schema->resultset('Cv::Cv')->find_or_create({ name => 'tree_improvement_unit' });
-    my $treatment_cv = $schema->resultset('Cv::Cv')->find({ name => 'experiment_treatment' });
+    my $treatment_cv = $schema->resultset('Cv::Cv')->find_or_create({ name => 'tree_improvement_treatment' });
 
     $schema->resultset('Cv::Cvprop')->find_or_create({ cv_id => $trait_cv->cv_id(), type_id => $trait_ontology });
     $schema->resultset('Cv::Cvprop')->find_or_create({ cv_id => $method_cv->cv_id(), type_id => $method_ontology });
-    $schema->resultset('Cv::Cvprop')->find_or_create({ cv_id => $tissue_cv->cv_id(), type_id => $object_ontology });
+    $schema->resultset('Cv::Cvprop')->find_or_create({ cv_id => $tissue_cv->cv_id(), type_id => $tissue_ontology });
     $schema->resultset('Cv::Cvprop')->find_or_create({ cv_id => $unit_cv->cv_id(), type_id => $unit_ontology });
 
-    my $trait_dbxref  = $schema->resultset('General::Dbxref')->find_or_create({ db_id => $db->db_id(), accession => '0000001' });
-    my $method_dbxref = $schema->resultset('General::Dbxref')->find_or_create({ db_id => $db->db_id(), accession => '0000002' });
-    my $tissue_dbxref = $schema->resultset('General::Dbxref')->find_or_create({ db_id => $db->db_id(), accession => '0000003' });
-    my $unit_dbxref   = $schema->resultset('General::Dbxref')->find_or_create({ db_id => $db->db_id(), accession => '0000004' });
+    # Create the treatment ontology as both trait ontology and experimental treatment ontology
+    $schema->resultset('Cv::Cvprop')->find_or_create({ cv_id => $treatment_cv->cv_id(), type_id => $treatment_ontology });
+    $schema->resultset('Cv::Cvprop')->find_or_create({ cv_id => $treatment_cv->cv_id(), type_id => $trait_ontology });
 
-    my $trait_cvterm  = $schema->resultset('Cv::Cvterm')->find_or_create({ name => 'Tree Improvement Trait', definition => 'Tree Improvement Trait Ontology', cv_id =>  $trait_cv->cv_id(), dbxref_id => $trait_dbxref->dbxref_id() });
-    my $method_cvterm = $schema->resultset('Cv::Cvterm')->find_or_create({ name => 'Tree Improvement Method', definition => 'Tree Improvement Method Ontology', cv_id =>  $method_cv->cv_id(), dbxref_id => $method_dbxref->dbxref_id() });
-    my $tissue_cvterm = $schema->resultset('Cv::Cvterm')->find_or_create({ name => 'Tree Improvement Tissue', definition => 'Tree Improvement Tissue Ontology', cv_id =>  $tissue_cv->cv_id(), dbxref_id => $tissue_dbxref->dbxref_id() });
-    my $unit_cvterm   = $schema->resultset('Cv::Cvterm')->find_or_create({ name => 'Tree Improvement Unit', definition => 'Tree Improvement Unit Ontology', cv_id =>  $unit_cv->cv_id(), dbxref_id => $unit_dbxref->dbxref_id() });
-    my $treatment_cvterm = $schema->resultset('Cv::Cvterm')->find({ name => 'Experimental treatment ontology', cv_id => $treatment_cv->cv_id() });
+    my $trait_dbxref     = $schema->resultset('General::Dbxref')->find_or_create({ db_id => $trait_db->db_id(), accession => '0000001' });
+    my $method_dbxref    = $schema->resultset('General::Dbxref')->find_or_create({ db_id => $method_db->db_id(), accession => '0000001' });
+    my $tissue_dbxref    = $schema->resultset('General::Dbxref')->find_or_create({ db_id => $tissue_db->db_id(), accession => '0000001' });
+    my $unit_dbxref      = $schema->resultset('General::Dbxref')->find_or_create({ db_id => $unit_db->db_id(), accession => '0000001' });
+    my $treatment_dbxref = $schema->resultset('General::Dbxref')->find_or_create({ db_id => $treatment_db->db_id(), accession => '0000001' });
+
+    my $trait_cvterm     = $schema->resultset('Cv::Cvterm')->find_or_create({ name => 'Tree Improvement Trait', definition => 'Tree Improvement Trait Ontology', cv_id =>  $trait_cv->cv_id(), dbxref_id => $trait_dbxref->dbxref_id() });
+    my $method_cvterm    = $schema->resultset('Cv::Cvterm')->find_or_create({ name => 'Tree Improvement Method', definition => 'Tree Improvement Method Ontology', cv_id =>  $method_cv->cv_id(), dbxref_id => $method_dbxref->dbxref_id() });
+    my $tissue_cvterm    = $schema->resultset('Cv::Cvterm')->find_or_create({ name => 'Tree Improvement Tissue', definition => 'Tree Improvement Tissue Ontology', cv_id =>  $tissue_cv->cv_id(), dbxref_id => $tissue_dbxref->dbxref_id() });
+    my $unit_cvterm      = $schema->resultset('Cv::Cvterm')->find_or_create({ name => 'Tree Improvement Unit', definition => 'Tree Improvement Unit Ontology', cv_id =>  $unit_cv->cv_id(), dbxref_id => $unit_dbxref->dbxref_id() });
+    my $treatment_cvterm = $schema->resultset('Cv::Cvterm')->find_or_create({ name => 'Tree Improvement Treatment', definition => 'Tree Improvement Treatment Ontology', cv_id =>  $treatment_cv->cv_id(), dbxref_id => $treatment_dbxref->dbxref_id() });
+
+    # ---------------------------------------------------
+    # Tissue
+
+    # Needle
+    my $needle_dbxref = $schema->resultset('General::Dbxref')->find_or_create({ db_id => $tissue_db->db_id(), accession => '0000002' });
+    my $needle_cvterm = $schema->resultset('Cv::Cvterm')->find_or_create({ name => 'needle', definition => 'needle tissue.', cv_id =>  $tissue_cv->cv_id(), dbxref_id => $needle_dbxref->dbxref_id() });
+    $schema->resultset("Cv::CvtermRelationship")->find_or_create({subject_id => $needle_cvterm->cvterm_id(), type_id => $is_a, object_id => $tissue_cvterm->cvterm_id()});
+
+    # Cambium
+    my $cambium_dbxref = $schema->resultset('General::Dbxref')->find_or_create({ db_id => $tissue_db->db_id(), accession => '0000003' });
+    my $cambium_cvterm = $schema->resultset('Cv::Cvterm')->find_or_create({ name => 'cambium', definition => 'cambium tissue.', cv_id =>  $tissue_cv->cv_id(), dbxref_id => $cambium_dbxref->dbxref_id() });
+    $schema->resultset("Cv::CvtermRelationship")->find_or_create({subject_id => $cambium_cvterm->cvterm_id(), type_id => $is_a, object_id => $tissue_cvterm->cvterm_id()});
+
+    # Cone
+    my $cone_dbxref = $schema->resultset('General::Dbxref')->find_or_create({ db_id => $db->db_id(), accession => '0000004' });
+    my $cone_cvterm = $schema->resultset('Cv::Cvterm')->find_or_create({ name => 'cone', definition => 'cone tissue.', cv_id =>  $tissue_cv->cv_id(), dbxref_id => $cone_dbxref->dbxref_id() });
+    $schema->resultset("Cv::CvtermRelationship")->find_or_create({subject_id => $cone_cvterm->cvterm_id(), type_id => $is_a, object_id => $tissue_cvterm->cvterm_id()});
 
     # ---------------------------------------------------
     # Traits (0000101-0000999)
@@ -125,44 +155,8 @@ sub patch {
     $schema->resultset("Cv::CvtermRelationship")->find_or_create({subject_id => $wgr_cvterm->cvterm_id(), type_id => $variable_of, object_id => $trait_cvterm->cvterm_id()});
     $schema->resultset("Cv::Cvtermsynonym")->find_or_create({cvterm_id => $wgr_cvterm->cvterm_id(), synonym => '"WGR" EXACT []' });
 
-    # Western Gall Rust|WGR 0-1
-    my $wgr_trait_01_dbxref = $schema->resultset('General::Dbxref')->find_or_create({ db_id => $db->db_id(), accession => '0000105' });
-    my $wgr_trait_01_cvterm = $schema->resultset('Cv::Cvterm')->find_or_create({ name => 'Western gall rust|WGR 0-1', definition => 'Western gall rust disease measured on a scale of 0 to 1.', cv_id =>  $trait_cv->cv_id(), dbxref_id => $wgr_trait_01_dbxref->dbxref_id() });
-    $schema->resultset("Cv::CvtermRelationship")->find_or_create({subject_id => $wgr_trait_01_cvterm->cvterm_id(), type_id => $variable_of, object_id => $wgr_cvterm->cvterm_id()});
-    $schema->resultset("Cv::Cvtermsynonym")->find_or_create({cvterm_id => $wgr_trait_01_cvterm->cvterm_id(), synonym => '"WGR 0-1" EXACT []' });
-
-    # Western Gall Rust|WGR 0-2
-    my $wgr_trait_02_dbxref = $schema->resultset('General::Dbxref')->find_or_create({ db_id => $db->db_id(), accession => '0000106' });
-    my $wgr_trait_02_cvterm = $schema->resultset('Cv::Cvterm')->find_or_create({ name => 'Western gall rust|WGR 0-2', definition => 'Western gall rust disease measured on a scale of 0 to 2.', cv_id =>  $trait_cv->cv_id(), dbxref_id => $wgr_trait_02_dbxref->dbxref_id() });
-    $schema->resultset("Cv::CvtermRelationship")->find_or_create({subject_id => $wgr_trait_02_cvterm->cvterm_id(), type_id => $variable_of, object_id => $wgr_cvterm->cvterm_id()});
-    $schema->resultset("Cv::Cvtermsynonym")->find_or_create({cvterm_id => $wgr_trait_02_cvterm->cvterm_id(), synonym => '"WGR 0-2" EXACT []' });
-
-    # Western Gall Rust|WGR 0-6
-    my $wgr_trait_06_dbxref = $schema->resultset('General::Dbxref')->find_or_create({ db_id => $db->db_id(), accession => '0000107' });
-    my $wgr_trait_06_cvterm = $schema->resultset('Cv::Cvterm')->find_or_create({ name => 'Western gall rust|WGR 0-6', definition => 'Western gall rust disease measured on a scale of 0 to 6.', cv_id =>  $trait_cv->cv_id(), dbxref_id => $wgr_trait_06_dbxref->dbxref_id() });
-    $schema->resultset("Cv::CvtermRelationship")->find_or_create({subject_id => $wgr_trait_06_cvterm->cvterm_id(), type_id => $variable_of, object_id => $wgr_cvterm->cvterm_id()});
-    $schema->resultset("Cv::Cvtermsynonym")->find_or_create({cvterm_id => $wgr_trait_06_cvterm->cvterm_id(), synonym => '"WGR 0-2" EXACT []' });
-
     # ---------------------------------------------------
     # Method (0001001-0001999)
-
-    # ---------------------------------------------------
-    # Tissue (0002001-0002999)
-
-    # Needle
-    my $needle_dbxref = $schema->resultset('General::Dbxref')->find_or_create({ db_id => $db->db_id(), accession => '0002001' });
-    my $needle_cvterm = $schema->resultset('Cv::Cvterm')->find_or_create({ name => 'needle', definition => 'Tree needle tissue.', cv_id =>  $tissue_cv->cv_id(), dbxref_id => $needle_dbxref->dbxref_id() });
-    $schema->resultset("Cv::CvtermRelationship")->find_or_create({subject_id => $needle_cvterm->cvterm_id(), type_id => $is_a, object_id => $tissue_cvterm->cvterm_id()});
-
-    # Cambium
-    my $cambium_dbxref = $schema->resultset('General::Dbxref')->find_or_create({ db_id => $db->db_id(), accession => '0002002' });
-    my $cambium_cvterm = $schema->resultset('Cv::Cvterm')->find_or_create({ name => 'cambium', definition => 'Tree cambium tissue.', cv_id =>  $tissue_cv->cv_id(), dbxref_id => $cambium_dbxref->dbxref_id() });
-    $schema->resultset("Cv::CvtermRelationship")->find_or_create({subject_id => $cambium_cvterm->cvterm_id(), type_id => $is_a, object_id => $tissue_cvterm->cvterm_id()});
-
-    # Cone
-    my $cone_dbxref = $schema->resultset('General::Dbxref')->find_or_create({ db_id => $db->db_id(), accession => '0002003' });
-    my $cone_cvterm = $schema->resultset('Cv::Cvterm')->find_or_create({ name => 'cone', definition => 'Tree cone tissue.', cv_id =>  $tissue_cv->cv_id(), dbxref_id => $cone_dbxref->dbxref_id() });
-    $schema->resultset("Cv::CvtermRelationship")->find_or_create({subject_id => $cone_cvterm->cvterm_id(), type_id => $is_a, object_id => $tissue_cvterm->cvterm_id()});
 
     # ---------------------------------------------------
     # unit (0003001-0003999)
@@ -183,12 +177,17 @@ sub patch {
     $schema->resultset("Cv::CvtermRelationship")->find_or_create({subject_id => $wgr_06_cvterm->cvterm_id(), type_id => $is_a, object_id => $unit_cvterm->cvterm_id()});
 
     # ---------------------------------------------------
-    # Experimental Treatments (0000002-)
+    # Experimental Treatments (0004001-0004999)
+
+    # Field Layout Treatments
+    my $field_layout_dbxref = $schema->resultset('General::Dbxref')->find_or_create({ db_id => $treatment_db->db_id(), accession => '0004001' });
+    my $field_layout_cvterm = $schema->resultset('Cv::Cvterm')->find_or_create({ name => 'Field Layout', definition => 'Experimental treatments related to field layout and design.', cv_id =>  $treatment_cv->cv_id(), dbxref_id => $field_layout_dbxref->dbxref_id() });
+    $schema->resultset("Cv::CvtermRelationship")->find_or_create({subject_id => $field_layout_cvterm->cvterm_id(), type_id => $is_a, object_id => $treatment_cvterm->cvterm_id()});
 
     # Tree type at establishment
-    my $establish_type_dbxref = $schema->resultset('General::Dbxref')->find_or_create({ db_id => $treatment_db->db_id(), accession => '0000002' });
-    my $establish_type_cvterm = $schema->resultset('Cv::Cvterm')->find_or_create({ name => 'Tree type at establishment', definition => 'Type of tree that was planted at establishment. ', cv_id =>  $treatment_cv->cv_id(), dbxref_id => $establish_type_dbxref->dbxref_id() });
-    $schema->resultset("Cv::CvtermRelationship")->find_or_create({subject_id => $establish_type_cvterm->cvterm_id(), type_id => $variable_of, object_id => $treatment_cvterm->cvterm_id()});
+    my $establish_type_dbxref = $schema->resultset('General::Dbxref')->find_or_create({ db_id => $treatment_db->db_id(), accession => '0004002' });
+    my $establish_type_cvterm = $schema->resultset('Cv::Cvterm')->find_or_create({ name => 'Tree type at establishment', definition => 'Type of tree that was planted at establishment.', cv_id =>  $treatment_cv->cv_id(), dbxref_id => $establish_type_dbxref->dbxref_id() });
+    $schema->resultset("Cv::CvtermRelationship")->find_or_create({subject_id => $establish_type_cvterm->cvterm_id(), type_id => $variable_of, object_id => $field_layout_cvterm->cvterm_id()});
 
     $schema->resultset('Cv::Cvtermprop')->find_or_create({ cvterm_id => $establish_type_cvterm->cvterm_id(), type_id => $trait_categories, value => '1/2/3/4' });
     $schema->resultset('Cv::Cvtermprop')->find_or_create({ cvterm_id => $establish_type_cvterm->cvterm_id(), type_id => $trait_details, value => 'Experimental/Filler/Border/Not Planted' });
@@ -202,6 +201,8 @@ sub patch {
     system("perl", "/home/production/cxgn/chado_tools/chado/bin/gmod_make_cvtermpath.pl", "-c", "tree_improvement_trait", "-H", $ENV{PGHOST}, "-D", $ENV{PGDATABASE},  "-d", "Pg", "-u", $ENV{PGUSER});
     system("perl", "/home/production/cxgn/chado_tools/chado/bin/gmod_make_cvtermpath.pl", "-c", "tree_improvement_method", "-H", $ENV{PGHOST}, "-D", $ENV{PGDATABASE},"-d", "Pg", "-u", $ENV{PGUSER});
     system("perl", "/home/production/cxgn/chado_tools/chado/bin/gmod_make_cvtermpath.pl", "-c", "tree_improvement_tissue", "-H", $ENV{PGHOST}, "-D", $ENV{PGDATABASE},"-d", "Pg", "-u", $ENV{PGUSER});
+    system("perl", "/home/production/cxgn/chado_tools/chado/bin/gmod_make_cvtermpath.pl", "-c", "tree_improvement_unit", "-H", $ENV{PGHOST}, "-D", $ENV{PGDATABASE},"-d", "Pg", "-u", $ENV{PGUSER});
+    system("perl", "/home/production/cxgn/chado_tools/chado/bin/gmod_make_cvtermpath.pl", "-c", "tree_improvement_treatment", "-H", $ENV{PGHOST}, "-D", $ENV{PGDATABASE},"-d", "Pg", "-u", $ENV{PGUSER});
 
     print "You're done!\n";
 }
