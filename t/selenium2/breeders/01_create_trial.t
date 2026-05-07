@@ -7,18 +7,16 @@ use Test::More;
 
 use SGN::Test::WWW::WebDriver;
 use SGN::Test::Fixture;
+use Selenium::Waiter qw(wait_until);
 
 my $t = SGN::Test::WWW::WebDriver->new();
 my $f = SGN::Test::Fixture->new();
 
 $t->while_logged_in_as("submitter", sub {
-	sleep(1);
-
 	$t->get_ok('/breeders/trials');
-	sleep(3);
 
 	$t->find_element_ok("refresh_jstree_html", "name", "refresh tree")->click();
-	sleep(5);
+	$t->wait_for_working_dialog();
 
 	my $add_project_link = $t->find_element_ok('add_project_link', 'id', "find add trial link");
 	$add_project_link->click();
@@ -119,14 +117,14 @@ $t->while_logged_in_as("submitter", sub {
 	$t->find_element_ok('increment', 'id', "find plot number increment input")->send_keys("2");
 
 	$t->find_element_ok('new_trial_submit', 'id', 'go to next screen - Custom plot naming')->click();
-	sleep(20);
+	$t->wait_for_working_dialog();
 
 	# SCREEN 7 /Review design/
 	$t->find_element_ok('redo_trial_layout_button', 'id', "find redo randomization and click button")->click();
-	sleep(20);
+	$t->wait_for_working_dialog();
 
 	$t->find_element_ok('new_trial_confirm_submit', 'id', "find new trial confirm and submit")->click();
-	sleep(20);
+	$t->wait_for_working_dialog();
 
 	# Very strange, but the only way to catch the complete trial button. Standard selectors without an extended XPath solution don't work.
 	$t->find_element_ok('create_trial_success_complete_button', 'id', "find success button after trial upload to database");
