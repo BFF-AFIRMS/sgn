@@ -104,6 +104,19 @@ $assay_type => undef
             <br/>
         </div>
     </div>
+
+% if (-e "mason/projects/trial/$trial_id.mas" ){
+<div class="panel panel-default" style="margin-top: 20px">
+    <div class="panel-body">
+        <div class="row" style="margin: 0px">
+                <&| /page/info_section.mas, title=>'Overview', collapsible=>1, collapsed=>0, subtitle=> ""  &>
+                    <& "/projects/trial/$trial_id.mas" &>
+                </&>
+        </div>
+    </div>
+</div>
+% }
+
 </div>
 
 <div class="row">
