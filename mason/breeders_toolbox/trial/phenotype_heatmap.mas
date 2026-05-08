@@ -321,6 +321,8 @@ $trial_stock_type => undef
         </div>
     </div>
 </div>
+% } else {
+</div>
 % }
 
 
