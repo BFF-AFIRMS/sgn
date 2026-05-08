@@ -1,7 +1,15 @@
 <li class="dropdown"><a class="menu_click_dropdown dropdown-toggle" data-toggle="dropdown" >Tools</a>
 <!-- <li class="dropdown"><a class="dropdown-toggle" data-toggle="dropdown" href="#">Tools<span class="caret"></span></a> -->
   <ul class="dropdown-menu">
-    <li class="dropdown-header">Sequence Analysis</li>
+    <li class="dropdown-header">Genome Browser</li>
+    <li><a href="/jbrowse/">JBrowse</a></li>
+    <li><a href="/jbrowse/data">JBrowse Data</a></li>
+
+    <li role="separator" class="divider"></li>
+  
+    <li class="dropdown-header">Coding</li>
+    <li><a href="/jupyter/">Jupyter</a></li>
+    <!-- <li class="dropdown-header">Sequence Analysis</li>
     <li><a href="/tools/blast/">BLAST</a></li>
     <li><a href="http://vigs.solgenomics.net/">VIGS Tool</a></li>
     <li><a href="/tools/align_viewer/">Alignment Analyzer</a></li>
@@ -36,6 +44,6 @@
     <li><a href="/tools/bulk?mode=ftp">FTP Site</a></li>
     <li><a href="/tools/bulk?mode=genes">Download Gene Sequences</a></li>
     <li><a href="/tools/bulk">Clones, Arrays, Unigenes and BACs</a></li>
-    <li><a href="/tools/bulk?mode=converter">Unigene Converter</a></li>
+    <li><a href="/tools/bulk?mode=converter">Unigene Converter</a></li> -->
   </ul>
 </li>
