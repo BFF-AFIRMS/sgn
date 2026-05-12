@@ -1006,6 +1006,7 @@ export function init() {
                         color = "#c7e9b4";
                     } else if (
                         plot.observationUnitName.includes(local_this.trial_id + " filler")
+                        || plot.germplasmName == "Filler"
                     ) {
                         color = "lightgrey";
                     } else {
