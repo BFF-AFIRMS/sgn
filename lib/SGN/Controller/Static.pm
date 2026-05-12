@@ -70,6 +70,16 @@ sub projects_forward :Path('/projects') Args(1) {
     $c->stash->{template} = '/projects/'.$page.".mas";
 }
 
+sub projects_subfolder_forward :Path('/projects') Args(2) {
+    my $self = shift;
+    my $c = shift;
+    my $subfolder = shift;
+    my $page = shift;
+
+    print STDERR "Forwarding to $subfolder/$page...\n";
+    $c->stash->{template} = '/projects/'.$subfolder.'/'.$page.".mas";
+}
+
 sub test_authentication :Path('/test_authentication/') :Args(0) {
     my $self = shift;
     my $c = shift;
