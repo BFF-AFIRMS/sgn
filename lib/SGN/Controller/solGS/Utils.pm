@@ -7,6 +7,9 @@ use File::Slurp qw /write_file read_file edit_file/;
 use JSON;
 use List::MoreUtils qw(first_index);
 
+our $c;
+use CatalystX::GlobalContext qw($c);
+
 sub convert_arrayref_to_hashref {
     my ($self, $array_ref) = @_;
 
@@ -150,6 +153,19 @@ sub top_10 {
 
 sub abbreviate_term {
     my ($self, $term) = @_;
+
+    my $schema = $c->dbic_schema("Bio::Chado::Schema");
+    my $query = "select cvterm_id from cvterm where replace(name, '|', ' ') = ?";
+    my $cvterm_sth = $schema->storage->dbh->prepare($query);
+    $cvterm_sth->execute($term);
+    my $cvterm_id = $cvterm_sth->fetchrow_array();
+    if ($cvterm_id){
+        my $cvterm = CXGN::Cvterm->new({ schema=>$schema, cvterm_id => $cvterm_id } );
+        my $synonym = $cvterm->get_single_synonym();
+        if ($synonym){
+            return $synonym;
+        }
+    }
 
     $term =~ s/\// /g;
     $term =~ s/-/_/g;
