@@ -140,6 +140,7 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
 
 
     $c->stash->{year} = $trial->get_year();
+    $c->stash->{year_zero} = $trial->get_year_zero();
 
     $c->stash->{trial_id} = $c->stash->{trial_id};
 

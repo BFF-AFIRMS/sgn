@@ -309,6 +309,28 @@ sub set_year {
     return $year;
 }
 
+=head2 accessors get_year_zero()
+
+getter for the year 0 property.
+
+=cut
+
+sub get_year_zero {
+    my $self = shift;
+
+    my $rs = $self->bcs_schema->resultset('Cv::Cvterm')->search( { name => 'year 0' });
+    my $type_id = $rs->first()->cvterm_id();
+
+    my $rs = $self->bcs_schema->resultset('Project::Project')->search( { 'me.project_id' => $self->get_trial_id() })->search_related('projectprops', { 'projectprops.type_id' => $type_id } );
+
+    if ($rs->count() == 0) {
+	return;
+    }
+    else {
+	return $rs->first()->value();
+    }    
+}
+
 =head2 accessors get_description(), set_description()
 
 getter/setter for the description
@@ -5008,7 +5030,13 @@ sub get_trial_stock_count {
 	my $self = shift;
 
 	my $accessions = $self->get_accessions();
-	my $stock_count = scalar(@{$accessions});
+    my @accessions_no_filler;
+    while (my ($i, $el) = each @{$accessions}) {
+        if ($el->{accession_name} ne 'Filler'){
+            push(@accessions_no_filler, $el);
+        }
+    }
+	my $stock_count = scalar(@accessions_no_filler);
 
 	return $stock_count;
 }
