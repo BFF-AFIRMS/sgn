@@ -16,6 +16,7 @@ use List::MoreUtils qw /uniq/;
 use Array::Utils qw(:all);
 use JSON;
 use SGN::Controller::solGS::Utils;
+use CXGN::Cvterm;
 
 
 BEGIN { extends 'Catalyst::Controller' }
@@ -277,10 +278,18 @@ sub traits_acronym_table {
     if (keys %$acronym_table)
     {
 	my $table = 'Acronym' . "\t" . 'Trait name' . "\n";
+	my $schema = $c->dbic_schema("Bio::Chado::Schema");
 
 	foreach (keys %$acronym_table)
 	{
-	    $table .= $_ . "\t" . $acronym_table->{$_} . "\n";
+		my $trait_name = $acronym_table->{$_};
+		my $trait_rs = $schema->resultset("Cv::Cvterm")->find({ name => $trait_name });
+		my $cvterm = CXGN::Cvterm->new({ schema=>$schema, cvterm_id => $trait_rs->cvterm_id() } );
+		my $synonym = $cvterm->get_single_synonym();
+		if (! $synonym){
+			$synonym = $_;
+		}
+		$table .= $synonym . "\t" . $acronym_table->{$_} . "\n";
 	}
 
 	$c->controller('solGS::Files')->traits_acronym_file($c, $pop_id);
