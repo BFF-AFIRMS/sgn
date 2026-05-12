@@ -283,13 +283,20 @@ sub traits_acronym_table {
 	foreach (keys %$acronym_table)
 	{
 		my $trait_name = $acronym_table->{$_};
-		my $trait_rs = $schema->resultset("Cv::Cvterm")->find({ name => $trait_name });
-		my $cvterm = CXGN::Cvterm->new({ schema=>$schema, cvterm_id => $trait_rs->cvterm_id() } );
-		my $synonym = $cvterm->get_single_synonym();
-		if (! $synonym){
-			$synonym = $_;
+		my $acronym = $_;
+
+		my $query = "select cvterm_id from cvterm where replace(name, '|', ' ') = ?";
+		my $cvterm_sth = $schema->storage->dbh->prepare($query);
+		$cvterm_sth->execute($trait_name);
+		my $cvterm_id = $cvterm_sth->fetchrow_array();
+		if ($cvterm_id){
+			my $cvterm = CXGN::Cvterm->new({ schema=>$schema, cvterm_id => $cvterm_id } );
+			my $synonym = $cvterm->get_single_synonym();
+			if ($synonym){
+				$acronym = $synonym;
+			}
 		}
-		$table .= $synonym . "\t" . $acronym_table->{$_} . "\n";
+		$table .= $acronym . "\t" . $acronym_table->{$_} . "\n";
 	}
 
 	$c->controller('solGS::Files')->traits_acronym_file($c, $pop_id);
