@@ -8,6 +8,7 @@ use Test::More 'tests' => 46;
 use SGN::Test::WWW::WebDriver;
 use Selenium::Remote::WDKeys 'KEYS';
 use SGN::Test::Fixture;
+use Selenium::Waiter qw(wait_until);
 
 my $t = SGN::Test::WWW::WebDriver->new();
 my $f = SGN::Test::Fixture->new();
@@ -30,14 +31,11 @@ $t->while_logged_in_as("curator", sub {
     $t->find_element_ok("add_list_button", "id", "find add list button test")->click();
 
     $t->find_element_ok("view_list_$list_name", "id", "view list test")->click();
-    sleep(2);
 
     $t->find_element_ok("type_select", "id", "add type of list")->click();
     $t->find_element_ok('option[name="accessions"]', "css", "select type 'accessions' from a list")->click();
-    sleep(1);
 
     $t->find_element_ok("dialog_add_list_item", "id", "add test list items")->send_keys("element1\nelement2\nelement3\n");
-    sleep(1);
 
     $t->find_element_ok("dialog_add_list_item_button", "id", "find add_list_item_button and click")->click();
 
@@ -63,13 +61,13 @@ $t->while_logged_in_as("curator", sub {
 
     my $submit_accessions = $t->find_element_ok("new_accessions_submit", "id", "submit new accessions");
     $submit_accessions->click();
-    sleep(7);
+
+    wait_until { $t->find_element("review_found_matches_hide", "id")->is_displayed; };
 
     my $review_found_matches = $t->find_element_ok("review_found_matches_hide", "id", "review found matches test");
     $review_found_matches->click();
-    sleep(1);
 
-    $t->driver->accept_alert();
+    wait_until { $t->driver->accept_alert(); };
 
     # then we add new_test_list_accessions not using fuzzy search should be added as first without problems
     # with a name of organism Manihot esculenta
@@ -90,8 +88,8 @@ $t->while_logged_in_as("curator", sub {
 
     my $submit_accessions = $t->find_element_ok("new_accessions_submit", "id", "submit new accessions");
     $submit_accessions->click();
-    sleep(5);
 
+    wait_until { $t->find_element("review_found_matches_hide", "id")->is_displayed; };
     my $review_found_matches = $t->find_element_ok("review_found_matches_hide", "id", "review found matches test");
     $review_found_matches->click();
 
@@ -102,8 +100,8 @@ $t->while_logged_in_as("curator", sub {
 
     my $review_matches = $t->find_element_ok("review_absent_accessions_submit", "id", "review matches and submit");
     $review_matches->click();
-    sleep(10);
 
+    wait_until { $t->find_element("close_add_accessions_saved_message_modal", "id")->is_displayed; };
     $t->find_element_ok("close_add_accessions_saved_message_modal", "id", "close add accessions saved message modal");
 
     # then we add new_test_list_accession again, not using fuzzy search to see if it sees them in the db.
@@ -125,16 +123,15 @@ $t->while_logged_in_as("curator", sub {
 
     my $submit_accessions = $t->find_element_ok("new_accessions_submit", "id", "submit new accessions");
     $submit_accessions->click();
-    sleep(5);
+    wait_until { $t->find_element("review_found_matches_hide", "id")->is_displayed; };
 
     my $review_matches = $t->find_element_ok(
         "review_found_matches_hide",
         "id",
         "review found matches in db, close modal");
     $review_matches->click();
-    sleep(1);
 
-    $t->driver->accept_alert();
+    wait_until { $t->driver->accept_alert(); };
 
     # then we add new_test_list_accessions again, using fuzzy search to see if it sees them in the db.
     # with fuzzy logic results should be a same - cannot be added to DB
@@ -153,8 +150,8 @@ $t->while_logged_in_as("curator", sub {
 
     my $submit_accessions = $t->find_element_ok("new_accessions_submit", "id", "submit new accessions");
     $submit_accessions->click();
-    sleep(7);
 
+    wait_until { $t->find_element("review_found_matches_hide", "id")->is_displayed; };
     my $review_found_matches = $t->find_element_ok("review_found_matches_hide", "id", "review found matches, close modal");
     $review_found_matches->click();
 
