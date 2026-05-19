@@ -263,11 +263,8 @@ sub remove_ontology {
 
     foreach my $tr (@$traits)
 	{
-		my $name = $tr->[1];
-		$name= $self->clean_traits($name);
-
-	my $id_nm = {'id' => $tr->[0], 'name' => $name};
- 	push @clean_traits, $id_nm;
+        my $id_nm = {'id' => $tr->[0], 'name' => $tr->[1]};
+        push @clean_traits, $id_nm;
     }
 
     return \@clean_traits;
