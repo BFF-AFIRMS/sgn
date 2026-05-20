@@ -3192,6 +3192,7 @@ sub get_traits_assayed {
             push @traits_assayed, [$trait_id, $trait_name, $component_terms, $count, $imaging_project_id, $imaging_project_name, $synonyms];
         }
     }
+
     return \@traits_assayed;
 }
 

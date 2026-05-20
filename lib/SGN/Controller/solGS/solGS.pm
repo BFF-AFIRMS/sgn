@@ -1362,8 +1362,6 @@ sub format_phenotype_dataset_rows {
 sub format_phenotype_dataset_headers {
     my ( $self, $all_headers, $meta_headers, $traits_file, $synonyms_map ) = @_;
 
-    $all_headers = SGN::Controller::solGS::Utils->clean_traits($all_headers);
-
     my $traits = $all_headers;
 
     foreach my $mh (@$meta_headers) {

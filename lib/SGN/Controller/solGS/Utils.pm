@@ -204,13 +204,12 @@ sub get_best_synonym {
     my $best;
     if ($synonyms && ref($synonyms) eq 'ARRAY') {
         foreach my $s (@$synonyms) {
-            if ($s && $s !~ /[\s\|:]/ && length($s) < 15) {
-                if (!$best || length($s) < length($best)) {
-                    $best = $s;
-                }
+            if (!$best || length($s) < length($best)) {
+                $best = $s;
             }
         }
     }
+
     $best ||= $self->abbreviate_term($name);
     return $best;
 }
@@ -227,7 +226,7 @@ sub acronymize_traits {
 
     foreach my $trait (@$traits)
     {
-	$cnt++;
+	    $cnt++;
 
         my ($trait_name, $syns);
         if (ref($trait) eq 'HASH') {
@@ -245,14 +244,14 @@ sub acronymize_traits {
         }
 
         $acronymized_traits .= $abbr;
-	$acronymized_traits .= "\t" unless $cnt == scalar(@$traits);
+	    $acronymized_traits .= "\t" unless $cnt == scalar(@$traits);
 
         $acronym_table->{$abbr} = $trait_name if $abbr;
     }
 
     my $acronym_data = {
-	'acronymized_traits' => $acronymized_traits,
-	'acronym_table'      => $acronym_table
+        'acronymized_traits' => $acronymized_traits,
+        'acronym_table'      => $acronym_table
     };
 
     return $acronym_data;
