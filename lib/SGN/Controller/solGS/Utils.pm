@@ -199,9 +199,25 @@ sub abbreviate_term {
 
 }
 
+sub get_best_synonym {
+    my ($self, $name, $synonyms) = @_;
+    my $best;
+    if ($synonyms && ref($synonyms) eq 'ARRAY') {
+        foreach my $s (@$synonyms) {
+            if ($s && $s !~ /[\s\|:]/ && length($s) < 15) {
+                if (!$best || length($s) < length($best)) {
+                    $best = $s;
+                }
+            }
+        }
+    }
+    $best ||= $self->abbreviate_term($name);
+    return $best;
+}
 
 sub acronymize_traits {
-    my ($self, $traits) = @_;
+    my ($self, $traits, $synonyms_map) = @_;
+    $synonyms_map //= {};
 
     my $acronym_table = {};
     my $cnt = 0;
@@ -209,19 +225,29 @@ sub acronymize_traits {
 
     no warnings 'uninitialized';
 
-    foreach my $trait_name (@$traits)
+    foreach my $trait (@$traits)
     {
 	$cnt++;
 
-        my $abbr = $self->abbreviate_term($trait_name);
+        my ($trait_name, $syns);
+        if (ref($trait) eq 'HASH') {
+            $trait_name = $trait->{name};
+            $syns = $trait->{synonyms};
+        } else {
+            $trait_name = $trait;
+            $syns = $synonyms_map->{$trait_name};
+        }
 
-	$abbr = $abbr . '.2' if $cnt > 1 && $acronym_table->{$abbr};
+        my $abbr = $self->get_best_synonym($trait_name, $syns);
+
+        if ($acronym_table->{$abbr}) {
+            $abbr = $abbr . ".$cnt";
+        }
 
         $acronymized_traits .= $abbr;
 	$acronymized_traits .= "\t" unless $cnt == scalar(@$traits);
 
         $acronym_table->{$abbr} = $trait_name if $abbr;
-	my $tr_h = $acronym_table->{$abbr};
     }
 
     my $acronym_data = {
@@ -263,7 +289,7 @@ sub remove_ontology {
 
     foreach my $tr (@$traits)
 	{
-        my $id_nm = {'id' => $tr->[0], 'name' => $tr->[1]};
+        my $id_nm = {'id' => $tr->[0], 'name' => $tr->[1], 'synonyms' => $tr->[6] || [] };
         push @clean_traits, $id_nm;
     }
 
