@@ -199,17 +199,37 @@ sub abbreviate_term {
 
 }
 
-sub get_best_synonym {
+sub synonym_remove_obo {
+    my ($self, $synonym) = @_;
+
+    # Clean OBO format: "synonym" SCOPE [xrefs]
+    $synonym =~ s/\R/ /g; # Remove newlines
+    if ($synonym =~ /^"(.*)"/) {
+        $synonym = $1; # Extract content inside quotes
+    } else {
+        # Fallback: remove scope and xrefs if quotes are missing
+        $synonym =~ s/\s+(EXACT|BROAD|NARROW|RELATED).*$//i;
+    }
+    $synonym =~ s/^\s+|\s+$//g; # Trim
+
+    return $synonym;
+}
+
+sub get_short_synonym {
     my ($self, $name, $synonyms) = @_;
     my $best;
+
     if ($synonyms && ref($synonyms) eq 'ARRAY') {
         foreach my $s (@$synonyms) {
-            if (!$best || length($s) < length($best)) {
-                $best = $s;
+            $s = $self->synonym_remove_obo($s);
+            # Only use as 'best' if it's suitable for a header (no spaces/special chars)
+            if ($s && $s !~ /[\s\|:]/) {
+                if (!$best || length($s) < length($best)) {
+                    $best = $s;
+                }
             }
         }
     }
-
     $best ||= $self->abbreviate_term($name);
     return $best;
 }
@@ -237,7 +257,7 @@ sub acronymize_traits {
             $syns = $synonyms_map->{$trait_name};
         }
 
-        my $abbr = $self->get_best_synonym($trait_name, $syns);
+        my $abbr = $self->get_short_synonym($trait_name, $syns);
 
         if ($acronym_table->{$abbr}) {
             $abbr = $abbr . ".$cnt";
