@@ -50,6 +50,21 @@ module.exports = {
                 }]
             },
             {
+                test: /\.css$/,
+                use: [
+                    "style-loader",
+                    "css-loader",
+                    {
+                        loader: "postcss-loader",
+                        options: {
+                            postcssOptions: {
+                                config: path.resolve(__dirname, 'postcss.config.js'),
+                            },
+                        },
+                    },
+                ],
+            },
+            {
                 test: legacyPath,
                 use: [{
                     loader: path.resolve(__dirname,"./webpack_util/jsan-error-loader.js")

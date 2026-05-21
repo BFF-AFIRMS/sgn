@@ -1,0 +1,4 @@
+@import "tailwindcss";
+
+@source "../../mason/**/*.mas";
+@source "./**/*.{ts,tsx,js,jsx}";
