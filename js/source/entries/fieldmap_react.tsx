@@ -169,6 +169,7 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
     authToken
 }) => {
     const [loading, setLoading] = useState(false);
+    const [selectedViewLabel, setSelectedViewLabel] = useState<string>('');
     const [plotObject, setPlotObject] = useState<Record<string, Plot>>({});
     const [variables, setVariables] = useState<Record<string, string>>({});
     const [selectedView, setSelectedView] = useState<string>('fieldmap');
@@ -479,6 +480,24 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
         return matrix;
     }, [bounds, renderBounds, plotList, fillerAccessionId]);
 
+    const overlappingPlots = useMemo(() => {
+        const positions: Record<string, Plot[]> = {};
+        plotList.forEach(p => {
+            const x = p.observationUnitPosition?.positionCoordinateX;
+            const y = p.observationUnitPosition?.positionCoordinateY;
+            if (x !== undefined && y !== undefined) {
+                const key = `${x}-${y}`;
+                if (!positions[key]) positions[key] = [];
+                positions[key].push(p);
+            }
+        });
+        const overlaps: Record<string, Plot[]> = {};
+        Object.entries(positions).forEach(([key, plots]) => {
+            if (plots.length > 1) overlaps[key] = plots;
+        });
+        return overlaps;
+    }, [plotList]);
+
     console.log(plotList);
     console.log(bounds);
     console.log(gridMatrix);
@@ -771,7 +790,10 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
                             <select
                                 className="form-control"
                                 value={selectedView}
-                                onChange={e => handleViewChange(e.target.value)}
+                                onChange={e => {
+                                    setSelectedViewLabel(e.target.options[e.target.selectedIndex]?.text || '');
+                                    handleViewChange(e.target.value);
+                                }}
                             >
                                 <optgroup label="Field Map">
                                     <option value="fieldmap">View Field Layout</option>
@@ -923,18 +945,70 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
                                     left: hoveredPlot.x + 15,
                                 }}
                             >
-                                <div><strong>Plot:</strong> {hoveredPlot.plot.observationUnitName}</div>
-                                {hoveredPlot.plot.germplasmName && <div><strong>Accession:</strong> {hoveredPlot.plot.germplasmName}</div>}
-                                {hoveredPlot.plot.observationUnitPosition && (
-                                    <div>
-                                        <strong>Col / Row:</strong> {hoveredPlot.plot.observationUnitPosition.positionCoordinateX} / {hoveredPlot.plot.observationUnitPosition.positionCoordinateY}
-                                    </div>
-                                )}
-                                {selectedView !== 'fieldmap' && selectedView !== 'geofieldmap' && (
-                                    <div className="text-[#ffd700] mt-1">
-                                        <strong>Value:</strong> {heatmapData[hoveredPlot.plot.observationUnitDbId || '']?.val ?? 'N/A'}
-                                    </div>
-                                )}
+                                {(() => {
+                                    const plot = hoveredPlot.plot;
+                                    const coordKey = `${plot.observationUnitPosition?.positionCoordinateX}-${plot.observationUnitPosition?.positionCoordinateY}`;
+                                    if (overlappingPlots[coordKey]) {
+                                        return (
+                                            <div>
+                                                <strong>Overlapping Plots:</strong>{' '}
+                                                {overlappingPlots[coordKey].map(p => {
+                                                    const code = p.observationUnitPosition?.observationLevel?.levelCode || p.observationUnitName;
+                                                    return displayLinkedTrials && p.studyName ? `${code} (${p.studyName})` : code;
+                                                }).join(', ')}
+                                            </div>
+                                        );
+                                    }
+                                    return (
+                                        <>
+                                            {displayLinkedTrials && plot.studyName && (
+                                                <div>
+                                                    <strong>Trial Name:</strong>{' '}
+                                                    {(() => {
+                                                        const t = linkedTrialsList.find(lt => lt.name === plot.studyName);
+                                                        if (t) {
+                                                            return (
+                                                                <span style={{ backgroundColor: t.bg, color: t.fg, padding: '1px 2px', borderRadius: '4px' }}>
+                                                                    {plot.studyName}
+                                                                </span>
+                                                            );
+                                                        }
+                                                        return <span>{plot.studyName}</span>;
+                                                    })()}
+                                                </div>
+                                            )}
+                                            <div><strong>Plot Name:</strong> {plot.observationUnitName}</div>
+                                            {plot.type === 'data' && (
+                                                <>
+                                                    <div><strong>Plot Number:</strong> {plot.observationUnitPosition?.observationLevel?.levelCode}</div>
+                                                    {plot.observationUnitPosition?.observationLevelRelationships && plot.observationUnitPosition.observationLevelRelationships.length > 1 && (
+                                                        <>
+                                                            <div><strong>Block Number:</strong> {plot.observationUnitPosition.observationLevelRelationships[1].levelCode}</div>
+                                                            <div><strong>Rep Number:</strong> {plot.observationUnitPosition.observationLevelRelationships[0].levelCode}</div>
+                                                        </>
+                                                    )}
+                                                    {plot.germplasmName && <div><strong>Accession Name:</strong> {plot.germplasmName}</div>}
+                                                    {plot.crossName && <div><strong>Cross Unique ID:</strong> {plot.crossName}</div>}
+                                                    {plot.additionalInfo?.familyName && <div><strong>Family Name:</strong> {plot.additionalInfo.familyName}</div>}
+                                                    {plot.additionalInfo?.intercropGermplasm?.map((g, i) => (
+                                                        <div key={i}><strong>Accession Name:</strong> {g.germplasmName}</div>
+                                                    ))}
+                                                    {selectedView !== 'fieldmap' && selectedView !== 'geofieldmap' && (
+                                                        <div className="text-[#ffd700] mt-1">
+                                                            <strong>Trait Name:</strong> {selectedViewLabel.replace(/ \(corrected\)| \(adjustment\)/, '')}<br />
+                                                            <strong>Trait Value:</strong> {(() => {
+                                                                const val = heatmapData[plot.observationUnitDbId || '']?.val;
+                                                                if (val === undefined) return <em>NA</em>;
+                                                                const num = parseFloat(String(val));
+                                                                return isNaN(num) ? val : Math.round((num + Number.EPSILON) * 100) / 100;
+                                                            })()}
+                                                        </div>
+                                                    )}
+                                                </>
+                                            )}
+                                        </>
+                                    );
+                                })()}
                             </div>
                         )}
                     </div>
