@@ -734,6 +734,25 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
         setShowDimDialog(false);
     };
 
+    const handleTranspose = () => {
+        setPlotObject(current => {
+            const transposed: Record<string, Plot> = {};
+            for (const [id, plot] of Object.entries(current)) {
+                transposed[id] = {
+                    ...plot,
+                    observationUnitPosition: {
+                        ...plot.observationUnitPosition,
+                        positionCoordinateX: plot.observationUnitPosition.positionCoordinateY,
+                        positionCoordinateY: plot.observationUnitPosition.positionCoordinateX
+                    }
+                };
+            }
+            return transposed;
+        });
+        setDimensions(d => ({ rows: d.cols, cols: d.rows }));
+        setTransposeActive(prev => !prev);
+    };
+
     return (
         <div className="p-3.75">
             {loading && (
@@ -833,7 +852,7 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
                         </div>
                     </div>
                     <div className="flex gap-2.5 mb-3.75">
-                        <button className="btn btn-default" onClick={() => setTransposeActive(!transposeActive)}>Transpose Display</button>
+                        <button className="btn btn-default" onClick={handleTranspose}>Transpose Display</button>
                         <button className="btn btn-default" onClick={() => setShowDimDialog(true)}>Change Dimensions</button>
                         <button className="btn btn-success" onClick={submitFieldLayout}>Submit Layout Changes</button>
                     </div>
