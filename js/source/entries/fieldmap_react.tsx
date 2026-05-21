@@ -1,6 +1,13 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { createRoot } from 'react-dom/client';
 
+// Declare external legacy global libraries
+// We must use 'any' here as Leaflet (L) and Turf are loaded globally as script includes 
+// via Mason templates and do not have type declarations within this bundler.
+declare const L: any;
+declare const turf: any;
+declare const BrAPIFieldmap: any;
+
 interface ObservationLevel {
     levelCode: string | number;
     levelName: string;
@@ -51,6 +58,14 @@ interface TrialDetails {
     fg: string;
 }
 
+interface PlotStructureNode {
+    type: string;
+    stock_id?: number;
+    name?: string;
+    attributes?: Record<string, { value: any }>;
+    has?: Record<string, PlotStructureNode>;
+}
+
 const trial_colors = [
     "#2f4f4f", "#ff8c00", "#ffff00", "#00ff00", "#9400d3",
     "#00ffff", "#1e90ff", "#ff1493", "#ffdab9", "#228b22",
@@ -96,11 +111,86 @@ const interpolate = (color1: string, color2: string, factor: number) => {
     return rgbToHex(r, g, b);
 };
 
+const RenderPlantGrid: React.FC<{ node: PlotStructureNode }> = ({ node }) => {
+    if (!node.has) return null;
+    
+    let maxRow = 1;
+    let maxCol = 1;
+    const coordMap: Record<string, string> = {};
+    
+    Object.entries(node.has).forEach(([plantName, plantNode]) => {
+        const row = parseInt(plantNode.attributes?.row_number?.value) || 0;
+        const col = parseInt(plantNode.attributes?.col_number?.value) || 0;
+        if (row > maxRow) maxRow = row;
+        if (col > maxCol) maxCol = col;
+        coordMap[`${row},${col}`] = plantName;
+    });
+    
+    const rows = [];
+    for (let r = maxRow; r >= 0; r--) {
+        const cols = [];
+        for (let c = 0; c <= maxCol; c++) {
+            if (r === 0) {
+                if (c === 0) {
+                    cols.push(<th key="empty" className="border-0"></th>);
+                } else {
+                    cols.push(<th key={`col-header-${c}`} className="border-0 text-center align-middle p-1 text-xs">{c}</th>);
+                }
+            } else {
+                if (c === 0) {
+                    cols.push(<th key={`row-header-${r}`} className="border-0 text-left align-middle pr-2 text-xs">{r}</th>);
+                } else {
+                    const key = `${r},${c}`;
+                    const plantName = coordMap[key];
+                    cols.push(
+                        <td key={key} className="border border-black p-1 rounded text-center align-middle text-[11px] min-w-15 h-8">
+                            {plantName || <span className="text-gray-300">empty</span>}
+                        </td>
+                    );
+                }
+            }
+        }
+        rows.push(<tr key={`row-${r}`}>{cols}</tr>);
+    }
+    
+    return (
+        <table className="border-separate border-spacing-1 overflow-hidden mx-auto mt-2" style={{ aspectRatio: `${maxCol + 1} / ${maxRow + 1}` }}>
+            <tbody>{rows}</tbody>
+        </table>
+    );
+};
+
+const RenderSubplotGrid: React.FC<{ node: PlotStructureNode }> = ({ node }) => {
+    if (!node.has) return null;
+    
+    return (
+        <div className="flex flex-col gap-2.5 items-center mt-2">
+            {Object.entries(node.has).sort(([a], [b]) => a.localeCompare(b)).map(([subplotName, subplotNode]) => (
+                <div key={subplotName} className="border border-gray-400 p-2.5 rounded-lg text-center align-middle w-full">
+                    <div className="font-bold mb-1 text-sm">{subplotName}</div>
+                    <RenderPlantGrid node={subplotNode} />
+                </div>
+            ))}
+        </div>
+    );
+};
+
+const pearsonSkewness = (arr: number[]): number => {
+    if (arr.length === 0) return 0;
+    const sorted = [...arr].sort((a, b) => a - b);
+    const median = sorted[Math.floor(sorted.length / 2)];
+    const mean = arr.reduce((sum, val) => sum + val, 0) / arr.length;
+    const variance = arr.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / arr.length;
+    const stdDev = Math.sqrt(variance);
+    return stdDev === 0 ? 0 : (3 * (mean - median)) / stdDev;
+};
+
 const AccessionAutocomplete: React.FC<{
     value: string;
     onChange: (val: string) => void;
     placeholder?: string;
     className?: string;
+    appendToId?: string;
 }> = ({ value, onChange, placeholder, className }) => {
     const [suggestions, setSuggestions] = useState<string[]>([]);
     const [show, setShow] = useState(false);
@@ -184,7 +274,6 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
     const [rightBorder, setRightBorder] = useState(false);
     const [bottomBorder, setBottomBorder] = useState(false);
     const [dimensions, setDimensions] = useState({ rows: 0, cols: 0 });
-    const [transposeActive, setTransposeActive] = useState(false);
 
     const [showDimDialog, setShowDimDialog] = useState(false);
     const [dimRowsInput, setDimRowsInput] = useState('');
@@ -193,16 +282,37 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
     const [fillerAccessionId, setFillerAccessionId] = useState<string | undefined>(undefined);
 
     const [heatmapData, setHeatmapData] = useState<Record<string, HeatmapValue>>({});
-    const [spatialAdjustments, setSpatialAdjustments] = useState<any>(null);
+    const [spatialAdjustments, setSpatialAdjustments] = useState<Record<string, Record<string, number>>>({});
+    const [controlAccessions, setControlAccessions] = useState<string[]>([]);
+    const [selectedControlPlot, setSelectedControlPlot] = useState<string>('');
+    const [controlRelationshipText, setControlRelationshipText] = useState<string>('');
+    const [showControlsSection, setShowControlsSection] = useState(false);
 
     const [hoveredPlot, setHoveredPlot] = useState<{ plot: Plot; x: number; y: number } | null>(null);
     const [selectedPlot, setSelectedPlot] = useState<Plot | null>(null);
-    const [plotStructure, setPlotStructure] = useState<any>(null);
+    const [plotStructure, setPlotStructure] = useState<PlotStructureNode | null>(null);
     const [plotImages, setPlotImages] = useState<string>('');
     const [showPlotDetails, setShowPlotDetails] = useState(false);
     const [showEditAccession, setShowEditAccession] = useState(false);
     const [newAccession, setNewAccession] = useState('');
     const [newPlotName, setNewPlotName] = useState('');
+
+    const [showCuratorWarning, setShowCuratorWarning] = useState(false);
+    const [showSuppressModal, setShowSuppressModal] = useState(false);
+    const [showDeleteTraitModal, setShowDeleteTraitModal] = useState(false);
+    const [showDownloadCSVModal, setShowDownloadCSVModal] = useState(false);
+
+    const [csvDownloadOpts, setCsvDownloadOpts] = useState({
+        accession: true,
+        obsUnit: false,
+        seedlot: false,
+        plotId: false,
+        plotNum: false
+    });
+
+    const clickTimer = useRef<NodeJS.Timeout | null>(null);
+    const geoMapRef = useRef<HTMLDivElement | null>(null);
+    const leafletMapInstance = useRef<any>(null);
 
     const [downloadOpts, setDownloadOpts] = useState({
         type: '',
@@ -222,6 +332,56 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
         loadVariables();
         loadSpatialAdjustments();
     }, [activeTrialIds]);
+
+    useEffect(() => {
+        fetch(`/ajax/breeders/trial/${trialId}/controls`)
+            .then(res => res.json())
+            .then(response => {
+                if (response?.accessions) {
+                    setControlAccessions(response.accessions.map((a: any) => a.accession_name));
+                }
+            })
+            .catch(() => {});
+    }, [trialId]);
+
+    // Handle Leaflet GeoMap rendering
+    useEffect(() => {
+        if (selectedView === 'geofieldmap' && geoMapRef.current) {
+            if (leafletMapInstance.current) {
+                leafletMapInstance.current.remove();
+            }
+            try {
+                // Initialize custom Leaflet container mapping
+                const mapEl = geoMapRef.current;
+                mapEl.innerHTML = "<div id='geoflatmap_leaflet' style='width:100%; height:600px;'></div>";
+                
+                const fmInstance = new BrAPIFieldmap('#geoflatmap_leaflet', '/brapi/v2', {
+                    viewOnly: false,
+                    brapi_auth: authToken,
+                    defaultPos: [0, 0],
+                    defaultZoom: 2,
+                    plotScaleFactor: 1,
+                    style: { weight: 1, color: '#41b6c4', fillOpacity: 0.4 }
+                });
+                fmInstance.load(trialId).then((success: boolean) => {
+                    if (!success) {
+                        alert("No geo reference data in this trial!");
+                    }
+                });
+                leafletMapInstance.current = fmInstance.map;
+                (window as any).geoFieldMapInstance = fmInstance;
+            } catch (e) {
+                console.error("Leaflet initialization failed", e);
+            }
+        }
+        return () => {
+            if (leafletMapInstance.current) {
+                leafletMapInstance.current.remove();
+                leafletMapInstance.current = null;
+            }
+            delete (window as any).geoFieldMapInstance;
+        };
+    }, [selectedView, trialId, authToken]);
 
     const loadObservationUnits = () => {
         setLoading(true);
@@ -253,7 +413,7 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
             })
             .catch(() => {
                 setLoading(false);
-                alert('Error loading plot observation units.');
+                alert('Error loading plot units.');
             });
     };
 
@@ -381,6 +541,23 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
         return Object.values(plotObject);
     }, [plotObject]);
 
+    const controlPlots = useMemo(() => {
+        return plotList.filter(p => {
+            return p.type === 'data' && (p.additionalInfo?.is_a_control || (p.germplasmName && controlAccessions.includes(p.germplasmName)));
+        });
+    }, [plotList, controlAccessions]);
+
+    const maxLevelCode = useMemo(() => {
+        let maxVal = 0;
+        plotList.forEach(plot => {
+            const code = parseInt(String(plot.observationUnitPosition?.observationLevel?.levelCode));
+            if (!isNaN(code) && code > maxVal) {
+                maxVal = code;
+            }
+        });
+        return maxVal;
+    }, [plotList]);
+
     const bounds = useMemo(() => {
         if (plotList.length === 0) return { minCol: 1, maxCol: dimensions.cols || 1, minRow: 1, maxRow: dimensions.rows || 1, numRows: dimensions.rows || 1, numCols: dimensions.cols || 1 };
         let minCol = Infinity;
@@ -463,7 +640,7 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
                 } else {
                     const isBorder = (r < bounds.minRow || r > bounds.maxRow || c < bounds.minCol || c > bounds.maxCol);
                     rowArr.push({
-                        type: isBorder ? 'border' : (fillerAccessionId ?  'filler' : 'empty_space'),
+                        type: isBorder ? 'border' : (fillerAccessionId ? 'filler' : 'empty_space'),
                         observationUnitName: isBorder ? `Border (${c}_${r})` : (fillerAccessionId ? `Filler (${c}_${r})` : `Space (${c}_${r})`),
                         observationUnitPosition: {
                             positionCoordinateX: c,
@@ -498,10 +675,6 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
         return overlaps;
     }, [plotList]);
 
-    console.log(plotList);
-    console.log(bounds);
-    console.log(gridMatrix);
-
     const getHeatmapObservations = (variableId: string) => {
         setLoading(true);
         const headers: Record<string, string> = {};
@@ -514,9 +687,19 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
                 const data = response?.result?.data || [];
                 const map: Record<string, HeatmapValue> = {};
                 data.forEach((obs: any) => {
-                    if (!isNaN(Number(obs.value))) {
+                    let finalVal = Number(obs.value);
+                    const plotName = obs.observationUnitName;
+
+                    // Apply Spatial adjustments if viewing Corrected or Adjustments
+                    if (selectedView.includes(' (corrected)') && spatialAdjustments[plotName]?.[variableId] !== undefined) {
+                        finalVal += Number(spatialAdjustments[plotName][variableId]);
+                    } else if (selectedView.includes(' (adjustment)') && spatialAdjustments[plotName]?.[variableId] !== undefined) {
+                        finalVal = Number(spatialAdjustments[plotName][variableId]);
+                    }
+
+                    if (!isNaN(finalVal)) {
                         map[obs.observationUnitDbId] = {
-                            val: Number(obs.value),
+                            val: finalVal,
                             plot_name: obs.observationUnitName,
                             id: obs.observationDbId
                         };
@@ -545,11 +728,18 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
         if (values.length === 0) return { min: 0, max: 0, scale: (val: number) => '#ffffff' };
         const min = Math.min(...values);
         const max = Math.max(...values);
-        const colors = min < 0 ? ['darkblue', 'white', 'darkred'] : ['white', 'darkred'];
+
+        // Skewness power transform scaling
+        const skew = pearsonSkewness(values);
+        const exponent = skew > 0.5 ? 0.5 : 1.0;
+
+        const hasNegatives = values.some(v => v < 0);
+        const hasPositives = values.some(v => v > 0);
+        const colors = (hasNegatives && !hasPositives) ? ['darkblue', 'white'] : (!hasNegatives && hasPositives) ? ['white', 'darkred'] : ['darkblue', 'white', 'darkred'];
 
         const scale = (val: number) => {
             if (min === max) return colors[0];
-            const factor = (val - min) / (max - min);
+            const factor = Math.pow((val - min) / (max - min), exponent);
             if (colors.length === 3) {
                 if (factor < 0.5) {
                     return interpolate(colors[0], colors[1], factor * 2);
@@ -561,43 +751,57 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
             }
         };
         return { min, max, scale, colors };
-    }, [heatmapData]);
+    }, [heatmapData, selectedView]);
 
-    const handlePlotClick = (plot: Plot) => {
-        if (plot.type === 'empty_space') return;
-        setSelectedPlot(plot);
-        setShowPlotDetails(true);
-        setPlotStructure(null);
-        setPlotImages('');
+    // Handle click vs double click logic
+    const handlePlotSelect = (plot: Plot) => {
+        if (clickTimer.current) {
+            clearTimeout(clickTimer.current);
+            clickTimer.current = null;
+            // Double Click behavior
+            if (plot.observationUnitDbId) {
+                window.open(`/stock/${plot.observationUnitDbId}/view`, '_blank');
+            }
+        } else {
+            clickTimer.current = setTimeout(() => {
+                clickTimer.current = null;
+                // Single Click behavior
+                if (plot.type === 'empty_space') return;
+                setSelectedPlot(plot);
+                setShowPlotDetails(true);
+                setPlotStructure(null);
+                setPlotImages('');
 
-        fetch(`/stock/get_child_stocks/${plot.observationUnitDbId}`)
-            .then(res => res.json())
-            .then(response => {
-                if (response?.data) {
-                    setPlotStructure(JSON.parse(response.data));
-                }
-            })
-            .catch(() => {});
+                fetch(`/stock/get_child_stocks/${plot.observationUnitDbId}`)
+                    .then(res => res.json())
+                    .then(response => {
+                        if (response?.data) {
+                            setPlotStructure(JSON.parse(response.data));
+                        }
+                    })
+                    .catch(() => {});
 
-        fetch(`/ajax/breeders/trial/${trialId}/retrieve_plot_images`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: new URLSearchParams({
-                image_ids: JSON.stringify(plot.plotImageDbIds || []),
-                plot_name: plot.observationUnitName,
-                plot_id: plot.observationUnitDbId || ''
-            })
-        })
-            .then(res => res.json())
-            .then(response => {
-                if (response?.image_html) {
-                    setPlotImages(response.image_html);
-                }
-            })
-            .catch(() => {});
+                fetch(`/ajax/breeders/trial/${trialId}/retrieve_plot_images`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: new URLSearchParams({
+                        image_ids: JSON.stringify(plot.plotImageDbIds || []),
+                        plot_name: plot.observationUnitName,
+                        plot_id: plot.observationUnitDbId || ''
+                    })
+                })
+                    .then(res => res.json())
+                    .then(response => {
+                        if (response?.image_html) {
+                            setPlotImages(response.image_html);
+                        }
+                    })
+                    .catch(() => {});
+            }, 250);
+        }
     };
 
-    const submitReplaceAccession = () => {
+    const submitReplaceAccession = (override: 'check' | 'override') => {
         if (!selectedPlot) return;
         setLoading(true);
         fetch(`/ajax/breeders/trial/${trialId}/replace_plot_accessions`, {
@@ -609,18 +813,21 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
                 old_accession: selectedPlot.germplasmName || '',
                 old_plot_id: selectedPlot.observationUnitDbId || '',
                 old_plot_name: selectedPlot.observationUnitName,
-                override: 'override'
+                override: override
             })
         })
             .then(res => res.json())
             .then(response => {
                 setLoading(false);
-                if (response.error) {
+                if (response.warning) {
+                    setShowCuratorWarning(true);
+                } else if (response.error) {
                     alert(response.error);
                 } else {
                     alert('Plot Accession Replaced successfully!');
                     setShowPlotDetails(false);
                     setShowEditAccession(false);
+                    setShowCuratorWarning(false);
                     loadObservationUnits();
                 }
             })
@@ -637,7 +844,6 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
         const allPlots = gridMatrix.flat();
         const plotsToCreate = allPlots.filter(plot => !plot.observationUnitDbId && (plot.type === 'filler' || plot.type === 'border'));
 
-        // Only send POST if we have an accession to assign to new units
         const brapiPostObject = fillerAccessionId ? plotsToCreate
             .map((plot, i) => ({
                 additionalInfo: {
@@ -650,9 +856,9 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
                 },
                 germplasmDbId: fillerAccessionId,
                 germplasmName: fillerAccessionInput,
-                observationUnitName: `${trialId} filler ${1000 + i}`,
+                observationUnitName: `${trialId} filler ${maxLevelCode + i + 1}`,
                 observationUnitPosition: {
-                    observationLevel: { levelCode: 1000 + i, levelName: 'plot', levelOrder: 2 },
+                    observationLevel: { levelCode: maxLevelCode + i + 1, levelName: 'plot', levelOrder: 2 },
                     positionCoordinateX: plot.observationUnitPosition.positionCoordinateX,
                     positionCoordinateY: plot.observationUnitPosition.positionCoordinateY,
                     entryType: plot.type
@@ -737,7 +943,33 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
         window.open(`/ajax/breeders/trial_plot_order?${q}`, '_blank');
     };
 
+    const submitGeoLayout = () => {
+        const fm = (window as any).geoFieldMapInstance;
+        if (fm) {
+            setLoading(true);
+            fm.update()
+                .then((msg: string) => {
+                    setLoading(false);
+                    alert(msg || 'Geo layout updated successfully!');
+                    loadObservationUnits();
+                })
+                .catch((err: any) => {
+                    setLoading(false);
+                    alert(err || 'Failed to update geo layout');
+                });
+        }
+    };
+
     const handleApplyDimensions = () => {
+        const cols = parseInt(dimColsInput) || 0;
+        const rows = parseInt(dimRowsInput) || 0;
+        const numRealPlots = plotList.length;
+
+        if (cols * rows < numRealPlots) {
+            alert('Those are not valid dimensions.\nPlease select dimensions that can accommodate your current plots.');
+            return;
+        }
+
         if (fillerAccessionInput) {
             fetch(`/ajax/breeders/trial/${trialId}/accession_exists?accession_name=${encodeURIComponent(fillerAccessionInput)}`)
                 .then(res => res.json())
@@ -749,7 +981,7 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
                     }
                 });
         }
-        setDimensions({ rows: parseInt(dimRowsInput) || 0, cols: parseInt(dimColsInput) || 0 });
+        setDimensions({ rows, cols });
         setShowDimDialog(false);
     };
 
@@ -769,8 +1001,188 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
             return transposed;
         });
         setDimensions(d => ({ rows: d.cols, cols: d.rows }));
-        setTransposeActive(prev => !prev);
     };
+
+    const handlePrint = () => {
+        alert("You may need to change print settings - such as page size, margins, and scaling - to get the fieldmap to display properly in the print preview. Select \"Background graphics\" to ensure the legend includes colors.");
+        const title = selectedView === 'fieldmap' ? 'Field Map View' : selectedViewLabel;
+        const printWindow = window.open('', '', 'width=800,height=600');
+        if (printWindow) {
+            printWindow.document.write('<html><head><title>Print Field Map</title></head><body style="display: flex;justify-content: center;align-items: center;flex-direction: column;margin: 0;">');
+            printWindow.document.write(`<h1>${title}</h1>`);
+            printWindow.document.write(document.getElementById('legend_list')?.outerHTML || '');
+            printWindow.document.write(document.getElementById('fieldmap_chart_svg')?.outerHTML || '');
+            printWindow.document.write('</body></html>');
+            printWindow.document.close();
+            printWindow.print();
+        }
+    };
+
+    const downloadHeatmapImage = () => {
+        const svgEl = document.getElementById('fieldmap_chart_svg');
+        if (!svgEl) return;
+        
+        const svgString = new XMLSerializer().serializeToString(svgEl);
+        const svgBlob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
+        const blobURL = URL.createObjectURL(svgBlob);
+
+        const image = new Image();
+        image.onload = () => {
+            const canvas = document.createElement('canvas');
+            canvas.width = svgEl.clientWidth || 1500;
+            canvas.height = svgEl.clientHeight || 1500;
+            const context = canvas.getContext('2d');
+            if (context) {
+                context.fillStyle = '#ffffff';
+                context.fillRect(0, 0, canvas.width, canvas.height);
+                context.drawImage(image, 0, 0);
+                
+                const pngData = canvas.toDataURL('image/png');
+                const downloadLink = document.createElement('a');
+                downloadLink.download = `${selectedViewLabel || 'fieldmap'}_heatmap.png`;
+                downloadLink.href = pngData;
+                downloadLink.click();
+            }
+        };
+        image.src = blobURL;
+    };
+
+    const handleDownloadCSV = () => {
+        let cols_csv_header = [];
+        for (let i = bounds.minCol; i <= bounds.maxCol; i++) {
+            cols_csv_header.push(i);
+        }
+        let csv = '';
+        csv += ['Rows/Columns', ...cols_csv_header].join(',') + '\n';
+
+        let coord_matrix: string[][] = [];
+        const sortedPlots = [...plotList].filter(p => p.type !== 'border');
+
+        sortedPlots.forEach(plot => {
+            const r = Number(plot.observationUnitPosition.positionCoordinateY) - bounds.minRow;
+            const c = Number(plot.observationUnitPosition.positionCoordinateX) - bounds.minCol;
+
+            if (!coord_matrix[r]) coord_matrix[r] = [];
+
+            let cellVal = '';
+            if (csvDownloadOpts.accession) {
+                cellVal += plot.germplasmName || plot.crossName || '';
+                if (plot.additionalInfo?.intercropGermplasm) {
+                    plot.additionalInfo.intercropGermplasm.forEach((g: any) => {
+                        cellVal += `, ${g.germplasmName}`;
+                    });
+                }
+            }
+            if (csvDownloadOpts.obsUnit && plot.observationUnitName) {
+                cellVal += (cellVal ? '\n' : '') + plot.observationUnitName;
+            }
+            if (csvDownloadOpts.plotId && plot.observationUnitDbId) {
+                cellVal += (cellVal ? '\n' : '') + plot.observationUnitDbId;
+            }
+            if (csvDownloadOpts.plotNum && plot.observationUnitPosition.observationLevel?.levelCode) {
+                cellVal += (cellVal ? '\n' : '') + plot.observationUnitPosition.observationLevel.levelCode;
+            }
+
+            coord_matrix[r][c] = `"${cellVal}"`;
+        });
+
+        if (!invertRows) {
+            coord_matrix.reverse();
+        }
+
+        coord_matrix.forEach((rowArr, idx) => {
+            const rowLabel = invertRows ? bounds.minRow + idx : bounds.maxRow - idx;
+            csv += [rowLabel, ...rowArr].join(',') + '\n';
+        });
+
+        const hiddenElement = document.createElement('a');
+        hiddenElement.href = 'data:text/csv;charset=utf-8,' + encodeURI(csv);
+        hiddenElement.target = '_blank';
+        hiddenElement.download = `Trial_${trialId}_spatial_layout.csv`;
+        hiddenElement.click();
+        setShowDownloadCSVModal(false);
+    };
+
+    const handleSuppressPhenotype = () => {
+        if (!selectedPlot) return;
+        const currentTraitId = selectedView.replace(' (corrected)', '').replace(' (adjustment)', '');
+        const valObj = heatmapData[selectedPlot.observationUnitDbId || ''];
+        if (!valObj) return;
+
+        setLoading(true);
+        fetch(`/ajax/breeders/trial/${trialId}/suppress_phenotype`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({
+                plot_name: selectedPlot.observationUnitName,
+                phenotype_value: String(valObj.val),
+                trait_id: currentTraitId,
+                phenotype_id: valObj.id
+            })
+        })
+            .then(res => res.json())
+            .then(response => {
+                setLoading(false);
+                if (response.error) {
+                    alert(response.error);
+                } else {
+                    alert('Phenotype was suppressed successfully!');
+                    setShowSuppressModal(false);
+                    setShowPlotDetails(false);
+                    getHeatmapObservations(currentTraitId);
+                }
+            })
+            .catch(() => {
+                setLoading(false);
+            });
+    };
+
+    const handleDeleteSingleTrait = () => {
+        const currentTraitId = selectedView.replace(' (corrected)', '').replace(' (adjustment)', '');
+        setLoading(true);
+        fetch(`/ajax/breeders/trial/${trialId}/delete_single_trait`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({
+                traits_id: JSON.stringify([currentTraitId])
+            })
+        })
+            .then(res => res.json())
+            .then(response => {
+                setLoading(false);
+                if (response.error) {
+                    alert(response.error);
+                } else {
+                    alert('Trait deleted successfully!');
+                    setShowDeleteTraitModal(false);
+                    setSelectedView('fieldmap');
+                    setHeatmapData({});
+                    loadVariables();
+                }
+            })
+            .catch(() => {
+                setLoading(false);
+            });
+    };
+
+    const plotStructureLayoutType = useMemo(() => {
+        if (!plotStructure || !plotStructure.has) return 'none';
+        const children = Object.values(plotStructure.has) as PlotStructureNode[];
+        if (children.length > 0) {
+            const firstChild = children[0];
+            if (firstChild.type === 'subplot') {
+                if (firstChild.has) {
+                    const subChildren = Object.values(firstChild.has) as PlotStructureNode[];
+                    if (subChildren.length > 0 && subChildren[0].attributes?.row_number?.value > 0) {
+                        return 'subplot_grid';
+                    }
+                }
+            } else if (firstChild.type === 'plant' && firstChild.attributes?.row_number?.value > 0) {
+                return 'plant_grid';
+            }
+        }
+        return 'tree';
+    }, [plotStructure]);
 
     return (
         <div className="p-3.75">
@@ -804,7 +1216,7 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
                                         <option key={variables[name]} value={variables[name]}>{name}</option>
                                     ))}
                                 </optgroup>
-                                {spatialAdjustments && (
+                                {Object.keys(spatialAdjustments).length > 0 && (
                                     <optgroup label="Spatial Corrections">
                                         {Object.keys(variables).sort().map(name => {
                                             const id = variables[name];
@@ -848,191 +1260,395 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
                 </div>
             </div>
 
-            {/* Map Plot Container */}
-            <div className="panel panel-default overflow-auto">
-                <div className="panel-body">
-                    <div className="flex gap-5 flex-wrap mb-3.75">
-                        <div className="form-inline">
-                            <label className="mr-1.25">Plot Layout:</label>
-                            <select className="form-control" value={plotLayout} onChange={e => setPlotLayout(e.target.value as any)}>
-                                <option value="serpentine">Serpentine</option>
-                                <option value="zigzag">Zigzag</option>
-                            </select>
-                        </div>
-                        <div className="form-check flex items-center">
-                            <label className="form-check-label">
-                                <input type="checkbox" className="form-check-input mr-1.25" checked={invertRows} onChange={e => setInvertRows(e.target.checked)} />
-                                Invert Rows
-                            </label>
-                        </div>
-                        <div className="flex gap-2.5 items-center">
-                            <label className="m-0">Include Borders:</label>
-                            <label className="font-normal m-0"><input type="checkbox" checked={topBorder} onChange={e => setTopBorder(e.target.checked)} /> Top</label>
-                            <label className="font-normal m-0"><input type="checkbox" checked={bottomBorder} onChange={e => setBottomBorder(e.target.checked)} /> Bottom</label>
-                            <label className="font-normal m-0"><input type="checkbox" checked={leftBorder} onChange={e => setLeftBorder(e.target.checked)} /> Left</label>
-                            <label className="font-normal m-0"><input type="checkbox" checked={rightBorder} onChange={e => setRightBorder(e.target.checked)} /> Right</label>
-                        </div>
-                    </div>
-                    <div className="flex gap-2.5 mb-3.75">
-                        <button className="btn btn-default" onClick={handleTranspose}>Transpose Display</button>
-                        <button className="btn btn-default" onClick={() => setShowDimDialog(true)}>Change Dimensions</button>
-                        <button className="btn btn-success" onClick={submitFieldLayout}>Submit Layout Changes</button>
-                    </div>
-
-                    <div className="relative border border-[#ddd] p-2.5 bg-[#fcfcfc] min-h-75 flex justify-center">
-                        <svg
-                            width={renderBounds.numCols * 55 + 50}
-                            height={renderBounds.numRows * 55 + 50}
-                        >
-                            <g transform="translate(25, 25)">
-                                {gridMatrix.map((row, rIdx) => {
-                                    const displayY = invertRows ? rIdx : renderBounds.numRows - rIdx - 1;
-                                    return row.map((plot, cIdx) => {
-                                        const plotX = cIdx * 52;
-                                        const plotY = displayY * 52;
-                                        const isOverlapping = false; // Add custom check if multiple plots share coordinates
-                                        let fill = '#c7e9b4';
-
-                                        if (plot.observationUnitPosition?.entryType === 'check') fill = '#6a5acd';
-                                        else if (plot.type === 'border' || plot.type === 'filler') fill = '#ecefef';
-                                        else if (plot.type === 'empty_space') fill = 'transparent';
-
-                                        if (selectedView !== 'fieldmap' && selectedView !== 'geofieldmap' && plot.observationUnitDbId) {
-                                            const valObj = heatmapData[plot.observationUnitDbId];
-                                            fill = valObj ? valueColorScale.scale(valObj.val) : '#a9afaf';
+            {selectedView !== 'fieldmap' && selectedView !== 'geofieldmap' && (
+                <div className="panel panel-default">
+                    <div className="panel-body flex gap-3.75 items-center flex-wrap">
+                        {!showControlsSection ? (
+                            <button className="btn btn-primary btn-sm" onClick={() => setShowControlsSection(true)}>View Controls</button>
+                        ) : (
+                            <div className="flex gap-2.5 items-center flex-wrap">
+                                <select
+                                    className="form-control"
+                                    value={selectedControlPlot}
+                                    onChange={e => {
+                                        const val = e.target.value;
+                                        setSelectedControlPlot(val);
+                                        if (val) {
+                                            const p = plotList.find(plot => plot.observationUnitDbId === val);
+                                            if (p) {
+                                                setControlRelationshipText(`Plot: ${p.observationUnitName} contains Check: ${p.germplasmName || ''}`);
+                                            }
+                                        } else {
+                                            setControlRelationshipText('');
                                         }
-
-                                        return (
-                                            <g
-                                                key={plot.observationUnitDbId || `empty-${cIdx}-${rIdx}`}
-                                                transform={`translate(${plotX}, ${plotY})`}
-                                                className="cursor-pointer"
-                                                onClick={() => handlePlotClick(plot)}
-                                                onMouseEnter={(e) => setHoveredPlot({ plot, x: e.clientX, y: e.clientY })}
-                                                onMouseLeave={() => setHoveredPlot(null)}
-                                            >
-                                                {plot.type !== 'empty_space' && (
-                                                    <rect
-                                                        width={50}
-                                                        height={50}
-                                                        rx={4}
-                                                        fill={fill}
-                                                        stroke={isOverlapping ? '#ff0000' : (plot.type === 'border' || plot.type === 'filler' ? '#eee' : '#41b6c4')}
-                                                        strokeWidth={isOverlapping ? 3 : 1.5}
-                                                    />
-                                                )}
-                                                {plot.type === 'data' && (
-                                                    <text x={25} y={30} textAnchor="middle" fill="#000" fontSize="10" fontWeight="bold">
-                                                        {plot.observationUnitPosition.observationLevel.levelCode}
-                                                    </text>
-                                                )}
-                                                {plot.plotImageDbIds && plot.plotImageDbIds.length > 0 && (
-                                                    <circle cx={42} cy={8} r={4} fill="#ff8c00" />
-                                                )}
-                                            </g>
-                                        );
-                                    });
-                                })}
-                            </g>
-                        </svg>
-
-                        {/* Dynamic Tooltip */}
-                        {hoveredPlot && (
-                            <div
-                                className="fixed bg-black/85 text-white px-3 py-2 rounded-md z-10000 text-[11px] pointer-events-none max-w-70"
-                                style={{
-                                    top: hoveredPlot.y + 15,
-                                    left: hoveredPlot.x + 15,
-                                }}
-                            >
-                                {(() => {
-                                    const plot = hoveredPlot.plot;
-                                    const coordKey = `${plot.observationUnitPosition?.positionCoordinateX}-${plot.observationUnitPosition?.positionCoordinateY}`;
-                                    if (overlappingPlots[coordKey]) {
-                                        return (
-                                            <div>
-                                                <strong>Overlapping Plots:</strong>{' '}
-                                                {overlappingPlots[coordKey].map(p => {
-                                                    const code = p.observationUnitPosition?.observationLevel?.levelCode || p.observationUnitName;
-                                                    return displayLinkedTrials && p.studyName ? `${code} (${p.studyName})` : code;
-                                                }).join(', ')}
-                                            </div>
-                                        );
-                                    }
-                                    return (
-                                        <>
-                                            {displayLinkedTrials && plot.studyName && (
-                                                <div>
-                                                    <strong>Trial Name:</strong>{' '}
-                                                    {(() => {
-                                                        const t = linkedTrialsList.find(lt => lt.name === plot.studyName);
-                                                        if (t) {
-                                                            return (
-                                                                <span style={{ backgroundColor: t.bg, color: t.fg, padding: '1px 2px', borderRadius: '4px' }}>
-                                                                    {plot.studyName}
-                                                                </span>
-                                                            );
-                                                        }
-                                                        return <span>{plot.studyName}</span>;
-                                                    })()}
-                                                </div>
-                                            )}
-                                            <div><strong>Plot Name:</strong> {plot.observationUnitName}</div>
-                                            {plot.type === 'data' && (
-                                                <>
-                                                    <div><strong>Plot Number:</strong> {plot.observationUnitPosition?.observationLevel?.levelCode}</div>
-                                                    {plot.observationUnitPosition?.observationLevelRelationships && plot.observationUnitPosition.observationLevelRelationships.length > 1 && (
-                                                        <>
-                                                            <div><strong>Block Number:</strong> {plot.observationUnitPosition.observationLevelRelationships[1].levelCode}</div>
-                                                            <div><strong>Rep Number:</strong> {plot.observationUnitPosition.observationLevelRelationships[0].levelCode}</div>
-                                                        </>
-                                                    )}
-                                                    {plot.germplasmName && <div><strong>Accession Name:</strong> {plot.germplasmName}</div>}
-                                                    {plot.crossName && <div><strong>Cross Unique ID:</strong> {plot.crossName}</div>}
-                                                    {plot.additionalInfo?.familyName && <div><strong>Family Name:</strong> {plot.additionalInfo.familyName}</div>}
-                                                    {plot.additionalInfo?.intercropGermplasm?.map((g, i) => (
-                                                        <div key={i}><strong>Accession Name:</strong> {g.germplasmName}</div>
-                                                    ))}
-                                                    {selectedView !== 'fieldmap' && selectedView !== 'geofieldmap' && (
-                                                        <div className="text-[#ffd700] mt-1">
-                                                            <strong>Trait Name:</strong> {selectedViewLabel.replace(/ \(corrected\)| \(adjustment\)/, '')}<br />
-                                                            <strong>Trait Value:</strong> {(() => {
-                                                                const val = heatmapData[plot.observationUnitDbId || '']?.val;
-                                                                if (val === undefined) return <em>NA</em>;
-                                                                const num = parseFloat(String(val));
-                                                                return isNaN(num) ? val : Math.round((num + Number.EPSILON) * 100) / 100;
-                                                            })()}
-                                                        </div>
-                                                    )}
-                                                </>
-                                            )}
-                                        </>
-                                    );
-                                })()}
+                                    }}
+                                >
+                                    <option value="">checks and plot numbers</option>
+                                    {controlPlots.map(cp => (
+                                        <option key={cp.observationUnitDbId} value={cp.observationUnitDbId}>
+                                            Plot:{cp.observationUnitName} [{cp.germplasmName}]
+                                        </option>
+                                    ))}
+                                </select>
+                                {controlRelationshipText && (
+                                    <span className="text-sm font-semibold bg-[#fcf8e3] p-1 border rounded">{controlRelationshipText}</span>
+                                )}
+                                <button className="btn btn-default btn-xs" onClick={() => { setShowControlsSection(false); setSelectedControlPlot(''); setControlRelationshipText(''); }}>Hide</button>
                             </div>
                         )}
                     </div>
                 </div>
-            </div>
+            )}
+
+            {/* Render view panel for Geo Field Map or Standard SVG Map */}
+            {selectedView === 'geofieldmap' ? (
+                <div key="geofieldmap-panel" className="panel panel-default">
+                    <div className="panel-body flex flex-col gap-2.5">
+                        <div ref={geoMapRef} style={{ width: '100%', height: '600px' }}></div>
+                        <button className="btn btn-success self-start" onClick={submitGeoLayout}>Submit Geo Layout Changes</button>
+                    </div>
+                </div>
+            ) : (
+                <div key="standard-fieldmap-panel" className="panel panel-default overflow-auto">
+                    <div className="panel-body">
+                        <div className="flex gap-5 flex-wrap mb-3.75">
+                            <div className="form-inline">
+                                <label className="mr-1.25">Plot Layout:</label>
+                                <select className="form-control" value={plotLayout} onChange={e => setPlotLayout(e.target.value as any)} disabled={displayLinkedTrials}>
+                                    <option value="serpentine">Serpentine</option>
+                                    <option value="zigzag">Zigzag</option>
+                                </select>
+                            </div>
+                            <div className="form-check flex items-center">
+                                <label className="form-check-label">
+                                    <input type="checkbox" className="form-check-input mr-1.25" checked={invertRows} onChange={e => setInvertRows(e.target.checked)} />
+                                    Invert Rows
+                                </label>
+                            </div>
+                            <div className="flex gap-2.5 items-center">
+                                <label className="m-0">Include Borders:</label>
+                                <label className="font-normal m-0"><input type="checkbox" checked={topBorder} onChange={e => setTopBorder(e.target.checked)} disabled={displayLinkedTrials} /> Top</label>
+                                <label className="font-normal m-0"><input type="checkbox" checked={bottomBorder} onChange={e => setBottomBorder(e.target.checked)} disabled={displayLinkedTrials} /> Bottom</label>
+                                <label className="font-normal m-0"><input type="checkbox" checked={leftBorder} onChange={e => setLeftBorder(e.target.checked)} disabled={displayLinkedTrials} /> Left</label>
+                                <label className="font-normal m-0"><input type="checkbox" checked={rightBorder} onChange={e => setRightBorder(e.target.checked)} disabled={displayLinkedTrials} /> Right</label>
+                            </div>
+                        </div>
+                        <div className="flex gap-2.5 mb-3.75">
+                            <button className="btn btn-default" onClick={handleTranspose} disabled={displayLinkedTrials}>Transpose Display</button>
+                            <button className="btn btn-default" onClick={() => setShowDimDialog(true)} disabled={displayLinkedTrials}>Change Dimensions</button>
+                            <button className="btn btn-default" onClick={() => setShowDownloadCSVModal(true)}>Download Spatial Layout (CSV)</button>
+                            <button className="btn btn-default" onClick={handlePrint}>Print Fieldmap</button>
+                            {selectedView !== 'fieldmap' && selectedView !== 'geofieldmap' && (
+                                <button className="btn btn-default" onClick={downloadHeatmapImage}>Download Heatmap Image</button>
+                            )}
+                            <button className="btn btn-success" onClick={submitFieldLayout} disabled={displayLinkedTrials}>Submit Layout Changes</button>
+                            {selectedView !== 'fieldmap' && selectedView !== 'geofieldmap' && (
+                                <button className="btn btn-danger" onClick={() => setShowDeleteTraitModal(true)}>Delete Selected Trait</button>
+                            )}
+                        </div>
+
+                        <div className="relative border border-[#ddd] p-2.5 bg-[#fcfcfc] min-h-75 flex justify-center">
+                            <svg
+                                id="fieldmap_chart_svg"
+                                width={(renderBounds.numCols + 1) * 55 + 50}
+                                height={(renderBounds.numRows + 1) * 55 + 50}
+                            >
+                                <g transform="translate(50, 25)">
+                                    {/* Column Labels */}
+                                    {Array.from({ length: renderBounds.numCols }).map((_, idx) => {
+                                        const displayX = idx * 52 + 25;
+                                        const labelText = bounds.minCol + idx;
+                                        const labelY = invertRows ? renderBounds.numRows * 52 + 20 : -10;
+                                        return (
+                                            <text key={`col-lbl-${idx}`} x={displayX} y={labelY} textAnchor="middle" fontSize="11" fontWeight="bold">
+                                                {labelText}
+                                            </text>
+                                        );
+                                    })}
+
+                                    {gridMatrix.map((row, rIdx) => {
+                                        const displayY = invertRows ? rIdx : renderBounds.numRows - rIdx - 1;
+                                        const rowLabel = invertRows ? bounds.minRow + rIdx : bounds.maxRow - rIdx;
+
+                                        return (
+                                            <g key={`row-group-${rIdx}`}>
+                                                {/* Row Label (Left Axis) */}
+                                                <text x={-20} y={displayY * 52 + 30} textAnchor="middle" fontSize="11" fontWeight="bold">
+                                                    {rowLabel}
+                                                </text>
+
+                                                {row.map((plot, cIdx) => {
+                                                    const plotX = cIdx * 52;
+                                                    const plotY = displayY * 52;
+
+                                                    const coordKey = `${plot.observationUnitPosition?.positionCoordinateX}-${plot.observationUnitPosition?.positionCoordinateY}`;
+                                                    const isOverlapping = !!overlappingPlots[coordKey];
+
+                                                    let fill = '#c7e9b4'; // Default block parity color (even block placeholder)
+                                                    let stroke = '#41b6c4'; // Default replicate parity stroke
+                                                    let strokeWidth = 1.5;
+
+                                                    // Replicate even/odd stroke coloring
+                                                    const repNo = parseInt(String(plot.observationUnitPosition?.observationLevelRelationships?.[0]?.levelCode));
+                                                    if (!isNaN(repNo)) {
+                                                        stroke = repNo % 2 === 0 ? 'red' : 'green';
+                                                    }
+
+                                                    // Block even/odd fill coloring
+                                                    const blockNo = parseInt(String(plot.observationUnitPosition?.observationLevelRelationships?.[1]?.levelCode));
+                                                    if (!isNaN(blockNo)) {
+                                                        fill = blockNo % 2 === 0 ? '#c7e9b4' : '#41b6c4';
+                                                    }
+
+                                                    if (plot.observationUnitPosition?.entryType === 'check') fill = '#6a5acd';
+                                                    else if (plot.type === 'border' || plot.type === 'filler') fill = '#ecefef';
+                                                    else if (plot.type === 'empty_space') fill = 'transparent';
+
+                                                    // Overlapping style override
+                                                    if (isOverlapping) {
+                                                        fill = '#000000';
+                                                        stroke = '#ff0000';
+                                                        strokeWidth = 3;
+                                                    }
+
+                                                    // Heatmap views logic
+                                                    if (selectedView !== 'fieldmap' && selectedView !== 'geofieldmap' && plot.observationUnitDbId) {
+                                                        const valObj = heatmapData[plot.observationUnitDbId];
+                                                        fill = valObj ? valueColorScale.scale(valObj.val) : '#a9afaf';
+                                                    }
+
+                                                    return (
+                                                        <g
+                                                            key={plot.observationUnitDbId || `empty-${cIdx}-${rIdx}`}
+                                                            transform={`translate(${plotX}, ${plotY})`}
+                                                            className="cursor-pointer"
+                                                            onClick={() => handlePlotSelect(plot)}
+                                                            onMouseEnter={(e) => setHoveredPlot({ plot, x: e.clientX, y: e.clientY })}
+                                                            onMouseLeave={() => setHoveredPlot(null)}
+                                                        >
+                                                            {plot.type !== 'empty_space' && (
+                                                                <rect
+                                                                    width={50}
+                                                                    height={50}
+                                                                    rx={4}
+                                                                    fill={fill}
+                                                                    stroke={stroke}
+                                                                    strokeWidth={strokeWidth}
+                                                                />
+                                                            )}
+                                                            {plot.type === 'data' && !isOverlapping && (
+                                                                <text x={25} y={30} textAnchor="middle" fill="#000" fontSize="10" fontWeight="bold">
+                                                                    {plot.observationUnitPosition.observationLevel.levelCode}
+                                                                </text>
+                                                            )}
+
+                                                            {/* Camera Image Icon */}
+                                                            {plot.plotImageDbIds && plot.plotImageDbIds.length > 0 && (
+                                                                <g transform="translate(5, 5) scale(0.6)">
+                                                                    <rect width="18" height="14" rx="2" fill="#ff8c00" />
+                                                                    <circle cx="9" cy="7" r="3" fill="#ffffff" />
+                                                                </g>
+                                                            )}
+
+                                                            {/* Multiple trial colored band */}
+                                                            {displayLinkedTrials && plot.studyName && (
+                                                                <rect
+                                                                    x={4}
+                                                                    y={42}
+                                                                    width={42}
+                                                                    height={5}
+                                                                    fill={linkedTrialsList.find(t => t.name === plot.studyName)?.bg || '#888'}
+                                                                />
+                                                            )}
+                                                        </g>
+                                                    );
+                                                })}
+											</g>
+                                        );
+									})}
+                                </g>
+                            </svg>
+
+                            {/* Dynamic Tooltip */}
+                            {hoveredPlot && (
+                                <div
+                                    className="fixed bg-black/85 text-white px-3 py-2 rounded-md z-10000 text-[11px] pointer-events-none max-w-70"
+                                    style={{
+                                        top: hoveredPlot.y + 15,
+                                        left: hoveredPlot.x + 15,
+                                    }}
+                                >
+                                    {(() => {
+                                        const plot = hoveredPlot.plot;
+                                        const coordKey = `${plot.observationUnitPosition?.positionCoordinateX}-${plot.observationUnitPosition?.positionCoordinateY}`;
+                                        if (overlappingPlots[coordKey]) {
+                                            return (
+                                                <div>
+                                                    <strong>Overlapping Plots:</strong>{' '}
+                                                    {overlappingPlots[coordKey].map(p => {
+                                                        const code = p.observationUnitPosition?.observationLevel?.levelCode || p.observationUnitName;
+                                                        return displayLinkedTrials && p.studyName ? `${code} (${p.studyName})` : code;
+                                                    }).join(', ')}
+                                                </div>
+                                            );
+                                        }
+                                        return (
+                                            <>
+                                                {displayLinkedTrials && plot.studyName && (
+                                                    <div>
+                                                        <strong>Trial Name:</strong>{' '}
+                                                        {(() => {
+                                                            const t = linkedTrialsList.find(lt => lt.name === plot.studyName);
+                                                            if (t) {
+                                                                return (
+                                                                    <span style={{ backgroundColor: t.bg, color: t.fg, padding: '1px 2px', borderRadius: '4px' }}>
+                                                                        {plot.studyName}
+                                                                    </span>
+                                                                );
+                                                            }
+                                                            return <span>{plot.studyName}</span>;
+                                                        })()}
+                                                    </div>
+                                                )}
+                                                <div><strong>Plot Name:</strong> {plot.observationUnitName}</div>
+                                                {plot.type === 'data' && (
+                                                    <>
+                                                        <div><strong>Plot Number:</strong> {plot.observationUnitPosition?.observationLevel?.levelCode}</div>
+                                                        {plot.observationUnitPosition?.observationLevelRelationships && plot.observationUnitPosition.observationLevelRelationships.length > 1 && (
+                                                            <>
+                                                                <div><strong>Block Number:</strong> {plot.observationUnitPosition.observationLevelRelationships[1].levelCode}</div>
+                                                                <div><strong>Rep Number:</strong> {plot.observationUnitPosition.observationLevelRelationships[0].levelCode}</div>
+                                                            </>
+                                                        )}
+                                                        {plot.germplasmName && <div><strong>Accession Name:</strong> {plot.germplasmName}</div>}
+                                                        {plot.crossName && <div><strong>Cross Unique ID:</strong> {plot.crossName}</div>}
+                                                        {plot.additionalInfo?.familyName && <div><strong>Family Name:</strong> {plot.additionalInfo.familyName}</div>}
+                                                        {plot.additionalInfo?.intercropGermplasm?.map((g, i) => (
+                                                            <div key={i}><strong>Accession Name:</strong> {g.germplasmName}</div>
+                                                        ))}
+                                                        {selectedView !== 'fieldmap' && selectedView !== 'geofieldmap' && (
+                                                            <div className="text-[#ffd700] mt-1">
+                                                                <strong>Trait Name:</strong> {selectedViewLabel.replace(/ \(corrected\)| \(adjustment\)/, '')}<br />
+                                                                <strong>Trait Value:</strong> {(() => {
+                                                                    const val = heatmapData[plot.observationUnitDbId || '']?.val;
+                                                                    if (val === undefined) return <em>NA</em>;
+                                                                    const num = parseFloat(String(val));
+                                                                    return isNaN(num) ? val : Math.round((num + Number.EPSILON) * 100) / 100;
+                                                                })()}
+                                                            </div>
+                                                        )}
+                                                    </>
+                                                )}
+                                            </>
+                                        );
+                                    })()}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Legend Container */}
-            <div className="panel panel-default">
+            <div id="legend_list" className="panel panel-default">
                 <div className="panel-body">
                     <div className="flex gap-3.75 flex-wrap items-center">
                         <span className="inline-block w-3.75 h-3.75 bg-[#ffffff] border border-[#eee]"></span> Empty Coordinate
                         <span className="inline-block w-3.75 h-3.75 bg-[#ecefef] border border-[#ddd]"></span> Border Plot
                         <span className="inline-block w-3.75 h-3.75 bg-[#6a5acd] border border-[#ddd]"></span> Check Plot
-                        <span className="inline-block w-3.75 h-3.75 bg-[#c7e9b4] border border-[#ddd]"></span> Standard Plot
+                        <span className="inline-block w-3.75 h-3.75 bg-[#c7e9b4] border border-[#ddd]"></span> Even Block
+                        <span className="inline-block w-3.75 h-3.75 bg-[#41b6c4] border border-[#ddd]"></span> Odd Block
+                        <span className="inline-block w-3.75 h-3.75 bg-[#000000] border-2 border-[#ff0000]"></span> Overlapping Plots
                         {selectedView !== 'fieldmap' && (
                             <div className="flex items-center gap-2.5">
                                 <span>Low Value</span>
-                                <div className="w-30 h-3.75" style={{ background: `linear-gradient(to right, ${valueColorScale.colors?.join(', ') || 'white, darkred'})` }} />
+                                <div className="w-30 h-3.75" style={{ background: `linear-gradient(to right, \thermalColorScale_gradient_key, ${valueColorScale.colors?.join(', ') || 'white, darkred'})` }} />
                                 <span>High Value</span>
                             </div>
                         )}
                     </div>
                 </div>
             </div>
+
+            {/* Download CSV Layout Customizer */}
+            {showDownloadCSVModal && (
+                <div className="modal show block bg-black/50">
+                    <div className="modal-dialog">
+                        <div className="modal-content">
+                            <div className="modal-header">
+                                <button type="button" className="close" onClick={() => setShowDownloadCSVModal(false)}>&times;</button>
+                                <h4 className="modal-title">Download Spatial Layout Customizer</h4>
+                            </div>
+                            <div className="modal-body">
+                                <div className="checkbox">
+                                    <label><input type="checkbox" checked={csvDownloadOpts.accession} onChange={e => setCsvDownloadOpts({ ...csvDownloadOpts, accession: e.target.checked })} /> Cross / Accession Name</label>
+                                </div>
+                                <div className="checkbox">
+                                    <label><input type="checkbox" checked={csvDownloadOpts.obsUnit} onChange={e => setCsvDownloadOpts({ ...csvDownloadOpts, obsUnit: e.target.checked })} /> Plot Name</label>
+                                </div>
+                                <div className="checkbox">
+                                    <label><input type="checkbox" checked={csvDownloadOpts.seedlot} onChange={e => setCsvDownloadOpts({ ...csvDownloadOpts, seedlot: e.target.checked })} /> Seedlot Name</label>
+                                </div>
+                                <div className="checkbox">
+                                    <label><input type="checkbox" checked={csvDownloadOpts.plotId} onChange={e => setCsvDownloadOpts({ ...csvDownloadOpts, plotId: e.target.checked })} /> Plot ID</label>
+                                </div>
+                                <div className="checkbox">
+                                    <label><input type="checkbox" checked={csvDownloadOpts.plotNum} onChange={e => setCsvDownloadOpts({ ...csvDownloadOpts, plotNum: e.target.checked })} /> Plot Number</label>
+                                </div>
+                            </div>
+                            <div className="modal-footer">
+                                <button className="btn btn-default" onClick={() => setShowDownloadCSVModal(false)}>Close</button>
+                                <button className="btn btn-primary" onClick={handleDownloadCSV}>Download CSV</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Suppress Phenotype outlier dialog */}
+            {showSuppressModal && selectedPlot && (
+                <div className="modal show block bg-black/50">
+                    <div className="modal-dialog">
+                        <div className="modal-content">
+                            <div className="modal-header">
+                                <button type="button" className="close" onClick={() => setShowSuppressModal(false)}>&times;</button>
+                                <h4 className="modal-title">Suppress Plot Phenotype Measurement</h4>
+                            </div>
+                            <div className="modal-body">
+                                <p>Suppressed measurements will be seen as outliers and can be excluded during phenotype analysis.</p>
+                                <div><strong>Plot Name:</strong> {selectedPlot.observationUnitName}</div>
+                                <div><strong>Phenotype Value:</strong> {heatmapData[selectedPlot.observationUnitDbId || '']?.val}</div>
+                            </div>
+                            <div className="modal-footer">
+                                <button className="btn btn-default" onClick={() => setShowSuppressModal(false)}>Close</button>
+                                <button className="btn btn-danger" onClick={handleSuppressPhenotype}>Suppress Phenotype</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Delete Trait confirmation dialog */}
+            {showDeleteTraitModal && (
+                <div className="modal show block bg-black/50">
+                    <div className="modal-dialog">
+                        <div className="modal-content">
+                            <div className="modal-header text-center">
+                                <button type="button" className="close" onClick={() => setShowDeleteTraitModal(false)}>&times;</button>
+                                <h4 className="modal-title">Assayed Trait Deletion</h4>
+                            </div>
+                            <div className="modal-body">
+                                <p className="font-bold">Are you sure you want to delete this assayed trait?</p>
+                                <p>All phenotyping data values linked with this trait in this trial will be removed permanently.</p>
+                            </div>
+                            <div className="modal-footer">
+                                <button className="btn btn-default" onClick={() => setShowDeleteTraitModal(false)}>Close</button>
+                                <button className="btn btn-danger" onClick={handleDeleteSingleTrait}>Delete Trait</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Dimensions Dialog */}
             {showDimDialog && (
@@ -1109,12 +1725,20 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
                                         {/* Expandable Plot Structure Section */}
                                         {plotStructure && (
                                             <div className="mt-5">
-                                                <h5><strong>Plot Contents & Structure Hierarchy:</strong></h5>
-                                                <div className="max-h-62.5 overflow-y-auto bg-[#f5f5f5] p-2.5 rounded">
-                                                    <pre className="m-0 text-[11px] border-none bg-transparent">
-                                                        {JSON.stringify(plotStructure, null, 2)}
-                                                    </pre>
-                                                </div>
+                                                <h5 className="font-bold mb-2">Plot Contents & Structure Hierarchy:</h5>
+                                                {plotStructureLayoutType === 'subplot_grid' ? (
+                                                    <div className="p-2.5 border rounded bg-[#fafafa]">
+                                                        <RenderSubplotGrid node={plotStructure} />
+                                                    </div>
+                                                ) : plotStructureLayoutType === 'plant_grid' ? (
+                                                    <div className="p-2.5 border rounded bg-[#fafafa]">
+                                                        <RenderPlantGrid node={plotStructure} />
+                                                    </div>
+                                                ) : (
+                                                    <div className="max-h-62.5 overflow-y-auto bg-[#f5f5f5] p-2.5 rounded text-xs">
+                                                        <pre className="border-0 bg-transparent p-0 m-0">{JSON.stringify(plotStructure, null, 2)}</pre>
+                                                    </div>
+                                                )}
                                             </div>
                                         )}
 
@@ -1138,12 +1762,36 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
                                         <div className="alert alert-warning">
                                             Replacing this accession will update layout structures and replicates. Ensure changes are correct.
                                         </div>
-                                        <button className="btn btn-primary" onClick={submitReplaceAccession}>Update Accession</button>
+                                        <button className="btn btn-primary mr-2" onClick={() => submitReplaceAccession('check')}>Update Accession</button>
+                                        {selectedView !== 'fieldmap' && selectedView !== 'geofieldmap' && heatmapData[selectedPlot.observationUnitDbId || ''] && (
+                                            <button className="btn btn-warning" onClick={() => setShowSuppressModal(true)}>Suppress Current Trait Value</button>
+                                        )}
                                     </div>
                                 )}
                             </div>
                             <div className="modal-footer">
                                 <button className="btn btn-default" onClick={() => setShowPlotDetails(false)}>Close</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Curator overrides warn popup */}
+            {showCuratorWarning && (
+                <div className="modal show block bg-black/50">
+                    <div className="modal-dialog">
+                        <div className="modal-content">
+                            <div className="modal-header">
+                                <button type="button" className="close" onClick={() => setShowCuratorWarning(false)}>&times;</button>
+                                <h4 className="modal-title">Curator Override Warning</h4>
+                            </div>
+                            <div className="modal-body">
+                                <p>One or more traits have already been assayed for this trial. Are you sure you want to replace this accession?</p>
+                            </div>
+                            <div className="modal-footer">
+                                <button className="btn btn-default" onClick={() => setShowCuratorWarning(false)}>No</button>
+                                <button className="btn btn-primary" onClick={() => submitReplaceAccession('override')}>Yes, Override</button>
                             </div>
                         </div>
                     </div>

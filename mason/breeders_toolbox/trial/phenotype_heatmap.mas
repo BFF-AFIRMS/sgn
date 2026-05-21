@@ -9,7 +9,7 @@ $trial_stock_type => undef
 </%args>
 
 <& /util/import_css.mas, paths => ['fieldmap/leaflet-search.min.css', 'fieldmap/leaflet.css'] &>
-<& /util/import_javascript.mas, entries => ['fieldmap_react'], classes => [ 'jqueryui.js', 'jquery.js', 'jstree.dist.jstree', "thickbox", "CXGN.Page.FormattingHelpers" ] &>
+<& /util/import_javascript.mas, entries => ['fieldmap_react'], classes => [ 'jqueryui.js', 'jquery.js', 'jstree.dist.jstree', "thickbox", "CXGN.Page.FormattingHelpers", 'brapi.fieldmap.leaflet', 'brapi.fieldmap.L-Path-Transform', 'brapi.fieldmap.leaflet-search', 'brapi.fieldmap.turf', 'brapi.BrAPI', 'brapi.BrAPIFieldmap' ] &>
 
 <div id="fieldmap_react_root"></div>
 
