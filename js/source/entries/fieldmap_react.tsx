@@ -316,8 +316,12 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
             }
 
             if (plot.observationUnitPosition?.observationLevel?.levelName === 'plot') {
+                let type: Plot['type'] = 'data';
+                if (plot.observationUnitPosition.entryType === 'filler') type = 'filler';
+                else if (plot.observationUnitPosition.entryType === 'border') type = 'border';
+
                 mapped[plot.observationUnitDbId] = {
-                    type: 'data',
+                    type,
                     observationUnitDbId: plot.observationUnitDbId,
                     observationUnitName: plot.observationUnitName,
                     observationUnitPosition: {
@@ -377,7 +381,7 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
     }, [plotObject]);
 
     const bounds = useMemo(() => {
-        if (plotList.length === 0) return { minCol: 1, maxCol: 1, minRow: 1, maxRow: 1, numRows: 1, numCols: 1 };
+        if (plotList.length === 0) return { minCol: 1, maxCol: dimensions.cols || 1, minRow: 1, maxRow: dimensions.rows || 1, numRows: dimensions.rows || 1, numCols: dimensions.cols || 1 };
         let minCol = Infinity;
         let minRow = Infinity;
         let maxCol = -Infinity;
@@ -401,6 +405,13 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
         if (minRow === Infinity) minRow = 1;
         if (maxRow === -Infinity) maxRow = 1;
 
+        if (dimensions.cols > (maxCol - minCol + 1)) {
+            maxCol = minCol + dimensions.cols - 1;
+        }
+        if (dimensions.rows > (maxRow - minRow + 1)) {
+            maxRow = minRow + dimensions.rows - 1;
+        }
+
         return {
             minCol,
             maxCol,
@@ -409,10 +420,27 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
             numRows: maxRow - minRow + 1,
             numCols: maxCol - minCol + 1
         };
-    }, [plotList]);
+    }, [plotList, dimensions]);
+
+    const renderBounds = useMemo(() => {
+        const { minCol, maxCol, minRow, maxRow } = bounds;
+        const rMinCol = leftBorder ? minCol - 1 : minCol;
+        const rMaxCol = rightBorder ? maxCol + 1 : maxCol;
+        const rMinRow = bottomBorder ? minRow - 1 : minRow;
+        const rMaxRow = topBorder ? maxRow + 1 : maxRow;
+
+        return {
+            minCol: rMinCol,
+            maxCol: rMaxCol,
+            minRow: rMinRow,
+            maxRow: rMaxRow,
+            numRows: rMaxRow - rMinRow + 1,
+            numCols: rMaxCol - rMinCol + 1
+        };
+    }, [bounds, topBorder, bottomBorder, leftBorder, rightBorder]);
 
     const gridMatrix = useMemo(() => {
-        const { minCol, maxCol, minRow, maxRow } = bounds;
+        const { minCol, maxCol, minRow, maxRow } = renderBounds;
         const matrix: Plot[][] = [];
         const indexed: Record<string, Plot[]> = {};
 
@@ -432,13 +460,15 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
                 if (found && found.length > 0) {
                     rowArr.push(found[0]);
                 } else {
+                    const isBorder = (r < bounds.minRow || r > bounds.maxRow || c < bounds.minCol || c > bounds.maxCol);
                     rowArr.push({
-                        type: 'empty_space',
-                        observationUnitName: `Empty Space (${c}_${r})`,
+                        type: isBorder ? 'border' : (fillerAccessionId ?  'filler' : 'empty_space'),
+                        observationUnitName: isBorder ? `Border (${c}_${r})` : (fillerAccessionId ? `Filler (${c}_${r})` : `Space (${c}_${r})`),
                         observationUnitPosition: {
                             positionCoordinateX: c,
                             positionCoordinateY: r,
-                            observationLevel: { levelCode: '', levelName: 'plot' }
+                            observationLevel: { levelCode: '', levelName: 'plot' },
+                            entryType: isBorder ? 'border' : (fillerAccessionId ? 'filler' : undefined)
                         }
                     });
                 }
@@ -447,7 +477,7 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
         }
 
         return matrix;
-    }, [bounds, plotList]);
+    }, [bounds, renderBounds, plotList, fillerAccessionId]);
 
     console.log(plotList);
     console.log(bounds);
@@ -585,8 +615,11 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
         if (!answer) return;
         setLoading(true);
 
-        const brapiPostObject = plotList
-            .filter(plot => plot.type === 'filler')
+        const allPlots = gridMatrix.flat();
+        const plotsToCreate = allPlots.filter(plot => !plot.observationUnitDbId && (plot.type === 'filler' || plot.type === 'border'));
+
+        // Only send POST if we have an accession to assign to new units
+        const brapiPostObject = fillerAccessionId ? plotsToCreate
             .map((plot, i) => ({
                 additionalInfo: {
                     invert_row_checkmark: invertRows,
@@ -602,15 +635,16 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
                 observationUnitPosition: {
                     observationLevel: { levelCode: 1000 + i, levelName: 'plot', levelOrder: 2 },
                     positionCoordinateX: plot.observationUnitPosition.positionCoordinateX,
-                    positionCoordinateY: plot.observationUnitPosition.positionCoordinateY
+                    positionCoordinateY: plot.observationUnitPosition.positionCoordinateY,
+                    entryType: plot.type
                 },
                 trialDbId: trialId,
                 studyDbId: trialId
-            }));
+            })) : [];
 
         const brapiPutObject: Record<string, any> = {};
-        plotList
-            .filter(plot => plot.type === 'data')
+        allPlots
+            .filter(plot => !!plot.observationUnitDbId)
             .forEach(plot => {
                 brapiPutObject[plot.observationUnitDbId!] = {
                     additionalInfo: {
@@ -627,7 +661,8 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
                     observationUnitPosition: {
                         observationLevel: { levelCode: plot.observationUnitPosition.observationLevel.levelCode, levelName: 'plot', levelOrder: 2 },
                         positionCoordinateX: plot.observationUnitPosition.positionCoordinateX,
-                        positionCoordinateY: plot.observationUnitPosition.positionCoordinateY
+                        positionCoordinateY: plot.observationUnitPosition.positionCoordinateY,
+                        entryType: plot.type === 'data' ? plot.observationUnitPosition.entryType : plot.type
                     },
                     trialDbId: trialId
                 };
@@ -681,6 +716,22 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
             hm_row: downloadOpts.hmRow
         }).toString();
         window.open(`/ajax/breeders/trial_plot_order?${q}`, '_blank');
+    };
+
+    const handleApplyDimensions = () => {
+        if (fillerAccessionInput) {
+            fetch(`/ajax/breeders/trial/${trialId}/accession_exists?accession_name=${encodeURIComponent(fillerAccessionInput)}`)
+                .then(res => res.json())
+                .then(response => {
+                    if (response.success) {
+                        setFillerAccessionId(response.success);
+                    } else {
+                        alert(response.error || 'Accession not found.');
+                    }
+                });
+        }
+        setDimensions({ rows: parseInt(dimRowsInput) || 0, cols: parseInt(dimColsInput) || 0 });
+        setShowDimDialog(false);
     };
 
     return (
@@ -789,21 +840,24 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
 
                     <div className="relative border border-[#ddd] p-2.5 bg-[#fcfcfc] min-h-75 flex justify-center">
                         <svg
-                            width={(bounds.numCols + (leftBorder ? 1 : 0) + (rightBorder ? 1 : 0)) * 55 + 50}
-                            height={(bounds.numRows + (topBorder ? 1 : 0) + (bottomBorder ? 1 : 0)) * 55 + 50}
+                            width={renderBounds.numCols * 55 + 50}
+                            height={renderBounds.numRows * 55 + 50}
                         >
                             <g transform="translate(25, 25)">
                                 {gridMatrix.map((row, rIdx) => {
-                                    const displayY = invertRows ? rIdx : bounds.numRows - rIdx - 1;
+                                    const displayY = invertRows ? rIdx : renderBounds.numRows - rIdx - 1;
                                     return row.map((plot, cIdx) => {
                                         const plotX = cIdx * 52;
                                         const plotY = displayY * 52;
                                         const isOverlapping = false; // Add custom check if multiple plots share coordinates
                                         let fill = '#c7e9b4';
-                                        if (plot.type === 'empty_space') fill = '#ecefef';
-                                        else if (plot.observationUnitPosition?.entryType === 'check') fill = '#6a5acd';
-                                        else if (selectedView !== 'fieldmap' && selectedView !== 'geofieldmap') {
-                                            const valObj = heatmapData[plot.observationUnitDbId || ''];
+
+                                        if (plot.observationUnitPosition?.entryType === 'check') fill = '#6a5acd';
+                                        else if (plot.type === 'border' || plot.type === 'filler') fill = '#ecefef';
+                                        else if (plot.type === 'empty_space') fill = 'transparent';
+
+                                        if (selectedView !== 'fieldmap' && selectedView !== 'geofieldmap' && plot.observationUnitDbId) {
+                                            const valObj = heatmapData[plot.observationUnitDbId];
                                             fill = valObj ? valueColorScale.scale(valObj.val) : '#a9afaf';
                                         }
 
@@ -816,14 +870,16 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
                                                 onMouseEnter={(e) => setHoveredPlot({ plot, x: e.clientX, y: e.clientY })}
                                                 onMouseLeave={() => setHoveredPlot(null)}
                                             >
-                                                <rect
-                                                    width={50}
-                                                    height={50}
-                                                    rx={4}
-                                                    fill={fill}
-                                                    stroke={isOverlapping ? '#ff0000' : '#41b6c4'}
-                                                    strokeWidth={isOverlapping ? 3 : 1.5}
-                                                />
+                                                {plot.type !== 'empty_space' && (
+                                                    <rect
+                                                        width={50}
+                                                        height={50}
+                                                        rx={4}
+                                                        fill={fill}
+                                                        stroke={isOverlapping ? '#ff0000' : (plot.type === 'border' || plot.type === 'filler' ? '#eee' : '#41b6c4')}
+                                                        strokeWidth={isOverlapping ? 3 : 1.5}
+                                                    />
+                                                )}
                                                 {plot.type === 'data' && (
                                                     <text x={25} y={30} textAnchor="middle" fill="#000" fontSize="10" fontWeight="bold">
                                                         {plot.observationUnitPosition.observationLevel.levelCode}
@@ -870,7 +926,8 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
             <div className="panel panel-default">
                 <div className="panel-body">
                     <div className="flex gap-3.75 flex-wrap items-center">
-                        <span className="inline-block w-3.75 h-3.75 bg-[#ecefef] border border-[#ddd]"></span> Empty Coordinate
+                        <span className="inline-block w-3.75 h-3.75 bg-[#ffffff] border border-[#eee]"></span> Empty Coordinate
+                        <span className="inline-block w-3.75 h-3.75 bg-[#ecefef] border border-[#ddd]"></span> Border Plot
                         <span className="inline-block w-3.75 h-3.75 bg-[#6a5acd] border border-[#ddd]"></span> Check Plot
                         <span className="inline-block w-3.75 h-3.75 bg-[#c7e9b4] border border-[#ddd]"></span> Standard Plot
                         {selectedView !== 'fieldmap' && (
@@ -909,10 +966,7 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
                             </div>
                             <div className="modal-footer">
                                 <button className="btn btn-default" onClick={() => setShowDimDialog(false)}>Cancel</button>
-                                <button className="btn btn-primary" onClick={() => {
-                                    setDimensions({ rows: parseInt(dimRowsInput) || 0, cols: parseInt(dimColsInput) || 0 });
-                                    setShowDimDialog(false);
-                                }}>Apply</button>
+                                <button className="btn btn-primary" onClick={handleApplyDimensions}>Apply</button>
                             </div>
                         </div>
                     </div>
