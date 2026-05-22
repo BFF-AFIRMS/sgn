@@ -1066,13 +1066,49 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
         const title = selectedView === 'fieldmap' ? 'Field Map View' : selectedViewLabel;
         const printWindow = window.open('', '', 'width=800,height=600');
         if (printWindow) {
-            printWindow.document.write('<html><head><title>Print Field Map</title></head><body style="display: flex;justify-content: center;align-items: center;flex-direction: column;margin: 0;">');
-            printWindow.document.write(`<h1>${title}</h1>`);
-            printWindow.document.write(document.getElementById('legend_list')?.outerHTML || '');
-            printWindow.document.write(document.getElementById('fieldmap_chart_svg')?.outerHTML || '');
-            printWindow.document.write('</body></html>');
+            printWindow.document.write('<html><head><title>Print Field Map</title>');
+            
+            // Copy styles from the main window to ensure Tailwind classes work in the print window
+            document.querySelectorAll('style, link[rel="stylesheet"]').forEach(style => {
+                printWindow.document.write(style.outerHTML);
+            });
+
+            printWindow.document.write(`
+                <style>
+                    body {
+                        display: flex;
+                        justify-content: center;
+                        align-items: center;
+                        flex-direction: column;
+                        margin: 0;
+                        padding: 20px;
+                    }
+                    svg {
+                        max-width: 100%;
+                        height: auto !important;
+                        display: block;
+                        margin: 0 auto;
+                    }
+                    #legend_list {
+                        width: 100%;
+                        margin-bottom: 20px;
+                    }
+                    @media print {
+                        body { padding: 0; }
+                    }
+                </style>
+            </head>
+            <body>
+                <h1>${title}</h1>
+                ${document.getElementById('legend_list')?.outerHTML || ''}
+                ${document.getElementById('fieldmap_chart_svg')?.outerHTML || ''}
+            </body></html>
+            `);
             printWindow.document.close();
-            printWindow.print();
+            
+            setTimeout(() => {
+                if (printWindow) printWindow.print();
+            }, 500);
         }
     };
 
@@ -1241,6 +1277,9 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
         }
         return 'tree';
     }, [plotStructure]);
+
+    const svgWidth = (renderBounds.numCols + 1) * 55 + 50;
+    const svgHeight = (renderBounds.numRows + 1) * 55 + 50;
 
     return (
         <div className="tw:p-3.75">
@@ -1418,8 +1457,9 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
                             <svg
                                 id="fieldmap_chart_svg"
                                 className="tw:max-w-none tw:shrink-0"
-                                width={(renderBounds.numCols + 1) * 55 + 50}
-                                height={(renderBounds.numRows + 1) * 55 + 50}
+                                width={svgWidth}
+                                height={svgHeight}
+                                viewBox={`0 0 ${svgWidth} ${svgHeight}`}
                             >
                                 <g transform="translate(50, 25)">
                                     {/* Column Labels */}
