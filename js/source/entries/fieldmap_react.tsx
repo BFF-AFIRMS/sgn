@@ -452,6 +452,8 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
         const mapped: Record<string, Plot> = {};
         const pseudo_layout: Record<string, number> = {};
 
+        let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+
         data.forEach(plot => {
             let x = parseInt(plot.observationUnitPosition?.positionCoordinateX);
             let y = parseInt(plot.observationUnitPosition?.positionCoordinateY);
@@ -475,6 +477,9 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
                     x = 1;
                 }
             }
+
+            if (!isNaN(x)) { minX = Math.min(minX, x); maxX = Math.max(maxX, x); }
+            if (!isNaN(y)) { minY = Math.min(minY, y); maxY = Math.max(maxY, y); }
 
             if (plot.observationUnitPosition?.observationLevel?.levelName === 'plot') {
                 let type: Plot['type'] = 'data';
@@ -503,6 +508,10 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
             }
         });
         setPlotObject(mapped);
+        setDimensions({
+            rows: isFinite(maxY) ? maxY - minY + 1 : 0,
+            cols: isFinite(maxX) ? maxX - minX + 1 : 0
+        });
     };
 
     const toggleLinkedTrials = (checked: boolean) => {
@@ -674,6 +683,52 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
         });
         return overlaps;
     }, [plotList]);
+
+    const recalculateLayout = (currentPlots: Record<string, Plot>, rows: number, cols: number, layout: 'serpentine' | 'zigzag') => {
+        const plotsArr = Object.values(currentPlots).filter(p => !!p.observationUnitDbId);
+        
+        let minC = Infinity, minR = Infinity;
+        plotsArr.forEach(p => {
+            const x = Number(p.observationUnitPosition.positionCoordinateX);
+            const y = Number(p.observationUnitPosition.positionCoordinateY);
+            if (x < minC) minC = x;
+            if (y < minR) minR = y;
+        });
+        if (minC === Infinity) minC = 1;
+        if (minR === Infinity) minR = 1;
+
+        const sortedPlots = [...plotsArr];
+        sortedPlots.sort((a, b) => {
+            const codeA = parseFloat(String(a.observationUnitPosition?.observationLevel?.levelCode)) || 0;
+            const codeB = parseFloat(String(b.observationUnitPosition?.observationLevel?.levelCode)) || 0;
+            return codeA - codeB;
+        });
+
+        const newPlotObject: Record<string, Plot> = {};
+        let plotIdx = 0;
+        for (let r = 0; r < rows; r++) {
+            const currentRow = minR + r;
+            const swap_columns = layout === 'serpentine' && (currentRow % 2 === 0);
+
+            for (let c = 0; c < cols; c++) {
+                if (plotIdx < sortedPlots.length) {
+                    const plot = sortedPlots[plotIdx];
+                    const currentCol = swap_columns ? (minC + cols - 1 - c) : (minC + c);
+
+                    newPlotObject[plot.observationUnitDbId!] = {
+                        ...plot,
+                        observationUnitPosition: {
+                            ...plot.observationUnitPosition,
+                            positionCoordinateX: currentCol,
+                            positionCoordinateY: currentRow,
+                        }
+                    };
+                    plotIdx++;
+                }
+            }
+        }
+        return newPlotObject;
+    };
 
     const getHeatmapObservations = (variableId: string) => {
         setLoading(true);
@@ -970,19 +1025,22 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
             return;
         }
 
+        const proceed = (accessionId?: string) => {
+            if (accessionId) setFillerAccessionId(accessionId);
+            setDimensions({ rows, cols });
+            setPlotObject(prev => recalculateLayout(prev, rows, cols, plotLayout));
+            setShowDimDialog(false);
+        };
+
         if (fillerAccessionInput) {
             fetch(`/ajax/breeders/trial/${trialId}/accession_exists?accession_name=${encodeURIComponent(fillerAccessionInput)}`)
                 .then(res => res.json())
                 .then(response => {
-                    if (response.success) {
-                        setFillerAccessionId(response.success);
-                    } else {
-                        alert(response.error || 'Accession not found.');
-                    }
+                    if (response.success) proceed(response.success); else alert(response.error || 'Accession not found.');
                 });
+        } else {
+            proceed();
         }
-        setDimensions({ rows, cols });
-        setShowDimDialog(false);
     };
 
     const handleTranspose = () => {
@@ -1314,7 +1372,16 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
                         <div className="tw:flex tw:gap-5 tw:flex-wrap tw:mb-3.75">
                             <div className="form-inline">
                                 <label className="tw:mr-1.25">Plot Layout:</label>
-                                <select className="form-control" value={plotLayout} onChange={e => setPlotLayout(e.target.value as any)} disabled={displayLinkedTrials}>
+                                <select 
+                                    className="form-control" 
+                                    value={plotLayout} 
+                                    onChange={e => {
+                                        const nextLayout = e.target.value as 'serpentine' | 'zigzag';
+                                        setPlotLayout(nextLayout);
+                                        setPlotObject(prev => recalculateLayout(prev, dimensions.rows || bounds.numRows, dimensions.cols || bounds.numCols, nextLayout));
+                                    }} 
+                                    disabled={displayLinkedTrials}
+                                >
                                     <option value="serpentine">Serpentine</option>
                                     <option value="zigzag">Zigzag</option>
                                 </select>
