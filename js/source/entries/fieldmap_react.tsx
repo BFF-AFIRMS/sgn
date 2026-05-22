@@ -1073,8 +1073,16 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
                 printWindow.document.write(style.outerHTML);
             });
 
+            // Extract the dynamic gradient style to override print resets
+            const gradientDiv = document.querySelector('#legend_list div[style*="linear-gradient"]');
+            const gradientStyle = gradientDiv ? (gradientDiv as HTMLElement).style.background : '';
+
             printWindow.document.write(`
                 <style>
+                    * {
+                        -webkit-print-color-adjust: exact !important;
+                        print-color-adjust: exact !important;
+                    }
                     body {
                         display: flex;
                         justify-content: center;
@@ -1095,6 +1103,29 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
                     }
                     @media print {
                         body { padding: 0; }
+                        
+                        /* Override aggressive print resets (like Bootstrap's) by using higher specificity than '*' */
+                        #legend_list span, 
+                        #legend_list div {
+                            print-color-adjust: exact !important;
+                            -webkit-print-color-adjust: exact !important;
+                        }
+
+                        /* Re-assert the dynamic heatmap gradient */
+                        #legend_list div[style*="linear-gradient"] {
+                            background: ${gradientStyle} !important;
+                        }
+
+                        /* Explicitly re-assert standard legend colors to fight off 'background: transparent !important' */
+                        #legend_list .tw\\:bg-\\[\\#d3d3d3\\] { background-color: #d3d3d3 !important; }
+                        #legend_list .tw\\:bg-\\[\\#c7e9b4\\] { background-color: #c7e9b4 !important; }
+                        #legend_list .tw\\:bg-\\[\\#41b6c4\\] { background-color: #41b6c4 !important; }
+                        #legend_list .tw\\:bg-\\[\\#6a5acd\\] { background-color: #6a5acd !important; }
+                        #legend_list .tw\\:bg-\\[\\#008000\\] { background-color: #008000 !important; }
+                        #legend_list .tw\\:bg-\\[\\#ff0000\\] { background-color: #ff0000 !important; }
+                        #legend_list .tw\\:bg-\\[\\#000000\\] { background-color: #000000 !important; }
+                        #legend_list .tw\\:bg-\\[\\#a9afaf\\] { background-color: #a9afaf !important; }
+                        #legend_list .tw\\:bg-\\[\\#ffffff\\] { background-color: #ffffff !important; }
                     }
                 </style>
             </head>
