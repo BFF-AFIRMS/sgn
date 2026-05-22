@@ -1309,7 +1309,7 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
                     </div>
                 </div>
             ) : (
-                <div key="standard-fieldmap-panel" className="panel panel-default tw:overflow-auto">
+                <div key="standard-fieldmap-panel" className="panel panel-default">
                     <div className="panel-body">
                         <div className="tw:flex tw:gap-5 tw:flex-wrap tw:mb-3.75">
                             <div className="form-inline">
@@ -1347,9 +1347,10 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
                             )}
                         </div>
 
-                        <div className="tw:relative tw:border tw:border-[#ddd] tw:p-2.5 tw:bg-[#fcfcfc] tw:min-h-75 tw:flex tw:justify-center">
+                        <div className="tw:relative tw:border tw:border-[#ddd] tw:p-2.5 tw:bg-[#fcfcfc] tw:min-h-75 tw:flex tw:overflow-auto">
                             <svg
                                 id="fieldmap_chart_svg"
+                                className="tw:max-w-none tw:shrink-0"
                                 width={(renderBounds.numCols + 1) * 55 + 50}
                                 height={(renderBounds.numRows + 1) * 55 + 50}
                             >
