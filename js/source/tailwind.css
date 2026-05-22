@@ -1,4 +1,7 @@
-@import "tailwindcss";
+@layer theme, base, components, utilities;
+
+@import "tailwindcss/theme" layer(theme) prefix(tw);
+@import "tailwindcss/utilities" layer(utilities);
 
 @source "../../mason/**/*.mas";
 @source "./**/*.{ts,tsx,js,jsx}";

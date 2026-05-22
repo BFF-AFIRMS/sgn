@@ -132,19 +132,19 @@ const RenderPlantGrid: React.FC<{ node: PlotStructureNode }> = ({ node }) => {
         for (let c = 0; c <= maxCol; c++) {
             if (r === 0) {
                 if (c === 0) {
-                    cols.push(<th key="empty" className="border-0"></th>);
+                    cols.push(<th key="empty" className="tw:border-0"></th>);
                 } else {
-                    cols.push(<th key={`col-header-${c}`} className="border-0 text-center align-middle p-1 text-xs">{c}</th>);
+                    cols.push(<th key={`col-header-${c}`} className="tw:border-0 tw:text-center tw:align-middle tw:p-1 tw:text-xs">{c}</th>);
                 }
             } else {
                 if (c === 0) {
-                    cols.push(<th key={`row-header-${r}`} className="border-0 text-left align-middle pr-2 text-xs">{r}</th>);
+                    cols.push(<th key={`row-header-${r}`} className="tw:border-0 tw:text-left tw:align-middle tw:pr-2 tw:text-xs">{r}</th>);
                 } else {
                     const key = `${r},${c}`;
                     const plantName = coordMap[key];
                     cols.push(
-                        <td key={key} className="border border-black p-1 rounded text-center align-middle text-[11px] min-w-15 h-8">
-                            {plantName || <span className="text-gray-300">empty</span>}
+                        <td key={key} className="tw:border tw:border-black tw:p-1 tw:rounded tw:text-center tw:align-middle tw:text-[11px] tw:min-w-15 tw:h-8">
+                            {plantName || <span className="tw:text-gray-300">empty</span>}
                         </td>
                     );
                 }
@@ -154,7 +154,7 @@ const RenderPlantGrid: React.FC<{ node: PlotStructureNode }> = ({ node }) => {
     }
     
     return (
-        <table className="border-separate border-spacing-1 overflow-hidden mx-auto mt-2" style={{ aspectRatio: `${maxCol + 1} / ${maxRow + 1}` }}>
+        <table className="tw:border-separate tw:border-spacing-1 tw:overflow-hidden tw:mx-auto tw:mt-2" style={{ aspectRatio: `${maxCol + 1} / ${maxRow + 1}` }}>
             <tbody>{rows}</tbody>
         </table>
     );
@@ -164,10 +164,10 @@ const RenderSubplotGrid: React.FC<{ node: PlotStructureNode }> = ({ node }) => {
     if (!node.has) return null;
     
     return (
-        <div className="flex flex-col gap-2.5 items-center mt-2">
+        <div className="tw:flex tw:flex-col tw:gap-2.5 tw:items-center tw:mt-2">
             {Object.entries(node.has).sort(([a], [b]) => a.localeCompare(b)).map(([subplotName, subplotNode]) => (
-                <div key={subplotName} className="border border-gray-400 p-2.5 rounded-lg text-center align-middle w-full">
-                    <div className="font-bold mb-1 text-sm">{subplotName}</div>
+                <div key={subplotName} className="tw:border tw:border-gray-400 tw:p-2.5 tw:rounded-lg tw:text-center tw:align-middle tw:w-full">
+                    <div className="tw:font-bold tw:mb-1 tw:text-sm">{subplotName}</div>
                     <RenderPlantGrid node={subplotNode} />
                 </div>
             ))}
@@ -215,7 +215,7 @@ const AccessionAutocomplete: React.FC<{
     }, [value]);
 
     return (
-        <div className="relative">
+        <div className="tw:relative">
             <input
                 type="text"
                 value={value}
@@ -225,9 +225,9 @@ const AccessionAutocomplete: React.FC<{
                 className={className}
             />
             {show && suggestions.length > 0 && (
-                <ul className="dropdown-menu block w-full max-h-50 overflow-y-auto z-1000">
+                <ul className="dropdown-menu tw:block tw:w-full tw:max-h-50 tw:overflow-y-auto tw:z-1000">
                     {suggestions.map((s, idx) => (
-                        <li key={idx} onMouseDown={() => { onChange(s); setShow(false); }} className="cursor-pointer">
+                        <li key={idx} onMouseDown={() => { onChange(s); setShow(false); }} className="tw:cursor-pointer">
                             <a>{s}</a>
                         </li>
                     ))}
@@ -1185,9 +1185,9 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
     }, [plotStructure]);
 
     return (
-        <div className="p-3.75">
+        <div className="tw:p-3.75">
             {loading && (
-                <div className="fixed inset-0 bg-white/70 flex justify-center items-center z-9999">
+                <div className="tw:fixed tw:inset-0 tw:bg-white/70 tw:flex tw:justify-center tw:items-center tw:z-9999">
                     <div className="spinner-border text-primary" role="status">
                         <span className="sr-only">Loading...</span>
                     </div>
@@ -1196,9 +1196,9 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
 
             <div className="panel panel-default">
                 <div className="panel-body">
-                    <div className="flex gap-6.25 flex-wrap items-center">
-                        <div className="form-group m-0 min-w-50">
-                            <label className="mr-2.5">Select Layout View:</label>
+                    <div className="tw:flex tw:gap-6.25 tw:flex-wrap tw:items-center">
+                        <div className="form-group tw:m-0 tw:min-w-50">
+                            <label className="tw:mr-2.5">Select Layout View:</label>
                             <select
                                 className="form-control"
                                 value={selectedView}
@@ -1232,11 +1232,11 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
                             </select>
                         </div>
 
-                        <div className="form-check m-0">
+                        <div className="form-check tw:m-0">
                             <label className="form-check-label">
                                 <input
                                     type="checkbox"
-                                    className="form-check-input mr-1.25"
+                                    className="form-check-input tw:mr-1.25"
                                     checked={displayLinkedTrials}
                                     onChange={e => toggleLinkedTrials(e.target.checked)}
                                 />
@@ -1246,11 +1246,11 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
                     </div>
 
                     {displayLinkedTrials && linkedTrialsList.length > 0 && (
-                        <div className="mt-2.5 p-2.5 bg-[#f9f9f9] rounded-lg">
+                        <div className="tw:mt-2.5 tw:p-2.5 tw:bg-[#f9f9f9] tw:rounded-lg">
                             <strong>Trials in Same Field:</strong>
-                            <div className="flex gap-2.5 flex-wrap mt-1.25">
+                            <div className="tw:flex tw:gap-2.5 tw:flex-wrap tw:mt-1.25">
                                 {linkedTrialsList.map(t => (
-                                    <span key={t.id} style={{ background: t.bg, color: t.fg }} className="px-2 py-0.75 rounded-lg text-[12px]">
+                                    <span key={t.id} style={{ background: t.bg, color: t.fg }} className="tw:px-2 tw:py-0.75 tw:rounded-lg tw:text-[12px]">
                                         {t.name}
                                     </span>
                                 ))}
@@ -1262,11 +1262,11 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
 
             {selectedView !== 'fieldmap' && selectedView !== 'geofieldmap' && (
                 <div className="panel panel-default">
-                    <div className="panel-body flex gap-3.75 items-center flex-wrap">
+                    <div className="panel-body tw:flex tw:gap-3.75 tw:items-center tw:flex-wrap">
                         {!showControlsSection ? (
                             <button className="btn btn-primary btn-sm" onClick={() => setShowControlsSection(true)}>View Controls</button>
                         ) : (
-                            <div className="flex gap-2.5 items-center flex-wrap">
+                            <div className="tw:flex tw:gap-2.5 tw:items-center tw:flex-wrap">
                                 <select
                                     className="form-control"
                                     value={selectedControlPlot}
@@ -1303,37 +1303,37 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
             {/* Render view panel for Geo Field Map or Standard SVG Map */}
             {selectedView === 'geofieldmap' ? (
                 <div key="geofieldmap-panel" className="panel panel-default">
-                    <div className="panel-body flex flex-col gap-2.5">
+                    <div className="panel-body tw:flex tw:flex-col tw:gap-2.5">
                         <div ref={geoMapRef} style={{ width: '100%', height: '600px' }}></div>
-                        <button className="btn btn-success self-start" onClick={submitGeoLayout}>Submit Geo Layout Changes</button>
+                        <button className="btn btn-success tw:self-start" onClick={submitGeoLayout}>Submit Geo Layout Changes</button>
                     </div>
                 </div>
             ) : (
-                <div key="standard-fieldmap-panel" className="panel panel-default overflow-auto">
+                <div key="standard-fieldmap-panel" className="panel panel-default tw:overflow-auto">
                     <div className="panel-body">
-                        <div className="flex gap-5 flex-wrap mb-3.75">
+                        <div className="tw:flex tw:gap-5 tw:flex-wrap tw:mb-3.75">
                             <div className="form-inline">
-                                <label className="mr-1.25">Plot Layout:</label>
+                                <label className="tw:mr-1.25">Plot Layout:</label>
                                 <select className="form-control" value={plotLayout} onChange={e => setPlotLayout(e.target.value as any)} disabled={displayLinkedTrials}>
                                     <option value="serpentine">Serpentine</option>
                                     <option value="zigzag">Zigzag</option>
                                 </select>
                             </div>
-                            <div className="form-check flex items-center">
+                            <div className="form-check tw:flex tw:items-center">
                                 <label className="form-check-label">
-                                    <input type="checkbox" className="form-check-input mr-1.25" checked={invertRows} onChange={e => setInvertRows(e.target.checked)} />
+                                    <input type="checkbox" className="form-check-input tw:mr-1.25" checked={invertRows} onChange={e => setInvertRows(e.target.checked)} />
                                     Invert Rows
                                 </label>
                             </div>
-                            <div className="flex gap-2.5 items-center">
-                                <label className="m-0">Include Borders:</label>
-                                <label className="font-normal m-0"><input type="checkbox" checked={topBorder} onChange={e => setTopBorder(e.target.checked)} disabled={displayLinkedTrials} /> Top</label>
-                                <label className="font-normal m-0"><input type="checkbox" checked={bottomBorder} onChange={e => setBottomBorder(e.target.checked)} disabled={displayLinkedTrials} /> Bottom</label>
-                                <label className="font-normal m-0"><input type="checkbox" checked={leftBorder} onChange={e => setLeftBorder(e.target.checked)} disabled={displayLinkedTrials} /> Left</label>
-                                <label className="font-normal m-0"><input type="checkbox" checked={rightBorder} onChange={e => setRightBorder(e.target.checked)} disabled={displayLinkedTrials} /> Right</label>
+                            <div className="tw:flex tw:gap-2.5 tw:items-center">
+                                <label className="tw:m-0">Include Borders:</label>
+                                <label className="tw:font-normal tw:m-0"><input type="checkbox" checked={topBorder} onChange={e => setTopBorder(e.target.checked)} disabled={displayLinkedTrials} /> Top</label>
+                                <label className="tw:font-normal tw:m-0"><input type="checkbox" checked={bottomBorder} onChange={e => setBottomBorder(e.target.checked)} disabled={displayLinkedTrials} /> Bottom</label>
+                                <label className="tw:font-normal tw:m-0"><input type="checkbox" checked={leftBorder} onChange={e => setLeftBorder(e.target.checked)} disabled={displayLinkedTrials} /> Left</label>
+                                <label className="tw:font-normal tw:m-0"><input type="checkbox" checked={rightBorder} onChange={e => setRightBorder(e.target.checked)} disabled={displayLinkedTrials} /> Right</label>
                             </div>
                         </div>
-                        <div className="flex gap-2.5 mb-3.75">
+                        <div className="tw:flex tw:gap-2.5 tw:mb-3.75">
                             <button className="btn btn-default" onClick={handleTranspose} disabled={displayLinkedTrials}>Transpose Display</button>
                             <button className="btn btn-default" onClick={() => setShowDimDialog(true)} disabled={displayLinkedTrials}>Change Dimensions</button>
                             <button className="btn btn-default" onClick={() => setShowDownloadCSVModal(true)}>Download Spatial Layout (CSV)</button>
@@ -1347,7 +1347,7 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
                             )}
                         </div>
 
-                        <div className="relative border border-[#ddd] p-2.5 bg-[#fcfcfc] min-h-75 flex justify-center">
+                        <div className="tw:relative tw:border tw:border-[#ddd] tw:p-2.5 tw:bg-[#fcfcfc] tw:min-h-75 tw:flex tw:justify-center">
                             <svg
                                 id="fieldmap_chart_svg"
                                 width={(renderBounds.numCols + 1) * 55 + 50}
@@ -1421,7 +1421,7 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
                                                         <g
                                                             key={plot.observationUnitDbId || `empty-${cIdx}-${rIdx}`}
                                                             transform={`translate(${plotX}, ${plotY})`}
-                                                            className="cursor-pointer"
+                                                            className="tw:cursor-pointer"
                                                             onClick={() => handlePlotSelect(plot)}
                                                             onMouseEnter={(e) => setHoveredPlot({ plot, x: e.clientX, y: e.clientY })}
                                                             onMouseLeave={() => setHoveredPlot(null)}
@@ -1472,7 +1472,7 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
                             {/* Dynamic Tooltip */}
                             {hoveredPlot && (
                                 <div
-                                    className="fixed bg-black/85 text-white px-3 py-2 rounded-md z-10000 text-[11px] pointer-events-none max-w-70"
+                                    className="tw:fixed tw:bg-black/85 tw:text-white tw:px-3 tw:py-2 tw:rounded-md tw:z-10000 tw:text-[11px] tw:pointer-events-none tw:max-w-70"
                                     style={{
                                         top: hoveredPlot.y + 15,
                                         left: hoveredPlot.x + 15,
@@ -1527,7 +1527,7 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
                                                             <div key={i}><strong>Accession Name:</strong> {g.germplasmName}</div>
                                                         ))}
                                                         {selectedView !== 'fieldmap' && selectedView !== 'geofieldmap' && (
-                                                            <div className="text-[#ffd700] mt-1">
+                                                            <div className="tw:text-[#ffd700] tw:mt-1">
                                                                 <strong>Trait Name:</strong> {selectedViewLabel.replace(/ \(corrected\)| \(adjustment\)/, '')}<br />
                                                                 <strong>Trait Value:</strong> {(() => {
                                                                     const val = heatmapData[plot.observationUnitDbId || '']?.val;
@@ -1552,17 +1552,17 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
             {/* Legend Container */}
             <div id="legend_list" className="panel panel-default">
                 <div className="panel-body">
-                    <div className="flex gap-3.75 flex-wrap items-center">
-                        <span className="inline-block w-3.75 h-3.75 bg-[#ffffff] border border-[#eee]"></span> Empty Coordinate
-                        <span className="inline-block w-3.75 h-3.75 bg-[#ecefef] border border-[#ddd]"></span> Border Plot
-                        <span className="inline-block w-3.75 h-3.75 bg-[#6a5acd] border border-[#ddd]"></span> Check Plot
-                        <span className="inline-block w-3.75 h-3.75 bg-[#c7e9b4] border border-[#ddd]"></span> Even Block
-                        <span className="inline-block w-3.75 h-3.75 bg-[#41b6c4] border border-[#ddd]"></span> Odd Block
-                        <span className="inline-block w-3.75 h-3.75 bg-[#000000] border-2 border-[#ff0000]"></span> Overlapping Plots
+                    <div className="tw:flex tw:gap-3.75 tw:flex-wrap tw:items-center">
+                        <span className="tw:inline-block tw:w-3.75 tw:h-3.75 tw:bg-[#ffffff] tw:border tw:border-[#eee]"></span> Empty Coordinate
+                        <span className="tw:inline-block tw:w-3.75 tw:h-3.75 tw:bg-[#ecefef] tw:border tw:border-[#ddd]"></span> Border Plot
+                        <span className="tw:inline-block tw:w-3.75 tw:h-3.75 tw:bg-[#6a5acd] tw:border tw:border-[#ddd]"></span> Check Plot
+                        <span className="tw:inline-block tw:w-3.75 tw:h-3.75 tw:bg-[#c7e9b4] tw:border tw:border-[#ddd]"></span> Even Block
+                        <span className="tw:inline-block tw:w-3.75 tw:h-3.75 tw:bg-[#41b6c4] tw:border tw:border-[#ddd]"></span> Odd Block
+                        <span className="tw:inline-block tw:w-3.75 tw:h-3.75 tw:bg-[#000000] tw:border-2 tw:border-[#ff0000]"></span> Overlapping Plots
                         {selectedView !== 'fieldmap' && (
-                            <div className="flex items-center gap-2.5">
+                            <div className="tw:flex tw:items-center tw:gap-2.5">
                                 <span>Low Value</span>
-                                <div className="w-30 h-3.75" style={{ background: `linear-gradient(to right, \thermalColorScale_gradient_key, ${valueColorScale.colors?.join(', ') || 'white, darkred'})` }} />
+                                <div className="tw:w-30 tw:h-3.75" style={{ background: `linear-gradient(to right, \thermalColorScale_gradient_key, ${valueColorScale.colors?.join(', ') || 'white, darkred'})` }} />
                                 <span>High Value</span>
                             </div>
                         )}
@@ -1572,7 +1572,7 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
 
             {/* Download CSV Layout Customizer */}
             {showDownloadCSVModal && (
-                <div className="modal show block bg-black/50">
+                <div className="modal show tw:block tw:bg-black/50">
                     <div className="modal-dialog">
                         <div className="modal-content">
                             <div className="modal-header">
@@ -1607,7 +1607,7 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
 
             {/* Suppress Phenotype outlier dialog */}
             {showSuppressModal && selectedPlot && (
-                <div className="modal show block bg-black/50">
+                <div className="modal show tw:block tw:bg-black/50">
                     <div className="modal-dialog">
                         <div className="modal-content">
                             <div className="modal-header">
@@ -1630,7 +1630,7 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
 
             {/* Delete Trait confirmation dialog */}
             {showDeleteTraitModal && (
-                <div className="modal show block bg-black/50">
+                <div className="modal show tw:block tw:bg-black/50">
                     <div className="modal-dialog">
                         <div className="modal-content">
                             <div className="modal-header text-center">
@@ -1652,7 +1652,7 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
 
             {/* Dimensions Dialog */}
             {showDimDialog && (
-                <div className="modal show block bg-black/50">
+                <div className="modal show tw:block tw:bg-black/50">
                     <div className="modal-dialog">
                         <div className="modal-content">
                             <div className="modal-header">
@@ -1684,7 +1684,7 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
 
             {/* Plot Details Modal */}
             {showPlotDetails && selectedPlot && (
-                <div className="modal show block bg-black/50">
+                <div className="modal show tw:block tw:bg-black/50">
                     <div className="modal-dialog modal-lg">
                         <div className="modal-content">
                             <div className="modal-header">
@@ -1692,9 +1692,9 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
                                 <h4 className="modal-title">Plot Details: {selectedPlot.observationUnitName}</h4>
                             </div>
                             <div className="modal-body">
-                                <ul className="nav nav-tabs mb-3.75">
-                                    <li className={!showEditAccession ? 'active' : ''}><a className="cursor-pointer" onClick={() => setShowEditAccession(false)}>Summary</a></li>
-                                    <li className={showEditAccession ? 'active' : ''}><a className="cursor-pointer" onClick={() => setShowEditAccession(true)}>Replace Accession</a></li>
+                                <ul className="nav nav-tabs tw:mb-3.75">
+                                    <li className={!showEditAccession ? 'active' : ''}><a className="tw:cursor-pointer" onClick={() => setShowEditAccession(false)}>Summary</a></li>
+                                    <li className={showEditAccession ? 'active' : ''}><a className="tw:cursor-pointer" onClick={() => setShowEditAccession(true)}>Replace Accession</a></li>
                                 </ul>
 
                                 {!showEditAccession ? (
@@ -1702,20 +1702,20 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
                                         <table className="table table-bordered">
                                             <tbody>
                                                 <tr>
-                                                    <td className="w-[30%] font-bold">Plot Database ID:</td>
+                                                    <td className="tw:w-[30%] tw:font-bold">Plot Database ID:</td>
                                                     <td>{selectedPlot.observationUnitDbId}</td>
                                                 </tr>
                                                 <tr>
-                                                    <td className="font-bold">Accession Name:</td>
+                                                    <td className="tw:font-bold">Accession Name:</td>
                                                     <td>{selectedPlot.germplasmName}</td>
                                                 </tr>
                                                 <tr>
-                                                    <td className="font-bold">Plot Number:</td>
+                                                    <td className="tw:font-bold">Plot Number:</td>
                                                     <td>{selectedPlot.observationUnitPosition?.observationLevel?.levelCode}</td>
                                                 </tr>
                                                 {selectedPlot.observationUnitPosition?.positionCoordinateX && (
                                                     <tr>
-                                                        <td className="font-bold">Coordinates (X / Y):</td>
+                                                        <td className="tw:font-bold">Coordinates (X / Y):</td>
                                                         <td>{selectedPlot.observationUnitPosition.positionCoordinateX} / {selectedPlot.observationUnitPosition.positionCoordinateY}</td>
                                                     </tr>
                                                 )}
@@ -1724,26 +1724,26 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
 
                                         {/* Expandable Plot Structure Section */}
                                         {plotStructure && (
-                                            <div className="mt-5">
-                                                <h5 className="font-bold mb-2">Plot Contents & Structure Hierarchy:</h5>
+                                            <div className="tw:mt-5">
+                                                <h5 className="tw:font-bold tw:mb-2">Plot Contents & Structure Hierarchy:</h5>
                                                 {plotStructureLayoutType === 'subplot_grid' ? (
-                                                    <div className="p-2.5 border rounded bg-[#fafafa]">
+                                                    <div className="tw:p-2.5 tw:border tw:rounded tw:bg-[#fafafa]">
                                                         <RenderSubplotGrid node={plotStructure} />
                                                     </div>
                                                 ) : plotStructureLayoutType === 'plant_grid' ? (
-                                                    <div className="p-2.5 border rounded bg-[#fafafa]">
+                                                    <div className="tw:p-2.5 tw:border tw:rounded tw:bg-[#fafafa]">
                                                         <RenderPlantGrid node={plotStructure} />
                                                     </div>
                                                 ) : (
-                                                    <div className="max-h-62.5 overflow-y-auto bg-[#f5f5f5] p-2.5 rounded text-xs">
-                                                        <pre className="border-0 bg-transparent p-0 m-0">{JSON.stringify(plotStructure, null, 2)}</pre>
+                                                    <div className="tw:max-h-62.5 tw:overflow-y-auto tw:bg-[#f5f5f5] tw:p-2.5 tw:rounded tw:text-xs">
+                                                        <pre className="tw:border-0 tw:bg-transparent tw:p-0 tw:m-0">{JSON.stringify(plotStructure, null, 2)}</pre>
                                                     </div>
                                                 )}
                                             </div>
                                         )}
 
                                         {plotImages && (
-                                            <div className="mt-5">
+                                            <div className="tw:mt-5">
                                                 <h5><strong>Plot Images:</strong></h5>
                                                 <div dangerouslySetInnerHTML={{ __html: plotImages }} />
                                             </div>
@@ -1762,7 +1762,7 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
                                         <div className="alert alert-warning">
                                             Replacing this accession will update layout structures and replicates. Ensure changes are correct.
                                         </div>
-                                        <button className="btn btn-primary mr-2" onClick={() => submitReplaceAccession('check')}>Update Accession</button>
+                                        <button className="btn btn-primary tw:mr-2" onClick={() => submitReplaceAccession('check')}>Update Accession</button>
                                         {selectedView !== 'fieldmap' && selectedView !== 'geofieldmap' && heatmapData[selectedPlot.observationUnitDbId || ''] && (
                                             <button className="btn btn-warning" onClick={() => setShowSuppressModal(true)}>Suppress Current Trait Value</button>
                                         )}
@@ -1779,7 +1779,7 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
 
             {/* Curator overrides warn popup */}
             {showCuratorWarning && (
-                <div className="modal show block bg-black/50">
+                <div className="modal show tw:block tw:bg-black/50">
                     <div className="modal-dialog">
                         <div className="modal-content">
                             <div className="modal-header">
@@ -1800,13 +1800,13 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
 
             {/* Download Options Panel */}
             {hasColAndRowNumbers && (
-                <div className="panel panel-default mt-5">
+                <div className="panel panel-default tw:mt-5">
                     <div className="panel-heading">
-                        <h3 className="panel-title font-bold">Download Plot Order</h3>
+                        <h3 className="panel-title tw:font-bold">Download Plot Order</h3>
                     </div>
                     <div className="panel-body">
-                        <div className="flex gap-5 flex-wrap">
-                            <div className="form-group min-w-45">
+                        <div className="tw:flex tw:gap-5 tw:flex-wrap">
+                            <div className="form-group tw:min-w-45">
                                 <label>File Format:</label>
                                 <select
                                     className="form-control"
@@ -1821,7 +1821,7 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
                                 </select>
                             </div>
 
-                            <div className="form-group min-w-45">
+                            <div className="form-group tw:min-w-45">
                                 <label>Traversal Order:</label>
                                 <select
                                     className="form-control"
@@ -1835,7 +1835,7 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
                                 </select>
                             </div>
 
-                            <div className="form-group min-w-45">
+                            <div className="form-group tw:min-w-45">
                                 <label>Starting Corner:</label>
                                 <select
                                     className="form-control"
@@ -1851,9 +1851,9 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
                         </div>
 
                         {downloadOpts.type === 'harvestmaster' && (
-                            <div className="well well-sm mt-2.5">
+                            <div className="well well-sm tw:mt-2.5">
                                 <strong>HarvestMaster Mapping Config:</strong>
-                                <div className="flex gap-3.75 flex-wrap mt-2.5">
+                                <div className="tw:flex tw:gap-3.75 tw:flex-wrap tw:mt-2.5">
                                     <div className="form-group">
                                         <label>PLTID:</label>
                                         <select className="form-control" value={downloadOpts.hmPltid} onChange={e => setDownloadOpts({ ...downloadOpts, hmPltid: e.target.value })}>
@@ -1880,7 +1880,7 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
                             </div>
                         )}
 
-                        <div className="flex gap-3.75 my-3.75">
+                        <div className="tw:flex tw:gap-3.75 tw:my-3.75">
                             <label><input type="checkbox" checked={downloadOpts.borders} onChange={e => setDownloadOpts({ ...downloadOpts, borders: e.target.checked })} /> Include Borders</label>
                             <label><input type="checkbox" checked={downloadOpts.gaps} onChange={e => setDownloadOpts({ ...downloadOpts, gaps: e.target.checked })} /> Include Gaps</label>
                             {hasSubplotEntries && <label><input type="checkbox" checked={downloadOpts.subplots} onChange={e => setDownloadOpts({ ...downloadOpts, subplots: e.target.checked })} /> Include Subplots</label>}
