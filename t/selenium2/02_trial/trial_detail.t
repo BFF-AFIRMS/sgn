@@ -136,6 +136,7 @@ $t->while_logged_in_as("curator", sub {
         ok($trial_details =~ /Test trial detail selenium - description/, "Verify description");
 
         # edit trial details
+        sleep(5);
         $t->click_ok("edit_trial_details", "id", "open trial details");
         $t->click_ok('//select[@id="edit_trial_year_0"]/option[@value="2015"]', 'xpath', "Select '2015' as value for year 0");
         $t->click_ok("save_trial_details", "id", "save trial details");
@@ -195,7 +196,7 @@ $t->while_logged_in_as("curator", sub {
         $t->accept_alert_ok("accept add list alert");
 
         # Open a a newly created list and check details of list
-        sleep(3);
+        sleep(5);
         $t->click_ok("lists_link", "name", "find lists_link");
         $t->click_ok("view_list_plots_list", "id", "view 'plots_list' for test");
 
