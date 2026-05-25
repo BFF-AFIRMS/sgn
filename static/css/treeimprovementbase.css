@@ -438,6 +438,10 @@ button[data-dismiss]:hover {
     background:       linear-gradient( to bottom right, #efefef, #b9b8b8 );
 }
 
+.input-group-btn > .btn {
+    margin-right: 0;
+}
+
 /* Sizing */
 
 .form-group-sm .btn {
@@ -542,8 +546,9 @@ Info Sections
 */
 
 div.infosectioncontent {
-    margin: 0px;
     /* display: flex; */
+    margin-left: 0;
+    margin-right: 0;
 }
 
 td.infosectionsubtitle {
@@ -552,10 +557,6 @@ td.infosectionsubtitle {
     text-wrap: auto;
     display: inline-block;
     width: 100%;
-}
-
-.infosectionhead {
-    margin-bottom: 0px;
 }
 
 .infosectionhead-no-icon {
