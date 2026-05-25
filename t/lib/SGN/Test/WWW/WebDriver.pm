@@ -281,7 +281,7 @@ sub send_keys_ok {
     return $element;
 }
 
-sub accept_alert { 
+sub accept_alert {
     my $self = shift;
 
     my $timeout = $self->driver->get_timeouts()->{"implicit"} / 1000; # in seconds
