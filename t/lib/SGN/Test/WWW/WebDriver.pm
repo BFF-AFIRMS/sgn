@@ -240,6 +240,25 @@ sub get_attribute_ok {
     return $element;
 }
 
+sub get_text {
+    my $self = shift;
+    my $name = shift;
+    my $method = shift;
+    my $timeout = $self->driver->get_timeouts()->{"implicit"} / 1000; # in seconds
+    return wait_until {
+        $self->driver->find_element($name, $method)->get_text();
+    } timeout => $timeout;
+}
+
+sub get_text_ok {
+    my $self = shift;
+    my $name = shift;
+    my $method = shift;
+    my $test_name = shift || print STDERR "You can provide a test name parameter for get_text_ok\n";
+    ok( my $element = $self->get_text($name, $method), $test_name);
+    return $element;
+}
+
 sub send_keys {
     my $self = shift;
     my $name = shift;
@@ -248,7 +267,7 @@ sub send_keys {
 
     my $timeout = $self->driver->get_timeouts()->{"implicit"} / 1000; # in seconds
     return wait_until {
-        $self->driver->find_element($name, $method)->send_keys($input);
+        $self->driver->find_element($name, $method)->send_keys(_maybe_unwrap($input));
     } timeout => $timeout;
 }
 
@@ -370,6 +389,13 @@ sub wait_for_alert_dismissed {
     }
 }
 
+sub _maybe_unwrap {
+    my $param = shift;
+    if (ref($param) eq 'ARRAY') {
+        return @$param;
+    }
+    return $param;
+}
 
 1;
    
