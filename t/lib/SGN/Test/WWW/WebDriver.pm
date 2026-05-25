@@ -119,15 +119,10 @@ sub login {
     
     $self->get("/user/login");
     sleep(2);
-    my $d = $self->driver();
-    my $username_field = $d->find_element("username", "id");
-    $username_field->click();
-    $username_field->send_keys($username);
-    my $password_field = $d->find_element("password", "name");
-    $password_field->click();
-    $password_field->send_keys($password);
-    my $login_button = $d->find_element("submit_password", "id");
-    $login_button->click();
+
+    $self->send_keys("username", "id", $username);
+    $self->send_keys("password", "name", $password);
+    $self->click("submit_password", "id");
 
     sleep(2); # Determined empirically, prevents an "error has occurred" alert
 }
@@ -281,10 +276,7 @@ sub download_linked_file {
     my $self = shift;
     my $link_id = shift;
 
-    my $download_link = $self->find_element($link_id, "id");
-    
-    my $href = $download_link->get_attribute("href");
-    
+    my $href = $self->get_attribute($link_id, "id", "href");
     my $cookies = $self->driver()->get_all_cookies();
     
     my $token = "";
