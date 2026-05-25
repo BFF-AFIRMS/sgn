@@ -14,10 +14,8 @@ $t->while_logged_in_as("submitter", sub {
 
     $t->wait_for_working_dialog();
 
-    $t->find_element_ok("trial_upload_files_onswitch", "id", "click on upload_fieldbook_link ")->click();
-    wait_until { $t->find_element("upload_fieldbook_phenotypes_link")->is_displayed(); };
-
-    $t->find_element_ok("upload_fieldbook_phenotypes_link", "id", "click on upload_fieldbook_link ")->click();
+    $t->click_ok("trial_upload_files_onswitch", "id", "click on upload_fieldbook_link");
+    $t->click_ok("upload_fieldbook_phenotypes_link", "id", "click on upload_fieldbook_link ");
 
     my $upload_input = $t->find_element_ok("upload_fieldbook_phenotype_file_input", "id", "find file input");
 
@@ -26,15 +24,14 @@ $t->while_logged_in_as("submitter", sub {
     # list of valid traits in the documentation or changes in the valid list.
     # In fieldbook_phenotype_file_no_fieldbook_image two last rows with fieldbook_image traits were removed
 
-    $t->find_element_ok("upload_fieldbook_phenotype_data_level", "id", "find fieldbook phenotype data level select")->click();
-    $t->find_element_ok('//select[@id="upload_fieldbook_phenotype_data_level"]/option[@value="plots"]', 'xpath', "Select 'plots' as value of phenotype data level")->click();
+    $t->click_ok("upload_fieldbook_phenotype_data_level", "id", "find fieldbook phenotype data level select");
+    $t->click_ok('//select[@id="upload_fieldbook_phenotype_data_level"]/option[@value="plots"]', 'xpath', "Select 'plots' as value of phenotype data level");
 
     my $filename = $f->config->{basepath}."/t/data/fieldbook/fieldbook_phenotype_file_no_fieldbook_image.csv";
     $t->driver()->upload_file($filename);
     $upload_input->send_keys($filename);
-    sleep(1);
 
-    $t->find_element_ok("upload_fieldbook_phenotype_submit_verify", "id", "submit spreadsheet file for verification")->click();
+    $t->click_ok("upload_fieldbook_phenotype_submit_verify", "id", "submit spreadsheet file for verification");
     $t->wait_for_working_dialog();
 
     my $verify_status = $t->find_element_ok(
@@ -46,7 +43,7 @@ $t->while_logged_in_as("submitter", sub {
     ok($verify_status =~ /File data successfully parsed./, "Verify the positive validation");
     ok($verify_status =~ /File data verified. Plot names and trait names are valid./, "Verify the positive validation");
 
-    $t->find_element_ok("upload_fieldbook_phenotype_submit_store", "id", "submit spreadsheet file for storage")->click();
+    $t->click_ok("upload_fieldbook_phenotype_submit_store", "id", "submit spreadsheet file for storage");
     $t->wait_for_working_dialog();
 
     $verify_status = $t->find_element_ok(
@@ -62,34 +59,23 @@ $t->while_logged_in_as("submitter", sub {
     $t->get_ok('/breeders/trial/137');
     $t->wait_for_working_dialog();
 
-    $t->find_element_ok("trial_upload_files_onswitch", "id", "click on upload_fieldbook_link ")->click();
-    print STDERR "!! 1 wait for upload_fieldbook_link to be displayed";
-    wait_until { $t->find_element("upload_fieldbook_phenotypes_link")->is_displayed(); };
+    $t->click_ok("trial_upload_files_onswitch", "id", "click on upload_fieldbook_link ");
+    $t->click_ok("upload_fieldbook_phenotypes_link", "id", "click on upload_spreadsheet_link ");
 
-    print STDERR "!! 2 click on upload_fieldbook_link";
-    $t->find_element_ok("upload_fieldbook_phenotypes_link", "id", "click on upload_spreadsheet_link ")->click();
-
-    print STDERR "!! 3 wait for working dialog";
     $t->wait_for_working_dialog();
 
-    print STDERR "!! 4 click on upload_fieldbook_phenotype_data_level";
-    $t->find_element_ok("upload_fieldbook_phenotype_data_level", "id", "find fieldbook phenotype data level select")->click();
-
-    print STDERR "!! 5 click on 'plots' as value of phenotype data level";
-    $t->find_element_ok('//select[@id="upload_fieldbook_phenotype_data_level"]/option[@value="plots"]', 'xpath', "Select 'plots' as value of phenotype data level")->click();
+    $t->click_ok("upload_fieldbook_phenotype_data_level", "id", "find fieldbook phenotype data level select");
+    $t->click_ok('//select[@id="upload_fieldbook_phenotype_data_level"]/option[@value="plots"]', 'xpath', "Select 'plots' as value of phenotype data level");
 
     $upload_input = $t->find_element_ok("upload_fieldbook_phenotype_file_input", "id", "find file input");
     $filename = $f->config->{basepath}."/t/data/fieldbook/fieldbook_phenotype_file_no_fieldbook_image.csv";
     $t->driver()->upload_file($filename);
     $upload_input->send_keys($filename);
-    sleep(1);
 
-    $t->find_element_ok("upload_fieldbook_phenotype_submit_verify", "id", "submit spreadsheet file for verification")->click();
+    $t->click_ok("upload_fieldbook_phenotype_submit_verify", "id", "submit spreadsheet file for verification");
     $t->wait_for_working_dialog();
 
-    $verify_status = $t->find_element_ok(
-        "upload_phenotype_fieldbook_verify_status",
-        "id", "verify the verification")->get_attribute('innerHTML');
+    $verify_status = $t->get_attribute_ok("upload_phenotype_fieldbook_verify_status", "id", "innerHTML", "verify the verification");
 
     print STDERR "VERIFY STATUS: $verify_status\n";
     
@@ -116,21 +102,17 @@ $t->while_logged_in_as("submitter", sub {
 
     $t->get_ok('/fieldbook');
 
-    $t->find_element_ok("upload_fieldbook_phenotypes_link", "id", "click on upload_spreadsheet_link ")->click();
+    $t->click_ok("upload_fieldbook_phenotypes_link", "id", "click on upload_spreadsheet_link ");
+    $t->click_ok("upload_fieldbook_phenotype_data_level", "id", "find fieldbook phenotype data level select");
 
-    wait_until { $t->find_element("upload_fieldbook_phenotype_data_level")->is_displayed(); }
-    $t->find_element_ok("upload_fieldbook_phenotype_data_level", "id", "find fieldbook phenotype data level select")->click();
-
-    my $option = $t->find_element_ok('//select[@id="upload_fieldbook_phenotype_data_level"]/option[@value="plots"]', 'xpath', "Select 'plots' as value of phenotype data level");
-    wait_until { $option->click(); }
+    $t->click_ok('//select[@id="upload_fieldbook_phenotype_data_level"]/option[@value="plots"]', 'xpath', "Select 'plots' as value of phenotype data level");
 
     $upload_input = $t->find_element_ok("upload_fieldbook_phenotype_file_input", "id", "find file input");
     $filename = $f->config->{basepath}."/t/data/fieldbook/fieldbook_phenotype_file_no_fieldbook_image.csv";
     $t->driver()->upload_file($filename);
     $upload_input->send_keys($filename);
-    sleep(1);
 
-    $t->find_element_ok("upload_fieldbook_phenotype_submit_verify", "id", "submit spreadsheet file for verification")->click();
+    $t->click_ok("upload_fieldbook_phenotype_submit_verify", "id", "submit spreadsheet file for verification");
     $t->wait_for_working_dialog();
 
     $verify_status = $t->find_element_ok(
@@ -144,7 +126,7 @@ $t->while_logged_in_as("submitter", sub {
     ok($verify_status =~ /To overwrite previously stored values instead/, "Verify warnings after store validation");
     ok($verify_status =~ /There are 28 values in your file that are the same as values already stored in the database./, "Verify warnings after store validation");
 
-    $t->find_element_ok("upload_fieldbook_phenotype_submit_store", "id", "submit spreadsheet file for storage")->click();
+    $t->click_ok("upload_fieldbook_phenotype_submit_store", "id", "submit spreadsheet file for storage");
     $t->wait_for_working_dialog();
 
     $verify_status = $t->find_element_ok(
