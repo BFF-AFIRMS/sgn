@@ -1,7 +1,7 @@
 use lib 't/lib';
 use strict;
 
-use Test::More 'tests' => 171;
+use Test::More 'tests' => 183;
 
 use SGN::Test::WWW::WebDriver;
 use SGN::Test::Fixture;
@@ -135,6 +135,15 @@ $t->while_logged_in_as("curator", sub {
         ok($trial_details =~ /[No Harvest Date]/, "Verify harvest date");
         ok($trial_details =~ /Test trial detail selenium - description/, "Verify description");
 
+        # edit trial details
+        $t->click_ok("edit_trial_details", "id", "open trial details");
+        $t->click_ok('//select[@id="edit_trial_year_0"]/option[@value="2015"]', 'xpath', "Select '2015' as value for year 0");
+        $t->click_ok("save_trial_details", "id", "save trial details");
+        $t->click_ok("trial_details_saved_close_button", "id", "close trial details");
+
+        my $trial_year = $t->get_attribute_ok("trial_year", "id", "innerHTML", "locate trial year");
+        ok($trial_year =~ /2016 | Year 0: 2015/, "Verify year 0");
+
         sleep(5);
         $t->click_ok("trial_design_section_onswitch", "id", "click to open design section");
 
@@ -204,6 +213,7 @@ $t->while_logged_in_as("curator", sub {
         ok($trial_details =~ /T100_plot_06/, "Verify plots");
         ok($trial_details =~ /T100_plot_07/, "Verify plots");
         ok($trial_details =~ /T100_plot_08/, "Verify plots");
+
     }
 });
 
