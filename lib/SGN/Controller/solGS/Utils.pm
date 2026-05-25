@@ -230,7 +230,7 @@ sub get_short_synonym {
             }
         }
     }
-    $best ||= $self->abbreviate_term($name);
+    $best ||= $name;
     return $best;
 }
 
