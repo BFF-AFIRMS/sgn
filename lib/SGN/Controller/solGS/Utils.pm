@@ -222,11 +222,8 @@ sub get_short_synonym {
     if ($synonyms && ref($synonyms) eq 'ARRAY') {
         foreach my $s (@$synonyms) {
             $s = $self->synonym_remove_obo($s);
-            # Only use as 'best' if it's suitable for a header (no spaces/special chars)
-            if ($s && $s !~ /[\s\|:]/) {
-                if (!$best || length($s) < length($best)) {
-                    $best = $s;
-                }
+            if ($s && (!$best || length($s) < length($best))) {
+                $best = $s;
             }
         }
     }
