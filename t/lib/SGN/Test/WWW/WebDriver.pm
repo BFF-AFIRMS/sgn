@@ -181,7 +181,7 @@ sub click_ok {
     ok(my $element = $self->click($name, $method), $test_name);
     return $element;
 }
-    
+
 sub get { 
     my $self = shift;
     my $url = shift;
@@ -294,6 +294,14 @@ sub accept_alert_ok {
     my $self = shift;
     my $test_name = shift;
     ok($self->accept_alert(), $test_name);
+}
+
+sub get_alert_text {
+    my $self = shift;
+    my $timeout = $self->driver->get_timeouts()->{"implicit"} / 1000; # in seconds
+    return wait_until {
+        return $self->driver->get_alert_text();
+    } timeout => $timeout;
 }
 
 sub download_linked_file {
