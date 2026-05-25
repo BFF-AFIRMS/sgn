@@ -161,11 +161,34 @@ sub base_url {
     my $self = shift;
     return $self->host();
 }
+
+sub click {
+    my $self = shift;
+    my $name = shift;
+    my $method = shift;
+
+    my $timeout = $self->driver->get_timeouts()->{"implicit"} / 1000; # in seconds
+    return wait_until {
+        $self->driver->find_element($name, $method)->click();
+    } timeout => $timeout;
+}
+
+sub click_ok {
+    my $self = shift;
+    my $name = shift;
+    my $method = shift;
+    my $test_name = shift || print STDERR "You can provide a test name parameter for click_ok\n";
+    ok(my $element = $self->click($name, $method), $test_name);
+    return $element;
+}
     
 sub get { 
     my $self = shift;
     my $url = shift;
-    return $self->driver->get($url);
+    my $timeout = $self->driver->get_timeouts()->{"implicit"} / 1000; # in seconds
+    return wait_until {
+        $self->driver->get($url);
+    } timeout => $timeout;
 }
 
 sub get_ok { 
@@ -177,7 +200,13 @@ sub get_ok {
     
 sub find_element { 
     my $self = shift;
-    return $self->driver->find_element(@_);
+    my $name = shift;
+    my $method = shift;
+
+    my $timeout = $self->driver->get_timeouts()->{"implicit"} / 1000; # in seconds
+    return wait_until {
+        $self->driver->find_element($name, $method);
+    } timeout => $timeout;
 }
 
 sub find_element_ok { 
@@ -189,9 +218,57 @@ sub find_element_ok {
     return $element;
 }
 
+sub get_attribute {
+    my $self = shift;
+    my $name = shift;
+    my $method = shift;
+    my $attribute = shift;
+
+    my $timeout = $self->driver->get_timeouts()->{"implicit"} / 1000; # in seconds
+    return wait_until {
+        $self->driver->find_element($name, $method)->get_attribute($attribute);
+    } timeout => $timeout;
+}
+
+sub get_attribute_ok {
+    my $self = shift;
+    my $name = shift;
+    my $method = shift;
+    my $attribute = shift;
+    my $test_name = shift || print STDERR "You can provide a test name parameter for get_attribute_ok\n";
+    ok( my $element = $self->get_attribute($name, $method, $attribute), $test_name);
+    return $element;
+}
+
+sub send_keys {
+    my $self = shift;
+    my $name = shift;
+    my $method = shift;
+    my $input = shift;
+
+    my $timeout = $self->driver->get_timeouts()->{"implicit"} / 1000; # in seconds
+    return wait_until {
+        $self->driver->find_element($name, $method)->send_keys($input);
+    } timeout => $timeout;
+}
+
+sub send_keys_ok {
+    my $self = shift;
+    my $name = shift;
+    my $method = shift;
+    my $input = shift;
+    my $test_name = shift || print STDERR "You can provide a test name parameter for send_keys_ok\n";
+    ok( my $element = $self->send_keys($name, $method, $input), $test_name);
+    return $element;
+}
+
 sub accept_alert { 
     my $self = shift;
-    $self->driver->accept_alert();
+
+    my $timeout = $self->driver->get_timeouts()->{"implicit"} / 1000; # in seconds
+    return wait_until {
+        $self->driver->accept_alert();
+    } timeout => $timeout;
 }
 
 sub accept_alert_ok { 
@@ -235,6 +312,7 @@ sub set_value_ok {
 
     return $element;
 }
+
 
 =item wait_for_working_dialog($self, $max, $id)
 Waits for a working dialog to disappear.  The default id is "working_modal".
