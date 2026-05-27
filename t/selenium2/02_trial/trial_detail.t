@@ -200,6 +200,8 @@ $t->while_logged_in_as("curator", sub {
         $t->click_ok("lists_link", "name", "find lists_link");
         $t->click_ok("view_list_plots_list", "id", "view 'plots_list' for test");
 
+        $t->wait_for_working_dialog();
+
         $trial_details = $t->get_attribute_ok(
             'list_item_dialog_datatable_wrapper',
             'id',
