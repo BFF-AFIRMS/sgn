@@ -20,12 +20,10 @@ jQuery(document).ready(function() {
 
     window.jsMod['fieldmap_react'].init('fieldmap_react_root', {
         trialId: '<% $trial_id %>',
-        dataLevel: '<% $data_level %>',
         trialStockType: '<% $trial_stock_type %>',
         hasColAndRowNumbers: <% $has_col_and_row_numbers ? 'true' : 'false' %>,
         hasSubplotEntries: <% $has_subplot_entries ? 'true' : 'false' %>,
         hasPlantEntries: <% $has_plant_entries ? 'true' : 'false' %>,
-        brapiRequireLogin: require_login === '1',
         authToken: auth_token
     });
 });

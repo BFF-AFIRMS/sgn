@@ -239,23 +239,20 @@ const AccessionAutocomplete: React.FC<{
 
 interface FieldMapContainerProps {
     trialId: string;
-    dataLevel: string;
     trialStockType: string;
     hasColAndRowNumbers: boolean;
     hasSubplotEntries: boolean;
     hasPlantEntries: boolean;
-    brapiRequireLogin: boolean;
     authToken?: string;
 }
 
+
 const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
     trialId,
-    dataLevel,
     trialStockType,
     hasColAndRowNumbers,
     hasSubplotEntries,
     hasPlantEntries,
-    brapiRequireLogin,
     authToken
 }) => {
     const [loading, setLoading] = useState(false);
@@ -326,6 +323,12 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
         hmRange: 'row_number',
         hmRow: 'col_number'
     });
+
+    const stockLabel = useMemo(() => {
+        if (trialStockType === 'cross') return 'Cross';
+        if (trialStockType === 'family_name') return 'Family';
+        return 'Accession';
+    }, [trialStockType]);
 
     useEffect(() => {
         loadObservationUnits();
@@ -1859,7 +1862,7 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
                             <div className="modal-body">
                                 <ul className="nav nav-tabs tw:mb-3.75">
                                     <li className={!showEditAccession ? 'active' : ''}><a className="tw:cursor-pointer" onClick={() => setShowEditAccession(false)}>Summary</a></li>
-                                    <li className={showEditAccession ? 'active' : ''}><a className="tw:cursor-pointer" onClick={() => setShowEditAccession(true)}>Replace Accession</a></li>
+                                    <li className={showEditAccession ? 'active' : ''}><a className="tw:cursor-pointer" onClick={() => setShowEditAccession(true)}>Replace {stockLabel}</a></li>
                                 </ul>
 
                                 {!showEditAccession ? (
@@ -1871,7 +1874,7 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
                                                     <td>{selectedPlot.observationUnitDbId}</td>
                                                 </tr>
                                                 <tr>
-                                                    <td className="tw:font-bold">Accession Name:</td>
+                                                    <td className="tw:font-bold">{stockLabel} Name:</td>
                                                     <td>{selectedPlot.germplasmName}</td>
                                                 </tr>
                                                 <tr>
@@ -1917,7 +1920,7 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
                                 ) : (
                                     <div>
                                         <div className="form-group">
-                                            <label>New Accession Name:</label>
+                                            <label>New {stockLabel} Name:</label>
                                             <AccessionAutocomplete value={newAccession} onChange={setNewAccession} className="form-control" />
                                         </div>
                                         <div className="form-group">
@@ -1925,9 +1928,9 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
                                             <input type="text" className="form-control" value={newPlotName} onChange={e => setNewPlotName(e.target.value)} />
                                         </div>
                                         <div className="alert alert-warning">
-                                            Replacing this accession will update layout structures and replicates. Ensure changes are correct.
+                                            Replacing this {stockLabel.toLowerCase()} will update layout structures and replicates. Ensure changes are correct.
                                         </div>
-                                        <button className="btn btn-primary tw:mr-2" onClick={() => submitReplaceAccession('check')}>Update Accession</button>
+                                        <button className="btn btn-primary tw:mr-2" onClick={() => submitReplaceAccession('check')}>Update {stockLabel}</button>
                                         {selectedView !== 'fieldmap' && selectedView !== 'geofieldmap' && heatmapData[selectedPlot.observationUnitDbId || ''] && (
                                             <button className="btn btn-warning" onClick={() => setShowSuppressModal(true)}>Suppress Current Trait Value</button>
                                         )}
