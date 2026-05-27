@@ -1438,7 +1438,7 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
                 </div>
             ) : (
                 <div key="standard-fieldmap-panel" className="panel panel-default">
-                    <div className="panel-body">
+                    <div className="panel-body tw:grid">
                         <div className="tw:flex tw:gap-5 tw:flex-wrap tw:mb-3.75">
                             <div className="form-inline">
                                 <label className="tw:mr-1.25">Plot Layout:</label>
