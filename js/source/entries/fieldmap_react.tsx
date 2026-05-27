@@ -266,6 +266,7 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
 
     const [plotLayout, setPlotLayout] = useState<'serpentine' | 'zigzag'>('serpentine');
     const [invertRows, setInvertRows] = useState(false);
+    const [invertCols, setInvertCols] = useState(false);
     const [topBorder, setTopBorder] = useState(false);
     const [leftBorder, setLeftBorder] = useState(false);
     const [rightBorder, setRightBorder] = useState(false);
@@ -406,6 +407,7 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
                         setRightBorder(!!first.additionalInfo.right_border_selection);
                         setBottomBorder(!!first.additionalInfo.bottom_border_selection);
                         setInvertRows(!!first.additionalInfo.invert_row_checkmark);
+                        setInvertCols(!!first.additionalInfo.invert_col_checkmark);
                         if (first.additionalInfo.plot_layout) {
                             setPlotLayout(first.additionalInfo.plot_layout);
                         }
@@ -906,6 +908,7 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
             .map((plot, i) => ({
                 additionalInfo: {
                     invert_row_checkmark: invertRows,
+                    invert_col_checkmark: invertCols,
                     top_border_selection: topBorder,
                     left_border_selection: leftBorder,
                     right_border_selection: rightBorder,
@@ -932,6 +935,7 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
                 brapiPutObject[plot.observationUnitDbId!] = {
                     additionalInfo: {
                         invert_row_checkmark: invertRows,
+                        invert_col_checkmark: invertCols,
                         top_border_selection: topBorder,
                         left_border_selection: leftBorder,
                         right_border_selection: rightBorder,
@@ -1063,6 +1067,30 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
         });
         setDimensions(d => ({ rows: d.cols, cols: d.rows }));
     };
+
+    const handleRotate = () => {
+        const { minCol, maxCol } = bounds;
+        setPlotObject(current => {
+            const rotated: Record<string, Plot> = {};
+            for (const [id, plot] of Object.entries(current)) {
+                const oldX = Number(plot.observationUnitPosition.positionCoordinateX);
+                const oldY = Number(plot.observationUnitPosition.positionCoordinateY);
+
+                rotated[id] = {
+                    ...plot,
+                    observationUnitPosition: {
+                        ...plot.observationUnitPosition,
+                        // CW 90deg: newX = oldY, newY = maxCol - oldX + minCol
+                        positionCoordinateX: oldY,
+                        positionCoordinateY: maxCol - oldX + minCol
+                    }
+                };
+            }
+            return rotated;
+        });
+        setDimensions(d => ({ rows: d.cols, cols: d.rows }));
+    };
+
 
     const handlePrint = () => {
         alert("You may need to change print settings - such as page size, margins, and scaling - to get the fieldmap to display properly in the print preview. Select \"Background graphics\" to ensure the legend includes colors.");
@@ -1465,6 +1493,12 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
                                     Invert Rows
                                 </label>
                             </div>
+                            <div className="form-check tw:flex tw:items-center">
+                                <label className="form-check-label">
+                                    <input type="checkbox" className="form-check-input tw:mr-1.25" checked={invertCols} onChange={e => setInvertCols(e.target.checked)} />
+                                    Invert Columns
+                                </label>
+                            </div>
                             <div className="tw:flex tw:gap-2.5 tw:items-center">
                                 <label className="tw:m-0">Include Borders:</label>
                                 <label className="tw:font-normal tw:m-0"><input type="checkbox" checked={topBorder} onChange={e => setTopBorder(e.target.checked)} disabled={displayLinkedTrials} /> Top</label>
@@ -1475,6 +1509,7 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
                         </div>
                         <div className="tw:flex tw:gap-2.5 tw:mb-3.75">
                             <button className="btn btn-default" onClick={handleTranspose} disabled={displayLinkedTrials}>Transpose Display</button>
+                            <button className="btn btn-default" onClick={handleRotate} disabled={displayLinkedTrials}>Rotate</button>
                             <button className="btn btn-default" onClick={() => setShowDimDialog(true)} disabled={displayLinkedTrials}>Change Dimensions</button>
                             <button className="btn btn-default" onClick={() => setShowDownloadCSVModal(true)}>Download Spatial Layout (CSV)</button>
                             <button className="btn btn-default" onClick={handlePrint}>Print Fieldmap</button>
@@ -1500,7 +1535,7 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
                                     {Array.from({ length: bounds.numCols }).map((_, idx) => {
                                         const colCoord = bounds.minCol + idx;
                                         const colIdx = colCoord - renderBounds.minCol;
-                                        const displayX = colIdx * 52 + 25;
+                                        const displayX = (invertCols ? renderBounds.numCols - colIdx - 1 : colIdx) * 52 + 25;
                                         const labelY = invertRows ? -10 : renderBounds.numRows * 52 + 20;
                                         return (
                                             <text key={`col-lbl-${idx}`} x={displayX} y={labelY} textAnchor="middle" fontSize="11" fontWeight="bold">
@@ -1524,7 +1559,8 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
                                                 )}
 
                                                 {row.map((plot, cIdx) => {
-                                                    const plotX = cIdx * 52;
+                                                    const displayXIdx = invertCols ? renderBounds.numCols - cIdx - 1 : cIdx;
+                                                    const plotX = displayXIdx * 52;
                                                     const plotY = displayY * 52;
 
                                                     const coordKey = `${plot.observationUnitPosition?.positionCoordinateX}-${plot.observationUnitPosition?.positionCoordinateY}`;
