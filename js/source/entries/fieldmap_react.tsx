@@ -332,7 +332,7 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
     }, [trialStockType]);
 
     useEffect(() => {
-        loadObservationUnits();
+        fetchObservationUnits();
         loadVariables();
         loadSpatialAdjustments();
     }, [activeTrialIds]);
@@ -387,7 +387,7 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
         };
     }, [selectedView, trialId, authToken]);
 
-    const loadObservationUnits = () => {
+    const fetchObservationUnits = () => {
         setLoading(true);
         const headers: Record<string, string> = {};
         if (authToken) {
@@ -735,7 +735,7 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
         return newPlotObject;
     };
 
-    const getHeatmapObservations = (variableId: string) => {
+    const fetchHeatmapObservations = (variableId: string) => {
         setLoading(true);
         const headers: Record<string, string> = {};
         if (authToken) {
@@ -779,7 +779,7 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
             setHeatmapData({});
         } else if (val) {
             const variableId = val.replace(' (corrected)', '').replace(' (adjustment)', '');
-            getHeatmapObservations(variableId);
+            fetchHeatmapObservations(variableId);
         }
     };
 
@@ -888,7 +888,7 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
                     setShowPlotDetails(false);
                     setShowEditAccession(false);
                     setShowCuratorWarning(false);
-                    loadObservationUnits();
+                    fetchObservationUnits();
                 }
             })
             .catch(() => {
@@ -977,7 +977,7 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
             .then(() => {
                 setLoading(false);
                 alert('Field Plot layout submitted successfully!');
-                loadObservationUnits();
+                fetchObservationUnits();
             })
             .catch(() => {
                 setLoading(false);
@@ -1013,7 +1013,7 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
                 .then((msg: string) => {
                     setLoading(false);
                     alert(msg || 'Geo layout updated successfully!');
-                    loadObservationUnits();
+                    fetchObservationUnits();
                 })
                 .catch((err: any) => {
                     setLoading(false);
@@ -1208,6 +1208,9 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
         for (let i = bounds.minCol; i <= bounds.maxCol; i++) {
             cols_csv_header.push(i);
         }
+        if (invertCols) {
+            cols_csv_header.reverse();
+        }
         let csv = '';
         csv += ['Rows/Columns', ...cols_csv_header].join(',') + '\n';
 
@@ -1247,6 +1250,14 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
         }
 
         coord_matrix.forEach((rowArr, idx) => {
+            if (!rowArr) rowArr = Array(bounds.numCols).fill('""');
+            for (let i = 0; i < bounds.numCols; i++) {
+                if (rowArr[i] === undefined) rowArr[i] = '""';
+            }
+            if (invertCols) {
+                rowArr.reverse();
+            }
+
             const rowLabel = invertRows ? bounds.minRow + idx : bounds.maxRow - idx;
             csv += [rowLabel, ...rowArr].join(',') + '\n';
         });
@@ -1285,7 +1296,7 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
                     alert('Phenotype was suppressed successfully!');
                     setShowSuppressModal(false);
                     setShowPlotDetails(false);
-                    getHeatmapObservations(currentTraitId);
+                    fetchHeatmapObservations(currentTraitId);
                 }
             })
             .catch(() => {
