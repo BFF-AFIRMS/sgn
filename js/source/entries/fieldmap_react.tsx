@@ -1494,27 +1494,31 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
                             >
                                 <g transform="translate(50, 25)">
                                     {/* Column Labels */}
-                                    {Array.from({ length: renderBounds.numCols }).map((_, idx) => {
-                                        const displayX = idx * 52 + 25;
-                                        const labelText = bounds.minCol + idx;
-                                        const labelY = invertRows ? renderBounds.numRows * 52 + 20 : -10;
+                                    {Array.from({ length: bounds.numCols }).map((_, idx) => {
+                                        const colCoord = bounds.minCol + idx;
+                                        const colIdx = colCoord - renderBounds.minCol;
+                                        const displayX = colIdx * 52 + 25;
+                                        const labelY = invertRows ? -10 : renderBounds.numRows * 52 + 20;
                                         return (
                                             <text key={`col-lbl-${idx}`} x={displayX} y={labelY} textAnchor="middle" fontSize="11" fontWeight="bold">
-                                                {labelText}
+                                                {colCoord}
                                             </text>
                                         );
                                     })}
 
                                     {gridMatrix.map((row, rIdx) => {
+                                        const rCoord = renderBounds.minRow + rIdx;
+                                        const isDataRow = rCoord >= bounds.minRow && rCoord <= bounds.maxRow;
                                         const displayY = invertRows ? rIdx : renderBounds.numRows - rIdx - 1;
-                                        const rowLabel = invertRows ? bounds.minRow + rIdx : bounds.maxRow - rIdx;
 
                                         return (
                                             <g key={`row-group-${rIdx}`}>
                                                 {/* Row Label (Left Axis) */}
-                                                <text x={-20} y={displayY * 52 + 30} textAnchor="middle" fontSize="11" fontWeight="bold">
-                                                    {rowLabel}
-                                                </text>
+                                                {isDataRow && (
+                                                    <text x={-20} y={displayY * 52 + 30} textAnchor="middle" fontSize="11" fontWeight="bold">
+                                                        {rCoord}
+                                                    </text>
+                                                )}
 
                                                 {row.map((plot, cIdx) => {
                                                     const plotX = cIdx * 52;
