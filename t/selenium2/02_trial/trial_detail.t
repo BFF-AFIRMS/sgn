@@ -98,15 +98,19 @@ $t->while_logged_in_as("curator", sub {
         # Need to wait for all javascript to finish loading before opening the
         # fieldmap/pheno heatmap. There is not an easy sentinel object to search for
         sleep(5);
+        $t->wait_for_network_idle();
         $t->click_ok("pheno_heatmap_onswitch", "id", "click to open pheno heatmap panel");
+        $t->wait_for_working_dialog();
+
         $t->click_ok("delete_field_map_hm_link", "id", "click on delete previous coordinate");
         $t->accept_alert_ok("click on delete previous coordinate - confirm");
         $t->accept_alert_ok("click on confirmation of delete");
 
         #Upload Trial Coordinates
         if ($file eq "T100_trial_layout.xls") { #the coords upload file only works on the first trial, no need to test that feature again
-            sleep(5);
+            $t->wait_for_network_idle();
             $t->click_ok("pheno_heatmap_onswitch", "id", "click to open pheno heatmap panel");
+            $t->wait_for_working_dialog();
 
             $t->click_ok("heatmap_upload_trial_coords_link", "id", "click on upload_trial_coords_link ");
 
@@ -137,7 +141,7 @@ $t->while_logged_in_as("curator", sub {
         ok($trial_details =~ /Test trial detail selenium - description/, "Verify description");
 
         # edit trial details
-        sleep(5);
+        $t->wait_for_network_idle();
         $t->click_ok("edit_trial_details", "id", "open trial details");
         $t->click_ok('//select[@id="edit_trial_year_0"]/option[@value="2015"]', 'xpath', "Select '2015' as value for year 0");
         $t->click_ok("save_trial_details", "id", "save trial details");
