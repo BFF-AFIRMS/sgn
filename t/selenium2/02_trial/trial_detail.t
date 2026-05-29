@@ -75,6 +75,7 @@ $t->while_logged_in_as("curator", sub {
         $t->click_ok("upload_trial_submit_first", "name", "find and click upload trial submit button");
 
         # important sleep 60 seconds for a functionality - it can take ages to save a trail depend of the machine
+        $t->wait_for_working_dialog();
 
         $t->click_ok("close_trial_upload_dialog", "id", "find and click close trial upload button");
 
