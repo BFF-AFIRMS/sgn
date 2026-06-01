@@ -70,7 +70,7 @@ has 'host' => ( is => 'rw',
     );
 
 # Configurable implicit wait
-has 'implicit_wait' => ( is => 'rw', default => 45000 );
+has 'implicit_wait' => ( is => 'rw', default => 90 * 1000 );
 
 has 'driver' => ( is => 'rw',
           isa => 'Selenium::Remote::Driver',
@@ -183,9 +183,11 @@ sub get {
     my $self = shift;
     my $url = shift;
     my $timeout = $self->driver->get_timeouts()->{"implicit"} / 1000; # in seconds
-    return wait_until {
+    my $ok = wait_until {
         $self->driver->get($url);
     } timeout => $timeout;
+    $self->wait_for_network_idle();
+    return $ok;
 }
 
 sub get_ok { 
@@ -380,7 +382,7 @@ sub wait_for_network_idle {
 
     my $timeout = $self->driver->get_timeouts()->{"implicit"} / 1000; # in seconds
 
-    my $last_active_requests = 0;
+    my $last_active_requests = -1;
     my $unchanged_count = 0;
     for (1 .. $timeout) {
         $self->screenshot("wait_for_network_idle");
@@ -397,11 +399,16 @@ sub wait_for_network_idle {
             $last_active_requests = $active_requests;
         }
 
-        # This serves a dual-purpose of giving the page 5 seconds to start its requests,
-        # and accommodating cancelled requests that may prevent the active count from
-        # reaching zero
-        if ($unchanged_count >= 5) {
-            print STDERR "wait_for_network_idle -> Active requests has been unchanged for 5 seconds, assuming network is now idle\n";
+        # Cancelled requests can cause active requests to remain non-zero so
+        # instead we check for 3 seconds of no change
+        if ($unchanged_count >= 3) {
+            print STDERR "wait_for_network_idle -> Active requests has been unchanged for $unchanged_count seconds, assuming network is now idle\n";
+            return 1;
+        }
+
+        # Faster path if active requests are zero for 1 second, network is idle
+        if ($active_requests == 0 && $unchanged_count == 1) {
+            print STDERR "wait_for_network_idle -> Network is now idle after $unchanged_count seconds of no active requests\n";
             return 1;
         }
 
