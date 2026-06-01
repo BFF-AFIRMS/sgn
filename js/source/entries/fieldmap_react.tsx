@@ -1581,7 +1581,7 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
                                 <label className="tw:font-normal tw:m-0"><input type="checkbox" checked={rightBorder} onChange={e => setRightBorder(e.target.checked)} disabled={displayLinkedTrials} /> Right</label>
                             </div>
                         </div>
-                        <div className="tw:flex tw:gap-2.5 tw:mb-3.75">
+                        <div className="tw:flex tw:gap-2.5 tw:flex-wrap tw:mb-3.75">
                             <button className="btn btn-default" onClick={handleTranspose} disabled={displayLinkedTrials}>Transpose Display</button>
                             <button className="btn btn-default" onClick={handleRotate} disabled={displayLinkedTrials}>Rotate</button>
                             <button className="btn btn-default" onClick={() => setShowDimDialog(true)} disabled={displayLinkedTrials}>Change Dimensions</button>
