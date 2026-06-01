@@ -7,6 +7,7 @@ import { createRoot } from 'react-dom/client';
 declare const L: any;
 declare const turf: any;
 declare const BrAPIFieldmap: any;
+declare const jQuery: any;
 
 interface ObservationLevel {
     levelCode: string | number;
@@ -340,6 +341,14 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
         if (trialStockType === 'family_name') return 'Family';
         return 'Accession';
     }, [trialStockType]);
+
+    useEffect(() => {
+        if (loading) {
+            jQuery("#working_modal").modal("show");
+        } else {
+            jQuery("#working_modal").modal("hide");
+        }
+    }, [loading]);
 
     useEffect(() => {
         fetchObservationUnits();
@@ -920,10 +929,11 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
         })
             .then(res => res.json())
             .then(response => {
-                setLoading(false);
                 if (response.warning) {
+                    setLoading(false);
                     setShowCuratorWarning(true);
                 } else if (response.error) {
+                    setLoading(false);
                     alert(response.error);
                 } else {
                     alert('Plot Accession Replaced successfully!');
@@ -1006,6 +1016,9 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
         const headers: Record<string, string> = { 'Content-Type': 'application/json' };
         if (authToken) headers['Authorization'] = `Bearer ${authToken}`;
 
+        console.log('BRAPI POST OBJECT', brapiPostObject);
+        console.log('BRAPI PUT OBJECT', brapiPutObject);
+
         const putPromise = fetch('/brapi/v2/observationunits', {
             method: 'PUT',
             headers,
@@ -1023,7 +1036,6 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
         Promise.all([putPromise, postPromise])
             .then(() => fetch(`/ajax/breeders/trial/${trialId}/refresh_cache`, { method: 'POST' }))
             .then(() => {
-                setLoading(false);
                 alert('Field Plot layout submitted successfully!');
                 fetchObservationUnits();
             })
@@ -1059,7 +1071,6 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
             setLoading(true);
             fm.update()
                 .then((msg: string) => {
-                    setLoading(false);
                     alert(msg || 'Geo layout updated successfully!');
                     fetchObservationUnits();
                 })
@@ -1404,14 +1415,6 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
 
     return (
         <div className="tw:p-3.75">
-            {loading && (
-                <div className="tw:fixed tw:inset-0 tw:bg-white/70 tw:flex tw:justify-center tw:items-center tw:z-9999">
-                    <div className="spinner-border text-primary" role="status">
-                        <span className="sr-only">Loading...</span>
-                    </div>
-                </div>
-            )}
-
             <div className="panel panel-default">
                 <div className="panel-body">
                     <div className="tw:flex tw:gap-6.25 tw:flex-wrap tw:items-center">
