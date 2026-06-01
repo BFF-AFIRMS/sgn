@@ -66,11 +66,6 @@ interface PlotStructureNode {
     has?: Record<string, PlotStructureNode>;
 }
 
-const PALETTE = [
-    "#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd",
-    "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf"
-];
-
 const trial_colors = [
     "#2f4f4f", "#ff8c00", "#ffff00", "#00ff00", "#9400d3",
     "#00ffff", "#1e90ff", "#ff1493", "#ffdab9", "#228b22",
@@ -569,10 +564,11 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
     }, [plotObject]);
 
     const germplasmPalette = useMemo(() => {
-        const names = Array.from(new Set(plotList.map(p => p.germplasmName || p.crossName || p.additionalInfo?.familyName || ''))).filter(n => n && n !== 'Filler');
+        const names = Array.from(new Set(plotList.map(p => p.germplasmName || p.crossName || p.additionalInfo?.familyName || '')))
+            .filter(n => n && n !== 'Filler');
         const mapping: Record<string, string> = {};
         names.sort().forEach((name, i) => {
-            mapping[name] = PALETTE[i % PALETTE.length];
+            mapping[name] = trial_colors[i % trial_colors.length];
         });
         return mapping;
     }, [plotList]);
@@ -583,7 +579,7 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
         }))).filter(b => b !== '');
         const mapping: Record<string, string> = {};
         blocks.sort().forEach((block, i) => {
-            mapping[block] = PALETTE[i % PALETTE.length];
+            mapping[block] = trial_colors[i % trial_colors.length];
         });
         return mapping;
     }, [plotList]);
