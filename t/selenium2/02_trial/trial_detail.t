@@ -98,8 +98,7 @@ $t->while_logged_in_as("curator", sub {
         #Delete Trial Coordinates - Remove first one to upload new coordinates
         $t->get_ok('/breeders/trial/' . $trial_id);
 
-        # Need to wait for all javascript to finish loading before opening the
-        # fieldmap/pheno heatmap. There is not an easy sentinel object to search for
+        $t->wait_for_network_idle();
         $t->click_ok("pheno_heatmap_onswitch", "id", "click to open pheno heatmap panel");
         $t->wait_for_working_dialog();
 
