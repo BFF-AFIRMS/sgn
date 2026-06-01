@@ -66,6 +66,11 @@ interface PlotStructureNode {
     has?: Record<string, PlotStructureNode>;
 }
 
+const PALETTE = [
+    "#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd",
+    "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf"
+];
+
 const trial_colors = [
     "#2f4f4f", "#ff8c00", "#ffff00", "#00ff00", "#9400d3",
     "#00ffff", "#1e90ff", "#ff1493", "#ffdab9", "#228b22",
@@ -266,6 +271,10 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
 
     const [plotLayout, setPlotLayout] = useState<'serpentine' | 'zigzag'>('serpentine');
     const [invertRows, setInvertRows] = useState(false);
+    const [colorVar, setColorVar] = useState<'parity' | 'germplasm' | 'block'>('parity');
+    const [labelVar, setLabelVar] = useState<'plot_number' | 'germplasm' | 'block'>('plot_number');
+    const [labelSize, setLabelSize] = useState(10);
+
     const [invertCols, setInvertCols] = useState(false);
     const [topBorder, setTopBorder] = useState(false);
     const [leftBorder, setLeftBorder] = useState(false);
@@ -290,6 +299,7 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
     const [selectedPlot, setSelectedPlot] = useState<Plot | null>(null);
     const [plotStructure, setPlotStructure] = useState<PlotStructureNode | null>(null);
     const [plotImages, setPlotImages] = useState<string>('');
+    const [plotContentCache, setPlotContentCache] = useState<Record<string, string[]>>({});
     const [showPlotDetails, setShowPlotDetails] = useState(false);
     const [showEditAccession, setShowEditAccession] = useState(false);
     const [newAccession, setNewAccession] = useState('');
@@ -411,6 +421,9 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
                         if (first.additionalInfo.plot_layout) {
                             setPlotLayout(first.additionalInfo.plot_layout);
                         }
+                        if (first.additionalInfo.plot_color_var) setColorVar(first.additionalInfo.plot_color_var);
+                        if (first.additionalInfo.plot_label_var) setLabelVar(first.additionalInfo.plot_label_var);
+                        if (first.additionalInfo.plot_label_size) setLabelSize(first.additionalInfo.plot_label_size);
                     }
                     parsePlotData(units);
                 }
@@ -554,6 +567,26 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
     const plotList = useMemo(() => {
         return Object.values(plotObject);
     }, [plotObject]);
+
+    const germplasmPalette = useMemo(() => {
+        const names = Array.from(new Set(plotList.map(p => p.germplasmName || p.crossName || p.additionalInfo?.familyName || ''))).filter(n => n && n !== 'Filler');
+        const mapping: Record<string, string> = {};
+        names.sort().forEach((name, i) => {
+            mapping[name] = PALETTE[i % PALETTE.length];
+        });
+        return mapping;
+    }, [plotList]);
+
+    const blockPalette = useMemo(() => {
+        const blocks = Array.from(new Set(plotList.map(p => {
+            return p.observationUnitPosition?.observationLevelRelationships?.find(r => r.levelName === 'block')?.levelCode || '';
+        }))).filter(b => b !== '');
+        const mapping: Record<string, string> = {};
+        blocks.sort().forEach((block, i) => {
+            mapping[block] = PALETTE[i % PALETTE.length];
+        });
+        return mapping;
+    }, [plotList]);
 
     const controlPlots = useMemo(() => {
         return plotList.filter(p => {
@@ -836,7 +869,15 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
                     .then(res => res.json())
                     .then(response => {
                         if (response?.data) {
-                            setPlotStructure(JSON.parse(response.data));
+                            const struct = JSON.parse(response.data);
+                            const plants: string[] = [];
+                            if (struct.has) {
+                                Object.values(struct.has).forEach((node: any) => {
+                                    if (node.type === 'plant') plants.push(node.name || '');
+                                });
+                            }
+                            setPlotContentCache(prev => ({ ...prev, [plot.observationUnitDbId!]: plants }));
+                            setPlotStructure(struct);
                         }
                     })
                     .catch(() => {});
@@ -913,7 +954,10 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
                     left_border_selection: leftBorder,
                     right_border_selection: rightBorder,
                     bottom_border_selection: bottomBorder,
-                    plot_layout: plotLayout
+                    plot_layout: plotLayout,
+                    plot_color_var: colorVar,
+                    plot_label_var: labelVar,
+                    plot_label_size: labelSize
                 },
                 germplasmDbId: fillerAccessionId,
                 germplasmName: fillerAccessionInput,
@@ -940,7 +984,10 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
                         left_border_selection: leftBorder,
                         right_border_selection: rightBorder,
                         bottom_border_selection: bottomBorder,
-                        plot_layout: plotLayout
+                        plot_layout: plotLayout,
+                        plot_color_var: colorVar,
+                        plot_label_var: labelVar,
+                        plot_label_size: labelSize
                     },
                     germplasmDbId: plot.germplasmDbId,
                     germplasmName: plot.germplasmName,
@@ -1510,6 +1557,26 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
                                     Invert Columns
                                 </label>
                             </div>
+                            <div className="form-inline">
+                                <label className="tw:mr-1.25">Color By:</label>
+                                <select className="form-control" value={colorVar} onChange={e => setColorVar(e.target.value as any)}>
+                                    <option value="parity">Default (Parity)</option>
+                                    <option value="germplasm">{stockLabel}</option>
+                                    <option value="block">Block Number</option>
+                                </select>
+                            </div>
+                            <div className="form-inline">
+                                <label className="tw:mr-1.25">Label By:</label>
+                                <select className="form-control" value={labelVar} onChange={e => setLabelVar(e.target.value as any)}>
+                                    <option value="plot_number">Plot Number</option>
+                                    <option value="germplasm">{stockLabel} Name</option>
+                                    <option value="block">Block Number</option>
+                                </select>
+                            </div>
+                            <div className="form-inline">
+                                <label className="tw:mr-1.25">Label Size:</label>
+                                <input type="number" className="form-control tw:w-15" value={labelSize} onChange={e => setLabelSize(parseInt(e.target.value) || 10)} />
+                            </div>
                             <div className="tw:flex tw:gap-2.5 tw:items-center">
                                 <label className="tw:m-0">Include Borders:</label>
                                 <label className="tw:font-normal tw:m-0"><input type="checkbox" checked={topBorder} onChange={e => setTopBorder(e.target.checked)} disabled={displayLinkedTrials} /> Top</label>
@@ -1574,6 +1641,8 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
                                                     const plotX = displayXIdx * 52;
                                                     const plotY = displayY * 52;
 
+                                                    const isObsolete = plot.additionalInfo?.isObsolete;
+
                                                     const coordKey = `${plot.observationUnitPosition?.positionCoordinateX}-${plot.observationUnitPosition?.positionCoordinateY}`;
                                                     const isOverlapping = !!overlappingPlots[coordKey];
 
@@ -1581,16 +1650,28 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
                                                     let stroke = '#41b6c4'; // Default replicate parity stroke
                                                     let strokeWidth = 1.5;
 
-                                                    // Replicate even/odd stroke coloring
-                                                    const repNo = parseInt(String(plot.observationUnitPosition?.observationLevelRelationships?.[0]?.levelCode));
-                                                    if (!isNaN(repNo)) {
-                                                        stroke = repNo % 2 === 0 ? 'red' : 'green';
-                                                    }
+                                                    if (colorVar === 'germplasm') {
+                                                        const name = plot.germplasmName || plot.crossName || plot.additionalInfo?.familyName || '';
+                                                        if (name && name !== 'Filler' && germplasmPalette[name]) {
+                                                            fill = germplasmPalette[name];
+                                                        }
+                                                    } else if (colorVar === 'block') {
+                                                        const block = plot.observationUnitPosition?.observationLevelRelationships?.find(r => r.levelName === 'block')?.levelCode || '';
+                                                        if (block && blockPalette[block]) {
+                                                            fill = blockPalette[block];
+                                                        }
+                                                    } else {
+                                                        // Replicate even/odd stroke coloring
+                                                        const repNo = parseInt(String(plot.observationUnitPosition?.observationLevelRelationships?.[0]?.levelCode));
+                                                        if (!isNaN(repNo)) {
+                                                            stroke = repNo % 2 === 0 ? 'red' : 'green';
+                                                        }
 
-                                                    // Block even/odd fill coloring
-                                                    const blockNo = parseInt(String(plot.observationUnitPosition?.observationLevelRelationships?.[1]?.levelCode));
-                                                    if (!isNaN(blockNo)) {
-                                                        fill = blockNo % 2 === 0 ? '#c7e9b4' : '#41b6c4';
+                                                        // Block even/odd fill coloring
+                                                        const blockNo = parseInt(String(plot.observationUnitPosition?.observationLevelRelationships?.[1]?.levelCode));
+                                                        if (!isNaN(blockNo)) {
+                                                            fill = blockNo % 2 === 0 ? '#c7e9b4' : '#41b6c4';
+                                                        }
                                                     }
 
                                                     if (plot.observationUnitPosition?.entryType === 'check') fill = '#6a5acd';
@@ -1609,6 +1690,16 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
                                                         const valObj = heatmapData[plot.observationUnitDbId];
                                                         fill = valObj ? valueColorScale.scale(valObj.val) : '#a9afaf';
                                                     }
+
+                                                    let labelText = String(plot.observationUnitPosition?.observationLevel?.levelCode || '');
+                                                    if (labelVar === 'germplasm') {
+                                                        labelText = plot.germplasmName || plot.crossName || plot.additionalInfo?.familyName || '';
+                                                        if (labelText === 'Filler') labelText = '';
+                                                    } else if (labelVar === 'block') {
+                                                        labelText = plot.observationUnitPosition?.observationLevelRelationships?.find(r => r.levelName === 'block')?.levelCode || '';
+                                                    }
+
+                                                    if (isObsolete) return null;
 
                                                     return (
                                                         <g
@@ -1630,8 +1721,8 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
                                                                 />
                                                             )}
                                                             {plot.type === 'data' && !isOverlapping && (
-                                                                <text x={25} y={30} textAnchor="middle" fill="#000" fontSize="10" fontWeight="bold">
-                                                                    {plot.observationUnitPosition.observationLevel.levelCode}
+                                                                <text x={25} y={30} textAnchor="middle" fill="#000" fontSize={labelSize} fontWeight="bold">
+                                                                    {labelText}
                                                                 </text>
                                                             )}
 
@@ -1719,6 +1810,9 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
                                                         {plot.additionalInfo?.intercropGermplasm?.map((g, i) => (
                                                             <div key={i}><strong>Accession Name:</strong> {g.germplasmName}</div>
                                                         ))}
+                                                        {plot.observationUnitDbId && plotContentCache[plot.observationUnitDbId] && plotContentCache[plot.observationUnitDbId].length > 0 && (
+                                                            <div><strong>Plants:</strong> {plotContentCache[plot.observationUnitDbId].join(', ')}</div>
+                                                        )}
                                                         {selectedView !== 'fieldmap' && selectedView !== 'geofieldmap' && (
                                                             <div className="tw:text-[#ffd700] tw:mt-1">
                                                                 <strong>Trait Name:</strong> {selectedViewLabel.replace(/ \(corrected\)| \(adjustment\)/, '')}<br />
