@@ -66,6 +66,11 @@ interface PlotStructureNode {
     has?: Record<string, PlotStructureNode>;
 }
 
+const palette = [
+    "#8dd3c7", "#ffffb3", "#bebada", "#fb8072", "#80b1d3",
+    "#fdb462", "#b3de69", "#fccde5", "#d9d9d9", "#bc80bd",
+    "#ccebc5", "#ffed6f"
+];
 const trial_colors = [
     "#2f4f4f", "#ff8c00", "#ffff00", "#00ff00", "#9400d3",
     "#00ffff", "#1e90ff", "#ff1493", "#ffdab9", "#228b22",
@@ -568,7 +573,7 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
             .filter(n => n && n !== 'Filler');
         const mapping: Record<string, string> = {};
         names.sort().forEach((name, i) => {
-            mapping[name] = trial_colors[i % trial_colors.length];
+            mapping[name] = palette[i % palette.length];
         });
         return mapping;
     }, [plotList]);
@@ -579,7 +584,7 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
         }))).filter(b => b !== '');
         const mapping: Record<string, string> = {};
         blocks.sort().forEach((block, i) => {
-            mapping[block] = trial_colors[i % trial_colors.length];
+            mapping[block] = palette[i % palette.length];
         });
         return mapping;
     }, [plotList]);
