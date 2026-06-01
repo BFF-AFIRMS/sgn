@@ -501,7 +501,7 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
 
             if (plot.observationUnitPosition?.observationLevel?.levelName === 'plot') {
                 let type: Plot['type'] = 'data';
-                if (plot.observationUnitPosition.entryType === 'filler') type = 'filler';
+                if (plot.observationUnitPosition.entryType === 'filler' || plot.germplasmName === 'Filler') type = 'filler';
                 else if (plot.observationUnitPosition.entryType === 'border') type = 'border';
 
                 mapped[plot.observationUnitDbId] = {
