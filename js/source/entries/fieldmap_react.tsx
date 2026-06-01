@@ -2046,7 +2046,7 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
                                 </ul>
 
                                 {!showEditAccession ? (
-                                    <div>
+                                    <div className="tw:p-2.5">
                                         <table className="table table-bordered">
                                             <tbody>
                                                 <tr>
@@ -2098,7 +2098,7 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
                                         )}
                                     </div>
                                 ) : (
-                                    <div>
+                                    <div className="tw:p-2.5">
                                         <div className="form-group">
                                             <label>New {stockLabel} Name:</label>
                                             <AccessionAutocomplete value={newAccession} onChange={setNewAccession} className="form-control" />
