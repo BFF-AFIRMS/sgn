@@ -76,7 +76,12 @@ module.exports = {
     optimization: {
         minimize: true,
         minimizer: [new TerserPlugin({
-            'parallel': 4,
+            parallel: 4,
+            terserOptions: {
+                format: {
+                    ascii_only: true
+                }
+            }
         })],
         runtimeChunk: {
             name: 'runtime'
