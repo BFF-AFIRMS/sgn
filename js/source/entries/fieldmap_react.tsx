@@ -231,7 +231,7 @@ const AccessionAutocomplete: React.FC<{
                 className={className}
             />
             {show && suggestions.length > 0 && (
-                <ul className="dropdown-menu tw:block tw:w-full tw:max-h-50 tw:overflow-y-auto tw:z-1000">
+                <ul className="dropdown-menu tw:block! tw:w-full tw:max-h-50 tw:overflow-y-auto tw:z-1000">
                     {suggestions.map((s, idx) => (
                         <li key={idx} onMouseDown={() => { onChange(s); setShow(false); }} className="tw:cursor-pointer">
                             <a>{s}</a>
