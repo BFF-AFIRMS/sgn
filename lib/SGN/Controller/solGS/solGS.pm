@@ -1383,7 +1383,7 @@ sub format_phenotype_dataset_headers {
     foreach my $hd (@headers) {
         my $acronym;
         foreach my $acr ( keys %$acronym_table ) {
-            $acronym = $acr if $acronym_table->{$acr} =~ /$hd/;
+            $acronym = $acr if $acronym_table->{$acr} eq $hd;
             last if $acronym;
         }
 
