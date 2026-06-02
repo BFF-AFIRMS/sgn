@@ -250,7 +250,7 @@ sub send_keys {
     my $timeout = $self->driver->get_timeouts()->{"implicit"} / 1000; # in seconds
     return wait_until {
         $self->screenshot("send_keys_$name");
-        $self->driver->find_element($name, $method)->send_keys($input);
+        $self->driver->find_element($name, $method)->send_keys(_maybe_unwrap($input));
     } timeout => $timeout;
 }
 
