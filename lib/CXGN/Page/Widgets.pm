@@ -104,6 +104,13 @@ sub collapser {
 		$hide_save_js = "UserPrefs.set(\"$id\", \"hid\");UserPrefs.setCookie();";
 		$show_save_js = "UserPrefs.set(\"$id\", \"dsp\");UserPrefs.setCookie();";
 	}
+	# Reinitialize DataTables children once they're visible
+	$show_save_js .= "
+	var dataTables = jQuery('#${id}_content').find('table').toArray().filter(function(table) {
+		console.log('table: ', table);
+		//return \$.fn.DataTable.isDataTable(table);
+	});
+	";
 	$hide_state_linktext ||= $linktext;
         no warnings 'uninitialized';
 	my $link = <<HTML;
