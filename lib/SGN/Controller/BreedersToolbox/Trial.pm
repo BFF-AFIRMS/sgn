@@ -99,6 +99,7 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
 
     $c->stash->{trial_name} = $trial->get_name();
     $c->stash->{trial_owner} = $trial->get_owner_link();
+    $c->stash->{identifier_prefix} =  $c->config->{identifier_prefix};
 
     my $trial_type_data = $trial->get_project_type();
     my $trial_type_name = $trial_type_data ? $trial_type_data->[1] : '';
@@ -139,6 +140,7 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
 
 
     $c->stash->{year} = $trial->get_year();
+    $c->stash->{year_0} = $trial->get_year_0();
 
     $c->stash->{trial_id} = $c->stash->{trial_id};
 
