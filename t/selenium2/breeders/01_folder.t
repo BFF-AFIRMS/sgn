@@ -18,11 +18,12 @@ $t->while_logged_in_as("submitter", sub {
   $t->get_ok("/breeders/trials");
 
   $t->click_ok("refresh_jstree_html", "name", "refresh tree");
-  sleep(1); # FIXME Find a better way to wait for tree changes
+  $t->wait_for_network_idle();
   $t->click_ok("jstree-icon", "class", "open up tree");
-  sleep(1); # FIXME Find a better way to wait for tree changes
+  $t->wait_for_network_idle();
 
   $t->click_ok("new_folder_dialog_link", "id", "create new folder");
+  $t->wait_for_network_idle();
 
   # CREATE NEW F1 PARENT FOLDER
   my $random_val = int(rand(1000));
@@ -32,21 +33,23 @@ $t->while_logged_in_as("submitter", sub {
 
   $t->click_ok('button[id="new_folder_submit"]', "css", "create new folder submit");
   $t->click_ok('button[id="close_new_folder_success_dialog"]', "css", "close new folder success dialog");
+  $t->wait_for_network_idle();
 
   $t->click_ok("refresh_jstree_html", "name", "refresh tree");
-  sleep(1); # FIXME Find a better way to wait for tree changes
+  $t->wait_for_network_idle();
   $t->click_ok("jstree-icon", "class", "open up tree");
-  sleep(1); # FIXME Find a better way to wait for tree changes
+  $t->wait_for_network_idle();
 
   $t->find_element_ok("//a[contains(text(),\"$folder_parent_name\")]", 'xpath', "Confirm if new $folder_parent_name folder exists after tree refresh");
 
   $t->click_ok("new_folder_dialog_link", "id", "create new F2 folder");
+  $t->wait_for_network_idle();
 
   # CREATE NEW F2 CHILD FOLDER
   my $folder_child_name = sprintf("Selenium_F2_%d", $random_val);
-  $t->send_keys_ok("new_folder_name", "id", KEYS->{'backspace'}, "find 'new folder name' textbox and clear a field");
-  $t->send_keys_ok("new_folder_name", "id", [KEYS->{'control'}, 'a'], "find 'new folder name' textbox and clear a field");
-  $t->send_keys_ok("new_folder_name", "id", $folder_child_name, "pass F2 as new folder name");
+  $t->send_keys_ok("new_folder_name", "id", [KEYS->{'control'}, 'a'], "find 'new folder name' textbox and ctrl-a");
+  $t->send_keys_ok("new_folder_name", "id", KEYS->{'backspace'}, "find 'new folder name' textbox and backspace");
+  $t->send_keys_ok("new_folder_name", "id", $folder_child_name, "input F2 as new folder name");
 
   $t->click_ok('select[id="new_folder_parent_folder_id"]', "css","find and click to open new_folder/parent_folder");
 
@@ -56,15 +59,18 @@ $t->while_logged_in_as("submitter", sub {
 
   $t->click_ok('button[id="new_folder_submit"]', "css", "create new folder submit");
   $t->click_ok('button[id="close_new_folder_success_dialog"]', "css", "close new folder success dialog");
+  $t->wait_for_network_idle();
 
   $t->click_ok("refresh_jstree_html", "name", "refresh tree");
-  sleep(1); # FIXME Find a better way to wait for tree changes
+  $t->wait_for_network_idle();
   $t->click_ok("jstree-icon", "class", "open up tree");
-  sleep(1); # FIXME Find a better way to wait for tree changes
+  $t->wait_for_network_idle();
 
   # MOVE TRIAL TO F2 FOLDER FROM MODAL WINDOW
   $t->click_ok("open_folder_dialog_link", "id", "place trial in F2");
+  $t->wait_for_network_idle();
   $t->click_ok("html_select_folder_for_trial", "id","pass child folder $folder_child_name as folder name");
+  $t->wait_for_network_idle();
 
   my $child_selector = "option[title='$folder_child_name']";
   my $child_folder_number = $t->get_attribute_ok($child_selector, "css","value", "find child folder name by title and select : $folder_child_name");
@@ -87,6 +93,7 @@ $t->while_logged_in_as("submitter", sub {
 
   # MOVE CHILD FOLDER (F2) FROM PARENT (F1) FOLDER AND DELETE PARENT (F1)
   $t->click_ok("move_folder_dialog_link", "id", "find 'move folder' link and click");
+  $t->wait_for_network_idle();
 
   $t->find_element_ok("move_folder_id", "id","find move folder select and open it");
   $t->click_ok("option[title='$folder_child_name']", "css","pass child folder : $folder_child_name as folder name");
@@ -106,8 +113,9 @@ $t->while_logged_in_as("submitter", sub {
   # MOVE TEST_TRIAL TO ROOT FOLDER
   $t->get_ok("/breeders/trials");
 
-  sleep(1); # FIXME Need to wait for button click handler to be registered
+  $t->wait_for_network_idle();
   $t->click_ok("open_folder_dialog_link", "id", "open a 'move trail' modal window to move trial from F2 folder");
+  $t->wait_for_network_idle();
   $t->click_ok("html_select_folder_for_trial", "id","pass 'None' (root) folder as folder name");
   $t->click_ok("option[value='0']", "css","find 'None' folder name by value '0' and select");
   $t->click_ok("html_select_trial_for_folder", "id","find select trial for folder pass and click (open)");
