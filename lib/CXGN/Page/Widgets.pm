@@ -106,9 +106,10 @@ sub collapser {
 	}
 	# Reinitialize DataTables children once they're visible
 	$show_save_js .= "
-	var dataTables = jQuery('#${id}_content').find('table').toArray().filter(function(table) {
-		console.log('table: ', table);
-		//return \$.fn.DataTable.isDataTable(table);
+	jQuery('#${id}_content').find('table').filter((i, table) => {
+        return jQuery.fn.DataTable.isDataTable(table);
+    }).each(function() {
+		jQuery(this).DataTable().columns.adjust().draw();
 	});
 	";
 	$hide_state_linktext ||= $linktext;
