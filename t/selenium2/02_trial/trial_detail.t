@@ -75,7 +75,8 @@ $t->while_logged_in_as("curator", sub {
         $t->click_ok("upload_trial_submit_first", "name", "find and click upload trial submit button");
 
         # important sleep 60 seconds for a functionality - it can take ages to save a trail depend of the machine
-        sleep(10);
+        $t->wait_for_working_dialog();
+        $t->wait_for_network_idle();
 
         $t->click_ok("close_trial_upload_dialog", "id", "find and click close trial upload button");
 
@@ -84,8 +85,10 @@ $t->while_logged_in_as("curator", sub {
         $t->get_ok('/breeders/trials');
 
         $t->click_ok("refresh_jstree_html_trialtree_button", "id", "refresh tree");
+        $t->wait_for_network_idle();
 
         $t->click_ok("jstree-icon", "class", "open up tree");
+        $t->wait_for_network_idle();
 
         $t->click_ok("$trial_name", "partial_link_text", "click trial in tree");
 
@@ -95,18 +98,19 @@ $t->while_logged_in_as("curator", sub {
         #Delete Trial Coordinates - Remove first one to upload new coordinates
         $t->get_ok('/breeders/trial/' . $trial_id);
 
-        # Need to wait for all javascript to finish loading before opening the
-        # fieldmap/pheno heatmap. There is not an easy sentinel object to search for
-        sleep(5);
+        $t->wait_for_network_idle();
         $t->click_ok("pheno_heatmap_onswitch", "id", "click to open pheno heatmap panel");
+        $t->wait_for_working_dialog();
+
         $t->click_ok("delete_field_map_hm_link", "id", "click on delete previous coordinate");
         $t->accept_alert_ok("click on delete previous coordinate - confirm");
         $t->accept_alert_ok("click on confirmation of delete");
 
         #Upload Trial Coordinates
         if ($file eq "T100_trial_layout.xls") { #the coords upload file only works on the first trial, no need to test that feature again
-            sleep(5);
+            $t->wait_for_network_idle();
             $t->click_ok("pheno_heatmap_onswitch", "id", "click to open pheno heatmap panel");
+            $t->wait_for_working_dialog();
 
             $t->click_ok("heatmap_upload_trial_coords_link", "id", "click on upload_trial_coords_link ");
 
@@ -120,6 +124,7 @@ $t->while_logged_in_as("curator", sub {
 
             $t->click_ok("trial_coord_upload_success_dialog_message_cancel", "id", "close success msg");
         }
+        $t->wait_for_network_idle();
 
         my $trial_details = $t->get_attribute_ok(
             'trial_details_content',
@@ -137,17 +142,18 @@ $t->while_logged_in_as("curator", sub {
         ok($trial_details =~ /Test trial detail selenium - description/, "Verify description");
 
         # edit trial details
-        $t->find_element_ok("edit_trial_details", "id", "open trial details")->click();
-        $t->find_element_ok('//select[@id="edit_trial_year_0"]/option[@value="2015"]', 'xpath', "Select '2015' as value for year 0")->click();
-        $t->find_element_ok("save_trial_details", "id", "save trial details")->click();
-        $t->find_element_ok("trial_details_saved_close_button", "id", "close trial details")->click();
+        sleep(5); # Waiting for network idle is not enough to ensure button is clickable
+        $t->click_ok("edit_trial_details", "id", "open trial details");
+        $t->click_ok('//select[@id="edit_trial_year_0"]/option[@value="2015"]', 'xpath', "Select '2015' as value for year 0");
+        $t->click_ok("save_trial_details", "id", "save trial details");
+        $t->click_ok("trial_details_saved_close_button", "id", "close trial details");
+        $t->wait_for_network_idle();
 
-        my $trial_year = $t->find_element_ok("trial_year", "id", "locate trial year")->get_attribute('innerHTML');
+        my $trial_year = $t->get_attribute_ok("trial_year", "id", "innerHTML", "locate trial year");
         ok($trial_year =~ /2016 | Year 0: 2015/, "Verify year 0");
 
-        my $trial_design_onswitch = $t->find_element_ok("trial_design_section_onswitch", "id", "click to open design section");
-        $trial_design_onswitch->click();
-        sleep(3);
+        $t->click_ok("trial_design_section_onswitch", "id", "click to open design section");
+        $t->wait_for_network_idle();
 
         $trial_details = $t->get_attribute_ok(
             'trial_controls_table',
@@ -158,8 +164,8 @@ $t->while_logged_in_as("curator", sub {
         ok($trial_details =~ /CRD/, "Verify ");
         ok($trial_details =~ /2/, "Verify ");
 
-        sleep(3);
         $t->click_ok("trial_stocks_onswitch", "id", "view trial accessions");
+        $t->wait_for_network_idle();
 
         $trial_details = $t->get_attribute_ok(
             'trial_stocks_table',
@@ -172,8 +178,8 @@ $t->while_logged_in_as("curator", sub {
         ok($trial_details =~ /test_accession3/, "Verify accessions");
         ok($trial_details =~ /test_accession4/, "Verify accessions");
 
-        sleep(3);
         $t->click_ok("trial_controls_onswitch", "id", "view trial controls");
+        $t->wait_for_network_idle();
 
         $trial_details = $t->get_attribute_ok(
             'trial_controls_content',
@@ -184,22 +190,25 @@ $t->while_logged_in_as("curator", sub {
         ok($trial_details =~ /test_accession2/, "Verify controls");
         ok($trial_details =~ /test_accession3/, "Verify controls");
 
-        sleep(3);
         $t->click_ok("trial_plots_onswitch", "id", "view trial plots");
+        $t->wait_for_network_idle();
 
         $t->click_ok("select_all_plots_btn", "id", "select plots");
 
         $t->find_element_ok("plot_select_new_list_name", "id", "find add list input");
 
         $t->send_keys_ok("plot_select_new_list_name", "id", "plots_list", "find add list input test");
+        sleep(1);
 
         $t->click_ok("plot_select_add_to_new_list_btn", "id", "find add list button");
         $t->accept_alert_ok("accept add list alert");
 
         # Open a a newly created list and check details of list
-        sleep(3);
+        $t->wait_for_network_idle();
         $t->click_ok("lists_link", "name", "find lists_link");
         $t->click_ok("view_list_plots_list", "id", "view 'plots_list' for test");
+
+        $t->wait_for_working_dialog();
 
         $trial_details = $t->get_attribute_ok(
             'list_item_dialog_datatable_wrapper',
