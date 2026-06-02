@@ -156,5 +156,5 @@ jobs:
         with:
           name: screenshots
           path: |
-            screenshots/*
+            data/selenium/screenshots/*
           retention-days: 3
