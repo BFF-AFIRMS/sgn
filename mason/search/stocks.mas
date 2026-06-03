@@ -460,6 +460,7 @@ jQuery(document).ready(function () {
 
                 const matchtype_val = editable_stockprops_search[property].matchtype || 'contains';
                 const input_val = editable_stockprops_search[property].value || '';
+                const safe_id = property.replace(/[^a-zA-Z0-9_-]/g, '_') + '_input_id';
 
                 // Draw input fields with corresponding selectors for custom mapping hooks
                 jQuery('#editable_stockprop_search_div').append(`
@@ -478,7 +479,7 @@ jQuery(document).ready(function () {
                                         </select>
                                     </span>
                                     <span class="input-group-btn">
-                                        <input type="text" class="form-control" name="editable_stockprop_search_inputs" id="${property}_input_id" data-property="${property}" placeholder="Type to Autocomplete"/>
+                                        <input type="text" class="form-control" name="editable_stockprop_search_inputs" id="${safe_id}" data-property="${property}" placeholder="Type to Autocomplete"/>
                                     </span>
                                     <span class="input-group-btn">
                                         <button name="editable_stockprop_search_remove" data-property="${property}" class="btn">
@@ -493,9 +494,9 @@ jQuery(document).ready(function () {
                 // Assign value and match type properties dynamically
                 const $row = jQuery('#editable_stockprop_search_div');
                 $row.find('select[data-property="'+property+'"]').val(matchtype_val);
-                $row.find('#'+property+'_input_id').val(input_val);
+                $row.find('input[data-property="'+property+'"]').val(input_val);
 
-                jQuery('#editable_stockprop_search_div').find("#"+property+"_input_id").autocomplete({
+                jQuery('#editable_stockprop_search_div').find('input[data-property="'+property+'"]').autocomplete({
                    source: '/ajax/stock/stockproperty_autocomplete?property='+property,
                 });
             }
