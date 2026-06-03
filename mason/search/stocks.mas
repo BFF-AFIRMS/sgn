@@ -20,6 +20,7 @@
 </%perl>
 
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables', 'CXGN.Effects', 'CXGN.List' ] &>
+<& /util/import_javascript.mas, entries => [ 'search_state' ] &>
 <& /util/import_javascript.mas, classes => ['jquery.dataTables-buttons-min', 'jszip-min', 'pdfmake.pdfmake-min', 'pdfmake.vfs_fonts', 'buttons.bootstrap-min', 'buttons.html5-min', 'buttons.print-min', 'buttons.colvis-min', 'dataTables.colReorder-min'] &>
 
 <style>
@@ -343,6 +344,10 @@ var stock_table;
 jQuery(document).ready(function () {
 
     window.addEventListener('load', () => {
+      // Skip reset routine if URL query parameters are present to protect deserialized values.
+      if (window.location.search.length > 1) {
+        return;
+      }
       // Reset the advanced search form parameters on load.
       // Very similar to later functionality but that one is for advanced search and on load trigger only.
       var input_list = document.getElementById('advanced_search_panel_content').getElementsByTagName('input');
@@ -444,11 +449,50 @@ jQuery(document).ready(function () {
         console.log("editable stockprops search is "+JSON.stringify(editable_stockprops_search));
     });
 
-    function _draw_editable_stockprops_search_fields(){
+    // Renders dynamic, search-by-property input fields (e.g. custom stock properties)
+    function _draw_editable_stockprops_search_fields() {
         jQuery('#editable_stockprop_search_div').html('');
         for (var property in editable_stockprops_search) {
             if (editable_stockprops_search.hasOwnProperty(property)) {
-                jQuery('#editable_stockprop_search_div').append('<div class="form-group form-group-sm"><label class="col-sm-4 control-label">'+property+': </label><div class="col-sm-8"><div class="form-group"><div class="input-group"><span class="input-group-btn" width="20%"><select class="form-control" id="editable_stockprop_matchtype" name="editable_stockprop_matchtype" data-property="'+property+'"><option title="contains" value="contains" selected="selected">contains</option><option title="starts with" value="starts_with">starts with</option><option title="ends with" value="ends_with">ends with</option><option title="exactly" value="exactly">exactly</option><option title="one of" value="one of">one of (separate multiple possibilities with commas)</option></select></span><span class="input-group-btn"><input type="text" class="form-control" name="editable_stockprop_search_inputs" id="'+property+'_input_id" data-property="'+property+'" placeholder="Type to Autocomplete"/></span><span class="input-group-btn"><button name="editable_stockprop_search_remove" data-property="'+property+'" class="btn"><span class="glyphicon glyphicon-remove"></span></button></span></div></div></div></div>');
+                // We filter out organization because it is handled directly as a first-class DOM element
+                if (property === 'organization') continue;
+
+                var matchtype_val = editable_stockprops_search[property].matchtype || 'contains';
+                var input_val = editable_stockprops_search[property].value || '';
+
+                // Draw input fields with corresponding selectors for custom mapping hooks
+                jQuery('#editable_stockprop_search_div').append(`
+                    <div class="form-group form-group-sm">
+                        <label class="col-sm-4 control-label">${property}: </label>
+                        <div class="col-sm-8">
+                            <div class="form-group">
+                                <div class="input-group">
+                                    <span class="input-group-btn" width="20%">
+                                        <select class="form-control" id="editable_stockprop_matchtype" name="editable_stockprop_matchtype" data-property="${property}">
+                                            <option title="contains" value="contains">contains</option>
+                                            <option title="starts with" value="starts_with">starts with</option>
+                                            <option title="ends with" value="ends_with">ends with</option>
+                                            <option title="exactly" value="exactly">exactly</option>
+                                            <option title="one of" value="one of">one of (separate multiple possibilities with commas)</option>
+                                        </select>
+                                    </span>
+                                    <span class="input-group-btn">
+                                        <input type="text" class="form-control" name="editable_stockprop_search_inputs" id="${property}_input_id" data-property="${property}" placeholder="Type to Autocomplete"/>
+                                    </span>
+                                    <span class="input-group-btn">
+                                        <button name="editable_stockprop_search_remove" data-property="${property}" class="btn">
+                                            <span class="glyphicon glyphicon-remove"></span>
+                                        </button>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>`);
+
+                // Assign value and match type properties dynamically
+                var $row = jQuery('#editable_stockprop_search_div');
+                $row.find('select[data-property="'+property+'"]').val(matchtype_val);
+                $row.find('#'+property+'_input_id').val(input_val);
 
                 jQuery('#editable_stockprop_search_div').find("#"+property+"_input_id").autocomplete({
                    source: '/ajax/stock/stockproperty_autocomplete?property='+property,
@@ -506,8 +550,6 @@ jQuery(document).ready(function () {
         updateResultsRows();
     })
 
-    parseArgs(editable_stockprops_search);
-
     jQuery('#stock_search_results').on( 'draw.dt', function () {
         const name_links = stock_table.column(1).data();
         let names = [];
@@ -533,11 +575,46 @@ jQuery(document).ready(function () {
         });
     });
 
-   jQuery('#submit_stock_search').click( function() {
-        //stock_table.search("stock_search_results").draw();
-        var stock_type_selected = jQuery('#stock_type_select option:selected').text();
-        _load_stock_search_results(stock_type_selected, editable_stockprops_search, stockprop_extra_columns_view, stockprop_extra_columns_view_array);
-   });
+    // Instantiate the unified Search State Manager configuration
+    const searchManager = window.jsMod['search_state'].create({
+        submitButtonSelector: '#submit_stock_search',
+        advancedToggleSelector: '#advanced_search_panel_onswitch',
+        // Lists all search elements classified as part of the collapsible advanced filter panels
+        advancedParams: ['organism', 'organization', 'obsolete_stock_search_term', 'project', 'location', 'year', 'breeding_program', 'trait', 'minimum_trait_value', 'maximum_trait_value', 'editable_stockprops'],
+        elements: {
+            any_name: { selector: '#any_name' },
+            any_name_matchtype: { selector: '#any_name_matchtype' },
+            stock_type: { selector: '#stock_type_select' },
+            organism: { selector: '#organism_select' },
+            organization: { selector: '#organization' },
+            obsolete_stock_search_term: { selector: '#obsolete_stock_search_term' },
+            project: { selector: '#project' },
+            location: { selector: '#location' },
+            year: { selector: '#year' },
+            breeding_program: { selector: '#breeding_program' },
+            trait: { selector: '#trait' },
+            minimum_trait_value: { selector: '#minimum_trait_value' },
+            maximum_trait_value: { selector: '#maximum_trait_value' },
+            // Set custom JSON mapping hook for complex, dynamically built custom properties
+            editable_stockprops: {
+                selector: '',
+                type: 'json',
+                getValue: function() { return editable_stockprops_search; },
+                setValue: function(val) {
+                    Object.assign(editable_stockprops_search, val);
+                    _draw_editable_stockprops_search_fields();
+                }
+            }
+        },
+        onSearch: function() {
+            // Standard search trigger reloads the DataTable using active criteria states
+            var stock_type_selected = jQuery('#stock_type_select option:selected').text();
+            _load_stock_search_results(stock_type_selected, editable_stockprops_search, stockprop_extra_columns_view, stockprop_extra_columns_view_array);
+        }
+    });
+
+    // Initialize events, bindings and restore URL states
+    searchManager.init();
 
    jQuery('#stock_search_form').keypress( function( e ) {
            var code = e.keyCode || e.which;
@@ -605,24 +682,6 @@ jQuery(document).ready(function () {
 
 
 });
-
-function parseArgs(editable_stockprops_search) {
-  const params = new URLSearchParams(window.location.search);
-  if ( params.has('any_name') ) {
-    jQuery('#any_name').val(params.get('any_name'));
-    jQuery('#stock_type_select').val(0);
-  }
-  if ( params.has('stock_type') ) {
-    var type = params.get('stock_type');
-    var value =  jQuery("#stock_type_select option[title="+ type +"]").val();
-    jQuery('#stock_type_select').val(value);
-
-  }
-  if ( params.has('prop') & params.has('value') ) {
-    editable_stockprops_search[params.get('prop')] = {"matchtype": "exactly"};
-    editable_stockprops_search[params.get('prop')]["value"] = params.get('value');
-  }
-}
 
 function _load_stock_search_results(stock_type, editable_stockprops_search, stockprop_extra_columns_view, stockprop_extra_columns_view_array){
     console.log(stock_type);
