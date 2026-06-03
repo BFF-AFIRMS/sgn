@@ -116,7 +116,7 @@ export class SearchStateManager {
                 hasAdvanced = true;
             }
 
-            // 1. Process custom deserialize overrides (e.g. nested JSON configs)
+            // Process custom deserialize overrides (e.g. nested JSON configs)
             if (element.setValue) {
                 if (element.type === 'json') {
                     try {
@@ -128,7 +128,7 @@ export class SearchStateManager {
                     element.setValue(val);
                 }
             } else {
-                // 2. Perform fallback updates on standard DOM fields
+                // Perform fallback updates on standard DOM fields
                 const $el = jQuery(element.selector);
                 if ($el.length) {
                     if (element.type === 'checkbox') {
@@ -188,11 +188,22 @@ export class SearchStateManager {
      * without triggering a disruptive page reload.
      */
     public updateUrl(): void {
+        const urlParams = new URLSearchParams(window.location.search);
+
+        // Clear out only the managed search parameters
+        for (const key of Object.keys(this.config.elements)) {
+            urlParams.delete(key);
+        }
+
+        // Merge in the newly serialized search state
         const searchParams = this.serialize();
-        const q = new URLSearchParams(searchParams);
-        
-        // Update the browser URL bar gracefully
-        window.history.pushState(null, '', '?' + q.toString());
+        for (const [key, value] of Object.entries(searchParams)) {
+            urlParams.set(key, value);
+        }
+
+        const qString = urlParams.toString();
+        const nextUrl = qString ? '?' + qString : window.location.pathname;
+        window.history.pushState(null, '', nextUrl);
     }
 
     /**
@@ -221,7 +232,16 @@ export class SearchStateManager {
             }
         }
 
-        window.history.pushState(null, '', window.location.pathname);
+        const urlParams = new URLSearchParams(window.location.search);
+
+        // Purge only managed search parameters, leaving unmanaged keys intact
+        for (const key of Object.keys(this.config.elements)) {
+            urlParams.delete(key);
+        }
+
+        const qString = urlParams.toString();
+        const nextUrl = qString ? '?' + qString : window.location.pathname;
+        window.history.pushState(null, '', nextUrl);
 
         if (this.config.onReset) {
             this.config.onReset();
@@ -232,10 +252,10 @@ export class SearchStateManager {
      * Mounts listeners, triggers state restorations, and executes auto-triggers.
      */
     public init(): void {
-        // 1. De-serialize and restore state from existing URL query parameters on load
+        // De-serialize and restore state from existing URL query parameters on load
         this.deserialize();
 
-        // 2. Intercept the search execution event to update query params and trigger callbacks
+        // Intercept the search execution event to update query params and trigger callbacks
         jQuery(this.config.submitButtonSelector).on('click', () => {
             this.updateUrl();
             if (this.config.onSearch) {
@@ -243,7 +263,7 @@ export class SearchStateManager {
             }
         });
 
-        // 4. Intercept the reset execution event to clear states
+        // Intercept the reset execution event to clear states
         if (this.config.resetButtonSelector) {
             jQuery(this.config.resetButtonSelector).on('click', (e) => {
                 e.preventDefault();
@@ -251,8 +271,10 @@ export class SearchStateManager {
             });
         }
 
-        // 3. Auto-trigger search if query parameters were restored
-        if (window.location.search.length > 1) {
+        // Auto-trigger search if managed query parameters were restored on load
+        const urlParams = new URLSearchParams(window.location.search);
+        const hasManagedParams = Object.keys(this.config.elements).some(key => urlParams.has(key));
+        if (hasManagedParams) {
             jQuery(this.config.submitButtonSelector).click();
         }
     }
