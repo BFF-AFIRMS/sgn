@@ -50,10 +50,10 @@ sub _validate_with_plugin {
     my $seen_derived_accession_names = $parsed_values->{'derived_accession_name'};
 
     my $source_names_validator = CXGN::List::Validate->new();
-    my @source_names_missing = @{$source_names_validator->validate($schema,'accessions_or_plants_or_tissue_samples',$seen_source_names)->{'missing'}};
+    my @source_names_missing = @{$source_names_validator->validate($schema,'accessions_or_plants_or_plots_or_tissue_samples',$seen_source_names)->{'missing'}};
 
     if (scalar(@source_names_missing) > 0) {
-        push @error_messages, "The following accessions or plants or tissue samples are not in the database: ".join(',',@source_names_missing);
+        push @error_messages, "The following accessions or plants or plots or tissue samples are not in the database: ".join(',',@source_names_missing);
     }
 
     my $rs = $schema->resultset("Stock::Stock")->search({

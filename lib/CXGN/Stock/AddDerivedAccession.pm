@@ -195,12 +195,14 @@ sub _get_original_stock_info {
     my $cross_cvterm_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'cross', 'stock_type')->cvterm_id();
     my $family_name_cvterm_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'family_name', 'stock_type')->cvterm_id();
     my $plant_cvterm_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'plant', 'stock_type')->cvterm_id();
+    my $plot_cvterm_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'plot', 'stock_type')->cvterm_id();
     my $tissue_sample_cvterm_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'tissue_sample', 'stock_type')->cvterm_id();
     my $female_parent_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'female_parent', 'stock_relationship')->cvterm_id();
     my $male_parent_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'male_parent', 'stock_relationship')->cvterm_id();
     my $family_female_parent_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema,  'family_female_parent_of', 'stock_relationship')->cvterm_id();
     my $family_male_parent_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema,  'family_male_parent_of', 'stock_relationship')->cvterm_id();
     my $plant_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant_of', 'stock_relationship')->cvterm_id();
+    my $plot_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot_of', 'stock_relationship')->cvterm_id();
     my $tissue_sample_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'tissue_sample_of', 'stock_relationship')->cvterm_id();
     my $offspring_of_cvterm_id =  SGN::Model::Cvterm->get_cvterm_row($schema, 'offspring_of', 'stock_relationship')->cvterm_id();
 
@@ -222,6 +224,9 @@ sub _get_original_stock_info {
     } elsif ($derived_from_stock_type_id == $plant_cvterm_id) {
         $relationship_type_id = $plant_of_cvterm_id;
         $derived_from_stock_type_name = 'plant';
+    } elsif ($derived_from_stock_type_id == $plot_cvterm_id) {
+        $relationship_type_id = $plot_of_cvterm_id;
+        $derived_from_stock_type_name = 'plot';
     } elsif ($derived_from_stock_type_id == $tissue_sample_cvterm_id) {
         $relationship_type_id = $tissue_sample_of_cvterm_id;
         $derived_from_stock_type_name = 'tissue_sample';
@@ -237,7 +242,7 @@ sub _get_original_stock_info {
         $h1->execute($female_parent_cvterm_id, $male_parent_cvterm_id, $original_stock_id);
         ($female_parent_stock_id, $cross_type, $male_parent_stock_id) = $h1->fetchrow_array();
 
-    } elsif (($derived_from_stock_type_id == $plant_cvterm_id) || ($derived_from_stock_type_id == $tissue_sample_cvterm_id)) {
+    } elsif (($derived_from_stock_type_id == $plant_cvterm_id) || ($derived_from_stock_type_id == $plot_cvterm_id) || ($derived_from_stock_type_id == $tissue_sample_cvterm_id)) {
         my $q2 = "SELECT stock.stock_id, cvterm.name, female_parent.subject_id, female_parent.value, male_parent.subject_id
             FROM stock
             JOIN stock_relationship ON (stock.stock_id = stock_relationship.object_id) AND stock_relationship.type_id = ?

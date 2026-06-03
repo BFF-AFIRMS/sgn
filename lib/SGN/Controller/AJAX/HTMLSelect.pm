@@ -2288,6 +2288,14 @@ sub get_trial_plot_select : Path('/ajax/html/select/plots_from_trial/') Args(0) 
         name => 'block',
         cv_id => $stockprop_cv_id
     })->cvterm_id();
+    my $stake_id = $schema->resultset("Cv::Cvterm")->find({
+        name => 'stake',
+        cv_id => $stockprop_cv_id
+    })->cvterm_id();
+    my $set_id = $schema->resultset("Cv::Cvterm")->find({
+        name => 'set',
+        cv_id => $stockprop_cv_id
+    })->cvterm_id();
     my $synonym_id = $schema->resultset("Cv::Cvterm")->find({
         name => 'stock_synonym',
         cv_id => $stockprop_cv_id
@@ -2311,25 +2319,27 @@ sub get_trial_plot_select : Path('/ajax/html/select/plots_from_trial/') Args(0) 
             MAX(value) FILTER (WHERE type_id = ?) AS col_number,
             MAX(value) FILTER (WHERE type_id = ?) AS rep,
             MAX(value) FILTER (WHERE type_id = ?) AS block,
+            MAX(value) FILTER (WHERE type_id = ?) AS stake,
+            MAX(value) FILTER (WHERE type_id = ?) AS set,
             STRING_AGG(value, ', ') FILTER (WHERE type_id = ?) AS synonyms
         FROM stockprop
-        WHERE type_id IN (?, ?, ?, ?, ?, ?)
+        WHERE type_id IN (?, ?, ?, ?, ?, ?, ?, ?)
         GROUP BY stock_id
     )
-    SELECT plot.plot_id, plot.plot_name, plotprops.plot_number, plotprops.row_number, plotprops.col_number, plotprops.rep, plotprops.block, plot.accession_id, plot.accession_name, accessionprops.synonyms, 
+    SELECT plot.plot_id, plot.plot_name, plotprops.plot_number, plotprops.row_number, plotprops.col_number, plotprops.rep, plotprops.block, plotprops.stake, plotprops.set, plot.accession_id, plot.accession_name, accessionprops.synonyms, 
         STRING_AGG(plot.intercrop_accession_id::text, ';'), STRING_AGG(plot.intercrop_accession_name, ';'), STRING_AGG(icsprops.synonyms, ';')
     FROM plot 
     LEFT JOIN stockprops AS plotprops ON plotprops.stock_id=plot.plot_id
     LEFT JOIN stockprops AS accessionprops ON accessionprops.stock_id=plot.accession_id
     LEFT JOIN stockprops AS icsprops ON icsprops.stock_id=plot.intercrop_accession_id
-    GROUP BY 1,2,3,4,5,6,7,8,9,10;"; 
+    GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12;"; 
 
     my $h = $schema->storage()->dbh()->prepare($plots_q);
-    $h->execute($intercrop_plot_of_id, $plot_of_id, \@plots, $plot_num_id, $row_num_id, $col_num_id, $rep_id, $block_id, $synonym_id, $plot_num_id, $row_num_id, $col_num_id, $rep_id, $block_id, $synonym_id);
+    $h->execute($intercrop_plot_of_id, $plot_of_id, \@plots, $plot_num_id, $row_num_id, $col_num_id, $rep_id, $block_id, $stake_id, $set_id, $synonym_id, $plot_num_id, $row_num_id, $col_num_id, $rep_id, $block_id, $stake_id, $set_id, $synonym_id);
 
-    my $html = "<table id=\"plots_from_trial_select_table\" width=\"100%\"><thead><tr><th></th><th>Plot</th><th>Number</th><th>(Row, Column)</th><th>Rep</th><th>Block</th><th>Accession</th></tr></thead><tbody>";
+    my $html = "<table id=\"plots_from_trial_select_table\" width=\"100%\"><thead><tr><th></th><th>Plot</th><th>Number</th><th>(Row, Column)</th><th>Rep</th><th>Block</th><th>Stake</th><th>Set</th><th>Accession</th></tr></thead><tbody>";
 
-    while (my ($plot_id, $plot_name, $plot_number, $row, $column, $rep, $block, $accession_id, $accession_name, $synonyms, $intercrop_accession_id, $intercrop_accession_name, $intercrop_synonyms) = $h->fetchrow_array()) {
+    while (my ($plot_id, $plot_name, $plot_number, $row, $column, $rep, $block, $stake, $set, $accession_id, $accession_name, $synonyms, $intercrop_accession_id, $intercrop_accession_name, $intercrop_synonyms) = $h->fetchrow_array()) {
 
         # Build text for accession name and synonyms
         my $accession_list = "<td>";
@@ -2357,7 +2367,7 @@ sub get_trial_plot_select : Path('/ajax/html/select/plots_from_trial/') Args(0) 
 
         $accession_list .= "</td>";
 
-        $html .= "<tr><td><input id=\"select_plot_$plot_name\" type=\"checkbox\" class=\"exp_design_plot_select\"></td><td><a href=\"/stock/$plot_id/view\">$plot_name</a></td><td>$plot_number</td><td>$coords</td><td>$rep</td><td>$block</td>$accession_list</tr>";
+        $html .= "<tr><td><input id=\"select_plot_$plot_name\" type=\"checkbox\" class=\"exp_design_plot_select\"></td><td><a href=\"/stock/$plot_id/view\">$plot_name</a></td><td>$plot_number</td><td>$coords</td><td>$rep</td><td>$block</td><td>$stake</td><td>$set</td>$accession_list</tr>";
     }
 
     $html .= "</tbody></table>";

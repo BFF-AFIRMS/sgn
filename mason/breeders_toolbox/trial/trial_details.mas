@@ -35,7 +35,7 @@ $latest_trial_activity => undef
 
             <tr>
                 <td><b>Trial Name</b></td>
-                <td>
+                <td class="trial-details-col2">
                     <div id="trial_name">
 % if ($trial_name) {
 %   print "$trial_name";
@@ -48,7 +48,7 @@ $latest_trial_activity => undef
 
             <tr>
                 <td><b>Breeding Program </b></td>
-                <td>
+                <td class="trial-details-col2">
                     <span id="breeding_program">
 % if ($breeding_program_name) {
                     <a href="/breeders/program/<% $breeding_program_id %>"><% $breeding_program_name %></a>
@@ -62,7 +62,7 @@ $latest_trial_activity => undef
 
             <tr>
                 <td><b>Trial Location</b></td>
-                <td>
+                <td class="trial-details-col2">
                     <div id="trial_location">
 % if ($location_name) {
 %  print "$location_name ( $country_name )";
@@ -75,7 +75,7 @@ $latest_trial_activity => undef
 
             <tr>
                 <td><b>Year</b></td>
-                <td>
+                <td class="trial-details-col2">
                     <div id="trial_year">
 % if ($year) {
 %  print "$year";
@@ -90,8 +90,8 @@ $latest_trial_activity => undef
             </tr>
 
             <tr>
-                <td><b>Stock Type Being Evaluated in This Trial</b></td>
-                <td>
+                <td><b>Stock Type in Trial</b></td>
+                <td class="trial-details-col2">
                     <div id="stock_type_in_trial">
 % if ($trial_stock_type) {
 %     print "$trial_stock_type";
@@ -103,8 +103,8 @@ $latest_trial_activity => undef
             </tr>
 
 	    <tr>
-                <td><b>Number of Stocks in This Trial</b></td>
-                <td>
+                <td><b>Number of Stocks</b></td>
+                <td class="trial-details-col2">
                     <div id="stock_number_in_trial">
 % if ($trial_stock_count) {
 %     print "$trial_stock_count";
@@ -117,7 +117,7 @@ $latest_trial_activity => undef
 
             <tr>
                 <td><b>Trial Type</b></td>
-                <td>
+                <td class="trial-details-col2">
                     <div id="trial_type">
 % if ($trial_type) {
 %  print "$trial_type";
@@ -130,7 +130,7 @@ $latest_trial_activity => undef
 
             <tr>
                 <td><b>Planting Date</b></td>
-                <td>
+                <td class="trial-details-col2">
                     <div id="planting_date">
 % if ($planting_date) {
 <a href="/breeders/trial/<% $trial_id %>?currentDate=<% $planting_date %>" ><% $planting_date %></a>
@@ -143,7 +143,7 @@ $latest_trial_activity => undef
 % if ($transplanting_date && $transplanting_date ne '') {
 <tr>
     <td><b>Transplanting Date</b></td>
-    <td>
+    <td class="trial-details-col2">
         <div id="transplanting_date">
             <a href="/breeders/trial/<% $trial_id %>?currentDate=<% $transplanting_date %>" ><% $transplanting_date %></a>
         </div>
@@ -152,7 +152,7 @@ $latest_trial_activity => undef
 % }
             <tr>
                 <td><b>Harvest Date</b></td>
-                <td>
+                <td class="trial-details-col2">
                     <div id="harvest_date">
 % if ($harvest_date) {
 <a href="/breeders/trial/<% $trial_id %>?currentDate=<% $harvest_date %>" ><% $harvest_date %></a>
@@ -164,7 +164,7 @@ $latest_trial_activity => undef
             </tr>
 
             <tr><td><b>Description</b></td>
-                <td>
+                <td class="trial-details-col2">
 % if ($trial_description) {
 %  print "<div id='trial_description' style='white-space: pre-wrap;'>$trial_description</div>";
 % } else {
@@ -175,7 +175,7 @@ $latest_trial_activity => undef
 
             <tr>
                 <td><b>Folder</b></td>
-                <td>
+                <td class="trial-details-col2">
                     <span id="trial_folder_div"><a href="/folder/<% $folder_id %>"><% $folder_name %></a></span>
                     <br/><br/>
                     <button class="btn btn-sm btn-default" style="margin:3px" id="new_folder_dialog_link">New Folder</button> <button class="btn btn-sm btn-default" style="margin:3px" id="open_folder_dialog_link">Change Folder</button>
@@ -183,7 +183,7 @@ $latest_trial_activity => undef
             </tr>
 
 	    <tr><td><b>Created by</b></td>
-                <td>
+                <td class="trial-details-col2">
                     <div id="trial_owner">
 % if ($trial_owner) {
 %  print "$trial_owner";
@@ -196,7 +196,7 @@ $latest_trial_activity => undef
 
             <tr>
                 <td><b>Latest Trial Activity</b></td>
-                <td>
+                <td class="trial-details-col2">
                         <div id="latest_trial_activity">
 % if ($latest_trial_activity) {
 %  print "<span class='text-success'>$latest_trial_activity</span>";
@@ -274,3 +274,11 @@ $latest_trial_activity => undef
         </table>
     </div>
 </div>
+
+% if (-e "mason/projects/trial/$trial_id.mas" ){
+<div class="row" style="margin: 0px; margin-top: 20px">
+        <&| /page/info_section.mas, title=>'Overview', collapsible=>1, collapsed=>0, subtitle=> ""  &>
+            <& "/projects/trial/$trial_id.mas" &>
+        </&>
+</div>
+% }

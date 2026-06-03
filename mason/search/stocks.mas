@@ -48,10 +48,10 @@ my $accession_cvterm_id;
 for (my $i=0; $i< scalar(@$stock_types); $i++) {
      if ( $stock_types->[$i][1] eq "" ) {
         $stock_types->[$i][1] = 'all';
-     }
-     if ( $stock_types->[$i][1] eq "accession" ) {
+     } elsif ( $stock_types->[$i][1] eq "plot" ) {
+        $stock_types->[$i][1] = 'tree';
+     } elsif ( $stock_types->[$i][1] eq "accession" ) {
      	$accession_cvterm_id = $stock_types->[$i][0];
-	last();
      }
 }
 
@@ -70,6 +70,9 @@ my $breeding_programs_select = simple_selectbox_html(
     choices => $breeding_programs,
     id      => "breeding_program" ,
 );
+
+push(@$editable_stock_props, "synonyms");
+push(@$editable_stock_props, "organism");
 </%perl>
 
 <&| /page/info_section.mas, title => 'Search', collapsible=>1, collapsed=>0 &>
@@ -262,7 +265,6 @@ my $breeding_programs_select = simple_selectbox_html(
     <center>
     <button class="btn btn-primary" id="submit_stock_search" />Search</button>
     </center>
-    <br/><br/>
   </div>
 </&>
 
@@ -307,7 +309,6 @@ my $breeding_programs_select = simple_selectbox_html(
                     <th>Stock Name</th>
                     <th>Stock Type</th>
                     <th>Organism</th>
-                    <th>Synonyms</th>
                     <th>Organization</th>
                 </tr>
                 </thead>
@@ -458,8 +459,8 @@ jQuery(document).ready(function () {
     }
 
     //For adding stockprop columns to search result
-    var stockprop_extra_columns_view = { 'organization':1 };
-    var stockprop_extra_columns_view_array = [ 'organization' ];
+    var stockprop_extra_columns_view = { 'organism': 1, 'organization':1 };
+    var stockprop_extra_columns_view_array = [ 'organism', 'organization' ];
 
     function updateResultsHeader() {
         var table_header_html =
@@ -467,9 +468,7 @@ jQuery(document).ready(function () {
             '<thead><tr>' +
               '<th>Stock Id</th>' +
               '<th>Stock Name</th>' +
-              '<th>Stock Type</th>' +
-              '<th>Organism</th>' +
-              '<th>Synonyms</th>';
+              '<th>Stock Type</th>';
         for (var i = 0; i < stockprop_extra_columns_view_array.length; i++) {
           table_header_html += '<th>' + stockprop_extra_columns_view_array[i] + '</th>';
         }
@@ -625,6 +624,7 @@ function parseArgs(editable_stockprops_search) {
 }
 
 function _load_stock_search_results(stock_type, editable_stockprops_search, stockprop_extra_columns_view, stockprop_extra_columns_view_array){
+    stock_type = stock_type == 'tree' ? 'plot' : stock_type;
     console.log(stock_type);
     console.log("Making AJAX request with editable stockprop "+JSON.stringify(editable_stockprops_search));
 
@@ -685,7 +685,7 @@ function _load_stock_search_results(stock_type, editable_stockprops_search, stoc
                 alert("Error retrieving search results: ", response);
             },
         },
-        'colReorder': true,
+        //'colReorder': true,
         'dom': 'lBfrtip',
         'rowId': 'Stock Id',
         'buttons': [ 'colvis',

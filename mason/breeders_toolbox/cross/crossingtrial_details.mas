@@ -16,14 +16,14 @@ $trial_owner
 </%args>
 
 
-<div class="row">
-    <div class="col-sm-8">
+<div class="row flex-wrap-row">
+    <div class="col-auto">
 
-        <table class="table table-hover table-bordered" >
+        <table class="table table-hover table-bordered">
 
             <tr>
                 <td><b>Crossing Experiment Name</b></td>
-                <td>
+                <td class="trial-details-col2">
                     <div id="trial_name">
 % if ($trial_name) {
 %   print "$trial_name";
@@ -101,8 +101,8 @@ $trial_owner
             </tr>
 
             <tr><td><b>Description</b></td>
-                <td>
-                    <div id="trial_description">
+                <td class="trial-details-col2">
+                    <div id="trial_description" style="white-space: normal">
 % if ($trial_description) {
 %  print "$trial_description";
 % } else {
@@ -136,7 +136,7 @@ $trial_owner
         </table>
 
     </div>
-    <div class="col-sm-4">
+    <div class="col-auto">
         <div class="well well-sm">
             <& /util/barcode.mas, identifier => "$identifier_prefix"."$trial_id", trial_id=> "$trial_id", trial_name=> "$trial_name", format=>"trial_qrcode"  &>
         </div>

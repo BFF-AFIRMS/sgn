@@ -85,14 +85,17 @@ $user_can_modify => undef
 
 jQuery(document).ready(function () {
 
-    jQuery('#trial_activities_table').DataTable({
+    var trial_activities_table = jQuery('#trial_activities_table').DataTable({
         'autoWidth': false,
         'searching': false,
         'info': false,
         'paging': false,
         'order': false,
         'ajax':'/ajax/breeders/trial/'+ <% $trial_id %> + '/all_trial_activities',
+        // 'scrollX': true
     });
+
+
 
     jQuery('#trial_completion_layout_section_onswitch').click( function() {
         jQuery.ajax ( {

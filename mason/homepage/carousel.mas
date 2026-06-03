@@ -31,7 +31,8 @@ my $jbrowse_lodgepole_pine_url = "$jbrowse_url/$jbrowse_path?assembly=Lodgepole%
 
           <div class="carousel-sgn-links">
             <ul class="sgn_sm_list">
-              <a href='/breeders/trial/194'><li>G128A Projeny Trial</li></a>
+              <a href='/breeders/trial/194'><li>G128A Projeny Trial at Judy Creek</li></a>
+              <a href='/breeders/trial/224'><li>G128B Projeny Trial at Virginia Hills</li></a>
             </ul>
           </div>
         </div>
