@@ -114,7 +114,7 @@ my $breeding_programs_select = simple_selectbox_html(
 
     <&| /page/info_section.mas, title => 'Advanced Search', collapsible=>1, collapsed=>1, id=>'advanced_search_panel' &>
 
-    <&| /page/info_section.mas, title => 'Properties', collapsible=>1, collapsed=>1 &>
+    <&| /page/info_section.mas, title => 'Properties', collapsible=>1, collapsed=>1, id=>'stock_search_properties_panel' &>
 
     <div class="row">
       <div class="form-group form-group-sm">
@@ -180,7 +180,7 @@ my $breeding_programs_select = simple_selectbox_html(
 % }
 
     </&>
-    <&| /page/info_section.mas, title => 'Usage', collapsible=>1, collapsed=>1 &>
+    <&| /page/info_section.mas, title => 'Usage', collapsible=>1, collapsed=>1, id=>'stock_search_usage_panel' &>
 
     <div class="row">
       <div class="col-sm-6">
@@ -220,7 +220,7 @@ my $breeding_programs_select = simple_selectbox_html(
     </div>
 
     </&>
-    <&| /page/info_section.mas, title => 'Phenotypes', collapsible=>1, collapsed=>1 &>
+    <&| /page/info_section.mas, title => 'Phenotypes', collapsible=>1, collapsed=>1, id=>'stock_search_phenotypes_panel' &>
 
     <div class="row">
         <div class="col-sm-6">
@@ -452,13 +452,13 @@ jQuery(document).ready(function () {
     // Renders dynamic, search-by-property input fields (e.g. custom stock properties)
     function _draw_editable_stockprops_search_fields() {
         jQuery('#editable_stockprop_search_div').html('');
-        for (var property in editable_stockprops_search) {
+        for (const property in editable_stockprops_search) {
             if (editable_stockprops_search.hasOwnProperty(property)) {
                 // We filter out organization because it is handled directly as a first-class DOM element
                 if (property === 'organization') continue;
 
-                var matchtype_val = editable_stockprops_search[property].matchtype || 'contains';
-                var input_val = editable_stockprops_search[property].value || '';
+                const matchtype_val = editable_stockprops_search[property].matchtype || 'contains';
+                const input_val = editable_stockprops_search[property].value || '';
 
                 // Draw input fields with corresponding selectors for custom mapping hooks
                 jQuery('#editable_stockprop_search_div').append(`
@@ -490,7 +490,7 @@ jQuery(document).ready(function () {
                     </div>`);
 
                 // Assign value and match type properties dynamically
-                var $row = jQuery('#editable_stockprop_search_div');
+                const $row = jQuery('#editable_stockprop_search_div');
                 $row.find('select[data-property="'+property+'"]').val(matchtype_val);
                 $row.find('#'+property+'_input_id').val(input_val);
 
@@ -597,7 +597,7 @@ jQuery(document).ready(function () {
             maximum_trait_value: { selector: '#maximum_trait_value' },
             // Set custom JSON mapping hook for complex, dynamically built custom properties
             editable_stockprops: {
-                selector: '',
+                selector: '#editable_stockprop_search_div',
                 type: 'json',
                 getValue: function() { return editable_stockprops_search; },
                 setValue: function(val) {

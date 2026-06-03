@@ -123,34 +123,57 @@ export class SearchStateManager {
                 } else {
                     element.setValue(val);
                 }
-                continue;
+            } else {
+                // 2. Perform fallback updates on standard DOM fields
+                const $el = jQuery(element.selector);
+                if ($el.length) {
+                    if (element.type === 'checkbox') {
+                        $el.prop('checked', val === 'true');
+                    } else if (element.type === 'multi-checkbox') {
+                        const items = val.split(',');
+                        $el.each(function() {
+                            const currentVal = jQuery(this).val();
+                            if (currentVal && items.includes(String(currentVal))) {
+                                jQuery(this).prop('checked', true);
+                            } else {
+                                jQuery(this).prop('checked', false);
+                            }
+                        });
+                    } else {
+                        $el.val(val);
+                    }
+                }
             }
 
-            // 2. Perform fallback updates on standard DOM fields
-            const $el = jQuery(element.selector);
-            if (!$el.length) continue;
-
-            if (element.type === 'checkbox') {
-                $el.prop('checked', val === 'true');
-            } else if (element.type === 'multi-checkbox') {
-                const items = val.split(',');
-                $el.each(function() {
-                    const currentVal = jQuery(this).val();
-                    if (currentVal && items.includes(String(currentVal))) {
-                        jQuery(this).prop('checked', true);
-                    } else {
-                        jQuery(this).prop('checked', false);
+            // Auto-expand any collapsed parent panels for this element
+            if (element.selector) {
+                const $el = jQuery(element.selector);
+                if ($el.length) {
+                    const parents = $el.parents('[id$="_content"]');
+                    const parentElements = parents.toArray().reverse();
+                    for (const parent of parentElements) {
+                        const id = jQuery(parent).attr('id');
+                        if (id) {
+                            const prefix = id.slice(0, -8); // remove '_content'
+                            const $toggle = jQuery('#' + prefix + '_onswitch');
+                            const isCollapsed = parent.style.display === 'none' || 
+                                                (jQuery(parent).hasClass('collapse') && !jQuery(parent).hasClass('in') && !jQuery(parent).hasClass('show'));
+                            if (isCollapsed && $toggle.length) {
+                                $toggle.click();
+                            }
+                        }
                     }
-                });
-            } else {
-                $el.val(val);
+                }
             }
         }
 
         // Auto-expand advanced options accordion if we restored any advanced filters
         if (hasAdvanced && this.config.advancedToggleSelector) {
             const $toggle = jQuery(this.config.advancedToggleSelector);
-            if ($toggle.is(':visible')) {
+            const contentId = this.config.advancedToggleSelector.replace('_onswitch', '_content');
+            const $content = jQuery(contentId);
+            const isCollapsed = $content.length ? ($content[0].style.display === 'none' || ($content.hasClass('collapse') && !$content.hasClass('in') && !$content.hasClass('show'))) : true;
+            if (isCollapsed && $toggle.length) {
                 $toggle.click();
             }
         }
