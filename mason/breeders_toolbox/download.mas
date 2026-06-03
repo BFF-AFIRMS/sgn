@@ -34,7 +34,7 @@ Choose a list for each parameter and click "Download".
 </div>
 
 <div class="well well-sm" style="margin-top: 20px">
-<&|  /page/info_section.mas, title => "<b>Download Phenotypes Using Lists</b>", collapsible => 1, collapsed => 1 &>
+<&|  /page/info_section.mas, title => "<b>Download Phenotypes Using Lists</b>", id => "download_phenotypes", collapsible => 1, collapsed => 1 &>
 <p>Select Parameters:</p>
 <form id="download_form" action="/breeders/download_action" method="POST" >
 <table class="table table-bordered table-download" id="table_download_phenotypes" >
@@ -122,7 +122,7 @@ Choose a list for each parameter and click "Download".
 </div>
 
 <div class="well well-sm" style="margin-top: 20px">
-  <&|  /page/info_section.mas, title => "<b>Inspect Datasets</b>", collapsible => 1, collapsed => 1 &>
+  <&|  /page/info_section.mas, title => "<b>Inspect Datasets</b>", id => "inspect_datasets", collapsible => 1, collapsed => 1 &>
       <div id="phenotype_download_dataset_list">
         /* id="table_inspect_datasets" */
       </div>
@@ -130,7 +130,7 @@ Choose a list for each parameter and click "Download".
 </div>
 
 <div class="well well-sm" style="margin-top: 20px">
-<&|  /page/info_section.mas, title => "<b>Trial Metadata</b>", collapsible => 1, collapsed => 1 &>
+<&|  /page/info_section.mas, title => "<b>Trial Metadata</b>", id => "download_trial_metadata", collapsible => 1, collapsed => 1 &>
 <p>Select Parameters:</p>
 <form id="download_metadata_form" action="/breeders/download_action" method="POST" >
 <table class="table table-bordered table-download">
@@ -289,7 +289,7 @@ function download_phenotypes() {
 <!-- DOWNLOAD ACCESSION PROPERTIES -->
 
 <div class="well well-sm" style="margin-top: 20px">
-  <&|  /page/info_section.mas, title => "<b>Accession Properties</b>", collapsible => 1, collapsed => 1 &>
+  <&|  /page/info_section.mas, title => "<b>Accession Properties</b>", id => "download_accession_properties", collapsible => 1, collapsed => 1 &>
   <p>Select parameters:</p>
   <form id="download_accession_properties" action="/breeders/download_accession_properties_action" method="POST">
     <table class="table table-download"  cellpadding="10">
@@ -372,7 +372,7 @@ $(document).ready(function() {
 <!-- start of code for pedigree download -->
 
 <div class="well well-sm" style="margin-top: 20px">
-<&|  /page/info_section.mas, title => "<b>Pedigrees</b>", collapsible => 1, collapsed => 1 &>
+<&|  /page/info_section.mas, title => "<b>Pedigrees</b>", id => "download_pedigrees", collapsible => 1, collapsed => 1 &>
 <p>Select parameter:</p>
 <form id="download_pedigree" action="/breeders/download_pedigree_action" method="POST">
 <table class="table table-download"  cellpadding="10" id="table_download_pedigrees">
@@ -472,7 +472,7 @@ $(document).ready(function() {
 <!-- start of code for cross and family download -->
 
 <div class="well well-sm" style="margin-top: 20px">
-<&|  /page/info_section.mas, title => "<b>Crosses and Families of Progenies</b>", collapsible => 1, collapsed => 1 &>
+<&|  /page/info_section.mas, title => "<b>Crosses and Families of Progenies</b>", id => "download_crosses_families_of_progenies", collapsible => 1, collapsed => 1 &>
 <p>Select parameters:</p>
     <form id="download_cross_family" action="/breeders/download_cross_family_of_progenies" method="POST">
         <table class="table table-download"  cellpadding="10">
@@ -538,7 +538,7 @@ $(document).ready(function() {
 <!-- start of code for seedlot details download -->
 
 <div class="well well-sm" style="margin-top: 20px">
-    <&|  /page/info_section.mas, title => "<b>Seedlot Details</b>", collapsible => 1, collapsed => 1 &>
+    <&|  /page/info_section.mas, title => "<b>Seedlot Details</b>", id => "download_seedlot_details", collapsible => 1, collapsed => 1 &>
     <p>Select parameters:</p>
 
     <form id="download_seedlot_details" action="/list/download_details" method="POST">
@@ -608,7 +608,7 @@ $(document).ready(function() {
 % if ( $seedlot_maintenance_enabled ) {
 
 <div class="well well-sm" style="margin-top: 20px">
-  <&|  /page/info_section.mas, title => "<b>Seedlot Maintenance Events</b>", collapsible => 1, collapsed => 1 &>
+  <&|  /page/info_section.mas, title => "<b>Seedlot Maintenance Events</b>", id => "download_seedlot_maintenance_events", collapsible => 1, collapsed => 1 &>
   <p>Select parameters:</p>
   <form id="download_seedlot_maintenance_events" action="/breeders/download_seedlot_maintenance_events_action" method="POST">
       <table class="table table-download"  cellpadding="10">
@@ -687,7 +687,7 @@ $(document).ready(function() {
 % if ($is_curator) {
 
 <div class="well well-sm" style="margin-top: 20px">
-    <&|  /page/info_section.mas, title => "<b>Obsolete Metadata</b>", collapsible => 1, collapsed => 1 &>
+    <&|  /page/info_section.mas, title => "<b>Obsolete Metadata</b>", id => "download_obsolete_metadata", collapsible => 1, collapsed => 1 &>
     <p>Select parameters:</p>
     <form id="download_obsolete_metadata_action" action="/breeders/download_obsolete_metadata_action" method="POST">
         <table class="table table-download" cellpadding="10">
@@ -753,7 +753,7 @@ jQuery(document).ready(function() {
 
 
 <div class="well well-sm" style="margin-top: 20px">
-<&|  /page/info_section.mas, title => "<b>Genotypes</b>", collapsible => 1, collapsed => 1 &>
+<&|  /page/info_section.mas, title => "<b>Genotypes</b>", id => "download_genotypes", collapsible => 1, collapsed => 1 &>
 <p>Select parameter:</p>
 <form id="download_gbs" action="/breeders/download_gbs_action" method="POST">
 <table class="table table-download"  cellpadding="10">
@@ -832,7 +832,7 @@ jQuery(document).ready(function() {
 </script>
 
 <div class="well well-sm" style="margin-top: 20px">
-<&|  /page/info_section.mas, title => "<b>Genotyping QC</b>", collapsible => 1, collapsed => 1 &>
+<&|  /page/info_section.mas, title => "<b>Genotyping QC</b>", id => "download_genotyping_qc", collapsible => 1, collapsed => 1 &>
 <p>Select parameter:</p>
 <form id="gbs_qc" action="/breeders/gbs_qc_action" method="POST">
 <table class="table" cellpadding="10">
