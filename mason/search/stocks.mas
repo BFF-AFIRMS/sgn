@@ -581,9 +581,6 @@ jQuery(document).ready(function () {
     const searchManager = window.jsMod['search_state'].create({
         submitButtonSelector: '#submit_stock_search',
         resetButtonSelector: '#reset_stock_search',
-        advancedToggleSelector: '#advanced_search_panel_onswitch',
-        // Lists all search elements classified as part of the collapsible advanced filter panels
-        advancedParams: ['organism', 'organization', 'obsolete_stock_search_term', 'project', 'location', 'year', 'breeding_program', 'trait', 'minimum_trait_value', 'maximum_trait_value', 'editable_stockprops'],
         onReset: function() {
             for (const key in editable_stockprops_search) {
                 delete editable_stockprops_search[key];

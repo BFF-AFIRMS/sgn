@@ -37,10 +37,6 @@ export interface SearchStateConfig {
     onSearch?: () => void;
     // Callback function to execute when a reset is triggered
     onReset?: () => void;
-    // Selector targeting the advanced options accordion toggle (if present)
-    advancedToggleSelector?: string;
-    // List of query parameter keys classified as advanced options
-    advancedParams?: string[];
 }
 
 export class SearchStateManager {
@@ -105,16 +101,10 @@ export class SearchStateManager {
      */
     public deserialize(): void {
         const urlParams = new URLSearchParams(window.location.search);
-        let hasAdvanced = false;
 
         for (const [key, element] of Object.entries(this.config.elements)) {
             const val = urlParams.get(key);
             if (val === null) continue;
-
-            // Check if this parameter qualifies as an advanced search metric
-            if (this.config.advancedParams?.includes(key)) {
-                hasAdvanced = true;
-            }
 
             // Process custom deserialize overrides (e.g. nested JSON configs)
             if (element.setValue) {
@@ -168,17 +158,6 @@ export class SearchStateManager {
                         }
                     }
                 }
-            }
-        }
-
-        // Auto-expand advanced options accordion if we restored any advanced filters
-        if (hasAdvanced && this.config.advancedToggleSelector) {
-            const $toggle = jQuery(this.config.advancedToggleSelector);
-            const contentId = this.config.advancedToggleSelector.replace('_onswitch', '_content');
-            const $content = jQuery(contentId);
-            const isCollapsed = $content.length ? ($content[0].style.display === 'none' || ($content.hasClass('collapse') && !$content.hasClass('in') && !$content.hasClass('show'))) : true;
-            if (isCollapsed && $toggle.length) {
-                $toggle.click();
             }
         }
     }
