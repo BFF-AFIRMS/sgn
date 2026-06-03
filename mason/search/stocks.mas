@@ -261,7 +261,8 @@ my $breeding_programs_select = simple_selectbox_html(
     </&> <!-- closes advanced search -->
 
     <center>
-    <button class="btn btn-primary" id="submit_stock_search" />Search</button>
+    <button class="btn btn-primary" id="submit_stock_search">Search</button>
+    <button class="btn btn-default" id="reset_stock_search">Reset</button>
     </center>
     <br/><br/>
   </div>
@@ -578,9 +579,21 @@ jQuery(document).ready(function () {
     // Instantiate the unified Search State Manager configuration
     const searchManager = window.jsMod['search_state'].create({
         submitButtonSelector: '#submit_stock_search',
+        resetButtonSelector: '#reset_stock_search',
         advancedToggleSelector: '#advanced_search_panel_onswitch',
         // Lists all search elements classified as part of the collapsible advanced filter panels
         advancedParams: ['organism', 'organization', 'obsolete_stock_search_term', 'project', 'location', 'year', 'breeding_program', 'trait', 'minimum_trait_value', 'maximum_trait_value', 'editable_stockprops'],
+        onReset: function() {
+            for (const key in editable_stockprops_search) {
+                delete editable_stockprops_search[key];
+            }
+            _draw_editable_stockprops_search_fields();
+
+            const type_select = document.getElementById('stock_type_select');
+            if (type_select) {
+                type_select.selectedIndex = [...type_select.options].findIndex(elem => elem.text.trim().toLowerCase() == 'accession') ?? 1;
+            }
+        },
         elements: {
             any_name: { selector: '#any_name' },
             any_name_matchtype: { selector: '#any_name_matchtype' },
@@ -601,6 +614,9 @@ jQuery(document).ready(function () {
                 type: 'json',
                 getValue: function() { return editable_stockprops_search; },
                 setValue: function(val) {
+                    for (const key in editable_stockprops_search) {
+                        delete editable_stockprops_search[key];
+                    }
                     Object.assign(editable_stockprops_search, val);
                     _draw_editable_stockprops_search_fields();
                 }

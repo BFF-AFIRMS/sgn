@@ -31,8 +31,12 @@ export interface SearchStateConfig {
     elements: Record<string, ElementConfig>;
     // Selector targeting the primary search submission button
     submitButtonSelector: string;
+    // Selector targeting the reset button (if present)
+    resetButtonSelector?: string;
     // Callback function to execute when a search is triggered
     onSearch?: () => void;
+    // Callback function to execute when a reset is triggered
+    onReset?: () => void;
     // Selector targeting the advanced options accordion toggle (if present)
     advancedToggleSelector?: string;
     // List of query parameter keys classified as advanced options
@@ -192,6 +196,39 @@ export class SearchStateManager {
     }
 
     /**
+     * Resets form fields, clears query parameters in the URL, and triggers callback updates.
+     */
+    public reset(): void {
+        for (const [key, element] of Object.entries(this.config.elements)) {
+            if (element.setValue) {
+                if (element.type === 'json') {
+                    element.setValue({});
+                } else {
+                    element.setValue('');
+                }
+                continue;
+            }
+
+            const $el = jQuery(element.selector);
+            if (!$el.length) continue;
+
+            if (element.type === 'checkbox' || element.type === 'multi-checkbox') {
+                $el.prop('checked', false);
+            } else if ($el.is('select')) {
+                $el.prop('selectedIndex', 0);
+            } else {
+                $el.val('');
+            }
+        }
+
+        window.history.pushState(null, '', window.location.pathname);
+
+        if (this.config.onReset) {
+            this.config.onReset();
+        }
+    }
+
+    /**
      * Mounts listeners, triggers state restorations, and executes auto-triggers.
      */
     public init(): void {
@@ -205,6 +242,14 @@ export class SearchStateManager {
                 this.config.onSearch();
             }
         });
+
+        // 4. Intercept the reset execution event to clear states
+        if (this.config.resetButtonSelector) {
+            jQuery(this.config.resetButtonSelector).on('click', (e) => {
+                e.preventDefault();
+                this.reset();
+            });
+        }
 
         // 3. Auto-trigger search if query parameters were restored
         if (window.location.search.length > 1) {
