@@ -1,5 +1,5 @@
 /**
- * declarative search state utility
+ * Declarative search state utility.
  * 
  * This module provides a highly reusable, framework-agnostic controller class
  * to handle serializing and deserializing search page form elements into the 
@@ -15,12 +15,16 @@ export interface ElementConfig {
     selector: string;
     // Defines how the state should be interpreted from/to the DOM
     type?: 'text' | 'checkbox' | 'select' | 'multi-checkbox' | 'json';
+    // When true, the deserializer will wait/poll until an option with the target value exists in the select element before setting it.
+    waitForOptions?: boolean;
+    // Timeout in milliseconds for waitForOptions polling (defaults to 3000)
+    timeout?: number;
     // Custom function to retrieve the value. 
     // Uses 'any' because custom components can return highly variable types (e.g., arrays, maps, nested objects).
     getValue?: () => any;
     // Custom function to set the value.
-    // Uses 'any' to accommodate heterogeneous inputs.
-    setValue?: (val: any) => void;
+    // Uses 'any' to accommodate heterogeneous inputs. Can return a Promise to allow async cascading lookups.
+    setValue?: (val: any) => void | Promise<void>;
 }
 
 /**
@@ -29,14 +33,16 @@ export interface ElementConfig {
 export interface SearchStateConfig {
     // Declarative map of parameter keys to element configurations
     elements: Record<string, ElementConfig>;
-    // Selector targeting the primary search submission button
-    submitButtonSelector: string;
-    // Selector targeting the reset button (if present)
-    resetButtonSelector?: string;
+    // Selector or list of selectors targeting search submission buttons
+    submitButtonSelector: string | string[];
+    // Selector, list of selectors, or a mapping of specific reset selectors to targeted element keys to reset
+    resetButtonSelector?: string | string[] | Record<string, string[]>;
     // Callback function to execute when a search is triggered
     onSearch?: () => void;
     // Callback function to execute when a reset is triggered
-    onReset?: () => void;
+    onReset?: (resetKeys?: string[]) => void;
+    // Callback function to execute when managed query parameters are restored on load
+    onRestore?: (restoredKeys: string[]) => void;
 }
 
 export class SearchStateManager {
@@ -101,9 +107,11 @@ export class SearchStateManager {
     /**
      * Parses the current URL query string and populates mapped elements.
      * Iterates through configurations, identifies matched URL keys, updates fields,
+     * 
+     * Supports sequential async lookups for dependent/cascading fields.
      * and handles programmatically expanding collapsible advanced option panels.
      */
-    public deserialize(): void {
+    public async deserialize(): Promise<void> {
         const urlParams = new URLSearchParams(window.location.search);
 
         for (const [key, element] of Object.entries(this.config.elements)) {
@@ -116,19 +124,26 @@ export class SearchStateManager {
             if (element.setValue) {
                 if (element.type === 'json') {
                     try {
-                        element.setValue(JSON.parse(val));
+                        const parsed = JSON.parse(val);
+                        const result = element.setValue(parsed);
+                        if (result instanceof Promise) {
+                            await result;
+                        }
                     } catch (e) {
                         console.error(`Error parsing JSON parameter for ${key}`, e);
                     }
                 } else {
-                    element.setValue(val);
+                    const result = element.setValue(val);
+                    if (result instanceof Promise) {
+                        await result;
+                    }
                 }
             } else {
                 // Perform fallback updates on standard DOM fields
                 const $el = jQuery(element.selector);
                 if ($el.length) {
                     if (element.type === 'checkbox') {
-                        $el.prop('checked', val === 'true');
+                        $el.prop('checked', val === 'true').trigger('change');
                     } else if (element.type === 'multi-checkbox') {
                         const items = val.split(',');
                         $el.each(function() {
@@ -139,8 +154,30 @@ export class SearchStateManager {
                                 jQuery(this).prop('checked', false);
                             }
                         });
+                        $el.trigger('change');
+                    } else if (element.waitForOptions) {
+                        await new Promise<void>((resolve) => {
+                            const selector = element.selector;
+                            const checkInterval = setInterval(() => {
+                                const $currentEl = jQuery(selector);
+                                if ($currentEl.length) {
+                                    const $opt = $currentEl.find(`option[value="${val}"]`);
+                                    if ($opt.length > 0) {
+                                        clearInterval(checkInterval);
+                                        $currentEl.val(val).trigger('change');
+                                        resolve();
+                                    }
+                                }
+                            }, 50);
+                            setTimeout(() => {
+                                clearInterval(checkInterval);
+                                // Fallback set even if option doesn't exist yet to prevent infinite hang
+                                jQuery(selector).val(val).trigger('change');
+                                resolve();
+                            }, element.timeout || 3000);
+                        });
                     } else {
-                        $el.val(val);
+                        $el.val(val).trigger('change');
                     }
                 }
             }
@@ -199,9 +236,15 @@ export class SearchStateManager {
 
     /**
      * Resets form fields, clears query parameters in the URL, and triggers callback updates.
+     * If a list of keys is provided, only those targeted elements and URL parameters are reset.
      */
-    public reset(): void {
-        for (const element of Object.values(this.config.elements)) {
+    public reset(keys?: string[]): void {
+        const targetKeys = keys || Object.keys(this.config.elements);
+
+        for (const key of targetKeys) {
+            const element = this.config.elements[key];
+            if (!element) continue;
+
             if (element.setValue) {
                 if (element.type === 'json') {
                     element.setValue({});
@@ -217,18 +260,18 @@ export class SearchStateManager {
             }
 
             if (element.type === 'checkbox' || element.type === 'multi-checkbox') {
-                $el.prop('checked', false);
+                $el.prop('checked', false).trigger('change');
             } else if ($el.is('select')) {
-                $el.prop('selectedIndex', 0);
+                $el.prop('selectedIndex', 0).trigger('change');
             } else {
-                $el.val('');
+                $el.val('').trigger('change');
             }
         }
 
         const urlParams = new URLSearchParams(window.location.search);
 
         // Purge only managed search parameters, leaving unmanaged keys intact
-        for (const key of Object.keys(this.config.elements)) {
+        for (const key of targetKeys) {
             urlParams.delete(key);
         }
 
@@ -237,39 +280,68 @@ export class SearchStateManager {
         window.history.pushState(null, '', nextUrl);
 
         if (this.config.onReset) {
-            this.config.onReset();
+            this.config.onReset(keys);
         }
     }
 
     /**
      * Mounts listeners, triggers state restorations, and executes auto-triggers.
      */
-    public init(): void {
+    public async init(): Promise<void> {
         // De-serialize and restore state from existing URL query parameters on load
-        this.deserialize();
+        await this.deserialize();
 
         // Intercept the search execution event to update query params and trigger callbacks
-        jQuery(this.config.submitButtonSelector).on('click', () => {
-            this.updateUrl();
-            if (this.config.onSearch) {
-                this.config.onSearch();
-            }
+        const submitSelectors = Array.isArray(this.config.submitButtonSelector)
+            ? this.config.submitButtonSelector
+            : [this.config.submitButtonSelector];
+
+        submitSelectors.forEach(selector => {
+            jQuery(selector).on('click', () => {
+                this.updateUrl();
+                if (this.config.onSearch) {
+                    this.config.onSearch();
+                }
+            });
         });
 
         // Intercept the reset execution event to clear states
         if (this.config.resetButtonSelector) {
-            jQuery(this.config.resetButtonSelector).on('click', (e) => {
-                e.preventDefault();
-                this.reset();
-            });
+            if (typeof this.config.resetButtonSelector === 'object' && !Array.isArray(this.config.resetButtonSelector)) {
+                // Structured selector-to-keys mapping: Record<string, string[]>
+                for (const [selector, targetKeys] of Object.entries(this.config.resetButtonSelector)) {
+                    jQuery(selector).on('click', (e) => {
+                        e.preventDefault();
+                        this.reset(targetKeys);
+                    });
+                }
+            } else {
+                // Simple selector or selector array: string | string[]
+                const resetSelectors = Array.isArray(this.config.resetButtonSelector)
+                    ? this.config.resetButtonSelector
+                    : [this.config.resetButtonSelector];
+
+                resetSelectors.forEach(selector => {
+                    jQuery(selector).on('click', (e) => {
+                        e.preventDefault();
+                        this.reset();
+                    });
+                });
+            }
         }
 
         // Auto-trigger search if managed query parameters were restored on load
         const urlParams = new URLSearchParams(window.location.search);
-        const hasManagedParams = Object.keys(this.config.elements)
-            .some(key => urlParams.has(key));
-        if (hasManagedParams) {
-            jQuery(this.config.submitButtonSelector).trigger('click');
+        const restoredKeys = Object.keys(this.config.elements)
+            .filter(key => urlParams.has(key));
+
+        if (restoredKeys.length > 0) {
+            if (this.config.onRestore) {
+                this.config.onRestore(restoredKeys);
+            } else if (!Array.isArray(this.config.submitButtonSelector)) {
+                // Fall back to triggering the single submit button only if there is no ambiguity
+                jQuery(this.config.submitButtonSelector).trigger('click');
+            }
         }
     }
 }
