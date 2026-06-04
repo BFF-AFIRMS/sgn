@@ -48,6 +48,17 @@ $stock_name => undef
 
 <&| /page/info_section.mas, title=>"Additional Search Options",  collapsible => 1, collapsed=>1 &>
 
+            <div class="form-group">
+                <label class="col-sm-7 control-label">Missing measurement format: </label>
+                <div class="col-sm-5">
+                    <select class="form-control" id="download_stock_phenotypes_missing_format">
+                        <option value="empty">Empty Cell</option>
+                        <option value="NA">NA</option>
+                        <option value="period">.</option>
+                    </select>
+                </div>
+            </div>
+
             <div class="row form-group">
                 <label class="col-sm-8 control-label">For repeated measurements, return the: </label>
                 <div class="col-sm-4">
@@ -177,13 +188,14 @@ jQuery(document).ready(function() {
     var entry_numbers = jQuery("#download_stock_phenotypes_entry_numbers_option").val();
     var trait_synonyms = jQuery("#download_stock_phenotypes_trait_synonyms_option").val();
     var traits = jQuery("#download_stock_phenotypes_traits_select").val();
+    var missing_format = jQuery("#download_stock_phenotypes_missing_format").val();
     if (! Array.isArray(traits) ) {
        traits = [ traits ];
     }
 
     var datalevel = jQuery("#download_stock_phenotypes_level_option").val();
     var exclude_phenotype_outlier = jQuery("#download_stock_phenotypes_exclude_outliers").val();
-    window.open("/breeders/trials/phenotype/download?"+stock_type+"_list="+JSON.stringify(stock_id)+"&dataLevel="+datalevel+"&format="+format+"&timestamp="+timestamp+"&trait_list="+JSON.stringify(traits)+"&exclude_phenotype_outlier="+exclude_phenotype_outlier+"&repetitive_measurements="+repetitive_measurements+"&intercrop="+intercrop+"&entry_numbers="+entry_numbers+"&trait_synonyms="+trait_synonyms);
+    window.open("/breeders/trials/phenotype/download?"+stock_type+"_list="+JSON.stringify(stock_id)+"&dataLevel="+datalevel+"&format="+format+"&timestamp="+timestamp+"&trait_list="+JSON.stringify(traits)+"&exclude_phenotype_outlier="+exclude_phenotype_outlier+"&repetitive_measurements="+repetitive_measurements+"&intercrop="+intercrop+"&entry_numbers="+entry_numbers+"&trait_synonyms="+trait_synonyms+"&missing_format="+missing_format);
   });
 
 });

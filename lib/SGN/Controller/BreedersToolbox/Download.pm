@@ -266,6 +266,7 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
     my $phenotype_max_value = $c->req->param("phenotype_max_value") && $c->req->param("phenotype_max_value") ne 'null' ? $c->req->param("phenotype_max_value") : "";
     my $phenotype_start_date = $c->req->param("phenotype_start_date");
     my $phenotype_end_date = $c->req->param("phenotype_end_date");
+    my $missing_format = $c->req->param("missing_format") || "empty";
 
     my @trait_list;
     if ($trait_list && $trait_list ne 'null') {
@@ -448,6 +449,7 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
 	    repetitive_measurements => $repetitive_measurements,
 	    start_date => $phenotype_start_date,
 	    end_date => $phenotype_end_date,
+        missing_format => $missing_format,
     });
 
     # print STDERR "Repetitive_measurements option recieved" .$repetitive_measurements  ."\n";

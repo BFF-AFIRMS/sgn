@@ -185,7 +185,7 @@ $dataset_id => undef
     </div>
   </div>
 
-  <div class="wizard-downloads panel-group col-sm-12 col-md-6" id="wiz-down-group" role="tablist" aria-multiselectable="true">
+  <div class="wizard-downloads panel-group col-sm-12 col-md-12 col-lg-6" id="wiz-down-group" role="tablist" aria-multiselectable="true">
     <&| /util/user.mas:logged_out &>
       <div class="panel panel-default">
         <div class="panel-heading">
@@ -453,7 +453,15 @@ $dataset_id => undef
                 </div>
               </td>
             </tr>
-            <tr>
+            </tr>
+              <td colspan="1">
+                Missing measurement format: <br />
+                <select class="wizard-download-phenotypes-missing-format form-control" >
+                  <option value="empty">Empty Cell</option>
+                  <option value="NA">NA</option>
+                  <option value="period">.</option>
+                </select>
+              </td>
               <td colspan="3">
                 Repetitive measurements: <br />
                 <select class="wizard-download-repetitive-measurements-type form-control" >
@@ -565,8 +573,10 @@ $dataset_id => undef
     var default_include_entry_numbers = <% $default_include_entry_numbers %>;
     var default_include_trait_synonyms = <% $default_include_trait_synonyms %>;
     var default_supress_outliers = <% $default_supress_outliers %>;
+    var default_missing_format = 'empty';
 
     jQuery(".wizard-download-repetitive-measurements-type").each(function() { jQuery(this).val(default_repeat_measurements) });
+    jQuery(".wizard-download-phenotypes-missing-format").each(function() { jQuery(this).val(default_missing_format) });
     jQuery(".wizard-download-phenotypes-timestamp").each(function() { jQuery(this).prop('checked', default_include_timestamps === 1) });
     jQuery(".wizard-download-phenotypes-entry-numbers").each(function() { jQuery(this).prop('checked', default_include_entry_numbers === 1) });
     jQuery(".wizard-download-phenotypes-trait-synonyms").each(function() { jQuery(this).prop('checked', default_include_trait_synonyms === 1) });

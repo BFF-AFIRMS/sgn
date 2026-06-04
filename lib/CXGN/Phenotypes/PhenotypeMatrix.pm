@@ -235,6 +235,12 @@ has 'include_trait_synonyms' => ( # when true, will set the column header as "SY
     default => 0
 );
 
+has 'missing_format' => ( # how to represent missing phenotypes
+    isa => 'Str',
+    is => 'rw',
+    default => 'empty'
+);
+
 sub get_phenotype_matrix {
     my $self = shift;
     my $include_pedigree_parents = $self->include_pedigree_parents();
@@ -243,6 +249,7 @@ sub get_phenotype_matrix {
     my $include_intercrop_stocks = $self->include_intercrop_stocks;
     my $include_entry_numbers = $self->include_entry_numbers;
     my $include_trait_synonyms = $self->include_trait_synonyms;
+    my $missing_format = $self->missing_format();
     my %trial_entry_numbers;
 
     $self->trait_repeat_types( $self->retrieve_trait_repeat_types() );
@@ -426,6 +433,8 @@ sub get_phenotype_matrix {
                 %unit_treatments = %{$treatment_details->{$obs_unit->{observationunit_stock_id}}};
             };
             foreach my $name (@$treatment_names) {
+                # If no treatment value available, convert to appropriate missing data format
+                $unit_treatments{$name} = CXGN::Phenotypes::Missing->convert($unit_treatments{$name}, $self->missing_format());
                 push @line, $unit_treatments{$name};
             }
 
@@ -743,11 +752,12 @@ sub get_phenotype_matrix {
 
                             # Get the ith value if it exists, else undef
                             my $value = $trait_values->[$multi_line];
-
+                            $value = CXGN::Phenotypes::Missing->convert($value, $self->missing_format());
                             push @line, $value;
                         } else {
                             # Single value
-			    push @line, $multi_line == 0 ? $trait_values : undef;
+                            my $value = CXGN::Phenotypes::Missing->convert($trait_values, $self->missing_format());
+                            push @line, $multi_line == 0 ? $value : undef;
                         }
                     }
 
@@ -763,7 +773,8 @@ sub get_phenotype_matrix {
                     } else {
                         # Fill with undef or empty strings
                         foreach my $name (@$treatment_names) {
-                            push @line, undef;
+                            my $value = CXGN::Phenotypes::Missing->convert(undef, $self->missing_format());
+                            push @line, $value;
                         }
                     }
                     push @info, \@line;
@@ -773,7 +784,8 @@ sub get_phenotype_matrix {
 		my @line = @metadata;
 
                 foreach my $trait (@sorted_traits) {
-                    push @line, $obsunit_data{$p}->{$trait};
+                    my $value = CXGN::Phenotypes::Missing->convert($obsunit_data{$p}->{$trait}, $self->missing_format());
+                    push @line, $value;
                 }
                 push @line,  $obsunit_data{$p}->{'notes'};
 

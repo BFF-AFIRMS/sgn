@@ -63,6 +63,7 @@ use List::Util qw(uniq);
 use CXGN::List::Transform;
 use CXGN::Phenotypes::Summary;
 use CXGN::Phenotypes::Exact;
+use CXGN::Phenotypes::Missing;
 use CXGN::Trial::TrialLayoutDownload::PlotLayout;
 use CXGN::Trial::TrialLayoutDownload::PlantLayout;
 use CXGN::Trial::TrialLayoutDownload::SubplotLayout;
@@ -183,6 +184,11 @@ has 'plot_start' => (
     is => 'rw',
     isa => 'Maybe[Str]',
     default => undef
+);
+has 'missing_format' => (
+    is => 'rw',
+    isa => 'Maybe[Str]',
+    default => 'empty'
 );
 
 sub get_layout_output {
@@ -401,6 +407,7 @@ sub get_layout_output {
         include_plot_order => $self->include_plot_order(),
         plot_order => $self->plot_order(),
         plot_start => $self->plot_start(),
+        missing_format => $self->missing_format(),
     };
 
     my $layout_output;
@@ -494,11 +501,8 @@ sub _add_exact_performance_to_line {
 
     foreach my $trait (@$exact_trait_names){
         my $value = $exact_performance_hash->{$trait}->{$observationunit_name };
-        if(defined $value && length $value) {
-            push @$line, $value
-        } else {
-            push @$line, '';
-        }
+        $value = CXGN::Phenotypes::Missing->convert($value, $self->missing_format());
+        push @$line, $value;
     }
     return $line;
 }
