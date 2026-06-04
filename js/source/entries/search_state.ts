@@ -55,7 +55,7 @@ export class SearchStateManager {
         const params: Record<string, string> = {};
 
         for (const [key, element] of Object.entries(this.config.elements)) {
-            // 1. Process custom serialize overrides if defined (e.g., JSON structures)
+            // Process custom serialize overrides if defined (e.g., JSON structures)
             if (element.getValue) {
                 const val = element.getValue();
                 if (val !== undefined && val !== null && val !== '') {
@@ -64,9 +64,11 @@ export class SearchStateManager {
                 continue;
             }
 
-            // 2. Resolve standard DOM states via jQuery selectors
+            // Resolve standard DOM states via jQuery selectors
             const $el = jQuery(element.selector);
-            if (!$el.length) continue;
+            if (!$el.length) {
+                continue;
+            }
 
             if (element.type === 'checkbox') {
                 // Serializes boolean check states
@@ -78,7 +80,9 @@ export class SearchStateManager {
                 const checkedVals: string[] = [];
                 $el.filter(':checked').each(function() {
                     const val = jQuery(this).val();
-                    if (val) checkedVals.push(String(val));
+                    if (val) {
+                        checkedVals.push(String(val));
+                    }
                 });
                 if (checkedVals.length > 0) {
                     params[key] = checkedVals.join(',');
@@ -104,7 +108,9 @@ export class SearchStateManager {
 
         for (const [key, element] of Object.entries(this.config.elements)) {
             const val = urlParams.get(key);
-            if (val === null) continue;
+            if (val === null) {
+                continue;
+            }
 
             // Process custom deserialize overrides (e.g. nested JSON configs)
             if (element.setValue) {
@@ -146,14 +152,20 @@ export class SearchStateManager {
                     const parents = $el.parents('[id$="_content"]');
                     const parentElements = parents.toArray().reverse();
                     for (const parent of parentElements) {
-                        const id = jQuery(parent).attr('id');
+                        const $parent = jQuery(parent);
+
+                        const id = $parent.attr('id');
                         if (id) {
                             const prefix = id.slice(0, -8); // remove '_content'
                             const $toggle = jQuery('#' + prefix + '_onswitch');
-                            const isCollapsed = parent.style.display === 'none' || 
-                                                (jQuery(parent).hasClass('collapse') && !jQuery(parent).hasClass('in') && !jQuery(parent).hasClass('show'));
+                            const isCollapsed = parent.style.display === 'none' || (
+                                $parent.hasClass('collapse') &&
+                                !$parent.hasClass('in') &&
+                                !$parent.hasClass('show')
+                            );
+
                             if (isCollapsed && $toggle.length) {
-                                $toggle.click();
+                                $toggle.trigger('click');
                             }
                         }
                     }
@@ -189,7 +201,7 @@ export class SearchStateManager {
      * Resets form fields, clears query parameters in the URL, and triggers callback updates.
      */
     public reset(): void {
-        for (const [key, element] of Object.entries(this.config.elements)) {
+        for (const element of Object.values(this.config.elements)) {
             if (element.setValue) {
                 if (element.type === 'json') {
                     element.setValue({});
@@ -200,7 +212,9 @@ export class SearchStateManager {
             }
 
             const $el = jQuery(element.selector);
-            if (!$el.length) continue;
+            if (!$el.length) {
+                continue;
+            }
 
             if (element.type === 'checkbox' || element.type === 'multi-checkbox') {
                 $el.prop('checked', false);
@@ -252,9 +266,10 @@ export class SearchStateManager {
 
         // Auto-trigger search if managed query parameters were restored on load
         const urlParams = new URLSearchParams(window.location.search);
-        const hasManagedParams = Object.keys(this.config.elements).some(key => urlParams.has(key));
+        const hasManagedParams = Object.keys(this.config.elements)
+            .some(key => urlParams.has(key));
         if (hasManagedParams) {
-            jQuery(this.config.submitButtonSelector).click();
+            jQuery(this.config.submitButtonSelector).trigger('click');
         }
     }
 }
