@@ -261,8 +261,8 @@ my $breeding_programs_select = simple_selectbox_html(
     </&> <!-- closes advanced search -->
 
     <center>
-    <button class="btn btn-primary" id="submit_stock_search">Search</button>
-    <button class="btn btn-default" id="reset_stock_search">Reset</button>
+        <button class="btn btn-default" id="reset_stock_search">Reset</button>
+        <button class="btn btn-primary" id="submit_stock_search">Search</button>
     </center>
     <br/><br/>
   </div>
