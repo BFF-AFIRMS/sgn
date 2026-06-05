@@ -131,7 +131,7 @@ div.paginate_nav {
     // Dynamically insert the Reset button next to the Submit button
     var $submitBtn = $('#organism_search_form [name="submit"]');
     if ($submitBtn.length) {
-      $('<button class="btn btn-default tw:ml-2.5" id="reset_organism_search">Reset</button>')
+      $('<button type="button" class="btn btn-default tw:ml-2.5" id="reset_organism_search">Reset</button>')
         .insertBefore($submitBtn)
         .click(function(e) {
           e.preventDefault();
