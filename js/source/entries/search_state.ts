@@ -17,6 +17,8 @@ export interface ElementConfig {
     type?: 'text' | 'checkbox' | 'select' | 'multi-checkbox' | 'json';
     // When true, the deserializer will wait/poll until an option with the target value exists in the select element before setting it.
     waitForOptions?: boolean;
+    // When true, the deserializer will wait/poll until the element selector exists in the DOM.
+    waitForElement?: boolean;
     // Timeout in milliseconds for waitForOptions polling (defaults to 3000)
     timeout?: number;
     // Custom function to retrieve the value. 
@@ -118,6 +120,23 @@ export class SearchStateManager {
             const val = urlParams.get(key);
             if (val === null) {
                 continue;
+            }
+
+            // Wait for element to exist in the DOM if requested
+            if (element.waitForElement && element.selector) {
+                await new Promise<void>((resolve) => {
+                    const selector = element.selector;
+                    const checkInterval = setInterval(() => {
+                        if (jQuery(selector).length > 0) {
+                            clearInterval(checkInterval);
+                            resolve();
+                        }
+                    }, 50);
+                    setTimeout(() => {
+                        clearInterval(checkInterval);
+                        resolve();
+                    }, element.timeout || 3000);
+                });
             }
 
             // Process custom deserialize overrides (e.g. nested JSON configs)
@@ -286,8 +305,10 @@ export class SearchStateManager {
 
     /**
      * Mounts listeners, triggers state restorations, and executes auto-triggers.
+     *
+     * @returns A promise that resolves to an array of keys that were restored from the URL.
      */
-    public async init(): Promise<void> {
+    public async init(): Promise<string[]> {
         // De-serialize and restore state from existing URL query parameters on load
         await this.deserialize();
 
@@ -343,6 +364,8 @@ export class SearchStateManager {
                 jQuery(this.config.submitButtonSelector).trigger('click');
             }
         }
+
+        return restoredKeys;
     }
 }
 
