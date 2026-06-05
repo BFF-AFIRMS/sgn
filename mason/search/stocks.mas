@@ -291,6 +291,7 @@ my $breeding_programs_select = simple_selectbox_html(
                   <span class="input-group-btn">
                     <button class="btn btn-primary btn-sm" id="editable_stockprop_view_column_add">Add</button>
                     <button class="btn btn-sm btn-danger" id="editable_stockprop_view_column_remove">Remove</button>
+                    <button class="btn btn-sm btn-default" id="reset_stock_columns">Reset</button>
                 </span>
               </div>
             </div>
@@ -503,8 +504,8 @@ jQuery(document).ready(function () {
     }
 
     //For adding stockprop columns to search result
-    const stockprop_extra_columns_view = { 'organization':1 };
-    const stockprop_extra_columns_view_array = [ 'organization' ];
+    let stockprop_extra_columns_view = { 'organization':1 };
+    let stockprop_extra_columns_view_array = [ 'organization' ];
 
     function updateResultsHeader() {
         let table_header_html =
@@ -626,7 +627,41 @@ jQuery(document).ready(function () {
         }
     });
 
+    // Instantiate a separate manager to independently persist and reset custom table columns
+    const columnManager = window.jsMod['search_state'].create({
+        submitButtonSelector: ['#editable_stockprop_view_column_add', '#editable_stockprop_view_column_remove'],
+        resetButtonSelector: '#reset_stock_columns',
+        elements: {
+            extra_columns: {
+                selector: '',
+                type: 'json',
+                getValue: function() { return stockprop_extra_columns_view_array; },
+                setValue: function(val) {
+                    if (Array.isArray(val)) {
+                        stockprop_extra_columns_view_array.length = 0;
+                        for (const key in stockprop_extra_columns_view) {
+                            delete stockprop_extra_columns_view[key];
+                        }
+                        val.forEach(col => {
+                            stockprop_extra_columns_view[col] = 1;
+                            stockprop_extra_columns_view_array.push(col);
+                        });
+                        updateResultsHeader();
+                    }
+                }
+            }
+        },
+        onReset: function() {
+            stockprop_extra_columns_view_array.length = 0;
+            stockprop_extra_columns_view = { 'organization': 1 };
+            stockprop_extra_columns_view_array.push('organization');
+            updateResultsHeader();
+            updateResultsRows();
+        }
+    });
+
     // Initialize events, bindings and restore URL states
+    columnManager.init();
     searchManager.init();
 
    jQuery('#stock_search_form').keypress( function( e ) {
