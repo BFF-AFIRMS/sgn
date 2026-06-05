@@ -159,6 +159,8 @@ jQuery(document).ready(function () {
     });
 
     searchManager.init().then((restoredKeys) => {
+        // If no parameters exist, we manually trigger the table draw to display a default, unfiltered
+        // "browse all" view of the results immediately on load.
         if (restoredKeys.length === 0) {
             _draw_trait_search_result_table();
         }
