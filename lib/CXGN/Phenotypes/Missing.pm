@@ -15,6 +15,9 @@ CXGN::Phenotypes::Missing->convert(undef, 'NA');
 # Returns '.'
 CXGN::Phenotypes::Missing->convert(0, 'period');
 
+# Returns undef
+CXGN::Phenotypes::Missing->convert(undef, 'undef');
+
 =head1 DESCRIPTION
 
 
@@ -37,6 +40,8 @@ sub convert {
             $value = 'NA';
         } elsif ($missing_format eq 'period'){
             $value = '.';
+        } elsif ($missing_format eq 'undef'){
+            $value = undef;
         } else {
             $value = '';
         }

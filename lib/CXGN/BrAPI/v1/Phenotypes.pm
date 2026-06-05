@@ -40,7 +40,8 @@ sub search_table_csv_or_tsv {
         year_list=>\@years_array,
         location_list=>\@location_ids_array,
         accession_list=>\@accession_ids_array,
-        exclude_phenotype_outlier=>$exclude_phenotype_outlier
+        exclude_phenotype_outlier=>$exclude_phenotype_outlier,
+        missing_format=>'undef',
     );
     my @data;
     try {
