@@ -118,7 +118,7 @@ jQuery(document).ready(function (){
             if (isCollapsed && $toggle.length) {
                 $toggle.trigger('click');
             }
-            jQuery('#search_parents').click();
+            jQuery('#search_parents').trigger('click');
         }
     });
     searchManager.init();

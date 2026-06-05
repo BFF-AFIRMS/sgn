@@ -22,11 +22,31 @@ export interface ElementConfig {
     // Timeout in milliseconds for waitForOptions polling (defaults to 3000)
     timeout?: number;
     // Custom function to retrieve the value. 
-    // Uses 'any' because custom components can return highly variable types (e.g., arrays, maps, nested objects).
-    getValue?: () => any;
+    // Uses 'unknown' to safely accommodate variable structures (e.g., arrays, maps, nested objects).
+    getValue?: () => unknown;
     // Custom function to set the value.
-    // Uses 'any' to accommodate heterogeneous inputs. Can return a Promise to allow async cascading lookups.
-    setValue?: (val: any) => void | Promise<void>;
+    // Uses 'unknown' to accommodate heterogeneous inputs. Can return a Promise to allow async cascading lookups.
+    setValue?: (val: unknown) => void | Promise<void>;
+}
+
+/**
+ * Suffix configuration rules for identifying and expanding collapsible parent panels
+ * when child fields are restored with active state parameters on page load.
+ * 
+ * SGN templates traditionally wrap advanced/collapsible form sections inside `info_section.mas`
+ * markup, which generates container IDs and trigger buttons with standardized suffix pairings.
+ */
+export interface ParentExpansionRules {
+    /**
+     * Suffix identifying the collapsible parent content container element in the DOM tree.
+     * Defaults to `_content` (e.g., matching `#advanced_search_panel_content`).
+     */
+    contentSuffix?: string;
+    /**
+     * Suffix appended to the parent prefix to identify the toggle button to trigger for expansion.
+     * Defaults to `_onswitch` (e.g., matching `#advanced_search_panel_onswitch`).
+     */
+    toggleSuffix?: string;
 }
 
 /**
@@ -45,13 +65,54 @@ export interface SearchStateConfig {
     onReset?: (resetKeys?: string[]) => void;
     // Callback function to execute when managed query parameters are restored on load
     onRestore?: (restoredKeys: string[]) => void;
+    // Suffix rules for collapsing/expanding parent elements
+    parentExpansionRules?: ParentExpansionRules;
+}
+
+/**
+ * Reusable helper to poll a specific DOM/data condition.
+ */
+function pollCondition(conditionFn: () => boolean, timeout = 3000): Promise<boolean> {
+    return new Promise((resolve) => {
+        let finished = false;
+        const interval = setInterval(() => {
+            if (!finished && conditionFn()) {
+                finished = true;
+                clearInterval(interval);
+                resolve(true);
+            }
+        }, 50);
+        setTimeout(() => {
+            clearInterval(interval);
+            if (finished) return;
+            finished = true;
+            resolve(false);
+        }, timeout);
+    });
+}
+
+/**
+ * Coerces a single value or an array of values into a guaranteed array of values.
+ */
+function ensureArray<T>(val: T | T[]): T[] {
+    return Array.isArray(val) ? val : [val];
 }
 
 export class SearchStateManager {
-    private config: SearchStateConfig;
+    private readonly config: SearchStateConfig;
+    private readonly submitSelectors: string[];
+    private readonly resetSelectors?: string[] | Record<string, string[]>;
 
     constructor(config: SearchStateConfig) {
         this.config = config;
+        this.submitSelectors = ensureArray(config.submitButtonSelector);
+        if (config.resetButtonSelector) {
+            if (typeof config.resetButtonSelector === 'object' && !Array.isArray(config.resetButtonSelector)) {
+                this.resetSelectors = config.resetButtonSelector;
+            } else {
+                this.resetSelectors = ensureArray(config.resetButtonSelector);
+            }
+        }
     }
 
     /**
@@ -124,23 +185,17 @@ export class SearchStateManager {
 
             // Wait for element to exist in the DOM if requested
             if (element.waitForElement && element.selector) {
-                await new Promise<void>((resolve) => {
-                    const selector = element.selector;
-                    const checkInterval = setInterval(() => {
-                        if (jQuery(selector).length > 0) {
-                            clearInterval(checkInterval);
-                            resolve();
-                        }
-                    }, 50);
-                    setTimeout(() => {
-                        clearInterval(checkInterval);
-                        resolve();
-                    }, element.timeout || 3000);
-                });
+                const selector = element.selector;
+                await pollCondition(
+                    () => jQuery(selector).length > 0,
+                    element.timeout || 3000
+                );
             }
 
-            // Process custom deserialize overrides (e.g. nested JSON configs)
+            const $el = element.selector ? jQuery(element.selector) : null;
+
             if (element.setValue) {
+                // Process custom deserialize overrides (e.g. nested JSON configs)
                 if (element.type === 'json') {
                     try {
                         const parsed = JSON.parse(val);
@@ -157,63 +212,50 @@ export class SearchStateManager {
                         await result;
                     }
                 }
-            } else {
-                // Perform fallback updates on standard DOM fields
-                const $el = jQuery(element.selector);
-                if ($el.length) {
-                    if (element.type === 'checkbox') {
-                        $el.prop('checked', val === 'true').trigger('change');
-                    } else if (element.type === 'multi-checkbox') {
-                        const items = val.split(',');
-                        $el.each(function() {
-                            const currentVal = jQuery(this).val();
-                            if (currentVal && items.includes(String(currentVal))) {
-                                jQuery(this).prop('checked', true);
-                            } else {
-                                jQuery(this).prop('checked', false);
-                            }
-                        });
-                        $el.trigger('change');
-                    } else if (element.waitForOptions) {
-                        await new Promise<void>((resolve) => {
-                            const selector = element.selector;
-                            const checkInterval = setInterval(() => {
-                                const $currentEl = jQuery(selector);
-                                if ($currentEl.length) {
-                                    const $opt = $currentEl.find(`option[value="${val}"]`);
-                                    if ($opt.length > 0) {
-                                        clearInterval(checkInterval);
-                                        $currentEl.val(val).trigger('change');
-                                        resolve();
-                                    }
-                                }
-                            }, 50);
-                            setTimeout(() => {
-                                clearInterval(checkInterval);
-                                // Fallback set even if option doesn't exist yet to prevent infinite hang
-                                jQuery(selector).val(val).trigger('change');
-                                resolve();
-                            }, element.timeout || 3000);
-                        });
-                    } else {
-                        $el.val(val).trigger('change');
+            } else if ($el && $el.length) {
+                // Set values on standard DOM fields
+                if (element.type === 'checkbox') {
+                    $el.prop('checked', val === 'true');
+                } else if (element.type === 'multi-checkbox') {
+                    const items = val.split(',');
+                    $el.each(function () {
+                        const currentVal = jQuery(this).val();
+                        if (currentVal && items.includes(String(currentVal))) {
+                            jQuery(this).prop('checked', true);
+                        } else {
+                            jQuery(this).prop('checked', false);
+                        }
+                    });
+                } else {
+                    if (element.waitForOptions) {
+                        const selector = element.selector;
+                        await pollCondition(() => {
+                            const $currentEl = jQuery(selector);
+                            return $currentEl.length > 0 && $currentEl.find(`option[value="${val}"]`).length > 0;
+                        }, element.timeout || 3000);
                     }
+                    
+                    $el.val(val);
                 }
+                $el.trigger('change');
             }
 
             // Auto-expand any collapsed parent panels for this element
-            if (element.selector) {
-                const $el = jQuery(element.selector);
-                if ($el.length) {
-                    const parents = $el.parents('[id$="_content"]');
+            if ($el && $el.length) {
+                const contentSuffix = this.config.parentExpansionRules?.contentSuffix ?? '_content';
+                const toggleSuffix = this.config.parentExpansionRules?.toggleSuffix ?? '_onswitch';
+                const parentSelector = `[id$="${contentSuffix}"]`;
+
+                const parents = $el.parents(parentSelector);
+                if (parents.length) {
                     const parentElements = parents.toArray().reverse();
                     for (const parent of parentElements) {
                         const $parent = jQuery(parent);
 
                         const id = $parent.attr('id');
-                        if (id) {
-                            const prefix = id.slice(0, -8); // remove '_content'
-                            const $toggle = jQuery('#' + prefix + '_onswitch');
+                        if (id && id.endsWith(contentSuffix)) {
+                            const prefix = id.slice(0, -contentSuffix.length);
+                            const $toggle = jQuery('#' + prefix + toggleSuffix);
                             const isCollapsed = parent.style.display === 'none' || (
                                 $parent.hasClass('collapse') &&
                                 !$parent.hasClass('in') &&
@@ -248,9 +290,22 @@ export class SearchStateManager {
             urlParams.set(key, value);
         }
 
+        if (typeof urlParams.sort === 'function') {
+            urlParams.sort();
+        }
         const qString = urlParams.toString();
         const nextUrl = qString ? '?' + qString : window.location.pathname;
-        window.history.pushState(null, '', nextUrl);
+
+        const currentUrlParams = new URLSearchParams(window.location.search);
+        if (typeof currentUrlParams.sort === 'function') {
+            currentUrlParams.sort();
+        }
+        const currentUrl = currentUrlParams.toString() ? '?' + currentUrlParams.toString() : window.location.pathname;
+
+        // Only add history if the URL has changed
+        if (currentUrl !== nextUrl) {
+            window.history.pushState(null, '', nextUrl);
+        }
     }
 
     /**
@@ -273,8 +328,8 @@ export class SearchStateManager {
                 continue;
             }
 
-            const $el = jQuery(element.selector);
-            if (!$el.length) {
+            const $el = element.selector ? jQuery(element.selector) : null;
+            if (!$el || !$el.length) {
                 continue;
             }
 
@@ -296,7 +351,12 @@ export class SearchStateManager {
 
         const qString = urlParams.toString();
         const nextUrl = qString ? '?' + qString : window.location.pathname;
-        window.history.pushState(null, '', nextUrl);
+
+        const currentUrlParams = new URLSearchParams(window.location.search);
+
+        if (currentUrlParams.toString() !== qString) {
+            window.history.pushState(null, '', nextUrl);
+        }
 
         if (this.config.onReset) {
             this.config.onReset(keys);
@@ -313,11 +373,7 @@ export class SearchStateManager {
         await this.deserialize();
 
         // Intercept the search execution event to update query params and trigger callbacks
-        const submitSelectors = Array.isArray(this.config.submitButtonSelector)
-            ? this.config.submitButtonSelector
-            : [this.config.submitButtonSelector];
-
-        submitSelectors.forEach(selector => {
+        this.submitSelectors.forEach(selector => {
             jQuery(selector).on('click', () => {
                 this.updateUrl();
                 if (this.config.onSearch) {
@@ -327,22 +383,18 @@ export class SearchStateManager {
         });
 
         // Intercept the reset execution event to clear states
-        if (this.config.resetButtonSelector) {
-            if (typeof this.config.resetButtonSelector === 'object' && !Array.isArray(this.config.resetButtonSelector)) {
+        if (this.resetSelectors) {
+            if (!Array.isArray(this.resetSelectors)) {
                 // Structured selector-to-keys mapping: Record<string, string[]>
-                for (const [selector, targetKeys] of Object.entries(this.config.resetButtonSelector)) {
+                for (const [selector, targetKeys] of Object.entries(this.resetSelectors)) {
                     jQuery(selector).on('click', (e) => {
                         e.preventDefault();
                         this.reset(targetKeys);
                     });
                 }
             } else {
-                // Simple selector or selector array: string | string[]
-                const resetSelectors = Array.isArray(this.config.resetButtonSelector)
-                    ? this.config.resetButtonSelector
-                    : [this.config.resetButtonSelector];
-
-                resetSelectors.forEach(selector => {
+                // Simple selector or selector array: string[]
+                this.resetSelectors.forEach(selector => {
                     jQuery(selector).on('click', (e) => {
                         e.preventDefault();
                         this.reset();
@@ -359,9 +411,9 @@ export class SearchStateManager {
         if (restoredKeys.length > 0) {
             if (this.config.onRestore) {
                 this.config.onRestore(restoredKeys);
-            } else if (!Array.isArray(this.config.submitButtonSelector)) {
+            } else if (this.submitSelectors.length === 1) {
                 // Fall back to triggering the single submit button only if there is no ambiguity
-                jQuery(this.config.submitButtonSelector).trigger('click');
+                jQuery(this.submitSelectors[0]).trigger('click');
             }
         }
 
@@ -370,21 +422,29 @@ export class SearchStateManager {
 }
 
 /**
- * Factory helper method to initialize the state manager safely
+ * Factory helper method to initialize the state manager
  * 
  * @example
  * var searchManager = window.jsMod['search_state'].create({
  *     submitButtonSelector: '#search_submit',
+ *     resetButtonSelector: '#search_reset',
  *     elements: {
  *         any_name: { selector: '#any_name_input' },
  *         type: { selector: '#type_select' }
  *     },
  *     onSearch: function() {
  *         // Reload Datatable here
- *         myTable.ajax.reload();
+ *         _draw_results_table();
  *     }
  * });
- * searchManager.init();
+ * 
+ * // Init returns a promise resolving to the restored parameter keys
+ * searchManager.init().then(function(restoredKeys) {
+ *     // If no query parameters were restored on load, trigger a default "browse all" search
+ *     if (restoredKeys.length === 0) {
+ *         _draw_results_table();
+ *     }
+ * });
  */
 export function create(config: SearchStateConfig): SearchStateManager {
     return new SearchStateManager(config);
