@@ -76,6 +76,10 @@ has 'driver' => ( is => 'rw',
           isa => 'Selenium::Remote::Driver',
           lazy => 1,
           builder => '_build_driver',
+          trigger => sub {
+              my ($self, $driver) = @_;
+              $self->_configure_driver_timeouts($driver);
+          },
     );
 
 sub _build_driver {
@@ -84,9 +88,14 @@ sub _build_driver {
         'base_url' => $ENV{SGN_TEST_SERVER},
         'remote_server_addr' => $ENV{SGN_REMOTE_SERVER_ADDR} || 'localhost'
     );
+    $self->_configure_driver_timeouts($driver);
+    return $driver;
+}
+
+sub _configure_driver_timeouts {
+    my ($self, $driver) = @_;
     $driver->set_timeout('implicit', $self->implicit_wait);
     $driver->set_timeout('page load', $self->implicit_wait);
-    return $driver;
 }
 
 has 'user_data' => ( is => 'rw',
