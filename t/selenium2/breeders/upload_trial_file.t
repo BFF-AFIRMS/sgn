@@ -81,8 +81,8 @@ $t->while_logged_in_as("submitter", sub {
         $t->wait_for_network_idle();
 
         $t->click_ok("upload_trial_submit_first", "name", "find and click upload trial submit button");
-
         $t->wait_for_working_dialog();
+        $t->wait_for_network_idle();
 
         $t->click_ok("close_trial_upload_dialog", "id", "find and click close trial upload button");
 
