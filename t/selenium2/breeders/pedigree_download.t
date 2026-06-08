@@ -60,6 +60,7 @@ $t->while_logged_in_as("submitter", sub {
     $t->send_keys_ok("species_name_input", "id", "Manihot esculenta", "input species name");
 
     $t->click_ok("review_absent_accessions_submit", "id", "review matches submit");
+    $t->wait_for_network_idle();
     $t->find_element_ok("close_add_accessions_saved_message_modal", "id", "close add accessions saved message modal");
 
     # PEDIGREE UPLOAD FROM FILE FOR LIST
@@ -75,9 +76,11 @@ $t->while_logged_in_as("submitter", sub {
     $t->send_keys_ok("pedigrees_uploaded_file", "id", $filename, "input file name");
 
     $t->click_ok("upload_pedigrees_dialog_submit", "id", "submit upload pedigrees file ");
+    $t->wait_for_network_idle();
 
     $t->click_ok("upload_pedigrees_store", "id", "find and upload pedigrees store");
     $t->click_ok("pedigrees_upload_success_dismiss", "id", "dismiss success modal ");
+    $t->wait_for_network_idle();
 
     # PEDIGREE LIST DOWNLOAD
     $t->get_ok('/breeders/download');
