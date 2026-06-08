@@ -12,10 +12,10 @@ $genotype_data_type
 $trial_owner
 </%args>
 
-<div class="row flex-wrap-row">
-    <div class="col-auto">
+<div class="row">
+    <div class="col-sm-8">
 
-        <table class="table table-hover table-bordered table-trial-details" >
+        <table class="table table-hover table-bordered" >
 
             <tr>
                 <td><b>Genotyping Project Name</b></td>
@@ -119,9 +119,17 @@ $trial_owner
         </table>
         
     </div>
-    <div class="col-auto">
+    <div class="col-sm-4">
         <div class="well well-sm">
             <& /util/barcode.mas, identifier => "$identifier_prefix"."$trial_id", trial_id=> "$trial_id", trial_name=> "$trial_name", format=>"trial_qrcode"  &>
         </div>
     </div>
 </div>
+
+% if (-e "mason/projects/trial/$trial_id.mas" ){
+<div class="row" style="margin: 0px">
+        <&| /page/info_section.mas, title=>'Overview', collapsible=>1, collapsed=>0, subtitle=> ""  &>
+            <& "/projects/trial/$trial_id.mas" &>
+        </&>
+</div>
+% }

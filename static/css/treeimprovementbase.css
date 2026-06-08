@@ -814,6 +814,30 @@ Navbar
 
 /*
 -------------------------------------------------------------------------------
+Overview
+-------------------------------------------------------------------------------
+*/
+.establishment-report-table-col-1 {
+    white-space: normal !important;
+}
+.establishment-report-table-col-2 {
+    white-space: normal !important;
+}
+
+@media print {
+  a[href]:after {
+    content: none !important;
+  }
+}
+
+@media print {
+  .remove-on-print {
+    display: none !important;
+  }
+}
+
+/*
+-------------------------------------------------------------------------------
 Table
 -------------------------------------------------------------------------------
 */

@@ -107,6 +107,11 @@ sub stock_search :Path('/ajax/search/stocks') Args(0) {
                                    ? join(', ', @{ $_->{synonyms} })
                                    : '';
 
+            # Skip filler
+            if ($uniquename eq 'Filler'){
+                next;
+            }
+
             my $name_link;
             if ($type eq "cross"){
                 $name_link = qq{<a href="/cross/$stock_id">$uniquename</a>};

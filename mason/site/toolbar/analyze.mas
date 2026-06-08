@@ -14,10 +14,10 @@
     <li role="separator" class="divider"></li>
     <li class="dropdown-header">Advanced</li>
     <li><a href="/kinship/analysis">Kinship & Inbreeding</a></li>
-    <li><a href="/tools/stability">Stability AMMI/GGE</a></li>
     <li><a href="/tools/heritability">Heritability</a></li>
     <li><a href="/tools/mixedmodels">Mixed Models</a></li>
     <li><a href="/solgs/search">Genomic Selection (GS)</a></li>
+    <li><a href="/tools/stability">Genotype by Environment (GxE)</a></li>    
     <li><a href="/tools/solgwas">Genome-Wide Assocation Study (GWAS)</a></li>
     <li><a href="/tools/blast">BLAST</a></li>
 

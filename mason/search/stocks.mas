@@ -34,6 +34,9 @@
   padding: 4px;
   margin-right: 4px;
 }
+#stock_search_results thead{
+  white-space: nowrap;
+}
 </style>
 
 <div class="container-fluid">
@@ -306,9 +309,9 @@ my $breeding_programs_select = simple_selectbox_html(
                 <table id="stock_search_results" width="100%" class="table table-hover table-striped">
                 <thead>
                   <tr>
-                    <th>Stock Id</th>
-                    <th>Stock Name</th>
-                    <th>Stock Type</th>
+                    <th>Record ID</th>
+                    <th>Name</th>
+                    <th>Type</th>
                     <th>Organism</th>
                     <th>Synonyms</th>
                     <th>Organization</th>
@@ -511,9 +514,9 @@ jQuery(document).ready(function () {
         let table_header_html =
           '<table id="stock_search_results" class="table table-hover table-striped" width="100%">' +
             '<thead><tr>' +
-              '<th>Stock Id</th>' +
-              '<th>Stock Name</th>' +
-              '<th>Stock Type</th>' +
+              '<th>Record ID</th>' +
+              '<th>Name</th>' +
+              '<th>Type</th>' +
               '<th>Organism</th>' +
               '<th>Synonyms</th>';
         for (let i = 0; i < stockprop_extra_columns_view_array.length; i++) {
@@ -747,6 +750,12 @@ function _load_stock_search_results(stock_type, editable_stockprops_search, stoc
 
     var export_message = 'Stock data from ' + window.location.href;
     var export_suffix = ' Stocks';
+    let stock_table_col_order;
+    // Reset the stock table reordering before fetching new data
+    if (stock_table) {
+      stock_table_col_order = stock_table.colReorder.order();
+      stock_table.colReorder.reset();
+    }
     stock_table = jQuery('#stock_search_results').DataTable({
         'destroy' : true,
         'searching' : false,
@@ -828,5 +837,11 @@ function _load_stock_search_results(stock_type, editable_stockprops_search, stoc
             }
         ],
     });
+
+    // Restore colReorder
+    if (stock_table_col_order) {
+      //console.log("restoring order:", stock_table_col_order)
+      //stock_table.colReorder.order(stock_table_col_order);
+    }
 }
 </script>
