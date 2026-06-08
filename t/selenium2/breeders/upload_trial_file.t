@@ -15,15 +15,13 @@ $t->while_logged_in_as("submitter", sub {
 
 
     for my $extension ("xls", "xlsx") {
-        sleep(1);
-
         $t->get_ok('/breeders/trials');
         $t->wait_for_network_idle();
 
         $t->click_ok("refresh_jstree_html", "name", "click on refresh_jstree_html");
         $t->wait_for_network_idle();
 
-        $t->click_ok("upload_trial_link", "name", "click on upload_trial_link");
+        $t->click_until_ok("upload_trial_link", "name", "next_step_upload_intro_button", "id", "click on upload_trial_link");
 
         # SCREEN 1 /Intro/
         $t->click_ok("next_step_upload_intro_button", "id", "click on next_step_upload_intro_button");

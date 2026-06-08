@@ -188,6 +188,54 @@ sub click_ok {
     return $element;
 }
 
+=item click_until_ok($self, $name_btn, $method_btn, $name_sentinel, $method_sentinel, $test_name)
+Keeps clicking the button defined by $name_btn and $method_btn every second
+until the sentinel element defined by $name_sentinel and $method_sentinel appears.
+=cut
+sub click_until_ok {
+    my ($self, $name_btn, $method_btn, $name_sentinel, $method_sentinel, $test_name) = @_;
+    $test_name ||= "Click button $name_btn until sentinel $name_sentinel appears";
+
+    my $timeout = $self->driver->get_timeouts()->{"implicit"} / 1000; # in seconds
+    my $sentinel;
+
+    my $success = try {
+        wait_until {
+            my $found = 0;
+            try {
+                $sentinel = $self->driver->find_element($name_sentinel, $method_sentinel);
+                if ($sentinel && $sentinel->is_displayed()) {
+                    $found = 1;
+                }
+            } catch {
+                # Sentinel not found
+            };
+
+            if ($found) {
+                print STDERR "click_until_ok: Sentinel found and displayed! ($name_sentinel, $method_sentinel)\n";
+                return 1;
+            }
+
+            print STDERR "click_until_ok: Sentinel not found or not displayed yet. Attempting click on $name_btn ($method_btn)\n";
+
+            try {
+                $self->screenshot("click_until_ok_attempt");
+                $self->driver->find_element($name_btn, $method_btn)->click();
+            } catch {
+                print STDERR "click_until_ok: Failed to click $name_btn: $_\n";
+            };
+
+            return 0;
+        } timeout => $timeout, interval => 1;
+    } catch {
+        print STDERR "click_until_ok: timed out or error: $_";
+        return 0;
+    };
+
+    ok($success, $test_name);
+    return $sentinel;
+}
+
 sub get { 
     my $self = shift;
     my $url = shift;
