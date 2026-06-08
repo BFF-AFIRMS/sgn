@@ -52,8 +52,10 @@ $t->while_logged_in_as("submitter", sub {
 
     #manage genotyping projects
     $t->click_ok("refresh_genotyping_project_jstree_html_button", "id", "find and click 'refresh genotyping project jstree'");
+	$t->wait_for_network_idle();
 
     $t->click_ok('//div[@id="genotyping_project_list"]//i[contains(@class, "jstree-icon")]', 'xpath', 'open a tree with genotyping project list');
+	$t->wait_for_network_idle();
 
     my $href_to_trial = $t->get_attribute_ok("//div[\@id='genotyping_project_list']//a[contains(text(), '$project_name')]", 'xpath', 'href', 'find created project and take link href');
 
