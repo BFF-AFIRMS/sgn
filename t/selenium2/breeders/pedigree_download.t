@@ -51,6 +51,7 @@ $t->while_logged_in_as("submitter", sub {
     $t->click_ok("//select[\@id='list_div_list_select']//option[contains(text(),\"$list_name\")]", 'xpath', "select $list_name option");
 
     $t->click_ok("new_accessions_submit", "id", "submit new accessions");
+    $t->wait_for_working_dialog();
 
     $t->click_ok("review_found_matches_hide", "id", "review found matches test");
 
@@ -59,7 +60,6 @@ $t->while_logged_in_as("submitter", sub {
     $t->send_keys_ok("species_name_input", "id", "Manihot esculenta", "input species name");
 
     $t->click_ok("review_absent_accessions_submit", "id", "review matches submit");
-
     $t->find_element_ok("close_add_accessions_saved_message_modal", "id", "close add accessions saved message modal");
 
     # PEDIGREE UPLOAD FROM FILE FOR LIST
