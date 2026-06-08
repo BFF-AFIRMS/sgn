@@ -29,6 +29,7 @@ $t->while_logged_in_as("curator", sub {
     $t->click_ok('delete_breeding_program_link_WEBTEST', 'id', 'click breeding program delete link');
 
     $t->accept_alert_ok('accept alert for breeding program deletion');
+    sleep(2); # Waiting for backend tasks to complete; no active requests to watch clientside
 
     $t->get_ok('/breeders/manage_programs');
 
