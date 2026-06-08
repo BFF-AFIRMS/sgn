@@ -85,10 +85,10 @@ $t->while_logged_in_as("submitter", sub {
         $t->click_ok('upload_crosses_dismiss_button', 'name', 'find "close" modal button and click');
 
         $t->click_ok("refresh_crosses_jstree_html_trialtree_button", "id", "find and click 'refresh crosses trial jstree'");
-        sleep(2); # FIXME Need to wait for tree refresh
+        $t->wait_for_network_idle();
 
         $t->click_ok('//div[@id="crosses_list"]//i[contains(@class, "jstree-icon")]', 'xpath', 'open a tree with crosses trial list');
-        sleep(2); # FIXME Need to wait for tree branch to expand
+        $t->wait_for_network_idle();
 
         my $href_to_trial = $t->get_attribute_ok("//div[\@id='crosses_list']//a[contains(text(), '$experiment_name')]", 'xpath', 'href', 'find created cross and take link href');
 
