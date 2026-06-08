@@ -78,6 +78,7 @@ $t->while_logged_in_as("submitter", sub {
         $t->click_ok('//select[@id="upload_trial_trial_will_be_crossed"]/option[@value="no"]', 'xpath', "Select 'no' as value for trial will be crossed");
 
         $t->click_ok("upload_trial_validate_form_button", "id", "find and click trial validate form button");
+        $t->wait_for_network_idle();
 
         $t->click_ok("upload_trial_submit_first", "name", "find and click upload trial submit button");
 
