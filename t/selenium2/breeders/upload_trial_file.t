@@ -83,6 +83,7 @@ $t->while_logged_in_as("submitter", sub {
         $t->click_ok("upload_trial_submit_first", "name", "find and click upload trial submit button");
         $t->wait_for_working_dialog();
         $t->wait_for_network_idle();
+        sleep(10); # The above 2 waits are insufficient to give the backend enough time to finish processing
 
         $t->click_ok("close_trial_upload_dialog", "id", "find and click close trial upload button");
 
