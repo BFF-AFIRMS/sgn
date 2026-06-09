@@ -67,6 +67,7 @@ $t->while_logged_in_as("submitter", sub {
 
     $t->accept_alert_ok('accept alert');
     $t->accept_alert_ok('accept alert');
+    $t->wait_for_network_idle();
 
     # Test adding parents from pedigree info section
     $t->get_ok('stock/38879/view');
