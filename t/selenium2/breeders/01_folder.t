@@ -81,6 +81,7 @@ $t->while_logged_in_as("submitter", sub {
 
   $t->click_ok("set_trial_folder", "id", "add trial to folder submit");
   $t->click_ok('button[id="close_set_folder_success_dialog"]', "css", "close set folder success dialog");
+  $t->wait_for_network_idle();
 
   # TEST DELETE OF PARENT FOLDER - SHOULD FAIL
   $t->get_ok("/folder/$parent_folder_number");
@@ -99,6 +100,7 @@ $t->while_logged_in_as("submitter", sub {
   $t->click_ok("option[title='$folder_child_name']", "css","pass child folder : $folder_child_name as folder name");
   $t->click_ok("move_folder_submit", "id", "find move folder submit button and click");
   $t->click_ok('button[id="close_move_folder_success_dialog"]', "css", "close move folder success dialog");
+  $t->wait_for_network_idle();
 
   # TEST DELETE OF PARENT FOLDER - SHOULD PASS BECAUSE FOLDER IS EMPTY
   $t->get_ok("/folder/$parent_folder_number");
@@ -122,6 +124,7 @@ $t->while_logged_in_as("submitter", sub {
   $t->click_ok('option[title="test_trial"]', "css","pass test_trial as trial names");
   $t->click_ok("set_trial_folder", "id", "add trial to folder 'None' and submit button");
   $t->click_ok('button[id="close_set_folder_success_dialog"]', "css", "close set folder success dialog");
+  $t->wait_for_network_idle();
 
   # DELETE F2 FOLDER
 

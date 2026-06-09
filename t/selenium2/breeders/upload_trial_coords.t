@@ -15,6 +15,7 @@ $t->while_logged_in_as("submitter", sub {
     sleep(1); # FIXME Need to wait for click handler to be registered
 
     $t->click_ok("pheno_heatmap_onswitch",  "id",  "click to open pheno heatmap panel");
+    $t->wait_for_working_dialog();
 
     $t->click_ok("heatmap_upload_trial_coords_link", "id", "click on upload_trial_coords_link ");
 
@@ -24,7 +25,10 @@ $t->while_logged_in_as("submitter", sub {
     $t->send_keys_ok("trial_coordinates_uploaded_file", "id", $filename, "input file name");
 
     $t->click_ok("upload_trial_coords_ok_button", "id", "submit upload trial coords file");
+    $t->wait_for_working_dialog();
+    $t->wait_for_network_idle();
     $t->click_ok("trial_coord_upload_success_dialog_message_cancel", "id", "close success msg");
+    $t->wait_for_network_idle();
 
     # RELOAD PAGE TO CHECK IF SUCCESS
     $t->get_ok('/breeders/trial/137');
