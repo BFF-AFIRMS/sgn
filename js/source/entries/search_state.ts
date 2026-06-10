@@ -360,11 +360,9 @@ export class SearchStateManager {
             urlParams.delete(key);
         }
 
-        // If this is a full reset, purge the submit button parameter as well
-        if (!keys) {
-            this.lastClickedSubmitButton = null;
-            urlParams.delete('submit_button');
-        }
+        // Any reset should also clear the last clicked submit button
+        this.lastClickedSubmitButton = null;
+        urlParams.delete('submit_button');
 
         const qString = urlParams.toString();
         const nextUrl = qString ? '?' + qString : window.location.pathname;
