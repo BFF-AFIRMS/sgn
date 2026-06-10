@@ -405,7 +405,6 @@ sub wait_for_working_dialog {
     my $self = shift;
     my $max = shift || 300;
     my $id = shift || "working_modal";
-    my $accept_alerts = shift || 0;
 
     $self->screenshot("wait_for_working_dialog_${id}_start");
 
@@ -417,14 +416,6 @@ sub wait_for_working_dialog {
     my $count = 0;
     print STDERR "... waiting for working dialog ...\n";
     while ( !$is_hidden && $count < $max ) {
-        if ($accept_alerts) {
-            try {
-                $self->driver->accept_alert();
-            } catch {
-                # No alerts to accept
-            }
-        }
-
         my $wd = $self->find_element($id, "id");
         $is_hidden = $wd->is_hidden();
         $count++;
