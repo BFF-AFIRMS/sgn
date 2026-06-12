@@ -99,6 +99,18 @@ $d->while_logged_in_as("user", sub {
     ok($search_results =~ /test_accession1/, "verify test_accession1 is in results");
     ok($search_results =~ /test_accession2/, "verify test_accession2 is in results");
 
+    # Search for one of
+    $d->click_ok("reset_stock_search", "id", "reset search");
+    $d->click_ok("//select[\@id=\"editable_stockprop_search_term\"]/option[text()='state']", "xpath","select state property");
+    $d->click_ok("editable_stockprop_search_add", "id", "add state property");
+    $d->click_ok("//select[\@id=\"editable_stockprop_matchtype\"]/option[\@value='one of']", "xpath","select one of match type");
+    $d->send_keys_ok("state_input_id", "id", "test_state_1,test_state_2", "enter state properties");
+    $d->click_ok("submit_stock_search", "id", "submit search");
+    $search_results = $d->get_attribute_ok("stock_search_results", "id", "innerHTML", "get search results content");
+    ok($search_results =~ /test_accession1/, "verify test_accession1 is in results");
+    ok($search_results =~ /test_accession2/, "verify test_accession2 is in results");
+
+
 });
 
 # Cleanup

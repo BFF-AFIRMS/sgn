@@ -487,7 +487,7 @@ sub search {
                     s{^\s+|\s+$}{}g foreach @values;
                     #my $search_vals_sql = "'".join ("','" , @values)."'";
                     #push @stockprop_wheres, "sp$index.value IN ($search_vals_sql)";
-		    push @stockprop_wheres, " (stockprops->>'$term_name' value in (" . join(" ", '?' x scalar(@values) ).") ) ";
+		    push @stockprop_wheres, " (stockprops->>'$term_name' in (" . join(",", ('?') x scalar(@values) ).") ) ";
 		    @placeholder_values = (@placeholder_values, @values);
 
                 } else {
