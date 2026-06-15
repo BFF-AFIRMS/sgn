@@ -285,8 +285,8 @@ sub get_cross_details {
     LEFT JOIN stock AS male_parent ON (male_parent.stock_id = stock_relationship2.subject_id)
     LEFT JOIN stock_relationship AS stock_relationship3 ON (stock_relationship3.subject_id = cross_entry.stock_id) AND stock_relationship3.type_id = ?
     LEFT JOIN stock AS family ON (stock_relationship3.object_id = family.stock_id) AND family.type_id = ?
-    LEFT JOIN nd_experiment_stock ON (nd_experiment_stock.stock_id = cross_entry.stock_id)
-    LEFT JOIN nd_experiment_project ON (nd_experiment_project.nd_experiment_id = nd_experiment_stock.nd_experiment_id) AND nd_experiment_stock.type_id = ?
+    LEFT JOIN nd_experiment_stock ON (nd_experiment_stock.stock_id = cross_entry.stock_id) AND nd_experiment_stock.type_id = ?
+    LEFT JOIN nd_experiment_project ON (nd_experiment_project.nd_experiment_id = nd_experiment_stock.nd_experiment_id)
     LEFT JOIN project ON (nd_experiment_project.project_id = project.project_id)
     $where_clause";
 
