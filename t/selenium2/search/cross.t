@@ -190,6 +190,66 @@ $d->while_logged_in_as('submitter', sub {
 
     ok($results_text =~ /TestCross1_progeny/, "TestCross1_progeny is present for specified parents");
     ok($results_text !~ /TestCross2_progeny/, "TestCross2_progeny is NOT present for specified parents");
+
+    # Test 3: Search Progenies using male parent (All Progenies of this Male Parent)
+    $d->get_ok('/search/progenies_using_male');
+    $d->wait_for_network_idle();
+
+    # Input male parent name
+    $d->send_keys_ok("male_parent", "id", "TestAccession2", "input male parent name");
+
+    # Click search all progenies button
+    $d->click_ok("search_all_progenies_using_male", "id", "click Search All Progenies of this Male Parent");
+    $d->wait_for_network_idle();
+
+    # Check that the URL contains the expected parameters
+    my $current_url_3 = $d->driver->get_current_url();
+    ok($current_url_3 =~ /male_parent=TestAccession2/, "URL contains male_parent parameter");
+    ok($current_url_3 =~ /submit_button=%23search_all_progenies_using_male/, "URL contains submit_button parameter");
+
+    # Verify the results are loaded in the search results table
+    $d->find_element_ok("pedigree_male_female_search_results", "id", "find cross search results table");
+
+    my $results_table_3 = $d->find_element_ok("pedigree_male_female_search_results", "id", "Get results table");
+    my $results_text_3 = $results_table_3->get_text();
+    ok($results_text_3 =~ /TestCross1_progeny/, "Verify TestCross1_progeny is present in search results");
+    ok($results_text_3 !~ /TestCross2_progeny/, "Verify TestCross2_progeny is NOT present in search results");
+
+    # Test 4: Search Progenies using both Male and Female parents
+    $d->get_ok('/search/progenies_using_male');
+    $d->wait_for_network_idle();
+
+    # Input male parent name
+    my $male_input_4 = $d->find_element_ok("male_parent", "id", "Get male parent input");
+    $male_input_4->clear();
+    $male_input_4->send_keys("TestAccession4");
+
+    # Wait for female parent select to be populated and select TestAccession1
+    wait_until {
+        # Click outside of the input to dismiss autocomplete dropdown
+        $d->click("pagetitle", "id");
+        my $val = $d->find_element("female_parent", "id")->get_attribute('innerHTML');
+        return $val =~ /TestAccession1/;
+    };
+
+    $d->click_ok('//select[@id="female_parent"]/option[text()="TestAccession1"]', 'xpath', "Select TestAccession1 as female parent");
+
+    # Click search progenies of these parents button
+    $d->click_ok("search_pedigree_male_female", "id", "click Progenies of these Parents");
+    $d->wait_for_network_idle();
+
+    # Check that the URL contains the expected parameters
+    my $url_4 = $d->driver->get_current_url();
+    ok($url_4 =~ /male_parent=TestAccession4/, "URL contains expected male parent parameter");
+    ok($url_4 =~ /female_parent=TestAccession1/, "URL contains expected female parent parameter");
+    ok($url_4 =~ /submit_button=%23search_pedigree_male_female/, "URL contains submit_button parameter");
+
+    # Verify results - only TestCross3_progeny should be present
+    my $results_table_4 = $d->find_element_ok("pedigree_male_female_search_results", "id", "Get results table");
+    my $results_text_4 = $results_table_4->get_text();
+
+    ok($results_text_4 =~ /TestCross3_progeny/, "TestCross3_progeny is present for specified parents");
+    ok($results_text_4 !~ /TestCross1_progeny/, "TestCross1_progeny is NOT present for specified parents");
 });
 
 $d->driver->quit();
