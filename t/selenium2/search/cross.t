@@ -49,19 +49,18 @@ my $nd_geolocation_id = $geolocation ? $geolocation->nd_geolocation_id() : 1;
 $schema->resultset("Project::Projectprop")->find_or_create({ project_id => $crossing_trial->project_id, type_id => $project_year_type_id, value => '2024' });
 $schema->resultset("Project::Projectprop")->find_or_create({ project_id => $crossing_trial->project_id, type_id => $project_location_type_id, value => $nd_geolocation_id });
 
-# Lookup or create parents
-my $female_parent_stock = $schema->resultset("Stock::Stock")->find({ uniquename => 'TestAccession1', type_id => $accession_type_id });
-my $organism_id = $female_parent_stock ? $female_parent_stock->organism_id() : 1;
+# Lookup parents
+my $female_parent_stock = $schema->resultset("Stock::Stock")->find({ uniquename => 'TestAccession1', type_id => $accession_type_id })
+    or die "Required female parent 'TestAccession1' not found in database fixture";
+my $organism_id = $female_parent_stock->organism_id();
 
 my %parents;
 foreach my $name ('TestAccession1', 'TestAccession2', 'TestAccession3', 'TestAccession4', 'TestPopulation1', 'TestPopulation2') {
     my $type_id = ($name =~ /Population/) ? $population_type_id : $accession_type_id;
-    my $p_stock = $schema->resultset("Stock::Stock")->find_or_create({
+    my $p_stock = $schema->resultset("Stock::Stock")->find({
         uniquename => $name,
-        name => $name,
         type_id => $type_id,
-        organism_id => $organism_id,
-    });
+    }) or die "Required parent stock '$name' not found in database fixture";
     $parents{$name} = $p_stock->stock_id;
 }
 
