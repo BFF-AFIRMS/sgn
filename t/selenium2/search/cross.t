@@ -142,250 +142,195 @@ foreach my $c_info (@crosses_to_create) {
 $schema->storage->dbh->do("SELECT refresh_materialized_phenotype_jsonb_table()");
 $schema->storage->dbh->do("REFRESH MATERIALIZED VIEW materialized_phenoview");
 
-$d->while_logged_in_as('submitter', sub {
-    $d->get_ok('/search/progenies_using_female');
+sub run_search_test {
+    my %args = @_;
+    my $page_url = $args{page_url};
+    my $primary_input_id = $args{primary_input_id};
+    my $primary_value = $args{primary_value};
+    my $secondary_select_id = $args{secondary_select_id};
+    my $secondary_value = $args{secondary_value};
+    my $submit_btn_id = $args{submit_btn_id};
+    my $expected_url_patterns = $args{expected_url_patterns} || [];
+    my $results_table_id = $args{results_table_id};
+    my $assertions = $args{assertions} || [];
+
+    $d->get_ok($page_url);
     $d->wait_for_network_idle();
 
-    # Input female parent name
-    $d->send_keys_ok("pedigree_female_parent", "id", "CrossesTestFemale1", "input female parent name");
+    # Input primary parent name
+    my $primary_input = $d->find_element_ok($primary_input_id, "id", "find primary input $primary_input_id");
+    $primary_input->clear();
+    $primary_input->send_keys($primary_value);
 
-    # Click search all progenies button
-    $d->click_ok("search_all_progenies_using_female", "id", "click Search All Progenies of this Female Parent");
+    # Select secondary parent if specified
+    if ($secondary_select_id && $secondary_value) {
+        wait_until {
+            # Click outside of the input to dismiss autocomplete dropdown
+            $d->click("pagetitle", "id");
+            my $val = $d->find_element($secondary_select_id, "id")->get_attribute('innerHTML');
+            return $val =~ /\Q$secondary_value\E/;
+        };
+        $d->click_ok("//select[\@id='$secondary_select_id']/option[text()='$secondary_value']", 'xpath', "Select $secondary_value as secondary parent");
+    }
+
+    # Click search button
+    $d->click_ok($submit_btn_id, "id", "click search button $submit_btn_id");
     $d->wait_for_network_idle();
 
     # Check that the URL contains the expected parameters
     my $current_url = $d->driver->get_current_url();
-    ok($current_url =~ /female_parent=CrossesTestFemale1/, "URL contains female_parent parameter");
-    ok($current_url =~ /submit_button=%23search_all_progenies_using_female/, "URL contains submit_button parameter");
+    foreach my $pattern (@$expected_url_patterns) {
+        ok($current_url =~ /\Q$pattern\E/, "URL did not contain: $pattern");
+    }
 
     # Verify the results are loaded in the search results table
-    $d->find_element_ok("pedigree_female_male_search_results", "id", "find cross search results table");
-
-    my $results_table = $d->find_element_ok("pedigree_female_male_search_results", "id", "Get results table");
+    $d->find_element_ok($results_table_id, "id", "find search results table");
+    my $results_table = $d->find_element_ok($results_table_id, "id", "Get results table");
     my $results_text = $results_table->get_text();
-    ok($results_text =~ /CrossesTestCross1_progeny/, "Verify CrossesTestCross1_progeny is present in search results");
-    ok($results_text =~ /CrossesTestCross1_progeny_sibling/, "Verify CrossesTestCross1_progeny_sibling is present in search results");
-    ok($results_text =~ /CrossesTestCross2_progeny/, "Verify CrossesTestCross2_progeny is present in search results");
-    ok($results_text =~ /CrossesTestCross3_progeny/, "Verify CrossesTestCross3_progeny is present in search results");
-    ok($results_text =~ /CrossesTestCross4_progeny/, "Verify CrossesTestCross4_progeny is present in search results");
-    ok($results_text =~ /CrossesTestCross5_progeny/, "Verify CrossesTestCross5_progeny is present in search results");
-    ok($results_text =~ /CrossesTestCross6_progeny/, "Verify CrossesTestCross6_progeny is present in search results");
+
+    foreach my $assertion (@$assertions) {
+        my $pattern = $assertion->{pattern};
+        my $expected = $assertion->{expected};
+        my $desc = $assertion->{desc};
+        if ($expected) {
+            ok($results_text =~ /$pattern/, $desc);
+        } else {
+            ok($results_text !~ /$pattern/, $desc);
+        }
+    }
+}
+
+$d->while_logged_in_as('submitter', sub {
+    # Test 1: Search Progenies using female parent (All Progenies of this Female Parent)
+    run_search_test(
+        page_url                => '/search/progenies_using_female',
+        primary_input_id        => 'pedigree_female_parent',
+        primary_value           => 'CrossesTestFemale1',
+        submit_btn_id           => 'search_all_progenies_using_female',
+        expected_url_patterns   => ['female_parent=CrossesTestFemale1', 'submit_button=%23search_all_progenies_using_female'],
+        results_table_id        => 'pedigree_female_male_search_results',
+        assertions              => [
+            { pattern => qr/CrossesTestCross1_progeny/, expected => 1, desc => 'Verify CrossesTestCross1_progeny is present' },
+            { pattern => qr/CrossesTestCross1_progeny_sibling/, expected => 1, desc => 'Verify CrossesTestCross1_progeny_sibling is present' },
+            { pattern => qr/CrossesTestCross2_progeny/, expected => 1, desc => 'Verify CrossesTestCross2_progeny is present' },
+            { pattern => qr/CrossesTestCross3_progeny/, expected => 1, desc => 'Verify CrossesTestCross3_progeny is present' },
+            { pattern => qr/CrossesTestCross4_progeny/, expected => 1, desc => 'Verify CrossesTestCross4_progeny is present' },
+            { pattern => qr/CrossesTestCross5_progeny/, expected => 1, desc => 'Verify CrossesTestCross5_progeny is present' },
+            { pattern => qr/CrossesTestCross6_progeny/, expected => 1, desc => 'Verify CrossesTestCross6_progeny is present' },
+        ]
+    );
 
     # Test 2: Search Progenies using both Female and Male parents
-    $d->get_ok('/search/progenies_using_female');
-    $d->wait_for_network_idle();
-
-    # Input female parent name
-    my $female_input = $d->find_element_ok("pedigree_female_parent", "id", "Get female parent input");
-    $female_input->clear();
-    $female_input->send_keys("CrossesTestFemale1");
-
-    # Wait for male parent select to be populated and select CrossesTestMale1
-    wait_until {
-        # Click outside of the input to dismiss autocomplete dropdown
-        $d->click("pagetitle", "id");
-        my $val = $d->find_element("pedigree_male_parent", "id")->get_attribute('innerHTML');
-        return $val =~ /CrossesTestMale1/;
-    };
-
-    $d->click_ok('//select[@id="pedigree_male_parent"]/option[text()="CrossesTestMale1"]', 'xpath', "Select CrossesTestMale1 as male parent");
-
-    # Click search progenies of these parents button
-    $d->click_ok("search_pedigree_female_male", "id", "click Progenies of these Parents");
-    $d->wait_for_network_idle();
-
-    # Check that the URL contains the expected parameters
-    $current_url = $d->driver->get_current_url();
-    ok($current_url =~ /female_parent=CrossesTestFemale1/, "URL contains expected female parent parameter");
-    ok($current_url =~ /male_parent=CrossesTestMale1/, "URL contains expected male parent parameter");
-    ok($current_url =~ /submit_button=%23search_pedigree_female_male/, "URL contains submit_button parameter");
-
-    # Verify results - only TestCross1_progeny should be present
-    $results_table = $d->find_element_ok("pedigree_female_male_search_results", "id", "Get results table");
-    $results_text = $results_table->get_text();
-
-    ok($results_text =~ /CrossesTestCross1_progeny/, "CrossesTestCross1_progeny is present for specified parents");
-    ok($results_text =~ /CrossesTestCross1_progeny_sibling/, "CrossesTestCross1_progeny_sibling is present for specified parents");
-    ok($results_text !~ /CrossesTestCross2_progeny/, "CrossesTestCross2_progeny is NOT present for specified parents");
+    run_search_test(
+        page_url                => '/search/progenies_using_female',
+        primary_input_id        => 'pedigree_female_parent',
+        primary_value           => 'CrossesTestFemale1',
+        secondary_select_id     => 'pedigree_male_parent',
+        secondary_value         => 'CrossesTestMale1',
+        submit_btn_id           => 'search_pedigree_female_male',
+        expected_url_patterns   => ['female_parent=CrossesTestFemale1', 'male_parent=CrossesTestMale1', 'submit_button=%23search_pedigree_female_male'],
+        results_table_id        => 'pedigree_female_male_search_results',
+        assertions              => [
+            { pattern => qr/CrossesTestCross1_progeny/, expected => 1, desc => 'CrossesTestCross1_progeny is present for specified parents' },
+            { pattern => qr/CrossesTestCross1_progeny_sibling/, expected => 1, desc => 'CrossesTestCross1_progeny_sibling is present for specified parents' },
+            { pattern => qr/CrossesTestCross2_progeny/, expected => 0, desc => 'CrossesTestCross2_progeny is NOT present for specified parents' },
+        ]
+    );
 
     # Test 3: Search Progenies using male parent (All Progenies of this Male Parent)
-    $d->get_ok('/search/progenies_using_male');
-    $d->wait_for_network_idle();
-
-    # Input male parent name
-    $d->send_keys_ok("male_parent", "id", "CrossesTestMale1", "input male parent name");
-
-    # Click search all progenies button
-    $d->click_ok("search_all_progenies_using_male", "id", "click Search All Progenies of this Male Parent");
-    $d->wait_for_network_idle();
-
-    # Check that the URL contains the expected parameters
-    $current_url = $d->driver->get_current_url();
-    ok($current_url =~ /male_parent=CrossesTestMale1/, "URL contains male_parent parameter");
-    ok($current_url =~ /submit_button=%23search_all_progenies_using_male/, "URL contains submit_button parameter");
-
-    # Verify the results are loaded in the search results table
-    $d->find_element_ok("pedigree_male_female_search_results", "id", "find cross search results table");
-
-    $results_table = $d->find_element_ok("pedigree_male_female_search_results", "id", "Get results table");
-    $results_text = $results_table_3->get_text();
-    ok($results_text =~ /CrossesTestCross1_progeny/, "Verify CrossesTestCross1_progeny is present in search results");
-    ok($results_text =~ /CrossesTestCross1_progeny_sibling/, "Verify CrossesTestCross1_progeny_sibling is present in search results");
-    ok($results_text !~ /CrossesTestCross2_progeny/, "Verify CrossesTestCross2_progeny is NOT present in search results");
+    run_search_test(
+        page_url                => '/search/progenies_using_male',
+        primary_input_id        => 'male_parent',
+        primary_value           => 'CrossesTestMale1',
+        submit_btn_id           => 'search_all_progenies_using_male',
+        expected_url_patterns   => ['male_parent=CrossesTestMale1', 'submit_button=%23search_all_progenies_using_male'],
+        results_table_id        => 'pedigree_male_female_search_results',
+        assertions              => [
+            { pattern => qr/CrossesTestCross1_progeny/, expected => 1, desc => 'Verify CrossesTestCross1_progeny is present in search results' },
+            { pattern => qr/CrossesTestCross1_progeny_sibling/, expected => 1, desc => 'Verify CrossesTestCross1_progeny_sibling is present in search results' },
+            { pattern => qr/CrossesTestCross2_progeny/, expected => 0, desc => 'Verify CrossesTestCross2_progeny is NOT present in search results' },
+        ]
+    );
 
     # Test 4: Search Progenies using both Male and Female parents
-    $d->get_ok('/search/progenies_using_male');
-    $d->wait_for_network_idle();
-
-    # Input male parent name
-    my $male_input = $d->find_element_ok("male_parent", "id", "Get male parent input");
-    $male_input->clear();
-    $male_input->send_keys("CrossesTestMale3");
-
-    # Wait for female parent select to be populated and select CrossesTestFemale1
-    wait_until {
-        # Click outside of the input to dismiss autocomplete dropdown
-        $d->click("pagetitle", "id");
-        my $val = $d->find_element("female_parent", "id")->get_attribute('innerHTML');
-        return $val =~ /CrossesTestFemale1/;
-    };
-
-    $d->click_ok('//select[@id="female_parent"]/option[text()="CrossesTestFemale1"]', 'xpath', "Select CrossesTestFemale1 as female parent");
-
-    # Click search progenies of these parents button
-    $d->click_ok("search_pedigree_male_female", "id", "click Progenies of these Parents");
-    $d->wait_for_network_idle();
-
-    # Check that the URL contains the expected parameters
-    $current_url = $d->driver->get_current_url();
-    ok($current_url =~ /male_parent=CrossesTestMale3/, "URL contains expected male parent parameter");
-    ok($current_url =~ /female_parent=CrossesTestFemale1/, "URL contains expected female parent parameter");
-    ok($current_url =~ /submit_button=%23search_pedigree_male_female/, "URL contains submit_button parameter");
-
-    # Verify results - only TestCross3_progeny should be present
-    $results_table = $d->find_element_ok("pedigree_male_female_search_results", "id", "Get results table");
-    $results_text = $results_table->get_text();
-
-    ok($results_text =~ /CrossesTestCross3_progeny/, "CrossesTestCross3_progeny is present for specified parents");
-    ok($results_text !~ /CrossesTestCross1_progeny/, "CrossesTestCross1_progeny is NOT present for specified parents");
+    run_search_test(
+        page_url                => '/search/progenies_using_male',
+        primary_input_id        => 'male_parent',
+        primary_value           => 'CrossesTestMale3',
+        secondary_select_id     => 'female_parent',
+        secondary_value         => 'CrossesTestFemale1',
+        submit_btn_id           => 'search_pedigree_male_female',
+        expected_url_patterns   => ['male_parent=CrossesTestMale3', 'female_parent=CrossesTestFemale1', 'submit_button=%23search_pedigree_male_female'],
+        results_table_id        => 'pedigree_male_female_search_results',
+        assertions              => [
+            { pattern => qr/CrossesTestCross3_progeny/, expected => 1, desc => 'CrossesTestCross3_progeny is present for specified parents' },
+            { pattern => qr/CrossesTestCross1_progeny/, expected => 0, desc => 'CrossesTestCross1_progeny is NOT present for specified parents' },
+        ]
+    );
 
     # Test 5: Search Crosses using female parent (All Crosses)
-    $d->get_ok('/search/crosses_using_female');
-    $d->wait_for_network_idle();
-
-    # Input female parent name
-    $d->send_keys_ok("cross_female_parent", "id", "CrossesTestFemale1", "input female parent name for cross search");
-
-    # Click search all crosses button
-    $d->click_ok("search_all_crosses_using_female", "id", "click Search All Crosses of this Female Parent");
-    $d->wait_for_network_idle();
-
-    # Check URL parameters
-    $current_url = $d->driver->get_current_url();
-    ok($current_url =~ /female_parent=CrossesTestFemale1/, "URL contains female_parent parameter");
-    ok($current_url =~ /submit_button=%23search_all_crosses_using_female/, "URL contains submit_button parameter");
-
-    # Verify results in table
-    $d->find_element_ok("cross_female_male_search_results", "id", "find cross search results table");
-    $results_table = $d->find_element_ok("cross_female_male_search_results", "id", "Get results table");
-    $results_text = $results_table->get_text();
-    ok($results_text =~ /CrossesTestCross1/, "Verify CrossesTestCross1 is present in crosses search results");
-    ok($results_text =~ /CrossesTestCross2/, "Verify CrossesTestCross2 is present in crosses search results");
-    ok($results_text =~ /CrossesTestCross3/, "Verify CrossesTestCross3 is present in crosses search results");
-    ok($results_text =~ /CrossesTestCross4/, "Verify CrossesTestCross4 is present in crosses search results");
-    ok($results_text =~ /CrossesTestCross5/, "Verify CrossesTestCross5 is present in crosses search results");
-    ok($results_text =~ /CrossesTestCross6/, "Verify CrossesTestCross6 is present in crosses search results");
+    run_search_test(
+        page_url                => '/search/crosses_using_female',
+        primary_input_id        => 'cross_female_parent',
+        primary_value           => 'CrossesTestFemale1',
+        submit_btn_id           => 'search_all_crosses_using_female',
+        expected_url_patterns   => ['female_parent=CrossesTestFemale1', 'submit_button=%23search_all_crosses_using_female'],
+        results_table_id        => 'cross_female_male_search_results',
+        assertions              => [
+            { pattern => qr/CrossesTestCross1/, expected => 1, desc => 'Verify CrossesTestCross1 is present in crosses search results' },
+            { pattern => qr/CrossesTestCross2/, expected => 1, desc => 'Verify CrossesTestCross2 is present in crosses search results' },
+            { pattern => qr/CrossesTestCross3/, expected => 1, desc => 'Verify CrossesTestCross3 is present in crosses search results' },
+            { pattern => qr/CrossesTestCross4/, expected => 1, desc => 'Verify CrossesTestCross4 is present in crosses search results' },
+            { pattern => qr/CrossesTestCross5/, expected => 1, desc => 'Verify CrossesTestCross5 is present in crosses search results' },
+            { pattern => qr/CrossesTestCross6/, expected => 1, desc => 'Verify CrossesTestCross6 is present in crosses search results' },
+        ]
+    );
 
     # Test 6: Search Crosses using female and male parent
-    $d->get_ok('/search/crosses_using_female');
-    $d->wait_for_network_idle();
-
-    # Input female parent name
-    $female_input = $d->find_element_ok("cross_female_parent", "id", "Get female parent input");
-    $female_input->clear();
-    $female_input->send_keys("CrossesTestFemale1");
-
-    # Wait for male parent select to be populated and select CrossesTestMale1
-    wait_until {
-        $d->click("pagetitle", "id");
-        my $val = $d->find_element("cross_male_parent", "id")->get_attribute('innerHTML');
-        return $val =~ /CrossesTestMale1/;
-    };
-
-    $d->click_ok('//select[@id="cross_male_parent"]/option[text()="CrossesTestMale1"]', 'xpath', "Select CrossesTestMale1 as male parent for cross search");
-
-    # Click search crosses of these parents button
-    $d->click_ok("search_crosses_female_male", "id", "click Search Crosses of these Parents");
-    $d->wait_for_network_idle();
-
-    # Check URL parameters
-    $current_url = $d->driver->get_current_url();
-    ok($current_url =~ /female_parent=CrossesTestFemale1/, "URL contains expected female parent parameter for crosses search");
-    ok($current_url =~ /male_parent=CrossesTestMale1/, "URL contains expected male parent parameter for crosses search");
-    ok($current_url =~ /submit_button=%23search_crosses_female_male/, "URL contains submit_button parameter");
-
-    # Verify results
-    $results_table = $d->find_element_ok("cross_female_male_search_results", "id", "Get results table");
-    $results_text = $results_table->get_text();
-    ok($results_text =~ /CrossesTestCross1/, "CrossesTestCross1 is present");
-    ok($results_text !~ /CrossesTestCross2/, "CrossesTestCross2 is NOT present");
+    run_search_test(
+        page_url                => '/search/crosses_using_female',
+        primary_input_id        => 'cross_female_parent',
+        primary_value           => 'CrossesTestFemale1',
+        secondary_select_id     => 'cross_male_parent',
+        secondary_value         => 'CrossesTestMale1',
+        submit_btn_id           => 'search_crosses_female_male',
+        expected_url_patterns   => ['female_parent=CrossesTestFemale1', 'male_parent=CrossesTestMale1', 'submit_button=%23search_crosses_female_male'],
+        results_table_id        => 'cross_female_male_search_results',
+        assertions              => [
+            { pattern => qr/CrossesTestCross1/, expected => 1, desc => 'CrossesTestCross1 is present' },
+            { pattern => qr/CrossesTestCross2/, expected => 0, desc => 'CrossesTestCross2 is NOT present' },
+        ]
+    );
 
     # Test 7: Search Crosses using male parent (All Crosses)
-    $d->get_ok('/search/crosses_using_male');
-    $d->wait_for_network_idle();
-
-    # Input male parent name
-    $d->send_keys_ok("cross_male", "id", "CrossesTestMale1", "input male parent name for cross search");
-
-    # Click search all crosses button
-    $d->click_ok("search_all_crosses_using_male", "id", "click Search All Crosses of this Male Parent");
-    $d->wait_for_network_idle();
-
-    # Check URL parameters
-    $current_url = $d->driver->get_current_url();
-    ok($current_url =~ /male_parent=CrossesTestMale1/, "URL contains male_parent parameter");
-    ok($current_url =~ /submit_button=%23search_all_crosses_using_male/, "URL contains submit_button parameter");
-
-    # Verify results in table
-    $d->find_element_ok("cross_male_female_search_results", "id", "find cross search results table");
-    $results_table = $d->find_element_ok("cross_male_female_search_results", "id", "Get results table");
-    $results_text = $results_table->get_text();
-    ok($results_text =~ /CrossesTestCross1/, "Verify CrossesTestCross1 is present in crosses search results");
-    ok($results_text !~ /CrossesTestCross2/, "Verify CrossesTestCross2 is NOT present");
+    run_search_test(
+        page_url                => '/search/crosses_using_male',
+        primary_input_id        => 'cross_male',
+        primary_value           => 'CrossesTestMale1',
+        submit_btn_id           => 'search_all_crosses_using_male',
+        expected_url_patterns   => ['male_parent=CrossesTestMale1', 'submit_button=%23search_all_crosses_using_male'],
+        results_table_id        => 'cross_male_female_search_results',
+        assertions              => [
+            { pattern => qr/CrossesTestCross1/, expected => 1, desc => 'Verify CrossesTestCross1 is present in crosses search results' },
+            { pattern => qr/CrossesTestCross2/, expected => 0, desc => 'Verify CrossesTestCross2 is NOT present' },
+        ]
+    );
 
     # Test 8: Search Crosses using both Male and Female parents
-    $d->get_ok('/search/crosses_using_male');
-    $d->wait_for_network_idle();
-
-    # Input male parent name
-    $male_input = $d->find_element_ok("cross_male", "id", "Get male parent input");
-    $male_input->clear();
-    $male_input->send_keys("CrossesTestMale3");
-
-    # Wait for female parent select to be populated and select CrossesTestFemale1
-    wait_until {
-        $d->click("pagetitle", "id");
-        my $val = $d->find_element("cross_female", "id")->get_attribute('innerHTML');
-        return $val =~ /CrossesTestFemale1/;
-    };
-
-    $d->click_ok('//select[@id="cross_female"]/option[text()="CrossesTestFemale1"]', 'xpath', "Select CrossesTestFemale1 as female parent for crosses search");
-
-    # Click search crosses of these parents button
-    $d->click_ok("search_crosses_male_female", "id", "click Search Crosses of these Parents");
-    $d->wait_for_network_idle();
-
-    # Check URL parameters
-    $current_url = $d->driver->get_current_url();
-    ok($current_url =~ /male_parent=CrossesTestMale3/, "URL contains expected male parent parameter");
-    ok($current_url =~ /female_parent=CrossesTestFemale1/, "URL contains expected female parent parameter");
-    ok($current_url =~ /submit_button=%23search_crosses_male_female/, "URL contains submit_button parameter");
-
-    # Verify results
-    $results_table = $d->find_element_ok("cross_male_female_search_results", "id", "Get results table");
-    $results_text = $results_table->get_text();
-    ok($results_text =~ /CrossesTestCross3/, "CrossesTestCross3 is present");
-    ok($results_text !~ /CrossesTestCross1/, "CrossesTestCross1 is NOT present");
+    run_search_test(
+        page_url                => '/search/crosses_using_male',
+        primary_input_id        => 'cross_male',
+        primary_value           => 'CrossesTestMale3',
+        secondary_select_id     => 'cross_female',
+        secondary_value         => 'CrossesTestFemale1',
+        submit_btn_id           => 'search_crosses_male_female',
+        expected_url_patterns   => ['male_parent=CrossesTestMale3', 'female_parent=CrossesTestFemale1', 'submit_button=%23search_crosses_male_female'],
+        results_table_id        => 'cross_male_female_search_results',
+        assertions              => [
+            { pattern => qr/CrossesTestCross3/, expected => 1, desc => 'CrossesTestCross3 is present' },
+            { pattern => qr/CrossesTestCross1/, expected => 0, desc => 'CrossesTestCross1 is NOT present' },
+        ]
+    );
 });
 
 $d->driver->quit();
