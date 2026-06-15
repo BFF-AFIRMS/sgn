@@ -361,6 +361,32 @@ sub send_keys_ok {
     return $element;
 }
 
+sub send_keys_clear {
+    my $self = shift;
+    my $name = shift;
+    my $method = shift;
+    my $input = shift;
+    my $timeout = $self->driver->get_timeouts()->{"implicit"} / 1000; # in seconds
+
+    return wait_until {
+        $self->screenshot("send_keys_clear_$name");
+        my $el = $self->driver->find_element($name, $method);
+        $el->clear();
+        $el->send_keys(_maybe_unwrap($input));
+    } timeout => $timeout;
+}
+
+sub send_keys_clear_ok {
+    my $self = shift;
+    my $name = shift;
+    my $method = shift;
+    my $input = shift;
+    my $test_name = shift || print STDERR "You can provide a test name parameter for send_keys_clear_ok\n";
+
+    ok( my $element = $self->send_keys_clear($name, $method, $input), $test_name);
+    return $element;
+}
+
 sub accept_alert {
     my $self = shift;
 
