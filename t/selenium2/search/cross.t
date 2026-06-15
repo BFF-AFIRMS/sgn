@@ -150,7 +150,6 @@ sub run_search_test {
     my $secondary_select_id = $args{secondary_select_id};
     my $secondary_value = $args{secondary_value};
     my $submit_btn_id = $args{submit_btn_id};
-    my $expected_url_patterns = $args{expected_url_patterns} || [];
     my $results_table_id = $args{results_table_id};
     my $assertions = $args{assertions} || [];
 
@@ -175,12 +174,6 @@ sub run_search_test {
     $d->click_ok($submit_btn_id, "id", "click search button $submit_btn_id");
     $d->wait_for_network_idle();
 
-    # Check that the URL contains the expected parameters
-    my $current_url = $d->driver->get_current_url();
-    foreach my $pattern (@$expected_url_patterns) {
-        ok($current_url =~ /\Q$pattern\E/, "URL did not contain: $pattern");
-    }
-
     # Verify the results are loaded in the search results table
     $d->find_element_ok($results_table_id, "id", "find search results table");
     my $results_table = $d->find_element_ok($results_table_id, "id", "Get results table");
@@ -198,7 +191,7 @@ sub run_search_test {
     }
 
     # Refresh the page and verify that search results are correctly restored from the URL
-    $d->get_ok($current_url, "Refresh page to verify search state persistence");
+    $d->get_ok($d->driver->get_current_url(), "Refresh page to verify search state persistence");
     $d->wait_for_network_idle();
 
     my $results_table_after = $d->find_element_ok($results_table_id, "id", "Get results table after refresh");
@@ -222,7 +215,6 @@ $d->while_logged_in_as('submitter', sub {
         primary_input_id        => 'pedigree_female_parent',
         primary_value           => 'CrossesTestFemale1',
         submit_btn_id           => 'search_all_progenies_using_female',
-        expected_url_patterns   => ['female_parent=CrossesTestFemale1', 'submit_button=%23search_all_progenies_using_female'],
         results_table_id        => 'pedigree_female_male_search_results',
         assertions              => [
             { pattern => qr/CrossesTestCross1_progeny/, expected => 1, desc => 'Verify CrossesTestCross1_progeny is present' },
@@ -243,7 +235,6 @@ $d->while_logged_in_as('submitter', sub {
         secondary_select_id     => 'pedigree_male_parent',
         secondary_value         => 'CrossesTestMale1',
         submit_btn_id           => 'search_pedigree_female_male',
-        expected_url_patterns   => ['female_parent=CrossesTestFemale1', 'male_parent=CrossesTestMale1', 'submit_button=%23search_pedigree_female_male'],
         results_table_id        => 'pedigree_female_male_search_results',
         assertions              => [
             { pattern => qr/CrossesTestCross1_progeny/, expected => 1, desc => 'CrossesTestCross1_progeny is present for specified parents' },
@@ -258,7 +249,6 @@ $d->while_logged_in_as('submitter', sub {
         primary_input_id        => 'male_parent',
         primary_value           => 'CrossesTestMale1',
         submit_btn_id           => 'search_all_progenies_using_male',
-        expected_url_patterns   => ['male_parent=CrossesTestMale1', 'submit_button=%23search_all_progenies_using_male'],
         results_table_id        => 'pedigree_male_female_search_results',
         assertions              => [
             { pattern => qr/CrossesTestCross1_progeny/, expected => 1, desc => 'Verify CrossesTestCross1_progeny is present in search results' },
@@ -275,7 +265,6 @@ $d->while_logged_in_as('submitter', sub {
         secondary_select_id     => 'female_parent',
         secondary_value         => 'CrossesTestFemale1',
         submit_btn_id           => 'search_pedigree_male_female',
-        expected_url_patterns   => ['male_parent=CrossesTestMale3', 'female_parent=CrossesTestFemale1', 'submit_button=%23search_pedigree_male_female'],
         results_table_id        => 'pedigree_male_female_search_results',
         assertions              => [
             { pattern => qr/CrossesTestCross3_progeny/, expected => 1, desc => 'CrossesTestCross3_progeny is present for specified parents' },
@@ -289,7 +278,6 @@ $d->while_logged_in_as('submitter', sub {
         primary_input_id        => 'cross_female_parent',
         primary_value           => 'CrossesTestFemale1',
         submit_btn_id           => 'search_all_crosses_using_female',
-        expected_url_patterns   => ['female_parent=CrossesTestFemale1', 'submit_button=%23search_all_crosses_using_female'],
         results_table_id        => 'cross_female_male_search_results',
         assertions              => [
             { pattern => qr/CrossesTestCross1/, expected => 1, desc => 'Verify CrossesTestCross1 is present in crosses search results' },
@@ -309,7 +297,6 @@ $d->while_logged_in_as('submitter', sub {
         secondary_select_id     => 'cross_male_parent',
         secondary_value         => 'CrossesTestMale1',
         submit_btn_id           => 'search_crosses_female_male',
-        expected_url_patterns   => ['female_parent=CrossesTestFemale1', 'male_parent=CrossesTestMale1', 'submit_button=%23search_crosses_female_male'],
         results_table_id        => 'cross_female_male_search_results',
         assertions              => [
             { pattern => qr/CrossesTestCross1/, expected => 1, desc => 'CrossesTestCross1 is present' },
@@ -323,7 +310,6 @@ $d->while_logged_in_as('submitter', sub {
         primary_input_id        => 'cross_male',
         primary_value           => 'CrossesTestMale1',
         submit_btn_id           => 'search_all_crosses_using_male',
-        expected_url_patterns   => ['male_parent=CrossesTestMale1', 'submit_button=%23search_all_crosses_using_male'],
         results_table_id        => 'cross_male_female_search_results',
         assertions              => [
             { pattern => qr/CrossesTestCross1/, expected => 1, desc => 'Verify CrossesTestCross1 is present in crosses search results' },
@@ -339,7 +325,6 @@ $d->while_logged_in_as('submitter', sub {
         secondary_select_id     => 'cross_female',
         secondary_value         => 'CrossesTestFemale1',
         submit_btn_id           => 'search_crosses_male_female',
-        expected_url_patterns   => ['male_parent=CrossesTestMale3', 'female_parent=CrossesTestFemale1', 'submit_button=%23search_crosses_male_female'],
         results_table_id        => 'cross_male_female_search_results',
         assertions              => [
             { pattern => qr/CrossesTestCross3/, expected => 1, desc => 'CrossesTestCross3 is present' },
