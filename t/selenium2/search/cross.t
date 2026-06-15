@@ -92,35 +92,40 @@ foreach my $c_info (@crosses_to_create) {
     $schema->resultset("Stock::StockRelationship")->find_or_create({ subject_id => $parents{$c_info->{female}}, object_id => $cross_stock->stock_id, type_id => $female_parent_rel_type_id, value => $c_info->{type} });
     $schema->resultset("Stock::StockRelationship")->find_or_create({ subject_id => $parents{$c_info->{male}}, object_id => $cross_stock->stock_id, type_id => $male_parent_rel_type_id }) if $c_info->{male};
 
-    # Create an accession for each mock cross so they will appear in progeny search results
-    my $progeny_name = $c_info->{name} . "_progeny";
-    my $progeny_stock = $schema->resultset("Stock::Stock")->find_or_create({
-        uniquename => $progeny_name,
-        name => $progeny_name,
-        type_id => $accession_type_id,
-        organism_id => $organism_id,
-    });
+    # Create one or more progeny accessions for each mock cross
+    my @progeny_suffixes = ('_progeny');
+    push @progeny_suffixes, '_progeny_sibling' if $c_info->{name} eq 'TestCross1'; # Add a second progeny to TestCross1
 
-    # Create a plot for the progeny and link it to the trial (required for materialized views used in many progeny grids)
-    my $progeny_plot_name = $progeny_name . "_plot";
-    my $progeny_plot = $schema->resultset("Stock::Stock")->find_or_create({
-        uniquename => $progeny_plot_name,
-        name => $progeny_plot_name,
-        type_id => $plot_type_id,
-        organism_id => $organism_id,
-    });
-    $schema->resultset("Stock::StockRelationship")->find_or_create({ subject_id => $progeny_plot->stock_id, object_id => $progeny_stock->stock_id, type_id => $plot_of_rel_type_id });
+    foreach my $suffix (@progeny_suffixes) {
+        my $progeny_name = $c_info->{name} . $suffix;
+        my $progeny_stock = $schema->resultset("Stock::Stock")->find_or_create({
+            uniquename => $progeny_name,
+            name => $progeny_name,
+            type_id => $accession_type_id,
+            organism_id => $organism_id,
+        });
 
-    # Link progeny plot to experiment of type 'field_layout' (required for materialized_phenoview and other search grids)
-    my $progeny_experiment = $schema->resultset("NaturalDiversity::NdExperiment")->create({ nd_geolocation_id => $nd_geolocation_id, type_id => $field_layout_type_id });
-    $progeny_experiment->create_related('nd_experiment_stocks', { stock_id => $progeny_plot->stock_id, type_id => $field_layout_type_id });
-    $progeny_experiment->create_related('nd_experiment_projects', { project_id => $crossing_trial->project_id });
+        # Create a plot for the progeny and link it to the trial (required for materialized views used in many progeny grids)
+        my $progeny_plot_name = $progeny_name . "_plot";
+        my $progeny_plot = $schema->resultset("Stock::Stock")->find_or_create({
+            uniquename => $progeny_plot_name,
+            name => $progeny_plot_name,
+            type_id => $plot_type_id,
+            organism_id => $organism_id,
+        });
+        $schema->resultset("Stock::StockRelationship")->find_or_create({ subject_id => $progeny_plot->stock_id, object_id => $progeny_stock->stock_id, type_id => $plot_of_rel_type_id });
 
-    # Progeny linked to cross
-    $schema->resultset("Stock::StockRelationship")->find_or_create({ subject_id => $progeny_stock->stock_id, object_id => $cross_stock->stock_id, type_id => $offspring_of_rel_type_id });
-    # Progeny also linked directly to parents (required for some progeny search types in CXGN::Cross)
-    $schema->resultset("Stock::StockRelationship")->find_or_create({ subject_id => $parents{$c_info->{female}}, object_id => $progeny_stock->stock_id, type_id => $female_parent_rel_type_id, value => $c_info->{type} });
-    $schema->resultset("Stock::StockRelationship")->find_or_create({ subject_id => $parents{$c_info->{male}}, object_id => $progeny_stock->stock_id, type_id => $male_parent_rel_type_id }) if $c_info->{male};
+        # Link progeny plot to experiment of type 'field_layout' (required for materialized_phenoview and other search grids)
+        my $progeny_experiment = $schema->resultset("NaturalDiversity::NdExperiment")->create({ nd_geolocation_id => $nd_geolocation_id, type_id => $field_layout_type_id });
+        $progeny_experiment->create_related('nd_experiment_stocks', { stock_id => $progeny_plot->stock_id, type_id => $field_layout_type_id });
+        $progeny_experiment->create_related('nd_experiment_projects', { project_id => $crossing_trial->project_id });
+
+        # Progeny linked to cross
+        $schema->resultset("Stock::StockRelationship")->find_or_create({ subject_id => $progeny_stock->stock_id, object_id => $cross_stock->stock_id, type_id => $offspring_of_rel_type_id });
+        # Progeny also linked directly to parents (required for some progeny search types in CXGN::Cross)
+        $schema->resultset("Stock::StockRelationship")->find_or_create({ subject_id => $parents{$c_info->{female}}, object_id => $progeny_stock->stock_id, type_id => $female_parent_rel_type_id, value => $c_info->{type} });
+        $schema->resultset("Stock::StockRelationship")->find_or_create({ subject_id => $parents{$c_info->{male}}, object_id => $progeny_stock->stock_id, type_id => $male_parent_rel_type_id }) if $c_info->{male};
+    }
 }
 
 # Refresh materialized views so they pick up the new stocks/experiments
@@ -149,6 +154,7 @@ $d->while_logged_in_as('submitter', sub {
     my $results_table = $d->find_element_ok("pedigree_female_male_search_results", "id", "Get results table");
     my $results_text = $results_table->get_text();
     ok($results_text =~ /TestCross1_progeny/, "Verify TestCross1_progeny is present in search results");
+    ok($results_text =~ /TestCross1_progeny_sibling/, "Verify TestCross1_progeny_sibling is present in search results");
     ok($results_text =~ /TestCross2_progeny/, "Verify TestCross2_progeny is present in search results");
     ok($results_text =~ /TestCross3_progeny/, "Verify TestCross3_progeny is present in search results");
     ok($results_text =~ /TestCross4_progeny/, "Verify TestCross4_progeny is present in search results");
@@ -189,6 +195,7 @@ $d->while_logged_in_as('submitter', sub {
     $results_text = $results_table->get_text();
 
     ok($results_text =~ /TestCross1_progeny/, "TestCross1_progeny is present for specified parents");
+    ok($results_text =~ /TestCross1_progeny_sibling/, "TestCross1_progeny_sibling is present for specified parents");
     ok($results_text !~ /TestCross2_progeny/, "TestCross2_progeny is NOT present for specified parents");
 
     # Test 3: Search Progenies using male parent (All Progenies of this Male Parent)
@@ -213,6 +220,7 @@ $d->while_logged_in_as('submitter', sub {
     my $results_table_3 = $d->find_element_ok("pedigree_male_female_search_results", "id", "Get results table");
     my $results_text_3 = $results_table_3->get_text();
     ok($results_text_3 =~ /TestCross1_progeny/, "Verify TestCross1_progeny is present in search results");
+    ok($results_text_3 =~ /TestCross1_progeny_sibling/, "Verify TestCross1_progeny_sibling is present in search results");
     ok($results_text_3 !~ /TestCross2_progeny/, "Verify TestCross2_progeny is NOT present in search results");
 
     # Test 4: Search Progenies using both Male and Female parents
