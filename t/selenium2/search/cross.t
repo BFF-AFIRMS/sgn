@@ -136,6 +136,11 @@ $d->while_logged_in_as('submitter', sub {
     $d->click_ok("search_all_progenies_using_female", "id", "click Search All Progenies of this Female Parent");
     $d->wait_for_network_idle();
 
+    # Check that the URL contains the expected parameters
+    my $current_url = $d->driver->get_current_url();
+    like($current_url, qr/female_parent=TestAccession1/, "URL contains female_parent parameter");
+    like($current_url, qr/submit_button=%23search_all_progenies_using_female/, "URL contains submit_button parameter");
+
     # Verify the results are loaded in the search results table
     $d->find_element_ok("pedigree_female_male_search_results", "id", "find cross search results table");
 
