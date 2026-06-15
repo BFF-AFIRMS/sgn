@@ -196,6 +196,23 @@ sub run_search_test {
             ok($results_text !~ /$pattern/, $desc);
         }
     }
+
+    # Refresh the page and verify that search results are correctly restored from the URL
+    $d->get_ok($current_url, "Refresh page to verify search state persistence");
+    $d->wait_for_network_idle();
+
+    my $results_table_after = $d->find_element_ok($results_table_id, "id", "Get results table after refresh");
+    my $results_text_after = $results_table_after->get_text();
+    foreach my $assertion (@$assertions) {
+        my $pattern = $assertion->{pattern};
+        my $expected = $assertion->{expected};
+        my $desc = $assertion->{desc} . " (after refresh)";
+        if ($expected) {
+            ok($results_text_after =~ /$pattern/, $desc);
+        } else {
+            ok($results_text_after !~ /$pattern/, $desc);
+        }
+    }
 }
 
 $d->while_logged_in_as('submitter', sub {
