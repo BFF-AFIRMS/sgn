@@ -7,6 +7,7 @@ use SGN::Test::WWW::WebDriver;
 use SGN::Test::Fixture;
 use SGN::Model::Cvterm;
 use LWP::UserAgent;
+use Selenium::Waiter qw(wait_until);
 
 my $d = SGN::Test::WWW::WebDriver->new();
 my $f = SGN::Test::Fixture->new();
@@ -151,6 +152,36 @@ $d->while_logged_in_as('submitter', sub {
     ok($page_source =~ /TestCross4_progeny/, "Verify TestCross4_progeny is present in search results");
     ok($page_source =~ /TestCross5_progeny/, "Verify TestCross5_progeny is present in search results");
     ok($page_source =~ /TestCross6_progeny/, "Verify TestCross6_progeny is present in search results");
+
+    # Test 2: Search Progenies using both Female and Male parents
+    $d->get_ok('/search/progenies_using_female');
+    $d->wait_for_network_idle();
+
+    # Input female parent name
+    my $female_input_2 = $d->find_element_ok("pedigree_female_parent", "id");
+    $female_input_2->clear();
+    $female_input_2->send_keys("TestAccession1");
+    # Explicitly trigger change to start the dependency logic
+    $d->driver->execute_script('jQuery("#pedigree_female_parent").change()');
+
+    # Wait for male parent select to be populated and select TestAccession2
+    wait_until {
+        my $val = $d->find_element("pedigree_male_parent", "id")->get_attribute('innerHTML');
+        return $val =~ /TestAccession2/;
+    };
+
+    $d->find_element_ok('//select[@id="pedigree_male_parent"]/option[text()="TestAccession2"]', 'xpath', "Select TestAccession2 as male parent")->click();
+
+    # Click search progenies of these parents button
+    $d->click_ok("search_pedigree_female_male", "id", "click Progenies of these Parents");
+    $d->wait_for_network_idle();
+
+    # Verify results - only TestCross1_progeny should be present
+    my $results_table_2 = $d->find_element_ok("pedigree_female_male_search_results", "id");
+    my $results_text = $results_table_2->get_text();
+
+    ok($results_text =~ /TestCross1_progeny/, "TestCross1_progeny is present for specified parents");
+    ok($results_text !~ /TestCross2_progeny/, "TestCross2_progeny is NOT present for specified parents");
 });
 
 $d->driver->quit();
