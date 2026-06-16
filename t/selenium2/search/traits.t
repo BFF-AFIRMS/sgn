@@ -42,7 +42,8 @@ sub run_trait_search_test {
     }
 
     while (my ($id, $val) = each %$inputs) {
-        $d->send_keys_clear_ok($id, "id", $val, "Input '$val' in $id");
+        $d->clear_ok($id, "id", "Clear input '$id'");
+        $d->send_keys_ok($id, "id", $val, "Input '$val' in $id");
     }
 
     $d->click_ok($submit_btn_id, "id", "Submit search");
@@ -236,7 +237,8 @@ run_trait_search_test(
 # Clear, search for 'fresh root weight' again, and navigate to details page
 $d->click_ok("reset_trait_search", "id", "Reset search");
 
-$d->send_keys_clear_ok("trait_search_name", "id", "fresh root weight", "Input 'fresh root weight' for details page test");
+$d->clear_ok("trait_search_name", "id", "Clear input trait_search_name");
+$d->send_keys_ok("trait_search_name", "id", "fresh root weight", "Input 'fresh root weight' for details page test");
 $d->click_ok("submit_trait_search", "id", "Submit search");
 $d->wait_for_network_idle();
 

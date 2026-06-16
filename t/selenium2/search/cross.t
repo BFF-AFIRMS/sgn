@@ -157,7 +157,8 @@ sub run_search_test {
     $d->wait_for_network_idle();
 
     # Input primary parent name
-    $d->send_keys_clear_ok($primary_input_id, "id", $primary_value, "Input primary parent name ($primary_input_id)");
+    $d->clear_ok($primary_input_id, "id", "Clear input $primary_input_id");
+    $d->send_keys_ok($primary_input_id, "id", $primary_value, "Input primary parent name ($primary_input_id)");
 
     # Select secondary parent if specified
     if ($secondary_select_id && $secondary_value) {
