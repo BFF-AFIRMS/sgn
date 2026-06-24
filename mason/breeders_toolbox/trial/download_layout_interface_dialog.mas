@@ -392,6 +392,8 @@ function show_available_columns_<% $download_type %>(level){
         'location_name': { label: 'Location Name', desc: 'The location that this trial is in will appear.' },
         'year': { label: 'Year', desc: 'The year that this trial occured will appear.' },
         'pedigree': { label: 'Pedigree', desc: 'The pedigree of the accession which was planted in the plot will appear. Only shows parents.' },
+        'female_parent': { label: 'Female Parent', desc: 'The female parent of the accession which was planted in the plot.' },
+        'male_parent': { label: 'Male Parent', desc: 'The male parent of the accession which was planted in the plot.' },
         'tier': { label: 'Tier', desc: 'A combined view of row_number/col_number. If the field is drawn as a grid, the row_number is the y coordinate and the col_number is the x coordinate.' },
         'seedlot_name': { label: 'Seedlot Name', desc: 'The source seedlot_name from which the plot was planted. Not all trials have this information saved.' },
         'seed_transaction_operator': { label: 'Seed Transaction Operator', desc: 'The operator who created the seedlot_transaction between the seedlot and the plot. The seedlot_name indicates the source from which the plot was planted. Not all trials have this information saved.' },
@@ -411,7 +413,7 @@ function show_available_columns_<% $download_type %>(level){
 
     var mandatory_cols = [];
     var optional_cols_checked = [];
-    var optional_cols_unchecked = ['synonyms', 'trial_name', 'location_name', 'year', 'pedigree', 'tier', 'seedlot_name', 'seed_transaction_operator', 'num_seed_per_plot', 'range_number', 'plot_geo_json'];
+    var optional_cols_unchecked = ['synonyms', 'trial_name', 'location_name', 'year', 'pedigree', 'female_parent', 'male_parent', 'tier', 'seedlot_name', 'seed_transaction_operator', 'num_seed_per_plot', 'range_number', 'plot_geo_json'];
 
     if (level == 'plots') {
         mandatory_cols = ['plot_name', 'plot_id'];
