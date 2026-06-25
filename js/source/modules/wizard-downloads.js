@@ -92,6 +92,7 @@ export function WizardDownloads(main_id,wizard){
             compute_from_parents: compute_from_parents,
             marker_set_list_id: marker_set_list_id,
             include_duplicate_genotypes: include_duplicate_genotypes,
+            forbid_cache: true,
         });
       });
     main.selectAll(".wizard-download-genetic-relationship-matrix")

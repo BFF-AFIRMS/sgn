@@ -166,6 +166,7 @@ sub search {
         ORDER BY s.key ASC
         $limit_clause
         $offset_clause;";
+    print STDERR "markersearch query: $protocolprop_q\n";
 
     my $protocolprop_h = $schema->storage->dbh()->prepare($protocolprop_q);
     $protocolprop_h->execute();

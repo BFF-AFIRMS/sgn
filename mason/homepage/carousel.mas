@@ -97,9 +97,9 @@ my $jbrowse_lodgepole_pine_url = "$jbrowse_url/$jbrowse_path?assembly=Lodgepole%
 </div>
 
 <ul id="btn_carousel_indicators" class="nav nav-pills nav-justified sgn_carousel_button_group">
-    <li class="active"><a data-target="#myCarousel" data-slide-to="0">Resilient Forests</a></li>
     <!--<li class="active"><a data-target="#myCarousel" data-slide-to="1">USA Seedlings</a></li>-->
-    <li class="active"><a data-target="#myCarousel" data-slide-to="1">Lodgepole Pine Reference Genome</a></li>    
+    <li class="active"><a data-target="#myCarousel" data-slide-to="1">Lodgepole Pine Reference Genome</a></li>
+    <li class="active"><a data-target="#myCarousel" data-slide-to="0">Resilient Forests</a></li>    
 </ul>
 
 <style>

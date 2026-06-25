@@ -95,6 +95,11 @@ has 'accession_list' => (
     is => 'ro',
 );
 
+has 'plot_list' => (
+    isa => 'ArrayRef[Int]|Undef',
+    is => 'ro',
+);
+
 has 'tissue_sample_list' => (
     isa => 'ArrayRef[Int]|Undef',
     is => 'ro',
@@ -521,7 +526,7 @@ sub get_genotype_info {
         $limit_clause
         $offset_clause;";
 
-    #print STDERR Dumper $q;
+    print STDERR "get_genotype_info: $q\n";
     my $h = $schema->storage->dbh()->prepare($q);
     $h->execute();
 
@@ -1410,9 +1415,9 @@ sub get_cached_file_dosage_matrix {
                 }
                 $genotype_string .= "\n";
             }
-            my $genotype_id = $geno->{germplasmName};
+            my $genotype_id = $geno->{stock_name};
             if (!$self->return_only_first_genotypeprop_for_stock) {
-                $genotype_id = $geno->{germplasmName}."|".$geno->{markerProfileDbId};
+                $genotype_id = $geno->{stock_name}."|".$geno->{markerProfileDbId};
             }
             my $genotype_data_string = "";
             foreach my $m (@all_marker_objects) {
@@ -1826,9 +1831,9 @@ sub get_cached_file_VCF {
                 }
                 $genotype_string .= "\n";
             }
-            my $genotype_id = $geno->{germplasmName};
+            my $genotype_id = $geno->{stock_name};
             if (!$self->return_only_first_genotypeprop_for_stock) {
-                $genotype_id = $geno->{germplasmName}."|".$geno->{markerProfileDbId};
+                $genotype_id = $geno->{stock_name}."|".$geno->{markerProfileDbId};
             }
             my $genotype_data_string = "";
             foreach my $m (@all_marker_objects) {
@@ -2133,9 +2138,9 @@ sub get_cached_file_VCF_compute_from_parents {
                     }
                     $genotype_string .= "\n";
                 }
-                my $genotype_id = $geno->{germplasmName};
+                my $genotype_id = $geno->{stock_name};
                 if (!$self->return_only_first_genotypeprop_for_stock) {
-                    $genotype_id = $geno->{germplasmName}."|".$geno->{markerProfileDbId};
+                    $genotype_id = $geno->{stock_name}."|".$geno->{markerProfileDbId};
                 }
 
                 my $geno_h = CXGN::Genotype::ComputeHybridGenotype->new({

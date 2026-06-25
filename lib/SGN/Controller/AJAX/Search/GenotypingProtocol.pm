@@ -122,7 +122,8 @@ sub genotyping_protocol_markers_search_GET : Args(0) {
     my @marker_names = $params->{marker_names} ? split ',', $params->{marker_names} : ();
     my $rows = $params->{length};
     my $offset = $params->{start};
-    my $limit = defined($offset) && defined($rows) ? ($offset+$rows)-1 : undef;
+    my $limit = $rows;
+    #my $limit = defined($offset) && defined($rows) ? ($offset+$rows)-1 : undef;
     my @result;
 
     my $protocol = CXGN::Genotype::Protocol->new({
