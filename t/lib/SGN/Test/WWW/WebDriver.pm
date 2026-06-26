@@ -70,7 +70,8 @@ has 'host' => ( is => 'rw',
     );
 
 # Configurable implicit wait
-has 'implicit_wait' => ( is => 'rw', default => 90 * 1000 );
+has 'implicit_wait' => ( is => 'rw', default => 1 * 1000 );
+has 'explicit_wait' => ( is => 'rw', default => 90 * 1000 );
 
 has 'driver' => ( is => 'rw',
           isa => 'Selenium::Remote::Driver',
@@ -172,7 +173,7 @@ sub click {
     my $name = shift;
     my $method = shift;
 
-    my $timeout = $self->driver->get_timeouts()->{"implicit"} / 1000; # in seconds
+    my $timeout = $self->explicit_wait / 1000; # in seconds
     return wait_until {
         $self->screenshot("click_$name");
         $self->driver->find_element($name, $method)->click();
@@ -193,7 +194,7 @@ sub clear {
     my $name = shift;
     my $method = shift;
 
-    my $timeout = $self->driver->get_timeouts()->{"implicit"} / 1000; # in seconds
+    my $timeout = $self->explicit_wait / 1000; # in seconds
     return wait_until {
         $self->screenshot("clear_$name");
         $self->driver->find_element($name, $method)->clear();
@@ -217,7 +218,7 @@ sub click_until_ok {
     my ($self, $name_btn, $method_btn, $name_sentinel, $method_sentinel, $test_name) = @_;
     $test_name ||= "Click button $name_btn until sentinel $name_sentinel appears";
 
-    my $timeout = $self->driver->get_timeouts()->{"implicit"} / 1000; # in seconds
+    my $timeout = $self->explicit_wait / 1000; # in seconds
     my $sentinel;
 
     my $success = try {
@@ -260,7 +261,7 @@ sub click_until_ok {
 sub get { 
     my $self = shift;
     my $url = shift;
-    my $timeout = $self->driver->get_timeouts()->{"implicit"} / 1000; # in seconds
+    my $timeout = $self->explicit_wait / 1000; # in seconds
     my $ok = wait_until {
         $self->driver->get($url);
     } timeout => $timeout;
@@ -280,7 +281,7 @@ sub find_element {
     my $name = shift;
     my $method = shift;
 
-    my $timeout = $self->driver->get_timeouts()->{"implicit"} / 1000; # in seconds
+    my $timeout = $self->explicit_wait / 1000; # in seconds
     return wait_until {
         $self->screenshot("find_element_$name");
         $self->driver->find_element($name, $method);
@@ -302,7 +303,7 @@ sub get_attribute {
     my $method = shift;
     my $attribute = shift;
 
-    my $timeout = $self->driver->get_timeouts()->{"implicit"} / 1000; # in seconds
+    my $timeout = $self->explicit_wait / 1000; # in seconds
     return wait_until {
         $self->screenshot("get_attribute_$attribute");
         $self->driver->find_element($name, $method)->get_attribute($attribute);
@@ -323,7 +324,7 @@ sub get_text {
     my $self = shift;
     my $name = shift;
     my $method = shift;
-    my $timeout = $self->driver->get_timeouts()->{"implicit"} / 1000; # in seconds
+    my $timeout = $self->explicit_wait / 1000; # in seconds
     return wait_until {
         $self->driver->find_element($name, $method)->get_text();
     } timeout => $timeout;
@@ -344,7 +345,7 @@ sub send_keys {
     my $method = shift;
     my $input = shift;
 
-    my $timeout = $self->driver->get_timeouts()->{"implicit"} / 1000; # in seconds
+    my $timeout = $self->explicit_wait / 1000; # in seconds
     return wait_until {
         $self->screenshot("send_keys_$name");
         $self->driver->find_element($name, $method)->send_keys(_maybe_unwrap($input));
@@ -364,7 +365,7 @@ sub send_keys_ok {
 sub accept_alert {
     my $self = shift;
 
-    my $timeout = $self->driver->get_timeouts()->{"implicit"} / 1000; # in seconds
+    my $timeout = $self->explicit_wait / 1000; # in seconds
     return wait_until {
         $self->screenshot("accept_alert");
         $self->driver->accept_alert();
@@ -379,7 +380,7 @@ sub accept_alert_ok {
 
 sub get_alert_text {
     my $self = shift;
-    my $timeout = $self->driver->get_timeouts()->{"implicit"} / 1000; # in seconds
+    my $timeout = $self->explicit_wait / 1000; # in seconds
     return wait_until {
         return $self->driver->get_alert_text();
     } timeout => $timeout;
@@ -485,7 +486,7 @@ sub wait_for_alert_dismissed {
 sub wait_for_network_idle {
     my $self = shift;
 
-    my $timeout = $self->driver->get_timeouts()->{"implicit"} / 1000; # in seconds
+    my $timeout = $self->explicit_wait / 1000; # in seconds
 
     my $last_active_requests = -1;
     my $unchanged_count = 0;
