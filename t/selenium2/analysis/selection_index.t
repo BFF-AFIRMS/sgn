@@ -7,6 +7,7 @@ use Test::More;
 use SGN::Test::WWW::WebDriver;
 use SGN::Test::Fixture;
 use SGN::Test::solGSData;
+use Selenium::Waiter qw(wait_until);
 
 my $d = SGN::Test::WWW::WebDriver->new();
 my $f = SGN::Test::Fixture->new();
@@ -80,16 +81,22 @@ $d->while_logged_in_as("submitter", sub {
 	$d->send_keys_ok('user_email', 'id', 'email@email.com', 'user email');
     $d->click_ok('submit_job', 'id', 'submit');
     sleep(10);
-
     $d->click_ok('Go back', 'partial_link_text', 'go back');
     $d->wait_for_network_idle();
-    $d->send_keys_ok('trial_search_box', 'id', 'Kasese solgs trial', 'population search form');
-    sleep(1);
-    $d->click_ok('search_trial', 'id', 'search for training pop');
-    $d->wait_for_network_idle();
-    $d->click_ok('Kasese', 'partial_link_text', 'create training pop');
-    sleep(15);
 
+    wait_until {
+        print STDERR "Waiting for job to finish\n";
+        $d->driver->get('/solgs');
+        $d->wait_for_network_idle();
+        $d->send_keys('trial_search_box', 'id', 'Kasese solgs trial');
+        sleep(1);
+        $d->click('search_trial', 'id');
+        $d->wait_for_network_idle();
+        $d->click('Kasese', 'partial_link_text');
+        $d->driver->find_element('//table[@id="population_traits_list"]/tbody/tr[1]/td/input', 'xpath');
+    } timeout => 240;
+
+    print STDERR "Job finished\n";
 
     $d->click_ok('//table[@id="population_traits_list"]/tbody/tr[1]/td/input', 'xpath', 'select 1st trait');
     $d->click_ok('//table[@id="population_traits_list"]/tbody/tr[2]/td/input', 'xpath', 'select 2nd trait');
