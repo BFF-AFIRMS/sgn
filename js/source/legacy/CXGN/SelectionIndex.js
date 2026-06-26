@@ -19,7 +19,7 @@ jQuery(document).ready(function() {
             jQuery('#trait_table').html("");
             jQuery('#weighted_values_div').html("");
             jQuery('#raw_avgs_div').html("");
-            jQuery('#sin_formula_list_select').val("");
+            jQuery('#sin_list_list_select').val("");
             update_formula();
 
             if (jQuery(this).val() == '') {
@@ -416,7 +416,7 @@ function load_sin() { // update traits and selection index when a saved sin form
     }
 
     //retrieve contents of list:
-    var sin_list_id = jQuery('#sin_formula_list_select').val();
+    var sin_list_id = jQuery('#sin_list_list_select').val();
     if (!sin_list_id) {
         update_formula();
         return;
