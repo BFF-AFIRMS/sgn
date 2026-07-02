@@ -5,16 +5,241 @@ use lib 't/lib';
 use Test::More;
 
 use SGN::Test::WWW::WebDriver;
+use SGN::Test::WWW::Mechanize;
+use Selenium::Firefox::Profile;
 use Selenium::Remote::WDKeys 'KEYS';
+use SGN::Model::Cvterm;
 use SGN::Test::Fixture;
+use JSON;
+use File::Slurp qw(read_file);
+use Data::Dumper;
 
 my $t = SGN::Test::WWW::WebDriver->new();
 my $f = SGN::Test::Fixture->new();
+my $mech = SGN::Test::WWW::Mechanize->new;
+
+# Setup Firefox profile for automatic downloads
+# The path /downloads on the selenium host is shared with the host and typically
+# mapped to /selenium/downloads on the breedbase (web) host.
+my $profile = Selenium::Firefox::Profile->new;
+$profile->set_preference( 'browser.download.folderList', 2 );
+$profile->set_preference( 'browser.download.dir', '/downloads' );
+$profile->set_preference( 'browser.helperApps.neverAsk.saveToDisk', 'application/text' );
+
+my $driver = Selenium::Remote::Driver->new(
+    firefox_profile => $profile,
+    base_url => $ENV{SGN_TEST_SERVER},
+    remote_server_addr => $ENV{SGN_REMOTE_SERVER_ADDR} || 'localhost'
+);
+$t->driver($driver);
+
+# get the database schema for test data setup
+my $schema = $f->bcs_schema;
+
+# -----------------------------------------------------------------------------
+# Create Tissue Samples for Searching Genotyping Data
+
+my $test_accession1_id = $schema->resultset("Stock::Stock")->find({uniquename=>'test_accession1'})->stock_id();
+
+my $tissue_sample_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'tissue_sample', 'stock_type')->cvterm_id();
+my $tissue_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'tissue_type', 'stock_property')->cvterm_id();
+my $tissue_sample_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'tissue_sample_of', 'stock_relationship')->cvterm_id();
+my $organism = $schema->resultset("Organism::Organism")->first();
+my $num_tissue_samples = 3;
+
+my $location_rs = $schema->resultset('NaturalDiversity::NdGeolocation')->search({description => 'Cornell Biotech'});
+my $location_id = $location_rs->first->nd_geolocation_id;
+
+my $bp_rs = $schema->resultset('Project::Project')->search({name => 'test'});
+my $breeding_program_id = $bp_rs->first->project_id;
+
+my @tissue_samples;
+
+foreach my $i (1 .. $num_tissue_samples) {
+    # Create tissue sample stocks
+    my $tissue_sample_name = "test_accession1_leaf-${i}";
+    my $tissue_sample = $schema->resultset("Stock::Stock")->find_or_create({
+        uniquename => $tissue_sample_name,
+        name => $tissue_sample_name,
+        type_id => $tissue_sample_cvterm_id,
+        organism_id => $organism->organism_id,
+    });
+    # Create tissue sample stock properties
+    $schema->resultset("Stock::Stockprop")->find_or_create( {
+        stock_id => $tissue_sample->stock_id(),
+        type_id => $tissue_type_cvterm_id,
+        value => "leaf",
+    });
+    # Create tissue sample stock relationships
+    $schema->resultset("Stock::StockRelationship")->find_or_create({
+        subject_id => $tissue_sample->stock_id(),
+        object_id => $test_accession1_id,
+        type_id => $tissue_sample_of_cvterm_id,
+    });
+    push(@tissue_samples, $tissue_sample_name);
+}
+
+# -----------------------------------------------------------------------------
+# Create VCF File for Genotyping Data
+
+my $upload_tissue_sample_genotypes = '##INFO=<ID=VCFDownload, Description=\'VCF file for testing uploading genotypes using tissue samples\'>
+##fileformat=VCFv4.0
+##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+##FORMAT=<ID=AD,Number=.,Type=Integer,Description="Allelic depths for the reference and alternate alleles in the order listed">
+##FORMAT=<ID=DP,Number=1,Type=Integer,Description="Read Depth (only filtered reads used for calling)">
+##FORMAT=<ID=GQ,Number=1,Type=Float,Description="Genotype Quality">
+##FORMAT=<ID=PL,Number=3,Type=Float,Description="Normalized, Phred-scaled likelihoods for AA,AB,BB genotypes where A=ref and B=alt; not applicable if site is not biallelic">
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	test_accession1_leaf-1	test_accession1_leaf-2	test_accession1_leaf-3
+1 	10 	S1_10	G	A	.	PASS	.	GT:AD:DP:GQ:PL	./.:0,0:0:.:1	0/0:10,10:20:99:0,255,255	1/1:10,10:20:99:0,255,255
+';
+
+my $upload_tissue_sample_genotypes_path = "/tmp/upload_tissue_sample_genotypes.vcf";
+open(my $fh_vcf, '>', $upload_tissue_sample_genotypes_path) or die $!;
+print $fh_vcf $upload_tissue_sample_genotypes;
+close($fh_vcf);
+
+# -----------------------------------------------------------------------------
+# Upload VCF File of tissue samples
+
+# Get a sgn_session_id for creating a genotyping protocol and project
+my $submitter = $t->user_data->{submitter};
+$mech->post_ok('http://localhost:3010/brapi/v1/token', [ "username" => $submitter->{username}, "password" =>  $submitter->{password}, "grant_type" => "password" ]);
+my $response = decode_json $mech->content;
+is($response->{'metadata'}->{'status'}->[2]->{'message'}, 'Login Successfull');
+my $sgn_session_id = $response->{access_token};
+
+# this upload simultaneous creates a genotyping project and a genotyping protocol
+my $ua = LWP::UserAgent->new;
+my $response = $ua->post(
+    'http://localhost:3010/ajax/genotype/upload',
+    Content_Type => 'form-data',
+    Content => [
+        upload_genotype_vcf_file_input => [ $upload_tissue_sample_genotypes_path, 'genotype_vcf_data_upload' ],
+        "sgn_session_id"=>$sgn_session_id,
+        "upload_genotypes_species_name_input"=>$organism->species(),
+        "upload_genotype_vcf_project_name"=>"Tissue Sample Genotype Test",
+        "upload_genotype_location_select"=>$location_id,
+        "upload_genotype_year_select"=>"2026",
+        "upload_genotype_breeding_program_select"=>$breeding_program_id,
+        "upload_genotype_vcf_observation_type"=>"tissue_sample", #IDEALLY THIS IS "tissue_sample"
+        "upload_genotype_vcf_facility_select"=>"IGD",
+        "upload_genotype_vcf_project_description"=>"Test uploading genotypes to tissue samples",
+        "upload_genotype_vcf_protocol_name"=>"Test Genotyping Protocol for Tissue Samples",
+        "upload_genotype_vcf_include_igd_numbers"=>0,
+        "upload_genotype_vcf_reference_genome_name"=>"Test_Reference_v1",
+        "upload_genotype_add_new_accessions"=>0,
+    ]
+);
+
+# Check response
+ok($response->is_success);
+my $message = $response->decoded_content;
+my $message_hash = decode_json $message;
+is($message_hash->{success}, 1);
+
+my $tissue_sample_protocol_id = $message_hash->{nd_protocol_id};
 
 $t->while_logged_in_as("submitter", sub {
     $t->get_ok('/breeders/search');
 
     sleep(1); # FIXME Need to wait for click handler to be registered
+
+    # -----------------------------------------------------------------------------
+    # Download VCF File based on accession list
+
+    # select genotyping protocols
+    $t->click_ok('(//div[@class="panel-heading"]/select)[1]//option[@value="genotyping_protocols"]', 'xpath', 'select genotyping_protocols');
+    $t->click_ok('(//div[@class="panel-body"])[1]//a[contains(text(), "Test Genotyping Protocol for Tissue Samples")]//preceding-sibling::button' , 'xpath', 'select Test Genotyping Protocol for Tissue Samples protocol');
+    # select accessions
+    $t->click_ok('(//div[@class="panel-heading"]/select)[2]//option[@value="accessions"]', 'xpath', 'select accessions');
+    $t->click_ok('(//div[@class="panel-body"])[2]//a[contains(text(), "test_accession1")]//preceding-sibling::button' , 'xpath', 'select test_accession1 accession');
+    # open download genotype data
+    $t->click_ok('//span[text()="Related Genotype Data"]', 'xpath', 'open related genotype data panel');
+    # save the current time, we will need this to find the correct downloaded file
+    my $download_time = time();
+    $t->click_ok('wizard-download-genotypes', 'class', 'download genotypes');
+
+    # search for a vcf file that is newer than before we clicked download
+    my $vcf_file_path = get_file_newer_than_timestamp(
+        "/selenium/downloads/breedbase_genotypes_*.vcf",
+        $download_time,
+        10 ,# maximum find attempts
+    );
+    ok(defined($vcf_file_path), "locate downloaded vcf file");
+
+    my $vcf_response_string_expected = "##INFO=<ID=VCFDownload, Description=\'VCF file for testing uploading genotypes using tissue samples\'>
+    ##fileformat=VCFv4.0
+    ##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Genotype\">
+    ##FORMAT=<ID=AD,Number=.,Type=Integer,Description=\"Allelic depths for the reference and alternate alleles in the order listed\">
+    ##FORMAT=<ID=DP,Number=1,Type=Integer,Description=\"Read Depth (only filtered reads used for calling)\">
+    ##FORMAT=<ID=GQ,Number=1,Type=Float,Description=\"Genotype Quality\">
+    ##FORMAT=<ID=PL,Number=3,Type=Float,Description=\"Normalized, Phred-scaled likelihoods for AA,AB,BB genotypes where A=ref and B=alt; not applicable if site is not biallelic\">
+    ##source=FILE GENERATED BY BREEDBASE
+    ##Genotyping protocol id(s)=$tissue_sample_protocol_id
+    ##Genotyping protocol name(s)=Test Genotyping Protocol for Tissue Samples
+    ##SynonymsOfAccessions=\" test_accession1=(test_accession1_synonym1)\"
+    #CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	test_accession1_leaf-1	test_accession1_leaf-2	test_accession1_leaf-3
+    1	10	S1_10	G	A	.	PASS	.	GT:AD:DP:GQ:PL:NT:DS	./.:0,0:0:.:1::NA	0/0:10,10:20:99:0,255,255:G,G:0	1/1:10,10:20:99:0,255,255:A,A:2
+    ";
+    # Remove leading spaces and tabs
+    $vcf_response_string_expected =~ s/^[ ]+//mg;
+    my @vcf_response_observed = read_file($vcf_file_path, chomp => 1);
+    my @vcf_response_expected = split "\n", $vcf_response_string_expected;
+    # remove lines with metadata about file date
+    @vcf_response_observed = grep !/fileDate/, @vcf_response_observed;
+    is_deeply(\@vcf_response_observed, \@vcf_response_expected);
+
+    unlink($vcf_file_path) or die "Failed to delete $vcf_file_path: $!";
+
+    # -----------------------------------------------------------------------------
+    # Download VCF File based on tissue sample list
+
+    $t->get_ok('/breeders/search');
+
+    sleep(1); # FIXME Need to wait for click handler to be registered
+
+    # select genotyping protocols
+    $t->click_ok('(//div[@class="panel-heading"]/select)[1]//option[@value="genotyping_protocols"]', 'xpath', 'select genotyping_protocols');
+    $t->click_ok('(//div[@class="panel-body"])[1]//a[contains(text(), "Test Genotyping Protocol for Tissue Samples")]//preceding-sibling::button' , 'xpath', 'select Test Genotyping Protocol for Tissue Samples protocol');
+    # select tissue samples
+    $t->click_ok('(//div[@class="panel-heading"]/select)[2]//option[@value="tissue_sample"]', 'xpath', 'select tissue samples');
+    $t->click_ok('(//div[@class="panel-body"])[2]//a[contains(text(), "test_accession1_leaf-1")]//preceding-sibling::button' , 'xpath', 'select test_accession1_leaf-1 tissue sample');
+    $t->click_ok('(//div[@class="panel-body"])[2]//a[contains(text(), "test_accession1_leaf-3")]//preceding-sibling::button' , 'xpath', 'select test_accession1_leaf-3 tissue sample');
+    # open download genotype data
+    $t->click_ok('//span[text()="Related Genotype Data"]', 'xpath', 'open related genotype data panel');
+    # save the current time, we will need this to find the correct downloaded file
+    $download_time = time();
+    $t->click_ok('wizard-download-genotypes', 'class', 'download genotypes');
+
+    # search for a vcf file that is newer than before we clicked download
+    my $vcf_file_path = get_file_newer_than_timestamp(
+        "/selenium/downloads/breedbase_genotypes_*.vcf",
+        $download_time,
+        10 ,# maximum find attempts
+    );
+    ok(defined($vcf_file_path), "locate downloaded vcf file");
+
+    my $vcf_response_string_expected = "##INFO=<ID=VCFDownload, Description=\'VCF file for testing uploading genotypes using tissue samples\'>
+    ##fileformat=VCFv4.0
+    ##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Genotype\">
+    ##FORMAT=<ID=AD,Number=.,Type=Integer,Description=\"Allelic depths for the reference and alternate alleles in the order listed\">
+    ##FORMAT=<ID=DP,Number=1,Type=Integer,Description=\"Read Depth (only filtered reads used for calling)\">
+    ##FORMAT=<ID=GQ,Number=1,Type=Float,Description=\"Genotype Quality\">
+    ##FORMAT=<ID=PL,Number=3,Type=Float,Description=\"Normalized, Phred-scaled likelihoods for AA,AB,BB genotypes where A=ref and B=alt; not applicable if site is not biallelic\">
+    ##source=FILE GENERATED BY BREEDBASE
+    ##Genotyping protocol id(s)=$tissue_sample_protocol_id
+    ##Genotyping protocol name(s)=Test Genotyping Protocol for Tissue Samples
+    ##SynonymsOfAccessions=\" test_accession1=(test_accession1_synonym1)\"
+    #CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	test_accession1_leaf-1	test_accession1_leaf-3
+    1	10	S1_10	G	A	.	PASS	.	GT:AD:DP:GQ:PL:NT:DS	./.:0,0:0:.:1::NA	1/1:10,10:20:99:0,255,255:A,A:2
+    ";
+    # Remove leading spaces and tabs
+    $vcf_response_string_expected =~ s/^[ ]+//mg;
+    my @vcf_response_observed = read_file($vcf_file_path, chomp => 1);
+    my @vcf_response_expected = split "\n", $vcf_response_string_expected;
+    # remove lines with metadata about file date
+    @vcf_response_observed = grep !/fileDate/, @vcf_response_observed;
+    is_deeply(\@vcf_response_observed, \@vcf_response_expected);
 
     # COLUMN 1 WIZARD SEARCH - test list select / search - select trials
     $t->click_ok('(//div[@class="panel-heading"]/select)[1]', 'xpath', 'find select column type in first column');
@@ -436,5 +661,28 @@ $t->while_logged_in_as("submitter", sub {
     }
 );
 
-$t->driver()->close();
+$t->driver()->quit();
+$f->clean_up_db();
 done_testing();
+
+# Locate a file that is newer than the given timestamp.
+# Useful when downloading genotype data through the UI,
+# to find the correct output since it's dynamically named.
+sub get_file_newer_than_timestamp {
+     my ($pattern, $time_stamp, $max_attempts) = @_;
+
+    my $num_attempts = 0;
+    my $file_path;
+    while(!$file_path && $num_attempts < $max_attempts){
+        # find a file that is newer than the timestamp in epoch seconds
+        my @downloaded_file_list = `find $pattern -type f -newermt "\@$time_stamp"`;
+        my $num_files = scalar(@downloaded_file_list);
+        $file_path = $num_files > 0 ? $downloaded_file_list[0] : undef;
+        $num_attempts += 1;
+        sleep(1);
+    }
+    if (defined($file_path)){
+        chomp($file_path);
+    }
+    return $file_path;
+}
