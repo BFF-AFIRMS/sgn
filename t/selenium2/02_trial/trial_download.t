@@ -6,6 +6,7 @@ use SGN::Test::Fixture;
 use Selenium::Firefox::Profile;
 use Text::CSV;
 use SGN::Model::Cvterm;
+use File::Slurp qw(read_file);
 
 my $f = SGN::Test::Fixture->new();
 my $t = SGN::Test::WWW::WebDriver->new();
@@ -72,7 +73,8 @@ $t->while_logged_in_as("curator", sub {
 
     # Upload a trial using the progeny
     my $trial_csv_content = "plot_name,accession_name,plot_number,block_number,is_a_control,rep_number,range_number,row_number,col_number\n";
-    $trial_csv_content .= "DownloadParentsPlot1,$progeny_name,1,1,0,1,1,1,1\n";
+    $trial_csv_content .= "DownloadParentsPlot$suffix,$progeny_name,1,1,0,1,1,1,1\n";
+    $trial_csv_content .= "MissingPhenotypesPlot$suffix,$progeny_name,2,1,0,2,1,1,2\n";
 
     my $trial_csv_path = "/tmp/trial_parents_test_$suffix.csv";
     open(my $fh_csv, '>', $trial_csv_path) or die $!;
@@ -146,6 +148,73 @@ $t->while_logged_in_as("curator", sub {
 
     close $fh;
     unlink $trial_csv_path;
+    unlink $download_path;
+
+    # Test downloading missing measurements format
+
+    $t->get_ok('/breeders/trial/' . $trial_id, "Navigate to new trial detail page");
+    $t->wait_for_network_idle();
+
+    # Add a phenotype to the plot DownloadParentsPlot
+    $t->click_ok("direct_phenotyping_link", "id", "Open direct phenotyping page");
+    $t->click_ok("//select[\@id='plot_name']/option[\@value='DownloadParentsPlot$suffix']", 'xpath', "Select plot name");
+    $t->click_ok('//select[@id="select_traits_for_trait_file"]/option[@title="fresh root weight|CO_334:0000012"]', 'xpath', "Select fresh root weight");
+    $t->send_keys_ok("select_pheno_value", "id", "10", "enter phenotype value");
+    $t->click_ok("pagetitle", "id", "click elsewhere to finalize entry");
+    $t->find_element_ok('//div[@id="success-trial-phenotype" and not(contains(@style, "display: none"))]', "xpath", "wait for success indicator");
+
+    $t->get_ok('/breeders/trial/' . $trial_id, "Navigate to new trial detail page");
+    $t->wait_for_network_idle();
+
+    # Expand the Experimental Design section to make the download button visible and clickable
+    $t->click_ok('trial_design_section_onswitch', 'id', "Expand experimental design section");
+    $t->wait_for_network_idle();
+
+    $t->click_ok('trial_download_layout_button', 'id', "Open download layout dialog");
+    $t->click_ok('//input[@id="create_fieldbook_include_measured_TrialLayout"]/parent::*//label[contains(@class, "toggle-off")]', 'xpath', "Click include phenotypes");
+
+    # Test downloading of all the possible missing data formats
+    my @missing_formats = (
+        # dropdown value, char in file
+        ["empty", ""],
+        ["NA", "NA"],
+        ["period", "."],
+    );
+
+    my $plot_1_id = $schema->resultset("Stock::Stock")->find({ uniquename => "DownloadParentsPlot$suffix" })->stock_id();
+    my $plot_2_id = $schema->resultset("Stock::Stock")->find({ uniquename => "MissingPhenotypesPlot$suffix" })->stock_id();
+
+    for my $format (@missing_formats){
+        my $value = @$format[0];
+        my $char = @$format[1];
+
+        $t->click_ok("//select[\@id='create_fieldbook_missing_format_TrialLayout']/option[\@value='$value']", 'xpath', "Select missing format $value");
+        $t->click_ok('create_fieldbook_ok_button_TrialLayout', 'id', "Download missing format $value");
+
+        # Wait for file to download
+        my $num_attempts = 0;
+        while (! -e $download_path && $num_attempts < 10){
+            $num_attempts +=1;
+            sleep(1);
+        }
+
+        my $expected_csv = '"plot_name","plot_id","accession_name","plot_number","block_number","is_a_control","rep_number","row_number","col_number","fresh root weight|CO_334:0000012"
+        "DownloadParentsPlot' . $suffix . '","' . $plot_1_id . '","' . $progeny_name . '","1","1","","1","1","1","10"
+        "MissingPhenotypesPlot' . $suffix . '","' . $plot_2_id . '","' . $progeny_name . '","2","1","","2","1","2","' . $char . '"';
+
+        # Remove leading spaces and tabs, and convert to array of lines
+        $expected_csv =~ s/^[ ]+//mg;
+        my @expected_csv = split "\n", $expected_csv;
+
+        # read downloaded file into array of lines
+        my @observed_csv = read_file($download_path, chomp => 1);
+
+        # compare line by line, showing differences if encountered
+        is_deeply(\@observed_csv, \@expected_csv);
+
+        unlink $download_path;
+        ok(! -e $download_path, "output file was deleted");
+    }
 });
 
 $t->driver->close();
