@@ -304,6 +304,9 @@ $t->while_logged_in_as("submitter", sub {
 
     $t->click_ok('(//div[@class="panel-body"])[1]//div[contains(@class, "wizard-union-toggle")]/div[contains(@class, "wizard-union-toggle-btn-group")]/button[contains(text(), "ALL")]' , 'xpath', 'find "ALL" button');
 
+    # wait for ALL button to be in an active state
+    $t->find_element_ok('(//div[@class="panel-body"])[1]//div[contains(@class, "wizard-union-toggle")]/div[contains(@class, "wizard-union-toggle-btn-group")]/button[contains(text(), "ALL") and contains(@class, "active")]' , 'xpath', 'wait for "ALL" button to be active');
+
     $button_count_all_second_column_text = $t->get_text_ok($button_count_all_second_column_xpath , 'xpath', 'find count traits field pointer');
     ok($button_count_all_second_column_text eq "3", "ALL traits in second panel from 'Kasese solgs trial' and 'trial2 NaCRRI' should be 3");
 
@@ -311,6 +314,9 @@ $t->while_logged_in_as("submitter", sub {
     ok($unselected_traits_content !~ /harvest index variable|CO_334:0000015/, '"harvest index variable|CO_334:0000015" trait for two trials and ALL union cannot be displayed in unselected traits');
 
     $t->click_ok('(//div[@class="panel-body"])[1]//div[contains(@class, "wizard-union-toggle")]/div[contains(@class, "wizard-union-toggle-btn-group")]/button[contains(text(), "ANY")]' , 'xpath', 'find "ANY" button');
+
+    # wait for ANY button to be in an active state
+    $t->find_element_ok('(//div[@class="panel-body"])[1]//div[contains(@class, "wizard-union-toggle")]/div[contains(@class, "wizard-union-toggle-btn-group")]/button[contains(text(), "ANY") and contains(@class, "active")]' , 'xpath', 'wait for "ANY" button to be active');
 
     $button_count_all_second_column_text = $t->get_text_ok($button_count_all_second_column_xpath , 'xpath', 'find count traits field pointer');
     ok($button_count_all_second_column_text eq "4", "ANY traits in second panel from 'Kasese solgs trial' and 'trial2 NaCRRI' should be 4");
