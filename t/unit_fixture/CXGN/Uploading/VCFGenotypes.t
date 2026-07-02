@@ -384,6 +384,163 @@ my $error_string = $message_hash->{'error_string'};
 like($error_string, qr/^Marker S12_7926132 in the SNP grid file is not found in the marker info file/, 'error starts with "Marker S12_792613200 in"');
 
 
+# -----------------------------------------------------------------------------
+# Genotyping Tissue Samples
+# -----------------------------------------------------------------------------
+
+# -----------------------------------------------------------------------------
+# Create Tissue Samples
+
+my $test_accession1_id = $schema->resultset("Stock::Stock")->find({uniquename=>'test_accession1'})->stock_id();
+
+my $tissue_sample_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'tissue_sample', 'stock_type')->cvterm_id();
+my $tissue_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'tissue_type', 'stock_property')->cvterm_id();
+my $tissue_sample_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'tissue_sample_of', 'stock_relationship')->cvterm_id();
+my $organism = $schema->resultset("Organism::Organism")->first();
+my $num_tissue_samples = 3;
+my @tissue_samples;
+
+foreach my $i (1 .. $num_tissue_samples) {
+    # Create tissue sample stocks
+    my $tissue_sample_name = "test_accession1_leaf-${i}";
+    my $tissue_sample = $schema->resultset("Stock::Stock")->create({
+        uniquename => $tissue_sample_name,
+        name => $tissue_sample_name,
+        type_id => $tissue_sample_cvterm_id,
+        organism_id => $organism->organism_id,
+    });
+    # Create tissue sample stock properties
+    $schema->resultset("Stock::Stockprop")->create( {
+        stock_id => $tissue_sample->stock_id(),
+        type_id => $tissue_type_cvterm_id,
+        value => "leaf",
+    });
+    # Create tissue sample stock relationships
+    $schema->resultset("Stock::StockRelationship")->create({
+        subject_id => $tissue_sample->stock_id(),
+        object_id => $test_accession1_id,
+        type_id => $tissue_sample_of_cvterm_id,
+    });
+    push(@tissue_samples, $tissue_sample_name);
+}
+
+# -----------------------------------------------------------------------------
+# Create VCF File
+
+my $upload_tissue_sample_genotypes = '##INFO=<ID=VCFDownload, Description=\'VCF file for testing uploading genotypes using tissue samples\'>
+##fileformat=VCFv4.0
+##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+##FORMAT=<ID=AD,Number=.,Type=Integer,Description="Allelic depths for the reference and alternate alleles in the order listed">
+##FORMAT=<ID=DP,Number=1,Type=Integer,Description="Read Depth (only filtered reads used for calling)">
+##FORMAT=<ID=GQ,Number=1,Type=Float,Description="Genotype Quality">
+##FORMAT=<ID=PL,Number=3,Type=Float,Description="Normalized, Phred-scaled likelihoods for AA,AB,BB genotypes where A=ref and B=alt; not applicable if site is not biallelic">
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	test_accession1_leaf-1	test_accession1_leaf-2	test_accession1_leaf-3
+1 	10 	S1_10	G	A	.	PASS	.	GT:AD:DP:GQ:PL	./.:0,0:0:.:1	0/0:10,10:20:99:0,255,255	1/1:10,10:20:99:0,255,255
+';
+
+my $upload_tissue_sample_genotypes_path = "/tmp/upload_tissue_sample_genotypes.vcf";
+open(my $fh_vcf, '>', $upload_tissue_sample_genotypes_path) or die $!;
+print $fh_vcf $upload_tissue_sample_genotypes;
+close($fh_vcf);
+
+# -----------------------------------------------------------------------------
+# Upload VCF File
+
+my $ua = LWP::UserAgent->new;
+$response = $ua->post(
+    'http://localhost:3010/ajax/genotype/upload',
+    Content_Type => 'form-data',
+    Content => [
+        upload_genotype_vcf_file_input => [ $upload_tissue_sample_genotypes_path, 'genotype_vcf_data_upload' ],
+        "sgn_session_id"=>$sgn_session_id,
+        "upload_genotypes_species_name_input"=>$organism->species(),
+        "upload_genotype_vcf_project_name"=>"Tissue Sample Genotype Test",
+        "upload_genotype_location_select"=>$location_id,
+        "upload_genotype_year_select"=>"2026",
+        "upload_genotype_breeding_program_select"=>$breeding_program_id,
+        "upload_genotype_vcf_observation_type"=>"tissue_sample", #IDEALLY THIS IS "tissue_sample"
+        "upload_genotype_vcf_facility_select"=>"IGD",
+        "upload_genotype_vcf_project_description"=>"Test uploading genotypes to tissue samples",
+        "upload_genotype_vcf_protocol_name"=>"Test Genotyping Protocol for Tissue Samples",
+        "upload_genotype_vcf_include_igd_numbers"=>0,
+        "upload_genotype_vcf_reference_genome_name"=>"Test_Reference_v1",
+        "upload_genotype_add_new_accessions"=>0, #IDEALLY THIS is set to 0
+    ]
+);
+
+# Check response
+ok($response->is_success);
+my $message = $response->decoded_content;
+my $message_hash = decode_json $message;
+is($message_hash->{success}, 1);
+ok($message_hash->{project_id});
+ok($message_hash->{nd_protocol_id});
+
+my $tissue_sample_protocol_id = $message_hash->{nd_protocol_id};
+my $tissue_sample_project_id = $message_hash->{project_id};
+
+# -----------------------------------------------------------------------------
+# Download VCF File Using Accession IDs
+
+# test downloading based on list of accession ids
+my $vcf_response_string_expected = "##INFO=<ID=VCFDownload, Description=\'VCF file for testing uploading genotypes using tissue samples\'>
+##fileformat=VCFv4.0
+##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Genotype\">
+##FORMAT=<ID=AD,Number=.,Type=Integer,Description=\"Allelic depths for the reference and alternate alleles in the order listed\">
+##FORMAT=<ID=DP,Number=1,Type=Integer,Description=\"Read Depth (only filtered reads used for calling)\">
+##FORMAT=<ID=GQ,Number=1,Type=Float,Description=\"Genotype Quality\">
+##FORMAT=<ID=PL,Number=3,Type=Float,Description=\"Normalized, Phred-scaled likelihoods for AA,AB,BB genotypes where A=ref and B=alt; not applicable if site is not biallelic\">
+##source=FILE GENERATED BY BREEDBASE
+##Genotyping protocol id(s)=$tissue_sample_protocol_id
+##Genotyping protocol name(s)=Test Genotyping Protocol for Tissue Samples
+##SynonymsOfAccessions=\" test_accession1=(test_accession1_synonym1)\"
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	test_accession1_leaf-1	test_accession1_leaf-2	test_accession1_leaf-3
+1	10	S1_10	G	A	.	PASS	.	GT:AD:DP:GQ:PL:NT:DS	./.:0,0:0:.:1::NA	0/0:10,10:20:99:0,255,255:G,G:0	1/1:10,10:20:99:0,255,255:A,A:2
+";
+
+my $ua = LWP::UserAgent->new;
+$response = $ua->get("http://localhost:3010/breeders/download_gbs_action/?ids=$test_accession1_id&forbid_cache=1&protocol_id=$tissue_sample_protocol_id&format=accession_ids&download_format=VCF&compute_from_parents=0");
+$message = $response->decoded_content;
+
+# split lines into array
+my @vcf_response_expected = split "\n", $vcf_response_string_expected;
+my @vcf_response_observed = split "\n", $message;
+# remove lines with metadata about file date
+@vcf_response_observed = grep !/fileDate/, @vcf_response_observed;
+is_deeply(\@vcf_response_observed, \@vcf_response_expected);
+
+# -----------------------------------------------------------------------------
+# Download VCF File Using Tissue Sample IDs
+
+my $tissue_sample_1_id = $schema->resultset("Stock::Stock")->find({uniquename=>'test_accession1_leaf-1'})->stock_id();
+my $tissue_sample_3_id = $schema->resultset("Stock::Stock")->find({uniquename=>'test_accession1_leaf-3'})->stock_id();
+
+my $vcf_response_string_expected = "##INFO=<ID=VCFDownload, Description=\'VCF file for testing uploading genotypes using tissue samples\'>
+##fileformat=VCFv4.0
+##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Genotype\">
+##FORMAT=<ID=AD,Number=.,Type=Integer,Description=\"Allelic depths for the reference and alternate alleles in the order listed\">
+##FORMAT=<ID=DP,Number=1,Type=Integer,Description=\"Read Depth (only filtered reads used for calling)\">
+##FORMAT=<ID=GQ,Number=1,Type=Float,Description=\"Genotype Quality\">
+##FORMAT=<ID=PL,Number=3,Type=Float,Description=\"Normalized, Phred-scaled likelihoods for AA,AB,BB genotypes where A=ref and B=alt; not applicable if site is not biallelic\">
+##source=FILE GENERATED BY BREEDBASE
+##Genotyping protocol id(s)=$tissue_sample_protocol_id
+##Genotyping protocol name(s)=Test Genotyping Protocol for Tissue Samples
+##SynonymsOfAccessions=\" test_accession1=(test_accession1_synonym1)\"
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	test_accession1_leaf-1	test_accession1_leaf-3
+1	10	S1_10	G	A	.	PASS	.	GT:AD:DP:GQ:PL:NT:DS	./.:0,0:0:.:1::NA	1/1:10,10:20:99:0,255,255:A,A:2
+";
+
+my $ua = LWP::UserAgent->new;
+$response = $ua->get("http://localhost:3010/breeders/download_gbs_action/?ids=$tissue_sample_1_id,$tissue_sample_3_id&forbid_cache=1&protocol_id=$tissue_sample_protocol_id&format=tissue_sample_ids&download_format=VCF&compute_from_parents=0");
+$message = $response->decoded_content;
+
+# split lines into array
+my @vcf_response_expected = split "\n", $vcf_response_string_expected;
+my @vcf_response_observed = split "\n", $message;
+# remove lines with metadata about file date
+@vcf_response_observed = grep !/fileDate/, @vcf_response_observed;
+is_deeply(\@vcf_response_observed, \@vcf_response_expected);
+
 my $file = $f->config->{basepath}."/t/data/genotype_data/testset_GT-AD-DP-GQ-DS-PL.h5";
 
 
@@ -815,7 +972,7 @@ is($after_deleting_empty_genotyping_project, $before_deleting_genotyping_project
 
 }
 
-
+$f->clean_up_db();
 done_testing();
 
 sub free_memory {
