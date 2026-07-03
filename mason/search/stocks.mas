@@ -443,9 +443,30 @@ jQuery(document).ready(function () {
         delete editable_stockprops_search[jQuery(this).data('property')];
         _draw_editable_stockprops_search_fields();
     });
+
     jQuery(document).on("keyup", 'input[name="editable_stockprop_search_inputs"]', function(){
         //Store typed value in object, in case of redraw inputs (input deletion or addition) the value will be still there. Also for search submission
         editable_stockprops_search[jQuery(this).data('property')]["value"] = jQuery(this).val();
+        console.log("editable stockprops search is "+JSON.stringify(editable_stockprops_search));
+    });
+
+    jQuery(document).on("keyup", 'input[name="editable_stockprop_range_min"], input[name="editable_stockprop_range_max"]', function(){
+        const prop = jQuery(this).data('property');
+        const safe_id = prop.replace(/[^a-zA-Z0-9_-]/g, '_');
+        const minVal = jQuery(`#${safe_id}_range_min`).val();
+        const maxVal = jQuery(`#${safe_id}_range_max`).val();
+
+        if (minVal !== '' && maxVal !== '') {
+            const minNum = parseFloat(minVal);
+            const maxNum = parseFloat(maxVal);
+            if (!isNaN(minNum) && !isNaN(maxNum) && minNum > maxNum) {
+                jQuery(`#${safe_id}_range_error`).text("Min cannot be greater than Max").show();
+            } else {
+                jQuery(`#${safe_id}_range_error`).hide();
+            }
+        }
+
+        editable_stockprops_search[prop]["value"] = minVal + ',' + maxVal;
         console.log("editable stockprops search is "+JSON.stringify(editable_stockprops_search));
     });
 
@@ -455,6 +476,11 @@ jQuery(document).ready(function () {
         //Store typed value in object, in case of redraw inputs (input deletion or addition) the value will be still there. Also for search submission
         console.log("prop is "+jQuery(this).data('property'));
         editable_stockprops_search[jQuery(this).data('property')]["matchtype"] = jQuery(this).val();
+        if (jQuery(this).val() === 'range') {
+            editable_stockprops_search[jQuery(this).data('property')]["value"] = ",";
+        } else {
+            editable_stockprops_search[jQuery(this).data('property')]["value"] = "";
+        }
         console.log("editable stockprops search is "+JSON.stringify(editable_stockprops_search));
     });
 
@@ -470,6 +496,29 @@ jQuery(document).ready(function () {
                 const matchtype_val = editable_stockprops_search[property].matchtype || 'contains';
                 const input_val = editable_stockprops_search[property].value || '';
                 const safe_id = property.replace(/[^a-zA-Z0-9_-]/g, '_') + '_input_id';
+                const safe_prefix = property.replace(/[^a-zA-Z0-9_-]/g, '_');
+
+                let inputs_html = '';
+                if (matchtype_val === 'range') {
+                    const parts = input_val.split(',');
+                    const min_val = parts[0] || '';
+                    const max_val = parts[1] || '';
+                    inputs_html = `
+                        <div class="tw:flex tw:items-center tw:gap-2 tw:w-full">
+                            <input type="number" step="any" class="form-control" name="editable_stockprop_range_min" id="${safe_prefix}_range_min" data-property="${property}" placeholder="Min" value="${min_val}" />
+                            <span class="tw:text-gray-500 tw:font-medium">to</span>
+                            <input type="number" step="any" class="form-control" name="editable_stockprop_range_max" id="${safe_prefix}_range_max" data-property="${property}" placeholder="Max" value="${max_val}" />
+                        </div>
+                    `;
+                } else {
+                    inputs_html = `
+                        <span class="input-group-btn">
+                            <input type="text" class="form-control" name="editable_stockprop_search_inputs" id="${safe_id}" data-property="${property}" placeholder="Type to Autocomplete" value="${input_val}"/>
+                        </span>
+                    `;
+                }
+
+                const error_div = `<div id="${safe_prefix}_range_error" class="tw:text-red-500 tw:hidden tw:mt-1 tw:text-xs tw:font-semibold"></div>`;
 
                 // Draw input fields with corresponding selectors for custom mapping hooks
                 $searchDiv.append(`
@@ -485,11 +534,10 @@ jQuery(document).ready(function () {
                                             <option title="ends with" value="ends_with">ends with</option>
                                             <option title="exactly" value="exactly">exactly</option>
                                             <option title="one of" value="one of">one of (separate multiple possibilities with commas)</option>
+                                            <option title="range" value="range">range</option>
                                         </select>
                                     </span>
-                                    <span class="input-group-btn">
-                                        <input type="text" class="form-control" name="editable_stockprop_search_inputs" id="${safe_id}" data-property="${property}" placeholder="Type to Autocomplete"/>
-                                    </span>
+                                    ${inputs_html}
                                     <span class="input-group-btn">
                                         <button name="editable_stockprop_search_remove" data-property="${property}" class="btn">
                                             <span class="glyphicon glyphicon-remove"></span>
@@ -497,16 +545,19 @@ jQuery(document).ready(function () {
                                     </span>
                                 </div>
                             </div>
+                            ${error_div}
                         </div>
                     </div>`);
 
                 // Assign value and match type properties dynamically
                 $searchDiv.find('select[data-property="'+property+'"]').val(matchtype_val);
-                $searchDiv.find('input[data-property="'+property+'"]').val(input_val);
+                if (matchtype_val !== 'range') {
+                    $searchDiv.find('input[data-property="'+property+'"]').val(input_val);
 
-                $searchDiv.find('input[data-property="'+property+'"]').autocomplete({
-                   source: '/ajax/stock/stockproperty_autocomplete?property='+property,
-                });
+                    $searchDiv.find('input[data-property="'+property+'"]').autocomplete({
+                       source: '/ajax/stock/stockproperty_autocomplete?property='+property,
+                    });
+                }
             }
         }
     }

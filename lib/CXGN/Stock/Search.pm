@@ -490,6 +490,19 @@ sub search {
 		    push @stockprop_wheres, " (stockprops->>'$term_name' in (" . join(",", ('?') x scalar(@values) ).") ) ";
 		    @placeholder_values = (@placeholder_values, @values);
 
+                } elsif ( $matchtype eq 'range' ) {
+                    my @parts = split ',', $value;
+                    my $min = $parts[0];
+                    my $max = $parts[1];
+                    push @stockprop_wheres, " (stockprops->>'$term_name' ~ '^-?[0-9]+(\\.[0-9]+)?\$') ";
+                    if (defined $min && $min ne '') {
+                        push @stockprop_wheres, " (CAST(stockprops->>'$term_name' AS numeric) >= ?) ";
+                        push @placeholder_values, $min;
+                    }
+                    if (defined $max && $max ne '') {
+                        push @stockprop_wheres, " (CAST(stockprops->>'$term_name' AS numeric) <= ?) ";
+                        push @placeholder_values, $max;
+                    }
                 } else {
 		    #print STDERR "START $start end $end SEARCH $value\n";
                     #push @stockprop_wheres, "sp$index.value ilike $search";
