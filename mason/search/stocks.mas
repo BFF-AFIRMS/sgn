@@ -481,6 +481,7 @@ jQuery(document).ready(function () {
         } else {
             editable_stockprops_search[jQuery(this).data('property')]["value"] = "";
         }
+        _draw_editable_stockprops_search_fields();
         console.log("editable stockprops search is "+JSON.stringify(editable_stockprops_search));
     });
 
