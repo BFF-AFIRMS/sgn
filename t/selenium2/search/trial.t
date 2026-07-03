@@ -16,7 +16,7 @@ my $source = $d->driver->get_page_source();
 ok($source =~ /Kasese/, "find trial search result content");
 ok($source =~ /2014/, "find trial year in trial search results");
 
-# Helper to get a column-specific input element from tfoot by placeholder or index
+# Helper to get a column-specific input element from tfoot by index
 sub get_column_input {
     my ($index) = @_;
     return $d->find_element("//div[\@id='trial_search_results_wrapper']//div[\@class='dt-scroll-foot']//tfoot//input[\@data-index='$index']", "xpath");
