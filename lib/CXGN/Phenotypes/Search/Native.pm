@@ -348,16 +348,16 @@ sub search {
     }
     
     if ($self->exclude_phenotype_outlier) {
-        $phenotypeprop_sql = "JOIN (
+        $phenotypeprop_sql = "LEFT JOIN (
                 SELECT phenotype_id
                 FROM phenotype
-                WHERE phenotype_id NOT IN (
+                WHERE phenotype_id IN (
                     SELECT phenotype_id
                     FROM phenotypeprop
                     WHERE type_id = $phenotype_outlier_type_id
                 )
-            ) AS not_outliers
-            ON not_outliers.phenotype_id = nd_experiment_phenotype.phenotype_id"
+            ) AS outliers
+            ON outliers.phenotype_id = nd_experiment_phenotype.phenotype_id"
     };
 
     my $from_clause = " FROM stock as observationunit 
@@ -612,6 +612,10 @@ sub search {
         OR observationunit.type_id = $analysis_instance_id 
         OR observationunit.type_id = $subplot_type_id 
         OR observationunit.type_id = $tissue_sample_type_id)"; #plots AND plants AND subplots AND tissue_samples
+    }
+
+    if ($self->exclude_phenotype_outlier) {
+        push @where_clause, "outliers.phenotype_id is NULL";
     }
 
     my $where_clause = " WHERE " . (join (" AND " , @where_clause));
