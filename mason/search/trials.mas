@@ -72,7 +72,7 @@ jQuery(document).ready(function () {
         "scrollX": true
     });
 
-    $(trial_table.table().container()).on('keyup', 'tfoot input', function () {
+    $(trial_table.table().container()).on('keyup change', 'tfoot input', function () {
         trial_table
             .column($(this).data('index'))
             .search(this.value)
