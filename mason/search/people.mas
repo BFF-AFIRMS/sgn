@@ -3,7 +3,7 @@
 
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ], entries => [ 'search_state' ] &>
+<& /util/import_javascript.mas, classes => [ ], entries => [ 'search_state' ] &>
 
 <& /page/page_title.mas, title=>'Search People' &>
 
@@ -81,10 +81,6 @@
 </thead>
 
 </table>
-
-<& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
-
-
 
 <script>
 

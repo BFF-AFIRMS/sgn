@@ -19,9 +19,7 @@
   }
 </%perl>
 
-<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables', 'CXGN.Effects', 'CXGN.List' ] &>
 <& /util/import_javascript.mas, entries => [ 'search_state' ] &>
-<& /util/import_javascript.mas, classes => ['jquery.dataTables-buttons-min', 'jszip-min', 'pdfmake.pdfmake-min', 'pdfmake.vfs_fonts', 'jquery.dataTables-buttons-bootstrap-min', 'jquery.dataTables-buttons-html5-min', 'jquery.dataTables-buttons-print-min', 'jquery.dataTables-colReorder-min'] &>
 
 <style>
 #stock_search_results_div {
@@ -800,7 +798,12 @@ function _load_stock_search_results(stock_type, editable_stockprops_search, stoc
         },
         'stateSave': true,
         'colReorder': true,
-        'dom': 'lBfrtip',
+        'layout': {
+            topStart: ['pageLength', 'buttons'],
+            topEnd: 'search',
+            bottomStart: 'info',
+            bottomEnd: 'paging'
+        },
         'rowId': 'Stock Id',
         'buttons': [ 'colvis',
             {
