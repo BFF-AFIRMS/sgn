@@ -42,7 +42,7 @@
                 </div>
             </div>
 
-<&| /page/info_section.mas, title=>"Additional Search Options",  collapsible => 1, collapsed=>1 &>
+<&| /page/info_section.mas, title=>"Additional Search Options",  collapsible => 1, collapsed=>1, id => "download_trials_phenotypes_additional_options" &>
 
             <div class="form-group">
                 <label class="col-sm-7 control-label">Missing measurement format: </label>
