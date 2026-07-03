@@ -94,7 +94,7 @@ export function WizardDownloads(main_id,wizard){
         openWindowWithPost(url, {
             ids: ids.join(","),
             protocol_id: protocol_id,
-	          project_id: project_id,
+            project_id: project_id,
             format: format,
             chromosome_number: chromosome_number,
             start_position: start_position,
@@ -123,7 +123,7 @@ export function WizardDownloads(main_id,wizard){
         openWindowWithPost(url, {
             ids: accession_ids.join(","),
             protocol_id: protocol_id,
-	    project_id: project_id,
+            project_id: project_id,
             format: 'accession_ids',
             trial_ids: trial_ids.join(","),
             download_format: download_format,
