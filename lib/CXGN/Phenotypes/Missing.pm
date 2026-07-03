@@ -28,6 +28,26 @@ Katherine Eaton <kmeaton1@ualberta.ca>
 =cut
 
 use Moose;
+use Exporter qw(import);
+
+our @ISA= qw( Exporter );
+
+# these CAN be exported.
+our @EXPORT_OK = qw( %MISSING_FORMATS @DOWNLOAD_MISSING_FORMATS );
+
+# these are exported by default.
+our @EXPORT = qw( %MISSING_FORMATS @DOWNLOAD_MISSING_FORMATS );
+
+# all allowed missing formats
+our %MISSING_FORMATS = (
+    "empty"  => "",
+    "NA"     => "NA",
+    "period" => ".",
+    "undef"  => undef,
+);
+
+# missing formats available when downloading to a file
+our @DOWNLOAD_MISSING_FORMATS = ("empty", "NA", "period");
 
 sub convert {
     my $self = shift;
@@ -35,16 +55,7 @@ sub convert {
     my $missing_format = shift;
 
     if(!defined $value || ! length $value) {
-
-        if ($missing_format eq 'NA'){
-            $value = 'NA';
-        } elsif ($missing_format eq 'period'){
-            $value = '.';
-        } elsif ($missing_format eq 'undef'){
-            $value = undef;
-        } else {
-            $value = '';
-        }
+        $value = $MISSING_FORMATS{$missing_format};
     }
 
     return $value;
