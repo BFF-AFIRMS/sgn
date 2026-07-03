@@ -23,12 +23,8 @@ $location_id => 'not_provided'
                         <th>Harvest Date</th>
                         <th>Download</th>
                     </tr>
-                </thead>
-                <tbody>
-                </tbody>
-                <tfoot>
-                    <tr>
-                        <!-- These cells are replaced by search boxes at runtime -->
+                    <tr id="trial_search_results_filter_row">
+                        <!-- These cells are populated with search boxes at runtime -->
                         <th>Trial name</th>
                         <th>Description</th>
                         <th>Breeding program</th>
@@ -41,7 +37,9 @@ $location_id => 'not_provided'
                         <th>Harvest Date</th>
                         <th>Download</th>
                     </tr>
-                </tfoot>
+                </thead>
+                <tbody>
+                </tbody>
             </table>
         </div>
     </div>
@@ -62,17 +60,17 @@ $location_id => 'not_provided'
 <script>
 
 jQuery(document).ready(function () {
-    $('#trial_search_results tfoot th').each(function (i) {
-        const title = $('#trial_search_results thead th').eq($(this).index()).text();
-        $(this).html( '<input type="text" placeholder="'+title+'" data-index="'+i+'" />')
+    $('#trial_search_results_filter_row th').each(function (i) {
+        $(this).html( '<input type="text" placeholder="Search" data-index="'+i+'" class="tw:w-full tw:min-w-40" />')
     });
 
     const trial_table = jQuery('#trial_search_results').DataTable( {
         'ajax': '/ajax/search/trials?location_id=<% $location_id %>',
-        "scrollX": true
+        "scrollX": true,
+        "orderCellsTop": true
     });
 
-    $(trial_table.table().container()).on('keyup change', 'tfoot input', function () {
+    $(trial_table.table().container()).on('keyup change', 'thead input', function () {
         trial_table
             .column($(this).data('index'))
             .search(this.value)
