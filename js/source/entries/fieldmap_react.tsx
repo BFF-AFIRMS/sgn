@@ -298,6 +298,7 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
     const [zoom, setZoom] = useState<number>(1);
     const [pan, setPan] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
     const [isDragging, setIsDragging] = useState<boolean>(false);
+    const containerRef = useRef<HTMLDivElement | null>(null);
     const hasDragged = useRef<boolean>(false);
     const dragStart = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
 
@@ -369,6 +370,44 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
         loadVariables();
         loadSpatialAdjustments();
     }, [activeTrialIds]);
+
+    // Bind native non-passive wheel listener to allow e.preventDefault() and prevent window scroll
+    useEffect(() => {
+        const handleNativeWheel = (e: WheelEvent) => {
+            e.preventDefault();
+            if (!containerRef.current) return;
+
+            // Get dimensions of the viewport container
+            const rect = containerRef.current.getBoundingClientRect();
+            const viewCenterX = rect.width / 2;
+            const viewCenterY = rect.height / 2;
+
+            // Determine target coordinates on the unscaled map corresponding to the viewport center
+            const mapX = (viewCenterX - pan.x) / zoom;
+            const mapY = (viewCenterY - pan.y) / zoom;
+
+            const scaleFactor = 1.1;
+            let nextZoom = e.deltaY < 0 ? zoom * scaleFactor : zoom / scaleFactor;
+            nextZoom = Math.max(0.1, Math.min(5, nextZoom));
+
+            // Recalculate pan to keep the center stable
+            const nextPanX = viewCenterX - mapX * nextZoom;
+            const nextPanY = viewCenterY - mapY * nextZoom;
+
+            setZoom(nextZoom);
+            setPan({ x: nextPanX, y: nextPanY });
+        };
+
+        const element = containerRef.current;
+        if (element) {
+            element.addEventListener('wheel', handleNativeWheel, { passive: false });
+        }
+        return () => {
+            if (element) {
+                element.removeEventListener('wheel', handleNativeWheel);
+            }
+        };
+    }, [zoom, pan]);
 
     useEffect(() => {
         const handleExternalClick = (e: MouseEvent) => {
@@ -1471,15 +1510,6 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
     const svgWidth = (renderBounds.numCols + 1) * 55 + 50;
     const svgHeight = (renderBounds.numRows + 1) * 55 + 50;
 
-    // Mouse Wheel Zoom Handler
-    const handleWheel = (e: React.WheelEvent<HTMLDivElement>) => {
-        e.preventDefault();
-        const scaleFactor = 1.1;
-        let nextZoom = e.deltaY < 0 ? zoom * scaleFactor : zoom / scaleFactor;
-        nextZoom = Math.max(0.1, Math.min(5, nextZoom));
-        setZoom(nextZoom);
-    };
-
     // Mouse Drag/Pan Handlers
     const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
         // Only drag with primary mouse button
@@ -1707,8 +1737,8 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
                         </div>
 
                         <div 
+                            ref={containerRef}
                             className="tw:relative tw:border tw:border-[#ddd] tw:bg-[#fcfcfc] tw:h-[600px] tw:flex tw:overflow-hidden tw:select-none"
-                            onWheel={handleWheel}
                             onMouseDown={handleMouseDown}
                             onMouseMove={handleMouseMove}
                             onMouseUp={handleMouseUpOrLeave}
