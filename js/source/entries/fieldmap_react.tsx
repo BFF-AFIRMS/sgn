@@ -73,6 +73,11 @@ interface PlotStructureNode {
  */
 const CLICK_DRAG_THRESHOLD = 1;
 
+/**
+ * Maximum pixels of empty space allowed around the map edges
+ */
+const PAN_MAX_EMPTY_SPACE = 200;
+
 const palette = [
     "#8dd3c7", "#ffffb3", "#bebada", "#fb8072", "#80b1d3",
     "#fdb462", "#b3de69", "#fccde5", "#d9d9d9", "#bc80bd",
@@ -371,6 +376,26 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
         loadSpatialAdjustments();
     }, [activeTrialIds]);
 
+    const updateZoomAndPan = (nextZoom: number, proposedPan: { x: number; y: number }) => {
+        const clampedZoom = Math.max(0.1, Math.min(5, nextZoom));
+        if (!containerRef.current) {
+            setZoom(clampedZoom);
+            setPan(proposedPan);
+            return;
+        }
+        const rect = containerRef.current.getBoundingClientRect();
+        const maxPanX = PAN_MAX_EMPTY_SPACE;
+        const minPanX = rect.width - (svgWidth * clampedZoom) - PAN_MAX_EMPTY_SPACE;
+        const maxPanY = PAN_MAX_EMPTY_SPACE;
+        const minPanY = rect.height - (svgHeight * clampedZoom) - PAN_MAX_EMPTY_SPACE;
+
+        setZoom(clampedZoom);
+        setPan({
+            x: Math.max(minPanX, Math.min(maxPanX, proposedPan.x)),
+            y: Math.max(minPanY, Math.min(maxPanY, proposedPan.y))
+        });
+    };
+
     // Bind native non-passive wheel listener to allow e.preventDefault() and prevent window scroll
     useEffect(() => {
         const handleNativeWheel = (e: WheelEvent) => {
@@ -394,10 +419,8 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
             const nextPanX = cursorX - mapX * nextZoom;
             const nextPanY = cursorY - mapY * nextZoom;
 
-            setZoom(nextZoom);
-            setPan({ x: nextPanX, y: nextPanY });
+            updateZoomAndPan(nextZoom, { x: nextPanX, y: nextPanY });
         };
-
         const element = containerRef.current;
         if (element) {
             element.addEventListener('wheel', handleNativeWheel, { passive: false });
@@ -1521,10 +1544,14 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
 
     const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
         if (!isDragging) return;
-        setPan({
-            x: e.clientX - dragStart.current.x,
-            y: e.clientY - dragStart.current.y
-        });
+        if (!containerRef.current) return;
+
+        // Calculate the raw next pan coordinates
+        const nextX = e.clientX - dragStart.current.x;
+        const nextY = e.clientY - dragStart.current.y;
+
+        updateZoomAndPan(zoom, { x: nextX, y: nextY });
+
         const deltaX = Math.abs(e.clientX - (dragStart.current.x + pan.x));
         const deltaY = Math.abs(e.clientY - (dragStart.current.y + pan.y));
         if (deltaX > CLICK_DRAG_THRESHOLD || deltaY > CLICK_DRAG_THRESHOLD) {
@@ -1749,15 +1776,15 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
                             <div className="tw:absolute tw:bottom-4 tw:right-4 tw:z-50 tw:flex tw:flex-col tw:gap-1 tw:bg-white/80 tw:p-1.5 tw:rounded-md tw:border tw:border-[#ccc] tw:shadow-sm">
                                 <button 
                                     className="btn btn-default btn-xs tw:font-bold" 
-                                    onClick={() => setZoom(z => Math.min(5, z * 1.2))}
+                                    onClick={() => updateZoomAndPan(zoom * 1.2, pan)}
                                     title="Zoom In"
                                 >+</button>
                                 <button 
                                     className="btn btn-default btn-xs tw:font-bold" 
-                                    onClick={() => setZoom(z => Math.max(0.1, z / 1.2))}
+                                    onClick={() => updateZoomAndPan(zoom / 1.2, pan)}
                                     title="Zoom Out"
                                 >-</button>
-                                <button 
+                                <button
                                     className="btn btn-default btn-xs tw:text-[10px]" 
                                     onClick={handleResetZoomPan}
                                     title="Reset View"
