@@ -1,5 +1,6 @@
 
 use strict;
+use warnings;
 
 use lib 't/lib';
 
@@ -25,10 +26,28 @@ my $test_accession2_stock_id = $schema->resultset("Stock::Stock")->find({uniquen
 my $country_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, "country of origin", "stock_property")->cvterm_id();
 my $state_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, "state", "stock_property")->cvterm_id();
 
-my $test_accession1_country = $schema->resultset("Stock::Stockprop")->find_or_create({stock_id => $test_accession1_stock_id, type_id => $country_cvterm, value => 'test_country_1'});
-my $test_accession2_country = $schema->resultset("Stock::Stockprop")->find_or_create({stock_id => $test_accession2_stock_id, type_id => $country_cvterm, value => 'test_country_2'});
-my $test_accession1_state = $schema->resultset("Stock::Stockprop")->find_or_create({stock_id => $test_accession1_stock_id, type_id => $state_cvterm, value => 'test_state_1'});
-my $test_accession2_state = $schema->resultset("Stock::Stockprop")->find_or_create({stock_id => $test_accession2_stock_id, type_id => $state_cvterm, value => 'test_state_2'});
+$schema->resultset("Stock::Stockprop")->find_or_create({stock_id => $test_accession1_stock_id, type_id => $country_cvterm, value => 'test_country_1'});
+$schema->resultset("Stock::Stockprop")->find_or_create({stock_id => $test_accession2_stock_id, type_id => $country_cvterm, value => 'test_country_2'});
+$schema->resultset("Stock::Stockprop")->find_or_create({stock_id => $test_accession1_stock_id, type_id => $state_cvterm, value => 'test_state_1'});
+$schema->resultset("Stock::Stockprop")->find_or_create({stock_id => $test_accession2_stock_id, type_id => $state_cvterm, value => 'test_state_2'});
+
+my $test_accession3_stock_id = $schema->resultset("Stock::Stock")->find({uniquename => "test_accession3"})->stock_id();
+my $test_accession4_stock_id = $schema->resultset("Stock::Stock")->find({uniquename => "test_accession4"})->stock_id();
+my $test_accession5_stock_id = $schema->resultset("Stock::Stock")->find({uniquename => "test_accession5"})->stock_id();
+
+my $ploidy_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, "ploidy_level", "stock_property")->cvterm_id();
+my $insertions_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, "number_of_insertions", "stock_property")->cvterm_id();
+
+$schema->resultset("Stock::Stockprop")->find_or_create({stock_id => $test_accession1_stock_id, type_id => $ploidy_cvterm, value => '2'});
+$schema->resultset("Stock::Stockprop")->find_or_create({stock_id => $test_accession1_stock_id, type_id => $insertions_cvterm, value => '1'});
+$schema->resultset("Stock::Stockprop")->find_or_create({stock_id => $test_accession2_stock_id, type_id => $ploidy_cvterm, value => '4'});
+$schema->resultset("Stock::Stockprop")->find_or_create({stock_id => $test_accession2_stock_id, type_id => $insertions_cvterm, value => '2'});
+$schema->resultset("Stock::Stockprop")->find_or_create({stock_id => $test_accession3_stock_id, type_id => $ploidy_cvterm, value => '2'});
+$schema->resultset("Stock::Stockprop")->find_or_create({stock_id => $test_accession3_stock_id, type_id => $insertions_cvterm, value => '3'});
+$schema->resultset("Stock::Stockprop")->find_or_create({stock_id => $test_accession4_stock_id, type_id => $ploidy_cvterm, value => '6'});
+$schema->resultset("Stock::Stockprop")->find_or_create({stock_id => $test_accession4_stock_id, type_id => $insertions_cvterm, value => '10'});
+$schema->resultset("Stock::Stockprop")->find_or_create({stock_id => $test_accession5_stock_id, type_id => $ploidy_cvterm, value => '8'});
+$schema->resultset("Stock::Stockprop")->find_or_create({stock_id => $test_accession5_stock_id, type_id => $insertions_cvterm, value => '5'});
 
 $d->while_logged_in_as("user", sub {
 
@@ -61,12 +80,14 @@ $d->while_logged_in_as("user", sub {
         # Dynamic Stockprops
         if (@$stockprops) {
             my $adv_content = $d->find_element("advanced_search_panel_content", "id");
-            if (!$adv_content->is_displayed()) {
-                $d->click_ok("advanced_search_panel_onswitch", "id", "open advanced search");
+            my $adv_content_onswitch = $d->find_element("advanced_search_panel_onswitch", "id");
+            if (!$adv_content->is_displayed() && $adv_content_onswitch->is_displayed()) {
+                $adv_content_onswitch->click();
             }
             my $prop_content = $d->find_element("stock_search_properties_panel_content", "id");
-            if (!$prop_content->is_displayed()) {
-                $d->click_ok("stock_search_properties_panel_onswitch", "id", "open properties search");
+            my $prop_content_onswitch = $d->find_element("stock_search_properties_panel_onswitch", "id");
+            if (!$prop_content->is_displayed() && $prop_content_onswitch->is_displayed()) {
+                $prop_content_onswitch->click();
             }
 
             foreach my $sp (@$stockprops) {
@@ -77,15 +98,33 @@ $d->while_logged_in_as("user", sub {
                 $d->click_ok("//select[\@id='editable_stockprop_search_term']/option[text()='$term']", "xpath", "Select stockprop term '$term'");
                 $d->click_ok("editable_stockprop_search_add", "id", "Add stockprop '$term'");
                 if ($match) {
-                     $d->click_ok("//select[\@id='editable_stockprop_matchtype']/option[\@value='$match']", "xpath", "Select matchtype '$match'");
+                     $d->click_ok("//select[\@data-property='$term' and \@name='editable_stockprop_matchtype']/option[\@value='$match']", "xpath", "Select matchtype '$match' for $term");
                 }
 
-                my $input_id = $term;
-                $input_id =~ s/ /_/g;
-                $input_id .= "_input_id";
+                if ($match && $match eq 'range') {
+                    my @range_vals = ref($val) eq 'ARRAY' ? @$val : ($val);
+                    for my $i (0 .. $#range_vals) {
+                        my ($min, $max) = split ',', $range_vals[$i];
+                        if ($i > 0) {
+                            $d->click_ok("//div[\@data-property-group='$term' and \@data-range-index='".($i-1)."']//button[contains(\@class, 'range-add-btn')]", "xpath", "Add another range row for $term");
+                        }
 
-                $d->clear_ok($input_id, "id", "Clear stockprop input $input_id");
-                $d->send_keys_ok($input_id, "id", $val, "Input '$val' in stockprop $input_id");
+                        my $row_xpath = "//div[\@data-property-group='$term' and \@data-range-index='$i']";
+                        if (defined $min && $min ne '') {
+                            $d->send_keys_ok("$row_xpath//input[\@name='editable_stockprop_range_min']", "xpath", $min, "Set min value for range $i of $term");
+                        }
+                        if (defined $max && $max ne '') {
+                            $d->send_keys_ok("$row_xpath//input[\@name='editable_stockprop_range_max']", "xpath", $max, "Set max value for range $i of $term");
+                        }
+                    }
+                } else {
+                    my $input_id = $term;
+                    $input_id =~ s/ /_/g;
+                    $input_id .= "_input_id";
+
+                    $d->clear_ok($input_id, "id", "Clear stockprop input $input_id");
+                    $d->send_keys_ok($input_id, "id", $val, "Input '$val' in stockprop $input_id");
+                }
             }
         }
 
@@ -197,14 +236,87 @@ $d->while_logged_in_as("user", sub {
         ]
     );
 
+    # -------------------------------------------------------------------------
+    # Search by Stock Property Numeric Ranges
+
+    # 1. One prop with a single range (ploidy 2 to 4)
+    run_stock_search_test(
+        reset_first => 1,
+        stockprops  => [ { term => 'ploidy_level', matchtype => 'range', value => '2,4' } ],
+        assertions  => [
+            { pattern => qr/test_accession1/, expected => 1, desc => "verify test_accession1 (ploidy 2) is in results" },
+            { pattern => qr/test_accession2/, expected => 1, desc => "verify test_accession2 (ploidy 4) is in results" },
+            { pattern => qr/test_accession3/, expected => 1, desc => "verify test_accession3 (ploidy 2) is in results" },
+            { pattern => qr/test_accession4/, expected => 0, desc => "verify test_accession4 (ploidy 6) is not in results" },
+            { pattern => qr/test_accession5/, expected => 0, desc => "verify test_accession5 (ploidy 8) is not in results" }
+        ]
+    );
+
+    # 2. One prop with multiple ranges (ploidy exactly 2 OR between 6 and 8)
+    run_stock_search_test(
+        reset_first => 1,
+        stockprops  => [ { term => 'ploidy_level', matchtype => 'range', value => ['2,2', '6,8'] } ],
+        assertions  => [
+            { pattern => qr/test_accession1/, expected => 1, desc => "verify test_accession1 (ploidy 2) is in results" },
+            { pattern => qr/test_accession2/, expected => 0, desc => "verify test_accession2 (ploidy 4) is excluded" },
+            { pattern => qr/test_accession3/, expected => 1, desc => "verify test_accession3 (ploidy 2) is in results" },
+            { pattern => qr/test_accession4/, expected => 1, desc => "verify test_accession4 (ploidy 6) is in results" },
+            { pattern => qr/test_accession5/, expected => 1, desc => "verify test_accession5 (ploidy 8) is in results" }
+        ]
+    );
+
+    # 3. 2 props with a single range each (ploidy 2-4 AND insertions 3-5)
+    run_stock_search_test(
+        reset_first => 1,
+        stockprops  => [
+            { term => 'ploidy_level', matchtype => 'range', value => '2,4' },
+            { term => 'number_of_insertions', matchtype => 'range', value => '3,5' }
+        ],
+        assertions  => [
+            { pattern => qr/test_accession3/, expected => 1, desc => "verify test_accession3 (2, 3) is in results" },
+            { pattern => qr/test_accession1/, expected => 0, desc => "verify test_accession1 (2, 1) is excluded" },
+            { pattern => qr/test_accession2/, expected => 0, desc => "verify test_accession2 (4, 2) is excluded" },
+            { pattern => qr/test_accession4/, expected => 0, desc => "verify test_accession4 (6, 10) is excluded" },
+            { pattern => qr/test_accession5/, expected => 0, desc => "verify test_accession5 (8, 5) is excluded" }
+        ]
+    );
+
+    # 4. 2 props with 1 single range, 1 multiple range (ploidy 2-8 AND insertions 1 OR 10)
+    run_stock_search_test(
+        reset_first => 1,
+        stockprops  => [
+            { term => 'ploidy_level', matchtype => 'range', value => '2,8' },
+            { term => 'number_of_insertions', matchtype => 'range', value => ['1,1', '10,10'] }
+        ],
+        assertions  => [
+            { pattern => qr/test_accession1/, expected => 1, desc => "verify test_accession1 (2, 1) is in results" },
+            { pattern => qr/test_accession4/, expected => 1, desc => "verify test_accession4 (6, 10) is in results" },
+            { pattern => qr/test_accession2/, expected => 0, desc => "verify test_accession2 (4, 2) is excluded" },
+            { pattern => qr/test_accession3/, expected => 0, desc => "verify test_accession3 (2, 3) is excluded" },
+            { pattern => qr/test_accession5/, expected => 0, desc => "verify test_accession5 (8, 5) is excluded" }
+        ]
+    );
+
+    # 5. 2 props each with multiple ranges (ploidy 2 OR 8 AND insertions 1 OR 5)
+    run_stock_search_test(
+        reset_first => 1,
+        stockprops  => [
+            { term => 'ploidy_level', matchtype => 'range', value => ['2,2', '8,8'] },
+            { term => 'number_of_insertions', matchtype => 'range', value => ['1,1', '5,5'] }
+        ],
+        assertions  => [
+            { pattern => qr/test_accession1/, expected => 1, desc => "verify test_accession1 (2, 1) is in results" },
+            { pattern => qr/test_accession5/, expected => 1, desc => "verify test_accession5 (8, 5) is in results" },
+            { pattern => qr/test_accession2/, expected => 0, desc => "verify test_accession2 is excluded" },
+            { pattern => qr/test_accession3/, expected => 0, desc => "verify test_accession3 is excluded" },
+            { pattern => qr/test_accession4/, expected => 0, desc => "verify test_accession4 is excluded" }
+        ]
+    );
+
 });
 
 # Cleanup
-$test_accession1_country->delete() if defined $test_accession1_country;
-$test_accession2_country->delete() if defined $test_accession2_country;
-$test_accession1_state->delete() if defined $test_accession1_state;
-$test_accession2_state->delete() if defined $test_accession2_state;
-
 $d->wait_for_network_idle();
 $d->driver->quit();
+$f->clean_up_db();
 done_testing();

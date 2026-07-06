@@ -427,6 +427,7 @@ jQuery(window).ready( function() {
 				'data' : data,
 				'order': [[4, 'asc']],
 				'scrollX': true,
+				'pageLength': 25,
 			});
 		} else {
 			jQuery('#raw_trait_data_table').DataTable( {
@@ -442,6 +443,7 @@ jQuery(window).ready( function() {
 				'data' : data,
 				'order': [[4, 'asc']],
 				'scrollX': true,
+				'pageLength': 25,
 			});
 		}
     }
