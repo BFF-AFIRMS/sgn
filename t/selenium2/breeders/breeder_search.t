@@ -5,13 +5,55 @@ use lib 't/lib';
 use Test::More;
 
 use SGN::Test::WWW::WebDriver;
+use SGN::Test::WWW::Mechanize;
+use Selenium::Firefox::Profile;
 use Selenium::Remote::WDKeys 'KEYS';
+use SGN::Model::Cvterm;
 use SGN::Test::Fixture;
+use JSON;
+use File::Slurp qw(read_file);
+use Data::Dumper;
+use Shared::Genotypes qw($vcf_expected_accessions $vcf_expected_tissue_samples create_tissue_sample_genotypes upload_tissue_sample_genotypes);
 
 my $t = SGN::Test::WWW::WebDriver->new();
 my $f = SGN::Test::Fixture->new();
+my $mech = SGN::Test::WWW::Mechanize->new;
+
+# Setup Firefox profile for automatic downloads
+# The path /downloads on the selenium host is shared with the host and typically
+# mapped to /selenium/downloads on the breedbase (web) host.
+my $profile = Selenium::Firefox::Profile->new;
+$profile->set_preference( 'browser.download.folderList', 2 );
+$profile->set_preference( 'browser.download.dir', '/downloads' );
+$profile->set_preference( 'browser.helperApps.neverAsk.saveToDisk', 'application/text' );
+
+my $driver = Selenium::Remote::Driver->new(
+    firefox_profile => $profile,
+    base_url => $ENV{SGN_TEST_SERVER},
+    remote_server_addr => $ENV{SGN_REMOTE_SERVER_ADDR} || 'localhost'
+);
+$t->driver($driver);
+
+# get the database schema for test data setup
+my $schema = $f->bcs_schema;
+
+# Create Tissue Samples
+create_tissue_sample_genotypes($schema);
+
+# Upload Tissue Sample Genotypes VCF File
+my $response = upload_tissue_sample_genotypes($schema, $mech);
+
+# Check response
+ok($response->is_success, 'upload response is success');
+my $message = $response->decoded_content;
+my $message_hash = decode_json $message;
+is($message_hash->{success}, 1, 'message is success');
+
+my $tissue_sample_protocol_id = $message_hash->{nd_protocol_id};
+my $tissue_sample_project_id = $message_hash->{project_id};
 
 $t->while_logged_in_as("submitter", sub {
+
     $t->get_ok('/breeders/search');
 
     sleep(1); # FIXME Need to wait for click handler to be registered
@@ -79,6 +121,9 @@ $t->while_logged_in_as("submitter", sub {
 
     $t->click_ok('(//div[@class="panel-body"])[1]//div[contains(@class, "wizard-union-toggle")]/div[contains(@class, "wizard-union-toggle-btn-group")]/button[contains(text(), "ALL")]' , 'xpath', 'find "ALL" button');
 
+    # wait for ALL button to be in an active state
+    $t->find_element_ok('(//div[@class="panel-body"])[1]//div[contains(@class, "wizard-union-toggle")]/div[contains(@class, "wizard-union-toggle-btn-group")]/button[contains(text(), "ALL") and contains(@class, "active")]' , 'xpath', 'wait for "ALL" button to be active');
+
     $button_count_all_second_column_text = $t->get_text_ok($button_count_all_second_column_xpath , 'xpath', 'find count traits field pointer');
     ok($button_count_all_second_column_text eq "3", "ALL traits in second panel from 'Kasese solgs trial' and 'trial2 NaCRRI' should be 3");
 
@@ -86,6 +131,9 @@ $t->while_logged_in_as("submitter", sub {
     ok($unselected_traits_content !~ /harvest index variable|CO_334:0000015/, '"harvest index variable|CO_334:0000015" trait for two trials and ALL union cannot be displayed in unselected traits');
 
     $t->click_ok('(//div[@class="panel-body"])[1]//div[contains(@class, "wizard-union-toggle")]/div[contains(@class, "wizard-union-toggle-btn-group")]/button[contains(text(), "ANY")]' , 'xpath', 'find "ANY" button');
+
+    # wait for ANY button to be in an active state
+    $t->find_element_ok('(//div[@class="panel-body"])[1]//div[contains(@class, "wizard-union-toggle")]/div[contains(@class, "wizard-union-toggle-btn-group")]/button[contains(text(), "ANY") and contains(@class, "active")]' , 'xpath', 'wait for "ANY" button to be active');
 
     $button_count_all_second_column_text = $t->get_text_ok($button_count_all_second_column_xpath , 'xpath', 'find count traits field pointer');
     ok($button_count_all_second_column_text eq "4", "ANY traits in second panel from 'Kasese solgs trial' and 'trial2 NaCRRI' should be 4");
@@ -421,7 +469,7 @@ $t->while_logged_in_as("submitter", sub {
     $t->accept_alert_ok('accept alert dataset deleted');
 
     # TEST DATASET WAS DELETED
-    $t->get_ok('/breeders/search');
+    $t->get_ok('/breeders/search', 'navigate to search wizard');
 
     my $datasets_list = $t->get_attribute_ok(
         '//select[contains(@class, "wizard-dataset-select")]',
@@ -429,12 +477,112 @@ $t->while_logged_in_as("submitter", sub {
         'innerHTML',
         'find a select input for datasets to delete and click');
 
-    ok($datasets_list =~ /$dataset_name_2/, "Verify if datasets list after 'delete' contain $dataset_name_2");
-    ok($datasets_list !~ /$dataset_name_1/, "Verify if datasets list after 'delete' NOT contain $dataset_name_1");
+    ok($datasets_list =~ /$dataset_name_2/, 'Verify if datasets list after "delete" contain ' . $dataset_name_2);
+    ok($datasets_list !~ /$dataset_name_1/, 'Verify if datasets list after "delete" NOT contain ' . $dataset_name_1);
+
+    # -----------------------------------------------------------------------------
+    # Download VCF File based on accession list
+
+    $t->get_ok('/breeders/search', 'navigate to search wizard');
+
+    sleep(1); # FIXME Need to wait for click handler to be registered
+
+    # select genotyping protocols
+    $t->click_ok('(//div[@class="panel-heading"]/select)[1]//option[@value="genotyping_protocols"]', 'xpath', 'select genotyping_protocols');
+    $t->click_ok('(//div[@class="panel-body"])[1]//a[contains(text(), "Test Genotyping Protocol for Tissue Samples")]//preceding-sibling::button' , 'xpath', 'select Test Genotyping Protocol for Tissue Samples protocol');
+    # select accessions
+    $t->click_ok('(//div[@class="panel-heading"]/select)[2]//option[@value="accessions"]', 'xpath', 'select accessions');
+    $t->click_ok('(//div[@class="panel-body"])[2]//a[contains(text(), "test_accession1")]//preceding-sibling::button' , 'xpath', 'select test_accession1 accession');
+    # open download genotype data
+    $t->click_ok('//span[text()="Related Genotype Data"]', 'xpath', 'open related genotype data panel');
+    # save the current time, we will need this to find the correct downloaded file
+    my $download_time = time();
+    $t->click_ok('wizard-download-genotypes', 'class', 'download genotypes');
+
+    # search for a vcf file that is newer than before we clicked download
+    my $vcf_file_path = get_file_newer_than_timestamp(
+        "/selenium/downloads/breedbase_genotypes_*.vcf",
+        $download_time,
+        10 ,# maximum find attempts
+    );
+    ok(defined($vcf_file_path), 'locate downloaded vcf file');
+
+    # patch in the tissue_sample_protocol_id value
+    my $vcf_response_expected = $vcf_expected_accessions;
+    $vcf_response_expected =~ s/{tissue_sample_protocol_id}/$tissue_sample_protocol_id/g;
+    # split into lines for comparison
+    my @vcf_response_observed = read_file($vcf_file_path, chomp => 1);
+    my @vcf_response_expected = split "\n", $vcf_response_expected;
+    # remove lines with metadata about file date
+    @vcf_response_observed = grep !/fileDate/, @vcf_response_observed;
+    is_deeply(\@vcf_response_observed, \@vcf_response_expected, 'tissue sample vcf matches the expected values');
+
+    unlink($vcf_file_path) or die "Failed to delete $vcf_file_path: $!";
+
+    # -----------------------------------------------------------------------------
+    # Download VCF File based on tissue sample list
+
+    $t->get_ok('/breeders/search');
+
+    sleep(1); # FIXME Need to wait for click handler to be registered
+
+    # select genotyping protocols
+    $t->click_ok('(//div[@class="panel-heading"]/select)[1]//option[@value="genotyping_protocols"]', 'xpath', 'select genotyping_protocols');
+    $t->click_ok('(//div[@class="panel-body"])[1]//a[contains(text(), "Test Genotyping Protocol for Tissue Samples")]//preceding-sibling::button' , 'xpath', 'select Test Genotyping Protocol for Tissue Samples protocol');
+    # select tissue samples
+    $t->click_ok('(//div[@class="panel-heading"]/select)[2]//option[@value="tissue_sample"]', 'xpath', 'select tissue samples');
+    $t->click_ok('(//div[@class="panel-body"])[2]//a[contains(text(), "test_accession1_leaf-1")]//preceding-sibling::button' , 'xpath', 'select test_accession1_leaf-1 tissue sample');
+    $t->click_ok('(//div[@class="panel-body"])[2]//a[contains(text(), "test_accession1_leaf-3")]//preceding-sibling::button' , 'xpath', 'select test_accession1_leaf-3 tissue sample');
+    # open download genotype data
+    $t->click_ok('//span[text()="Related Genotype Data"]', 'xpath', 'open related genotype data panel');
+    # save the current time, we will need this to find the correct downloaded file
+    $download_time = time();
+    $t->click_ok('wizard-download-genotypes', 'class', 'download genotypes');
+
+    # search for a vcf file that is newer than before we clicked download
+    my $vcf_file_path = get_file_newer_than_timestamp(
+        "/selenium/downloads/breedbase_genotypes_*.vcf",
+        $download_time,
+        10 ,# maximum find attempts
+    );
+    ok(defined($vcf_file_path), "locate downloaded vcf file");
+
+    # patch in the tissue_sample_protocol_id value
+    my $vcf_response_expected = $vcf_expected_tissue_samples;
+    $vcf_response_expected =~ s/{tissue_sample_protocol_id}/$tissue_sample_protocol_id/g;
+    # split into lines for comparison
+    my @vcf_response_observed = read_file($vcf_file_path, chomp => 1);
+    my @vcf_response_expected = split "\n", $vcf_response_expected;
+    # remove lines with metadata about file date
+    @vcf_response_observed = grep !/fileDate/, @vcf_response_observed;
+    is_deeply(\@vcf_response_observed, \@vcf_response_expected, 'tissue sample vcf matches the expected values');
 
     # DONE TESTING
     }
 );
 
-$t->driver()->close();
+$t->driver()->quit();
+$f->clean_up_db();
 done_testing();
+
+# Locate a file that is newer than the given timestamp.
+# Useful when downloading genotype data through the UI,
+# to find the correct output since it's dynamically named.
+sub get_file_newer_than_timestamp {
+     my ($pattern, $time_stamp, $max_attempts) = @_;
+
+    my $num_attempts = 0;
+    my $file_path;
+    while(!$file_path && $num_attempts < $max_attempts){
+        # find a file that is newer than the timestamp in epoch seconds
+        my @downloaded_file_list = `find $pattern -type f -newermt "\@$time_stamp"`;
+        my $num_files = scalar(@downloaded_file_list);
+        $file_path = $num_files > 0 ? $downloaded_file_list[0] : undef;
+        $num_attempts += 1;
+        sleep(1);
+    }
+    if (defined($file_path)){
+        chomp($file_path);
+    }
+    return $file_path;
+}

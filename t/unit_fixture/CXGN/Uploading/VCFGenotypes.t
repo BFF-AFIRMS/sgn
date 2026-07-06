@@ -15,6 +15,7 @@ use Bio::GeneticRelationships::Pedigree;
 use CXGN::Pedigree::AddPedigrees;
 use Bio::GeneticRelationships::Individual;
 use CXGN::List;
+use Shared::Genotypes qw($vcf_expected_accessions $vcf_expected_tissue_samples create_tissue_sample_genotypes upload_tissue_sample_genotypes);
 
 #Needed to update IO::Socket::SSL
 use Data::Dumper;
@@ -383,6 +384,71 @@ $message_hash = decode_json $message;
 my $error_string = $message_hash->{'error_string'};
 like($error_string, qr/^Marker S12_7926132 in the SNP grid file is not found in the marker info file/, 'error starts with "Marker S12_792613200 in"');
 
+# -----------------------------------------------------------------------------
+# Genotyping Tissue Samples
+# -----------------------------------------------------------------------------
+
+# Create Tissue Samples
+create_tissue_sample_genotypes($schema);
+
+# Upload VCF file
+my $response = upload_tissue_sample_genotypes($schema, $mech);
+
+# Check response
+ok($response->is_success);
+my $message = $response->decoded_content;
+my $message_hash = decode_json $message;
+is($message_hash->{success}, 1);
+ok($message_hash->{project_id});
+ok($message_hash->{nd_protocol_id});
+
+my $tissue_sample_protocol_id = $message_hash->{nd_protocol_id};
+my $tissue_sample_project_id = $message_hash->{project_id};
+
+# -----------------------------------------------------------------------------
+# Download VCF File Using Accession IDs
+
+my $test_accession1_id = $schema->resultset("Stock::Stock")->find({uniquename=>"test_accession1"})->stock_id();
+
+my $ua = LWP::UserAgent->new;
+$response = $ua->get("http://localhost:3010/breeders/download_gbs_action/?ids=$test_accession1_id&forbid_cache=1&protocol_id=$tissue_sample_protocol_id&format=accession_ids&download_format=VCF&compute_from_parents=0");
+$message = $response->decoded_content;
+
+# patch in the tissue_sample_protocol_id value
+my $vcf_response_expected = $vcf_expected_accessions;
+$vcf_response_expected =~ s/{tissue_sample_protocol_id}/$tissue_sample_protocol_id/g;
+
+# Read lines to array
+my @vcf_response_expected = split "\n", $vcf_response_expected;
+my @vcf_response_observed = split "\n", $message;
+
+# remove lines with metadata about file date
+@vcf_response_observed = grep !/fileDate/, @vcf_response_observed;
+is_deeply(\@vcf_response_observed, \@vcf_response_expected);
+
+# -----------------------------------------------------------------------------
+# Download VCF File Using Tissue Sample IDs
+
+my $tissue_sample_1_id = $schema->resultset("Stock::Stock")->find({uniquename=>'test_accession1_leaf-1'})->stock_id();
+my $tissue_sample_3_id = $schema->resultset("Stock::Stock")->find({uniquename=>'test_accession1_leaf-3'})->stock_id();
+
+my $ua = LWP::UserAgent->new;
+$response = $ua->get("http://localhost:3010/breeders/download_gbs_action/?ids=$tissue_sample_1_id,$tissue_sample_3_id&forbid_cache=1&protocol_id=$tissue_sample_protocol_id&format=tissue_sample_ids&download_format=VCF&compute_from_parents=0");
+$message = $response->decoded_content;
+
+# patch in the tissue_sample_protocol_id value
+my $vcf_response_expected = $vcf_expected_tissue_samples;
+$vcf_response_expected =~ s/{tissue_sample_protocol_id}/$tissue_sample_protocol_id/g;
+
+# Read lines to array
+my @vcf_response_expected = split "\n", $vcf_response_expected;
+my @vcf_response_observed = split "\n", $message;
+
+# remove lines with metadata about file date
+@vcf_response_observed = grep !/fileDate/, @vcf_response_observed;
+is_deeply(\@vcf_response_observed, \@vcf_response_expected);
+
+# End testing tissue samples
 
 my $file = $f->config->{basepath}."/t/data/genotype_data/testset_GT-AD-DP-GQ-DS-PL.h5";
 
@@ -425,8 +491,6 @@ $message = $response->decoded_content;
 my $message_hash_tassel = decode_json $message;
 #print STDERR Dumper $message_hash_tassel;
 is($message_hash_tassel->{success}, 1);
-ok($message_hash_tassel->{project_id});
-ok($message_hash_tassel->{nd_protocol_id});
 
 my $genotypes_search = CXGN::Genotype::Search->new({
     bcs_schema=>$schema,
@@ -815,7 +879,7 @@ is($after_deleting_empty_genotyping_project, $before_deleting_genotyping_project
 
 }
 
-
+$f->clean_up_db();
 done_testing();
 
 sub free_memory {
