@@ -289,6 +289,11 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
     const [fillerAccessionInput, setFillerAccessionInput] = useState('');
     const [fillerAccessionId, setFillerAccessionId] = useState<string | undefined>(undefined);
 
+    const [zoom, setZoom] = useState<number>(1);
+    const [pan, setPan] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
+    const [isDragging, setIsDragging] = useState<boolean>(false);
+    const dragStart = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
+
     const [heatmapData, setHeatmapData] = useState<Record<string, HeatmapValue>>({});
     const [spatialAdjustments, setSpatialAdjustments] = useState<Record<string, Record<string, number>>>({});
     const [controlAccessions, setControlAccessions] = useState<string[]>([]);
@@ -1456,6 +1461,40 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
     const svgWidth = (renderBounds.numCols + 1) * 55 + 50;
     const svgHeight = (renderBounds.numRows + 1) * 55 + 50;
 
+    // Mouse Wheel Zoom Handler
+    const handleWheel = (e: React.WheelEvent<HTMLDivElement>) => {
+        e.preventDefault();
+        const scaleFactor = 1.1;
+        let nextZoom = e.deltaY < 0 ? zoom * scaleFactor : zoom / scaleFactor;
+        nextZoom = Math.max(0.1, Math.min(5, nextZoom));
+        setZoom(nextZoom);
+    };
+
+    // Mouse Drag/Pan Handlers
+    const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+        // Only drag with primary mouse button
+        if (e.button !== 0) return;
+        setIsDragging(true);
+        dragStart.current = { x: e.clientX - pan.x, y: e.clientY - pan.y };
+    };
+
+    const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+        if (!isDragging) return;
+        setPan({
+            x: e.clientX - dragStart.current.x,
+            y: e.clientY - dragStart.current.y
+        });
+    };
+
+    const handleMouseUpOrLeave = () => {
+        setIsDragging(false);
+    };
+
+    const handleResetZoomPan = () => {
+        setZoom(1);
+        setPan({ x: 0, y: 0 });
+    };
+
     return (
         <div className="tw:p-3.75">
             <div className="panel panel-default">
@@ -1651,13 +1690,41 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
                             )}
                         </div>
 
-                        <div className="tw:relative tw:border tw:border-[#ddd] tw:p-2.5 tw:bg-[#fcfcfc] tw:min-h-75 tw:flex tw:overflow-auto">
+                        <div 
+                            className="tw:relative tw:border tw:border-[#ddd] tw:bg-[#fcfcfc] tw:h-[600px] tw:flex tw:overflow-hidden tw:select-none"
+                            onWheel={handleWheel}
+                            onMouseDown={handleMouseDown}
+                            onMouseMove={handleMouseMove}
+                            onMouseUp={handleMouseUpOrLeave}
+                            onMouseLeave={handleMouseUpOrLeave}
+                            style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
+                        >
+                            {/* Zoom controls HUD */}
+                            <div className="tw:absolute tw:bottom-4 tw:right-4 tw:z-50 tw:flex tw:flex-col tw:gap-1 tw:bg-white/80 tw:p-1.5 tw:rounded-md tw:border tw:border-[#ccc] tw:shadow-sm">
+                                <button 
+                                    className="btn btn-default btn-xs tw:font-bold" 
+                                    onClick={() => setZoom(z => Math.min(5, z * 1.2))}
+                                    title="Zoom In"
+                                >+</button>
+                                <button 
+                                    className="btn btn-default btn-xs tw:font-bold" 
+                                    onClick={() => setZoom(z => Math.max(0.1, z / 1.2))}
+                                    title="Zoom Out"
+                                >-</button>
+                                <button 
+                                    className="btn btn-default btn-xs tw:text-[10px]" 
+                                    onClick={handleResetZoomPan}
+                                    title="Reset View"
+                                >Reset</button>
+                            </div>
+
                             <svg
                                 id="fieldmap_chart_svg"
                                 className="tw:max-w-none tw:shrink-0"
                                 width={svgWidth}
                                 height={svgHeight}
                                 viewBox={`0 0 ${svgWidth} ${svgHeight}`}
+                                style={{ transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`, transformOrigin: '0 0' }}
                             >
                                 <g transform="translate(50, 25)">
                                     {/* Pass 1: Render Plot Geometry (Backgrounds, Borders, Icons) */}
