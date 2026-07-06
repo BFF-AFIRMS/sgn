@@ -452,14 +452,13 @@ jQuery(document).ready(function () {
 
     jQuery(document).on("keyup", 'input[name="editable_stockprop_range_min"], input[name="editable_stockprop_range_max"]', function(){
         const prop = jQuery(this).data('property');
-        const safe_id = prop.replace(/[^a-zA-Z0-9_-]/g, '_');
-        
+
         const ranges_values = [];
         jQuery(`div[data-property-group="${prop}"]`).each(function() {
             const $group = jQuery(this);
             const minVal = $group.find('input[name="editable_stockprop_range_min"]').val() || '';
             const maxVal = $group.find('input[name="editable_stockprop_range_max"]').val() || '';
-            
+
             if (minVal !== '' && maxVal !== '') {
                 const minNum = parseFloat(minVal);
                 const maxNum = parseFloat(maxVal);
@@ -508,7 +507,6 @@ jQuery(document).ready(function () {
                 const matchtype_val = editable_stockprops_search[property].matchtype || 'contains';
                 const input_val = editable_stockprops_search[property].value || '';
                 const safe_id = property.replace(/[^a-zA-Z0-9_-]/g, '_') + '_input_id';
-                const safe_prefix = property.replace(/[^a-zA-Z0-9_-]/g, '_');
 
                 let inputs_html = '';
                 if (matchtype_val === 'range') {
