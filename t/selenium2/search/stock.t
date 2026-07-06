@@ -96,7 +96,7 @@ $d->while_logged_in_as("user", sub {
                 $d->click_ok("//select[\@id='editable_stockprop_search_term']/option[text()='$term']", "xpath", "Select stockprop term '$term'");
                 $d->click_ok("editable_stockprop_search_add", "id", "Add stockprop '$term'");
                 if ($match) {
-                     $d->click_ok("//select[@data-property='$term' and @name='editable_stockprop_matchtype']/option[@value='$match']", "xpath", "Select matchtype '$match' for $term");
+                     $d->click_ok("//select[\@data-property='$term' and \@name='editable_stockprop_matchtype']/option[\@value='$match']", "xpath", "Select matchtype '$match' for $term");
                 }
 
                 if ($match && $match eq 'range') {
@@ -104,15 +104,15 @@ $d->while_logged_in_as("user", sub {
                     for my $i (0 .. $#range_vals) {
                         my ($min, $max) = split ',', $range_vals[$i];
                         if ($i > 0) {
-                            $d->click_ok("//div[@data-property-group='$term' and @data-range-index='".($i-1)."']//button[contains(@class, 'range-add-btn')]", "xpath", "Add another range row for $term");
+                            $d->click_ok("//div[\@data-property-group='$term' and \@data-range-index='".($i-1)."']//button[contains(\@class, 'range-add-btn')]", "xpath", "Add another range row for $term");
                         }
-                        
-                        my $row_xpath = "//div[@data-property-group='$term' and @data-range-index='$i']";
+
+                        my $row_xpath = "//div[\@data-property-group='$term' and \@data-range-index='$i']";
                         if (defined $min && $min ne '') {
-                            $d->send_keys_ok("$row_xpath//input[@name='editable_stockprop_range_min']", "xpath", $min, "Set min value for range $i of $term");
+                            $d->send_keys_ok("$row_xpath//input[\@name='editable_stockprop_range_min']", "xpath", $min, "Set min value for range $i of $term");
                         }
                         if (defined $max && $max ne '') {
-                            $d->send_keys_ok("$row_xpath//input[@name='editable_stockprop_range_max']", "xpath", $max, "Set max value for range $i of $term");
+                            $d->send_keys_ok("$row_xpath//input[\@name='editable_stockprop_range_max']", "xpath", $max, "Set max value for range $i of $term");
                         }
                     }
                 } else {
