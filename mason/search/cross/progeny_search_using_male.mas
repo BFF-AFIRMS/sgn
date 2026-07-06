@@ -39,7 +39,6 @@
 </&>
 <&| /page/info_section.mas, title => 'Search Results', collapsible=>1, collapsed=>0&>
     <div class="well well-sm">
-        <& /util/import_css.mas, paths => ['/documents/inc/datatables/jquery.dataTables.css'] &>
         <div class="panel panel-default">
             <div class="panel-body">
                 <table id="pedigree_male_female_search_results" width="100%" class="table table-hover table-striped">
@@ -92,7 +91,8 @@ jQuery(document).ready(function (){
                     html += "<option value='" + response.data[i][0] + "'>" + response.data[i][0] + "</option>";
                 }
                 jQuery('#female_parent').html(html);
-            }
+            },
+            scrollX: true,
         });
     }, 150));
 
@@ -106,7 +106,8 @@ jQuery(document).ready(function (){
             'destroy': true,
             'ajax': {'url':'/ajax/search/progenies',
                 data:{'pedigree_male_parent':jQuery('#male_parent').val()},
-            }
+            },
+            'scrollX': true
         });
 
         jQuery('#pedigree_male_female_search_results').on( 'draw.dt', function (){
@@ -136,7 +137,8 @@ jQuery(document).ready(function (){
                 data:{'pedigree_female_parent':jQuery('#female_parent').val(),
                     'pedigree_male_parent':jQuery('#male_parent').val(),
                     }
-            }
+            },
+            'scrollX': true
         });
 
         jQuery('#pedigree_male_female_search_results').on( 'draw.dt', function (){

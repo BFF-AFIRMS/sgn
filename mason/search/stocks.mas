@@ -19,9 +19,7 @@
   }
 </%perl>
 
-<& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables', 'CXGN.Effects', 'CXGN.List' ] &>
 <& /util/import_javascript.mas, entries => [ 'search_state' ] &>
-<& /util/import_javascript.mas, classes => ['jquery.dataTables-buttons-min', 'jszip-min', 'pdfmake.pdfmake-min', 'pdfmake.vfs_fonts', 'buttons.bootstrap-min', 'buttons.html5-min', 'buttons.print-min', 'buttons.colvis-min', 'dataTables.colReorder-min'] &>
 
 <style>
 #stock_search_results_div {
@@ -445,9 +443,40 @@ jQuery(document).ready(function () {
         delete editable_stockprops_search[jQuery(this).data('property')];
         _draw_editable_stockprops_search_fields();
     });
+
     jQuery(document).on("keyup", 'input[name="editable_stockprop_search_inputs"]', function(){
         //Store typed value in object, in case of redraw inputs (input deletion or addition) the value will be still there. Also for search submission
         editable_stockprops_search[jQuery(this).data('property')]["value"] = jQuery(this).val();
+        console.log("editable stockprops search is "+JSON.stringify(editable_stockprops_search));
+    });
+
+    jQuery(document).on("keyup", 'input[name="editable_stockprop_range_min"], input[name="editable_stockprop_range_max"]', function(){
+        const prop = jQuery(this).data('property');
+
+        const ranges_values = [];
+        jQuery(`div[data-property-group="${prop}"]`).each(function() {
+            const $group = jQuery(this);
+            const minVal = $group.find('input[name="editable_stockprop_range_min"]').val() || '';
+            const maxVal = $group.find('input[name="editable_stockprop_range_max"]').val() || '';
+
+            if (minVal !== '' && maxVal !== '') {
+                const minNum = parseFloat(minVal);
+                const maxNum = parseFloat(maxVal);
+                if (!isNaN(minNum) && !isNaN(maxNum) && minNum > maxNum) {
+                    $group.find('.range-row-error').text("Min cannot be greater than Max").show();
+                } else {
+                    $group.find('.range-row-error').hide();
+                }
+            } else {
+                $group.find('.range-row-error').hide();
+            }
+            
+            if (minVal !== '' || maxVal !== '') {
+                ranges_values.push(minVal + ',' + maxVal);
+            }
+        });
+
+        editable_stockprops_search[prop]["value"] = ranges_values.join(';');
         console.log("editable stockprops search is "+JSON.stringify(editable_stockprops_search));
     });
 
@@ -457,6 +486,12 @@ jQuery(document).ready(function () {
         //Store typed value in object, in case of redraw inputs (input deletion or addition) the value will be still there. Also for search submission
         console.log("prop is "+jQuery(this).data('property'));
         editable_stockprops_search[jQuery(this).data('property')]["matchtype"] = jQuery(this).val();
+        if (jQuery(this).val() === 'range') {
+            editable_stockprops_search[jQuery(this).data('property')]["value"] = ",";
+        } else {
+            editable_stockprops_search[jQuery(this).data('property')]["value"] = "";
+        }
+        _draw_editable_stockprops_search_fields();
         console.log("editable stockprops search is "+JSON.stringify(editable_stockprops_search));
     });
 
@@ -473,30 +508,53 @@ jQuery(document).ready(function () {
                 const input_val = editable_stockprops_search[property].value || '';
                 const safe_id = property.replace(/[^a-zA-Z0-9_-]/g, '_') + '_input_id';
 
+                let inputs_html = '';
+                if (matchtype_val === 'range') {
+                    const ranges = input_val.split(';');
+                    inputs_html = '<div class="tw:flex tw:flex-col tw:gap-2 tw:w-full tw:px-2">';
+                    ranges.forEach((range_str, index) => {
+                        const parts = range_str.split(',');
+                        const min_val = parts[0] || '';
+                        const max_val = parts[1] || '';
+                        inputs_html += `
+                            <div class="tw:flex tw:items-center tw:gap-2 tw:w-full" data-property-group="${property}" data-range-index="${index}">
+                                <input type="number" step="any" class="form-control" name="editable_stockprop_range_min" data-property="${property}" placeholder="Min" value="${min_val}" />
+                                <span class="tw:text-gray-500 tw:font-medium">to</span>
+                                <input type="number" step="any" class="form-control" name="editable_stockprop_range_max" data-property="${property}" placeholder="Max" value="${max_val}" />
+                                <div class="tw:flex tw:flex-shrink-0">
+                                    <button type="button" class="btn btn-default btn-xs range-remove-btn tw:inline-flex tw:items-center tw:justify-center tw:w-9 tw:h-6 tw:m-0! tw:p-0 tw:font-bold tw:text-sm tw:leading-none tw:rounded-r-none! tw:border-r-0!" data-property="${property}" data-range-index="${index}" ${ranges.length === 1 ? 'disabled="disabled"' : ''}>-</button>
+                                    <button type="button" class="btn btn-default btn-xs range-add-btn tw:inline-flex tw:items-center tw:justify-center tw:w-9 tw:h-6 tw:m-0! tw:p-0 tw:font-bold tw:text-sm tw:leading-none tw:rounded-l-none!" data-property="${property}" data-range-index="${index}">+</button>
+                                </div>
+                                <div class="range-row-error tw:text-red-500 tw:hidden tw:ml-2 tw:text-xs tw:font-semibold"></div>
+                            </div>
+                        `;
+                    });
+                    inputs_html += '</div>';
+                } else {
+                    inputs_html = `
+                        <input type="text" class="form-control tw:grow" name="editable_stockprop_search_inputs" id="${safe_id}" data-property="${property}" placeholder="Type to Autocomplete" value="${input_val}"/>
+                    `;
+                }
+
                 // Draw input fields with corresponding selectors for custom mapping hooks
                 $searchDiv.append(`
                     <div class="form-group form-group-sm">
                         <label class="col-sm-4 control-label">${property}: </label>
                         <div class="col-sm-8">
                             <div class="form-group">
-                                <div class="input-group">
-                                    <span class="input-group-btn tw:w-[20%]">
-                                        <select class="form-control" id="editable_stockprop_matchtype" name="editable_stockprop_matchtype" data-property="${property}">
-                                            <option title="contains" value="contains">contains</option>
-                                            <option title="starts with" value="starts_with">starts with</option>
-                                            <option title="ends with" value="ends_with">ends with</option>
-                                            <option title="exactly" value="exactly">exactly</option>
-                                            <option title="one of" value="one of">one of (separate multiple possibilities with commas)</option>
-                                        </select>
-                                    </span>
-                                    <span class="input-group-btn">
-                                        <input type="text" class="form-control" name="editable_stockprop_search_inputs" id="${safe_id}" data-property="${property}" placeholder="Type to Autocomplete"/>
-                                    </span>
-                                    <span class="input-group-btn">
-                                        <button name="editable_stockprop_search_remove" data-property="${property}" class="btn">
-                                            <span class="glyphicon glyphicon-remove"></span>
-                                        </button>
-                                    </span>
+                                <div class="tw:flex tw:items-center tw:w-full tw:gap-2">
+                                    <select class="form-control tw:w-[20%] tw:min-w-[120px]" id="editable_stockprop_matchtype" name="editable_stockprop_matchtype" data-property="${property}">
+                                        <option title="contains" value="contains">contains</option>
+                                        <option title="starts with" value="starts_with">starts with</option>
+                                        <option title="ends with" value="ends_with">ends with</option>
+                                        <option title="exactly" value="exactly">exactly</option>
+                                        <option title="one of" value="one of">one of (separate multiple possibilities with commas)</option>
+                                        <option title="range" value="range">range</option>
+                                    </select>
+                                    ${inputs_html}
+                                    <button name="editable_stockprop_search_remove" data-property="${property}" class="btn tw:flex-shrink-0">
+                                        <span class="glyphicon glyphicon-remove"></span>
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -504,14 +562,42 @@ jQuery(document).ready(function () {
 
                 // Assign value and match type properties dynamically
                 $searchDiv.find('select[data-property="'+property+'"]').val(matchtype_val);
-                $searchDiv.find('input[data-property="'+property+'"]').val(input_val);
+                if (matchtype_val !== 'range') {
+                    $searchDiv.find('input[data-property="'+property+'"]').val(input_val);
 
-                $searchDiv.find('input[data-property="'+property+'"]').autocomplete({
-                   source: '/ajax/stock/stockproperty_autocomplete?property='+property,
-                });
+                    $searchDiv.find('input[data-property="'+property+'"]').autocomplete({
+                       source: '/ajax/stock/stockproperty_autocomplete?property='+property,
+                    });
+                }
             }
         }
     }
+
+    // Multiple range dynamic add/remove operations
+    jQuery(document).on('click', '.range-add-btn', function() {
+        const prop = jQuery(this).data('property');
+        const index = parseInt(jQuery(this).attr('data-range-index'));
+        let current_val = editable_stockprops_search[prop]["value"] || '';
+        if (current_val === '') {
+            current_val = ',';
+        }
+        const ranges = current_val.split(';');
+        ranges.splice(index + 1, 0, ',');
+        editable_stockprops_search[prop]["value"] = ranges.join(';');
+        _draw_editable_stockprops_search_fields();
+    });
+
+    jQuery(document).on('click', '.range-remove-btn', function() {
+        const prop = jQuery(this).data('property');
+        const removeIndex = parseInt(jQuery(this).attr('data-range-index'));
+        const current_val = editable_stockprops_search[prop]["value"] || '';
+        const ranges = current_val.split(';');
+        if (removeIndex >= 0 && removeIndex < ranges.length) {
+            ranges.splice(removeIndex, 1);
+        }
+        editable_stockprops_search[prop]["value"] = ranges.join(';');
+        _draw_editable_stockprops_search_fields();
+    });
 
     //For adding stockprop columns to search result
     let stockprop_extra_columns_view = { 'organization':1 };
@@ -800,7 +886,12 @@ function _load_stock_search_results(stock_type, editable_stockprops_search, stoc
         },
         'stateSave': true,
         'colReorder': true,
-        'dom': 'lBfrtip',
+        'layout': {
+            topStart: ['pageLength', 'buttons'],
+            topEnd: 'search',
+            bottomStart: 'info',
+            bottomEnd: 'paging'
+        },
         'rowId': 'Stock Id',
         'buttons': [ 'colvis',
             {

@@ -47,6 +47,10 @@ export function WizardDownloads(main_id,wizard){
     var accessions = categories.indexOf("accessions")!=-1?
       selections["accessions"]:
       [];
+    // Use singular/non-pluralized form for compatibility
+    var tissue_samples = categories.indexOf("tissue_sample")!=-1?
+      selections["tissue_sample"]:
+      [];
     var traits = categories.indexOf("traits")!=-1?
       selections["traits"]:
       [];
@@ -56,13 +60,19 @@ export function WizardDownloads(main_id,wizard){
     var projects = categories.indexOf("genotyping_projects")!=-1?
       selections["genotyping_projects"]:
       [];
-    main.select(".wizard-download-genotypes-info")
+    if (tissue_samples.length > 0){
+      main.select(".wizard-download-genotypes-info")
+      .attr("value",`${tissue_samples.length||"Too few"} tissue samples`);
+    } else {
+      main.select(".wizard-download-genotypes-info")
       .attr("value",`${accessions.length||"Too few"} accessions`);
+    }
     main.selectAll(".wizard-download-genotypes")
-      .attr("disabled",accessions.length<1?true:null)
+      .attr("disabled",accessions.length<1 && tissue_samples.length<1 ? true:null)
       .on("click",()=>{
         event.preventDefault();
         var accession_ids = accessions.map(d=>d.id);
+        var tissue_sample_ids = tissue_samples.map(d=>d.id);
         var trial_ids = (selections["trials"]||[]).map(d=>d.id);
         var protocol_id = protocols.length==1?protocols[0].id:'';
 	var project_id = projects.length>0?projects[0].id:'';
@@ -79,11 +89,13 @@ export function WizardDownloads(main_id,wizard){
             return;
         }
         var url = document.location.origin+'/breeders/download_gbs_action';
+        var format = tissue_samples.length > 0 ? 'tissue_sample_ids' : 'accession_ids';
+        var ids = tissue_samples.length > 0 ? tissue_sample_ids : accession_ids;
         openWindowWithPost(url, {
-            ids: accession_ids.join(","),
+            ids: ids.join(","),
             protocol_id: protocol_id,
-	    project_id: project_id,
-            format: 'accession_ids',
+            project_id: project_id,
+            format: format,
             chromosome_number: chromosome_number,
             start_position: start_position,
             end_position: end_position,
@@ -111,7 +123,7 @@ export function WizardDownloads(main_id,wizard){
         openWindowWithPost(url, {
             ids: accession_ids.join(","),
             protocol_id: protocol_id,
-	    project_id: project_id,
+            project_id: project_id,
             format: 'accession_ids',
             trial_ids: trial_ids.join(","),
             download_format: download_format,

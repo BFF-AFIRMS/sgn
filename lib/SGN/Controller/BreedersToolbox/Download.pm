@@ -1200,6 +1200,7 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
     my $sample_unit_level = $c->req->param("sample_unit_level") || "accession";
 
     my (@accession_ids, @accession_list, @accession_genotypes, @unsorted_markers, @trial_ids);
+    my (@tissue_sample_ids);
     my ($id_string, $protocol_id, $project_id, $trial_id_string);
     my $associated_protocol;
     my $accession_data = [];
@@ -1209,9 +1210,13 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
         @trial_ids = split(',', $trial_id_string);
     }
 
-    if ($format eq 'accession_ids') {       #use protocol id and accession ids supplied directly
+    if ($format eq 'accession_ids' || $format eq 'tissue_sample_ids') {       #use protocol id and ids supplied directly
         $id_string = $c->req->param("ids");
-        @accession_ids = split(',',$id_string);
+        if ($format eq 'accession_ids'){
+            @accession_ids = split(',',$id_string);
+        } elsif ($format eq 'tissue_sample_ids'){
+            @tissue_sample_ids = split(',',$id_string);
+        }
         $protocol_id = $c->req->param("protocol_id");
 	$project_id = $c->req->param("project_id");
         if ($protocol_id =~ /\d/) {
@@ -1230,7 +1235,6 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
 	    print STDERR "using default protocol_id = $protocol_id\n";
         }
     }
-
     elsif ($format eq 'list_id') {        #get accession names from list and tranform them to ids
         my $accession_list_id = $c->req->param("genotype_accession_list_list_select");
         $protocol_id = $c->req->param("genotyping_protocol_select");
@@ -1292,7 +1296,7 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
             people_schema=>$people_schema,
             cache_root_dir=>$c->config->{cache_file_path},
             accession_list=>\@accession_ids,
-            #tissue_sample_list=>$tissue_sample_list,
+            tissue_sample_list=>\@tissue_sample_ids,
             trial_list=>\@trial_ids,
             protocol_id_list=>\@protocol_list,
             chromosome_list=>$chromosome_numbers,
@@ -1324,7 +1328,7 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
         expires => '+1m',
     };
 
-    my ($fh, $file_path) = tempfile("breedbase_grm_XXXXX", DIR => $c->config->{cluster_shared_tempdir});
+    my ($fh, $file_path) = tempfile("breedbase_genotypes_XXXXX", DIR => $c->config->{cluster_shared_tempdir});
     my $filename = basename($file_path);
 
     if ($download_format eq 'VCF') {
