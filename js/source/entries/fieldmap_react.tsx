@@ -1738,7 +1738,7 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
 
                         <div 
                             ref={containerRef}
-                            className="tw:relative tw:border tw:border-[#ddd] tw:bg-[#fcfcfc] tw:h-[600px] tw:flex tw:overflow-hidden tw:select-none"
+                            className="tw:relative tw:border tw:border-[#ddd] tw:bg-[#fcfcfc] tw:h-300 tw:flex tw:overflow-hidden tw:select-none"
                             onMouseDown={handleMouseDown}
                             onMouseMove={handleMouseMove}
                             onMouseUp={handleMouseUpOrLeave}
