@@ -80,12 +80,14 @@ $d->while_logged_in_as("user", sub {
         # Dynamic Stockprops
         if (@$stockprops) {
             my $adv_content = $d->find_element("advanced_search_panel_content", "id");
-            if (!$adv_content->is_displayed()) {
-                $d->click_ok("advanced_search_panel_onswitch", "id", "open advanced search");
+            my $adv_content_onswitch = $d->find_element("advanced_search_panel_onswitch", "id");
+            if (!$adv_content->is_displayed() && $adv_content_onswitch->is_displayed()) {
+                $adv_content_onswitch->click();
             }
             my $prop_content = $d->find_element("stock_search_properties_panel_content", "id");
-            if (!$prop_content->is_displayed()) {
-                $d->click_ok("stock_search_properties_panel_onswitch", "id", "open properties search");
+            my $prop_content_onswitch = $d->find_element("stock_search_properties_panel_onswitch", "id");
+            if (!$prop_content->is_displayed() && $prop_content_onswitch->is_displayed()) {
+                $prop_content_onswitch->click();
             }
 
             foreach my $sp (@$stockprops) {
