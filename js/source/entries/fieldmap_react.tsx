@@ -376,14 +376,30 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
         loadSpatialAdjustments();
     }, [activeTrialIds]);
 
-    const updateZoomAndPan = (nextZoom: number, proposedPan: { x: number; y: number }) => {
+    const updateZoomAndPan = (
+        nextZoom: number, 
+        targetPan?: { x: number; y: number }
+    ) => {
         const clampedZoom = Math.max(0.1, Math.min(5, nextZoom));
         if (!containerRef.current) {
             setZoom(clampedZoom);
-            setPan(proposedPan);
+            if (targetPan) setPan(targetPan);
             return;
         }
         const rect = containerRef.current.getBoundingClientRect();
+
+        // Zoom around the center of the viewport if no target pan is provided
+        if (!targetPan) {
+            const centerX = rect.width / 2;
+            const centerY = rect.height / 2;
+            const mapX = (centerX - pan.x) / zoom;
+            const mapY = (centerY - pan.y) / zoom;
+            targetPan = {
+                x: centerX - mapX * clampedZoom,
+                y: centerY - mapY * clampedZoom
+            };
+        }
+
         const maxPanX = PAN_MAX_EMPTY_SPACE;
         const minPanX = rect.width - (svgWidth * clampedZoom) - PAN_MAX_EMPTY_SPACE;
         const maxPanY = PAN_MAX_EMPTY_SPACE;
@@ -391,8 +407,8 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
 
         setZoom(clampedZoom);
         setPan({
-            x: Math.max(minPanX, Math.min(maxPanX, proposedPan.x)),
-            y: Math.max(minPanY, Math.min(maxPanY, proposedPan.y))
+            x: Math.max(minPanX, Math.min(maxPanX, targetPan.x)),
+            y: Math.max(minPanY, Math.min(maxPanY, targetPan.y))
         });
     };
 
@@ -1776,12 +1792,12 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
                             <div className="tw:absolute tw:bottom-4 tw:right-4 tw:z-50 tw:flex tw:flex-col tw:gap-1 tw:bg-white/80 tw:p-1.5 tw:rounded-md tw:border tw:border-[#ccc] tw:shadow-sm">
                                 <button 
                                     className="btn btn-default btn-xs tw:font-bold" 
-                                    onClick={() => updateZoomAndPan(zoom * 1.2, pan)}
+                                    onClick={() => updateZoomAndPan(zoom * 1.2)}
                                     title="Zoom In"
                                 >+</button>
                                 <button 
                                     className="btn btn-default btn-xs tw:font-bold" 
-                                    onClick={() => updateZoomAndPan(zoom / 1.2, pan)}
+                                    onClick={() => updateZoomAndPan(zoom / 1.2)}
                                     title="Zoom Out"
                                 >-</button>
                                 <button
