@@ -67,6 +67,12 @@ interface PlotStructureNode {
     has?: Record<string, PlotStructureNode>;
 }
 
+/**
+ * Minimum pixel distance threshold to distinguish between a click and a drag operation.
+ * If the mouse moves more than this many pixels during a mousedown event, it's considered a drag.
+ */
+const CLICK_DRAG_THRESHOLD = 1;
+
 const palette = [
     "#8dd3c7", "#ffffb3", "#bebada", "#fb8072", "#80b1d3",
     "#fdb462", "#b3de69", "#fccde5", "#d9d9d9", "#bc80bd",
@@ -292,6 +298,7 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
     const [zoom, setZoom] = useState<number>(1);
     const [pan, setPan] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
     const [isDragging, setIsDragging] = useState<boolean>(false);
+    const hasDragged = useRef<boolean>(false);
     const dragStart = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
 
     const [heatmapData, setHeatmapData] = useState<Record<string, HeatmapValue>>({});
@@ -900,6 +907,9 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
 
     // Handle click vs double click logic
     const handlePlotSelect = (plot: Plot) => {
+        if (hasDragged.current) {
+            return;
+        }
         if (clickTimer.current) {
             clearTimeout(clickTimer.current);
             clickTimer.current = null;
@@ -1475,6 +1485,7 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
         // Only drag with primary mouse button
         if (e.button !== 0) return;
         setIsDragging(true);
+        hasDragged.current = false;
         dragStart.current = { x: e.clientX - pan.x, y: e.clientY - pan.y };
     };
 
@@ -1484,6 +1495,11 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
             x: e.clientX - dragStart.current.x,
             y: e.clientY - dragStart.current.y
         });
+        const deltaX = Math.abs(e.clientX - (dragStart.current.x + pan.x));
+        const deltaY = Math.abs(e.clientY - (dragStart.current.y + pan.y));
+        if (deltaX > CLICK_DRAG_THRESHOLD || deltaY > CLICK_DRAG_THRESHOLD) {
+            hasDragged.current = true;
+        }
     };
 
     const handleMouseUpOrLeave = () => {
