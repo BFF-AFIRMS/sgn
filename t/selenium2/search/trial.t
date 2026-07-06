@@ -19,7 +19,7 @@ ok($source =~ /2014/, "find trial year in trial search results");
 # Helper to get a column-specific input element from tfoot by index
 sub get_column_input {
     my ($index) = @_;
-    return $d->find_element("//div[\@id='trial_search_results_wrapper']//div[\@class='dt-scroll-foot']//tfoot//input[\@data-index='$index']", "xpath");
+    return $d->find_element("//tr[\@id='trial_search_results_filter_row']//input[\@data-index='$index']", "xpath");
 }
 
 sub get_search_results {
