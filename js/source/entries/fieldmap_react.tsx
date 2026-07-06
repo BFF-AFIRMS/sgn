@@ -379,20 +379,20 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
 
             // Get dimensions of the viewport container
             const rect = containerRef.current.getBoundingClientRect();
-            const viewCenterX = rect.width / 2;
-            const viewCenterY = rect.height / 2;
+            const cursorX = e.clientX - rect.left;
+            const cursorY = e.clientY - rect.top;
 
-            // Determine target coordinates on the unscaled map corresponding to the viewport center
-            const mapX = (viewCenterX - pan.x) / zoom;
-            const mapY = (viewCenterY - pan.y) / zoom;
+            // Determine target coordinates on the unscaled map corresponding to the cursor position
+            const mapX = (cursorX - pan.x) / zoom;
+            const mapY = (cursorY - pan.y) / zoom;
 
             const scaleFactor = 1.1;
             let nextZoom = e.deltaY < 0 ? zoom * scaleFactor : zoom / scaleFactor;
             nextZoom = Math.max(0.1, Math.min(5, nextZoom));
 
-            // Recalculate pan to keep the center stable
-            const nextPanX = viewCenterX - mapX * nextZoom;
-            const nextPanY = viewCenterY - mapY * nextZoom;
+            // Recalculate pan to keep the point under the cursor stable
+            const nextPanX = cursorX - mapX * nextZoom;
+            const nextPanY = cursorY - mapY * nextZoom;
 
             setZoom(nextZoom);
             setPan({ x: nextPanX, y: nextPanY });
