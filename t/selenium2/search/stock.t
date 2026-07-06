@@ -16,10 +16,6 @@ $d->driver->set_timeout('implicit', 5000);
 my $f = SGN::Test::Fixture->new();
 my $schema = $f->bcs_schema;
 
-my ($ta1_ploidy, $ta1_insertions, $ta2_ploidy, $ta2_insertions,
-    $ta3_ploidy, $ta3_insertions, $ta4_ploidy, $ta4_insertions,
-    $ta5_ploidy, $ta5_insertions);
-
 # -------------------------------------------------------------------------
 # Data Setup
 
@@ -30,10 +26,10 @@ my $test_accession2_stock_id = $schema->resultset("Stock::Stock")->find({uniquen
 my $country_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, "country of origin", "stock_property")->cvterm_id();
 my $state_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, "state", "stock_property")->cvterm_id();
 
-my $test_accession1_country = $schema->resultset("Stock::Stockprop")->find_or_create({stock_id => $test_accession1_stock_id, type_id => $country_cvterm, value => 'test_country_1'});
-my $test_accession2_country = $schema->resultset("Stock::Stockprop")->find_or_create({stock_id => $test_accession2_stock_id, type_id => $country_cvterm, value => 'test_country_2'});
-my $test_accession1_state = $schema->resultset("Stock::Stockprop")->find_or_create({stock_id => $test_accession1_stock_id, type_id => $state_cvterm, value => 'test_state_1'});
-my $test_accession2_state = $schema->resultset("Stock::Stockprop")->find_or_create({stock_id => $test_accession2_stock_id, type_id => $state_cvterm, value => 'test_state_2'});
+$schema->resultset("Stock::Stockprop")->find_or_create({stock_id => $test_accession1_stock_id, type_id => $country_cvterm, value => 'test_country_1'});
+$schema->resultset("Stock::Stockprop")->find_or_create({stock_id => $test_accession2_stock_id, type_id => $country_cvterm, value => 'test_country_2'});
+$schema->resultset("Stock::Stockprop")->find_or_create({stock_id => $test_accession1_stock_id, type_id => $state_cvterm, value => 'test_state_1'});
+$schema->resultset("Stock::Stockprop")->find_or_create({stock_id => $test_accession2_stock_id, type_id => $state_cvterm, value => 'test_state_2'});
 
 my $test_accession3_stock_id = $schema->resultset("Stock::Stock")->find({uniquename => "test_accession3"})->stock_id();
 my $test_accession4_stock_id = $schema->resultset("Stock::Stock")->find({uniquename => "test_accession4"})->stock_id();
@@ -42,16 +38,16 @@ my $test_accession5_stock_id = $schema->resultset("Stock::Stock")->find({uniquen
 my $ploidy_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, "ploidy_level", "stock_property")->cvterm_id();
 my $insertions_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, "number_of_insertions", "stock_property")->cvterm_id();
 
-$ta1_ploidy = $schema->resultset("Stock::Stockprop")->find_or_create({stock_id => $test_accession1_stock_id, type_id => $ploidy_cvterm, value => '2'});
-$ta1_insertions = $schema->resultset("Stock::Stockprop")->find_or_create({stock_id => $test_accession1_stock_id, type_id => $insertions_cvterm, value => '1'});
-$ta2_ploidy = $schema->resultset("Stock::Stockprop")->find_or_create({stock_id => $test_accession2_stock_id, type_id => $ploidy_cvterm, value => '4'});
-$ta2_insertions = $schema->resultset("Stock::Stockprop")->find_or_create({stock_id => $test_accession2_stock_id, type_id => $insertions_cvterm, value => '2'});
-$ta3_ploidy = $schema->resultset("Stock::Stockprop")->find_or_create({stock_id => $test_accession3_stock_id, type_id => $ploidy_cvterm, value => '2'});
-$ta3_insertions = $schema->resultset("Stock::Stockprop")->find_or_create({stock_id => $test_accession3_stock_id, type_id => $insertions_cvterm, value => '3'});
-$ta4_ploidy = $schema->resultset("Stock::Stockprop")->find_or_create({stock_id => $test_accession4_stock_id, type_id => $ploidy_cvterm, value => '6'});
-$ta4_insertions = $schema->resultset("Stock::Stockprop")->find_or_create({stock_id => $test_accession4_stock_id, type_id => $insertions_cvterm, value => '10'});
-$ta5_ploidy = $schema->resultset("Stock::Stockprop")->find_or_create({stock_id => $test_accession5_stock_id, type_id => $ploidy_cvterm, value => '8'});
-$ta5_insertions = $schema->resultset("Stock::Stockprop")->find_or_create({stock_id => $test_accession5_stock_id, type_id => $insertions_cvterm, value => '5'});
+$schema->resultset("Stock::Stockprop")->find_or_create({stock_id => $test_accession1_stock_id, type_id => $ploidy_cvterm, value => '2'});
+$schema->resultset("Stock::Stockprop")->find_or_create({stock_id => $test_accession1_stock_id, type_id => $insertions_cvterm, value => '1'});
+$schema->resultset("Stock::Stockprop")->find_or_create({stock_id => $test_accession2_stock_id, type_id => $ploidy_cvterm, value => '4'});
+$schema->resultset("Stock::Stockprop")->find_or_create({stock_id => $test_accession2_stock_id, type_id => $insertions_cvterm, value => '2'});
+$schema->resultset("Stock::Stockprop")->find_or_create({stock_id => $test_accession3_stock_id, type_id => $ploidy_cvterm, value => '2'});
+$schema->resultset("Stock::Stockprop")->find_or_create({stock_id => $test_accession3_stock_id, type_id => $insertions_cvterm, value => '3'});
+$schema->resultset("Stock::Stockprop")->find_or_create({stock_id => $test_accession4_stock_id, type_id => $ploidy_cvterm, value => '6'});
+$schema->resultset("Stock::Stockprop")->find_or_create({stock_id => $test_accession4_stock_id, type_id => $insertions_cvterm, value => '10'});
+$schema->resultset("Stock::Stockprop")->find_or_create({stock_id => $test_accession5_stock_id, type_id => $ploidy_cvterm, value => '8'});
+$schema->resultset("Stock::Stockprop")->find_or_create({stock_id => $test_accession5_stock_id, type_id => $insertions_cvterm, value => '5'});
 
 $d->while_logged_in_as("user", sub {
 
@@ -318,22 +314,7 @@ $d->while_logged_in_as("user", sub {
 });
 
 # Cleanup
-$test_accession1_country->delete() if defined $test_accession1_country;
-$test_accession2_country->delete() if defined $test_accession2_country;
-$test_accession1_state->delete() if defined $test_accession1_state;
-$test_accession2_state->delete() if defined $test_accession2_state;
-
-$ta1_ploidy->delete() if defined $ta1_ploidy;
-$ta1_insertions->delete() if defined $ta1_insertions;
-$ta2_ploidy->delete() if defined $ta2_ploidy;
-$ta2_insertions->delete() if defined $ta2_insertions;
-$ta3_ploidy->delete() if defined $ta3_ploidy;
-$ta3_insertions->delete() if defined $ta3_insertions;
-$ta4_ploidy->delete() if defined $ta4_ploidy;
-$ta4_insertions->delete() if defined $ta4_insertions;
-$ta5_ploidy->delete() if defined $ta5_ploidy;
-$ta5_insertions->delete() if defined $ta5_insertions;
-
 $d->wait_for_network_idle();
 $d->driver->quit();
+$f->clean_up_db();
 done_testing();
