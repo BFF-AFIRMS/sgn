@@ -19,7 +19,7 @@ jQuery(document).ready(function() {
             jQuery('#trait_table').html("");
             jQuery('#weighted_values_div').html("");
             jQuery('#raw_avgs_div').html("");
-            jQuery('#sin_formula_list_select').val("");
+            jQuery('#sin_list_list_select').val("");
             update_formula();
 
             if (jQuery(this).val() == '') {
@@ -73,15 +73,13 @@ jQuery(document).ready(function() {
                             synonyms = response.synonyms;
                             //console.log("synonyms = " + JSON.stringify(synonyms));
                             trait_html = '<option id="select_message" value="" title="Select a trait">Select a trait</option>\n';
-                            for (i = 0; i < list.length; i++) {
-                                var trait_id = list[i][0];
-                                var trait_name = list[i][1];
-                                var parts = trait_name.split("|");
-                                var synonym = synonyms[trait_id];
-                            //    synonym_fixed = synonym.replace(/"/g, "");
-                            //    var syn_parts = synonym_fixed.split(" ");
-                              //  synonym_fixed = syn_parts[0];
-                                trait_html += '<option value="' + trait_id + '" data-synonym="' + synonym + '" data-list_name="' + trait_name + '" title="' + parts[0] + '">' + parts[0] + '</a>\n';
+                            for (let i = 0; i < list.length; i++) {
+                                const trait_id = list[i][0];
+                                const trait_name = list[i][1];
+                                const parts = trait_name.split("|");
+                                const synonym = synonyms[trait_id];
+                                const trait_display = parts.length > 1 ? parts.slice(0, -1).join("|") : parts[0];
+                                trait_html += '<option value="' + trait_id + '" data-synonym="' + synonym + '" data-list_name="' + trait_name + '" title="' + trait_display + '">' + trait_display + '</option>\n';
                             }
 
                             jQuery('#trait_list').html(trait_html);
@@ -122,23 +120,23 @@ jQuery(document).ready(function() {
                             var accessions = response.accessions;
                             var accession_html;
                             if (response.accessions[0].length == 0) {
-                                accession_html = '<option value="" title="Select a control">No controls found</a>\n';
+                                accession_html = '<option value="" title="Select a control">No controls found</option>\n';
                             } else {
-                                accession_html = '<option value="" title="Select a control">Select a control</a>\n';
+                                accession_html = '<option value="" title="Select a control">Select a control</option>\n';
                                 for (i = 0; i < response.accessions[0].length; i++) {
-                                    accession_html += '<option value="' + accessions[0][i].stock_id + '" title="' + response.accessions[0][i].stock_id + '">' + response.accessions[0][i].accession_name + '</a>\n';
+                                    accession_html += '<option value="' + accessions[0][i].stock_id + '" title="' + response.accessions[0][i].stock_id + '">' + response.accessions[0][i].accession_name + '</option>\n';
                                 }
                             }
                             jQuery('#control_list').html(accession_html);
                             jQuery('#trait_list').focus();
                         },
                         error: function(response) {
-                            jQuery('#control_list').html('<option value="" title="Select a control">Error retrieving trial controls</a>');
+                            jQuery('#control_list').html('<option value="" title="Select a control">Error retrieving trial controls</option>');
                         }
                     });
                 },
                 error: function(response) {
-                    jQuery('#control_list').html('<option value="" title="Select a control">Error retrieving trial design</a>');
+                    jQuery('#control_list').html('<option value="" title="Select a control">Error retrieving trial design</option>');
                 }
             });
         });
@@ -423,7 +421,7 @@ function load_sin() { // update traits and selection index when a saved sin form
     }
 
     //retrieve contents of list:
-    var sin_list_id = jQuery('#sin_formula_list_select').val();
+    var sin_list_id = jQuery('#sin_list_list_select').val();
     if (!sin_list_id) {
         update_formula();
         return;
