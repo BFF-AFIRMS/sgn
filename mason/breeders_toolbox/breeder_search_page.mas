@@ -456,7 +456,7 @@ $dataset_id => undef
             </tr>
               <td colspan="1">
                 Missing measurement format: <br />
-                <select class="wizard-download-phenotypes-missing-format form-control" >
+                <select class="wizard-download-phenotypes-missing-format form-control" id="wizard-download-phenotypes-missing-format">
                   <option value="empty">Empty Cell</option>
                   <option value="NA">NA</option>
                   <option value="period">.</option>
@@ -514,7 +514,7 @@ $dataset_id => undef
             </tr>
           </table>
           <div class="panel-footer" style="border-top: 1px solid #ddd;">
-            <button class="wizard-download-phenotypes btn btn-sm btn-primary">
+            <button class="wizard-download-phenotypes btn btn-sm btn-primary" id="wizard-download-phenotypes-btn">
                 <span class="glyphicon glyphicon-download" aria-hidden="true"></span>
                 Download Phenotypes
             </button>
