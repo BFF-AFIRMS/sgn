@@ -388,12 +388,11 @@ like($error_string, qr/^Marker S12_7926132 in the SNP grid file is not found in 
 # Genotyping Tissue Samples
 # -----------------------------------------------------------------------------
 
-# -----------------------------------------------------------------------------
-# Create Tissue Samples and Genotypes VCF file
-my $upload_tissue_sample_genotypes_path = create_tissue_sample_genotypes($schema );
+# Create Tissue Samples
+create_tissue_sample_genotypes($schema);
 
 # Upload VCF file
-my $response = upload_tissue_sample_genotypes($schema, $mech, $upload_tissue_sample_genotypes_path);
+my $response = upload_tissue_sample_genotypes($schema, $mech);
 
 # Check response
 ok($response->is_success);

@@ -37,11 +37,11 @@ $t->driver($driver);
 # get the database schema for test data setup
 my $schema = $f->bcs_schema;
 
-# Create Tissue Samples and Genotypes VCF File
-my $upload_tissue_sample_genotypes_path = create_tissue_sample_genotypes($schema );
+# Create Tissue Samples
+create_tissue_sample_genotypes($schema);
 
 # Upload Tissue Sample Genotypes VCF File
-my $response = upload_tissue_sample_genotypes($schema, $mech, $upload_tissue_sample_genotypes_path);
+my $response = upload_tissue_sample_genotypes($schema, $mech);
 
 # Check response
 ok($response->is_success, 'upload response is success');
