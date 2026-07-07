@@ -9,21 +9,37 @@ $location_id => 'not_provided'
     <div class="panel panel-default">
         <div class="panel-body">
             <table id="trial_search_results" width="100%" class="table table-hover table-striped">
-            <thead>
-              <tr>
-                <th>Trial name</th>
-                <th>Description</th>
-                <th>Breeding program</th>
-                <th>Folder</th>
-                <th>Year</th>
-                <th>Location</th>
-                <th>Trial type</th>
-                <th>Design</th>
-                <th>Planting Date</th>
-                <th>Harvest Date</th>
-                <th>Download</th>
-            </tr>
-            </thead>
+                <thead>
+                    <tr>
+                        <th>Trial name</th>
+                        <th>Description</th>
+                        <th>Breeding program</th>
+                        <th>Folder</th>
+                        <th>Year</th>
+                        <th>Location</th>
+                        <th>Trial type</th>
+                        <th>Design</th>
+                        <th>Planting Date</th>
+                        <th>Harvest Date</th>
+                        <th>Download</th>
+                    </tr>
+                    <tr id="trial_search_results_filter_row">
+                        <!-- These cells are populated with search boxes at runtime -->
+                        <th>Trial name</th>
+                        <th>Description</th>
+                        <th>Breeding program</th>
+                        <th>Folder</th>
+                        <th>Year</th>
+                        <th>Location</th>
+                        <th>Trial type</th>
+                        <th>Design</th>
+                        <th>Planting Date</th>
+                        <th>Harvest Date</th>
+                        <th>Download</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
             </table>
         </div>
     </div>
@@ -44,26 +60,36 @@ $location_id => 'not_provided'
 <script>
 
 jQuery(document).ready(function () {
+    $('#trial_search_results_filter_row th').each(function (i) {
+        $(this).html( '<input type="text" placeholder="Search" data-index="'+i+'" class="tw:w-full tw:min-w-40" />')
+    });
 
-   var trial_table = jQuery('#trial_search_results').DataTable( {
-       'ajax': '/ajax/search/trials?location_id=<% $location_id %>',
-       "scrollX": true
-   });
+    const trial_table = jQuery('#trial_search_results').DataTable( {
+        'ajax': '/ajax/search/trials?location_id=<% $location_id %>',
+        "scrollX": true,
+        "orderCellsTop": true
+    });
 
-   jQuery('#trial_search_results').on( 'draw.dt', function () {
-     var name_links = trial_table.column( 0, {page:'current'} ).data();
-     var names = [];
+    $(trial_table.table().container()).on('keyup change', 'thead input', function () {
+        trial_table
+            .column($(this).data('index'))
+            .search(this.value)
+            .draw();
+    });
 
-     for (var i = 0; i < name_links.length; i++) { //extract text from anchor tags
-       names.push(name_links[i].match(/<a [^>]+>([^<]+)<\/a>/)[1]+'\n');
-     }
+    jQuery('#trial_search_results').on( 'draw.dt', function () {
+        const name_links = trial_table.column( 0, {page:'current'} ).data();
+        const names = [];
 
-     jQuery('#trial_result_names').html(names);
-     addToListMenu('trials_to_list_menu', 'trial_result_names', {
-       listType: 'trials'
-     });
+        for (let i = 0; i < name_links.length; i++) { //extract text from anchor tags
+            names.push(name_links[i].match(/<a [^>]+>([^<]+)<\/a>/)[1]+'\n');
+        }
 
-   });
+        jQuery('#trial_result_names').html(names);
+        addToListMenu('trials_to_list_menu', 'trial_result_names', {
+            listType: 'trials'
+        });
+    });
 
 });
 

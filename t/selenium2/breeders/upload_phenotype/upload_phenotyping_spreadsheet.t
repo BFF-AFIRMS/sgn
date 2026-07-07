@@ -151,6 +151,7 @@ $t->while_logged_in_as("curator", sub {
             $t->get_ok('/breeders/trial/137');
 
             $t->click_ok("trial_raw_data_onswitch", "id", "Find phenotype raw data section");
+            $t->wait_for_network_idle();
             $t->click_ok("raw_data_trait_select_button", "id", "Request raw phenotype data");
             $t->wait_for_working_dialog();
 
@@ -207,6 +208,7 @@ $t->while_logged_in_as("curator", sub {
             $t->get_ok('/breeders/trial/137');
 
             $t->click_ok("trial_raw_data_onswitch", "id", "Find raw data section after page refresh");
+            $t->wait_for_network_idle();
 
             $t->click_ok("raw_data_trait_select_button", "id", "Request raw phenotype data after page refresh");
             $t->wait_for_working_dialog();
