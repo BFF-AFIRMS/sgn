@@ -1826,9 +1826,9 @@ sub get_cached_file_VCF {
                 }
                 $genotype_string .= "\n";
             }
-            my $genotype_id = $geno->{germplasmName};
+            my $genotype_id = $geno->{stock_name};
             if (!$self->return_only_first_genotypeprop_for_stock) {
-                $genotype_id = $geno->{germplasmName}."|".$geno->{markerProfileDbId};
+                $genotype_id = $geno->{stock_name}."|".$geno->{markerProfileDbId};
             }
             my $genotype_data_string = "";
             foreach my $m (@all_marker_objects) {
