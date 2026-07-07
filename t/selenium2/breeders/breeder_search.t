@@ -612,6 +612,6 @@ $t->while_logged_in_as("submitter", sub {
     # DONE TESTING
     }
 );
-$t->driver->quit();
+$t->driver()->quit();
 $f->clean_up_db();
 done_testing();
