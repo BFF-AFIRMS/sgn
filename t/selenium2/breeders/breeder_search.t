@@ -520,7 +520,7 @@ $t->while_logged_in_as("submitter", sub {
     @vcf_response_observed = grep !/fileDate/, @vcf_response_observed;
     is_deeply(\@vcf_response_observed, \@vcf_response_expected, 'tissue sample vcf matches the expected values');
 
-    ok(defined($vcf_file_path) && -e $vcf_file_path, 'delete downloaded vcf file');
+    ok(unlink($vcf_file_path), 'delete downloaded accession vcf file');
 
     # -----------------------------------------------------------------------------
     # Download VCF File based on tissue sample list
@@ -548,7 +548,7 @@ $t->while_logged_in_as("submitter", sub {
         $download_time,
         10 ,# maximum find attempts
     );
-    ok(-e $vcf_file_path, "locate downloaded vcf file");
+    ok(defined($vcf_file_path) && -e $vcf_file_path, 'locate downloaded tissue sample vcf file');
 
     # patch in the tissue_sample_protocol_id value
     my $vcf_response_expected = $vcf_expected_tissue_samples;
