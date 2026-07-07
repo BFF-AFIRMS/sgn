@@ -34,6 +34,7 @@ sub define_object {
     my $user_type = $self->get_user()->get_user_type();
     my %json_hash= $self->get_json_hash();
     my $sp_person_id = $self->get_user()->get_sp_person_id();
+    my $username = $self->get_user()->get_username();
 
     print STDERR "this is sp_person_id before dbic_schema: ".$sp_person_id."\n";
 
@@ -41,7 +42,7 @@ sub define_object {
 
     $self->set_object_id($stock_id);
     $self->set_object_name('Stock'); #this is useful for email messages
-    $self->set_object( CXGN::Stock->new({schema=>$schema, stock_id=>$stock_id}) );
+    $self->set_object( CXGN::Stock->new({schema=>$schema, stock_id=>$stock_id, user_name=>$username}));
 
     if ( $self->get_object()->is_obsolete() == 1 && $user_type ne 'curator' )
     {
@@ -78,6 +79,7 @@ sub store {
     $stock->uniquename($args{uniquename});
     $stock->description($args{description});
 
+    $stock->modification_note("Edited stock details");
 
     my $message = $stock->exists_in_database();
     my $validate;
