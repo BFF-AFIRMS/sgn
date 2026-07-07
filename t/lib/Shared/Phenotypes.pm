@@ -1,4 +1,4 @@
-
+package Shared::Phenotypes;
 
 =head1 NAME
 
@@ -6,23 +6,19 @@ Shared::Phenotypes - Shared functions for testing phenotypes
 
 =cut
 
-package Shared::Phenotypes;
 use strict;
 use warnings;
-use Exporter;
+use Exporter qw(import);
 use File::Slurp qw(read_file);
 
 use Data::Dumper;
 
-use CXGN::Phenotypes::Missing qw(%MISSING_FORMATS);
-
-our @ISA= qw( Exporter );
-
-# Possible exports
-our @EXPORT_OK = qw( download_missing_phenotypes_csv );
+use CXGN::Phenotypes::Missing;
 
 # Default exports
-our @EXPORT = qw( download_missing_phenotypes_csv );
+our @EXPORT = qw/
+    download_missing_phenotypes_csv
+/;
 
 sub download_missing_phenotypes_csv {
     my ($t, $select_id, $format, $submit_id, $download_path, $expected_csv) = @_;

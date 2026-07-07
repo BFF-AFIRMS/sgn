@@ -30,13 +30,11 @@ Katherine Eaton <kmeaton1@ualberta.ca>
 use Moose;
 use Exporter qw(import);
 
-our @ISA= qw( Exporter );
-
-# these CAN be exported.
-our @EXPORT_OK = qw( %MISSING_FORMATS @DOWNLOAD_MISSING_FORMATS );
-
-# these are exported by default.
-our @EXPORT = qw( %MISSING_FORMATS @DOWNLOAD_MISSING_FORMATS );
+# Default exports
+our @EXPORT = qw/
+    %MISSING_FORMATS
+    @DOWNLOAD_MISSING_FORMATS
+/;
 
 # all allowed missing formats
 our %MISSING_FORMATS = (
