@@ -67,6 +67,17 @@ interface PlotStructureNode {
     has?: Record<string, PlotStructureNode>;
 }
 
+/**
+ * Minimum pixel distance threshold to distinguish between a click and a drag operation.
+ * If the mouse moves more than this many pixels during a mousedown event, it's considered a drag.
+ */
+const CLICK_DRAG_THRESHOLD = 1;
+
+/**
+ * Maximum pixels of empty space allowed around the map edges
+ */
+const PAN_MAX_EMPTY_SPACE = 200;
+
 const palette = [
     "#8dd3c7", "#ffffb3", "#bebada", "#fb8072", "#80b1d3",
     "#fdb462", "#b3de69", "#fccde5", "#d9d9d9", "#bc80bd",
@@ -289,6 +300,13 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
     const [fillerAccessionInput, setFillerAccessionInput] = useState('');
     const [fillerAccessionId, setFillerAccessionId] = useState<string | undefined>(undefined);
 
+    const [zoom, setZoom] = useState<number>(1);
+    const [pan, setPan] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
+    const [isDragging, setIsDragging] = useState<boolean>(false);
+    const containerRef = useRef<HTMLDivElement | null>(null);
+    const hasDragged = useRef<boolean>(false);
+    const dragStart = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
+
     const [heatmapData, setHeatmapData] = useState<Record<string, HeatmapValue>>({});
     const [spatialAdjustments, setSpatialAdjustments] = useState<Record<string, Record<string, number>>>({});
     const [controlAccessions, setControlAccessions] = useState<string[]>([]);
@@ -357,6 +375,78 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
         loadVariables();
         loadSpatialAdjustments();
     }, [activeTrialIds]);
+
+    const updateZoomAndPan = (
+        nextZoom: number, 
+        targetPan?: { x: number; y: number }
+    ) => {
+        const clampedZoom = Math.max(0.1, Math.min(5, nextZoom));
+        if (!containerRef.current) {
+            setZoom(clampedZoom);
+            if (targetPan) setPan(targetPan);
+            return;
+        }
+        const rect = containerRef.current.getBoundingClientRect();
+
+        // Zoom around the center of the viewport if no target pan is provided
+        if (!targetPan) {
+            const centerX = rect.width / 2;
+            const centerY = rect.height / 2;
+            const mapX = (centerX - pan.x) / zoom;
+            const mapY = (centerY - pan.y) / zoom;
+            targetPan = {
+                x: centerX - mapX * clampedZoom,
+                y: centerY - mapY * clampedZoom
+            };
+        }
+
+        const maxPanX = PAN_MAX_EMPTY_SPACE;
+        const minPanX = rect.width - (svgWidth * clampedZoom) - PAN_MAX_EMPTY_SPACE;
+        const maxPanY = PAN_MAX_EMPTY_SPACE;
+        const minPanY = rect.height - (svgHeight * clampedZoom) - PAN_MAX_EMPTY_SPACE;
+
+        setZoom(clampedZoom);
+        setPan({
+            x: Math.max(minPanX, Math.min(maxPanX, targetPan.x)),
+            y: Math.max(minPanY, Math.min(maxPanY, targetPan.y))
+        });
+    };
+
+    // Bind native non-passive wheel listener to allow e.preventDefault() and prevent window scroll
+    useEffect(() => {
+        const handleNativeWheel = (e: WheelEvent) => {
+            e.preventDefault();
+            if (!containerRef.current) return;
+
+            // Get dimensions of the viewport container
+            const rect = containerRef.current.getBoundingClientRect();
+            const cursorX = e.clientX - rect.left;
+            const cursorY = e.clientY - rect.top;
+
+            // Determine target coordinates on the unscaled map corresponding to the cursor position
+            const mapX = (cursorX - pan.x) / zoom;
+            const mapY = (cursorY - pan.y) / zoom;
+
+            const scaleFactor = 1.1;
+            let nextZoom = e.deltaY < 0 ? zoom * scaleFactor : zoom / scaleFactor;
+            nextZoom = Math.max(0.1, Math.min(5, nextZoom));
+
+            // Recalculate pan to keep the point under the cursor stable
+            const nextPanX = cursorX - mapX * nextZoom;
+            const nextPanY = cursorY - mapY * nextZoom;
+
+            updateZoomAndPan(nextZoom, { x: nextPanX, y: nextPanY });
+        };
+        const element = containerRef.current;
+        if (element) {
+            element.addEventListener('wheel', handleNativeWheel, { passive: false });
+        }
+        return () => {
+            if (element) {
+                element.removeEventListener('wheel', handleNativeWheel);
+            }
+        };
+    }, [zoom, pan]);
 
     useEffect(() => {
         const handleExternalClick = (e: MouseEvent) => {
@@ -895,6 +985,9 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
 
     // Handle click vs double click logic
     const handlePlotSelect = (plot: Plot) => {
+        if (hasDragged.current) {
+            return;
+        }
         if (clickTimer.current) {
             clearTimeout(clickTimer.current);
             clickTimer.current = null;
@@ -1456,6 +1549,41 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
     const svgWidth = (renderBounds.numCols + 1) * 55 + 50;
     const svgHeight = (renderBounds.numRows + 1) * 55 + 50;
 
+    // Mouse Drag/Pan Handlers
+    const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+        // Only drag with primary mouse button
+        if (e.button !== 0) return;
+        setIsDragging(true);
+        hasDragged.current = false;
+        dragStart.current = { x: e.clientX - pan.x, y: e.clientY - pan.y };
+    };
+
+    const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+        if (!isDragging) return;
+        if (!containerRef.current) return;
+
+        // Calculate the raw next pan coordinates
+        const nextX = e.clientX - dragStart.current.x;
+        const nextY = e.clientY - dragStart.current.y;
+
+        updateZoomAndPan(zoom, { x: nextX, y: nextY });
+
+        const deltaX = Math.abs(e.clientX - (dragStart.current.x + pan.x));
+        const deltaY = Math.abs(e.clientY - (dragStart.current.y + pan.y));
+        if (deltaX > CLICK_DRAG_THRESHOLD || deltaY > CLICK_DRAG_THRESHOLD) {
+            hasDragged.current = true;
+        }
+    };
+
+    const handleMouseUpOrLeave = () => {
+        setIsDragging(false);
+    };
+
+    const handleResetZoomPan = () => {
+        setZoom(1);
+        setPan({ x: 0, y: 0 });
+    };
+
     return (
         <div className="tw:p-3.75">
             <div className="panel panel-default">
@@ -1651,13 +1779,40 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
                             )}
                         </div>
 
-                        <div className="tw:relative tw:border tw:border-[#ddd] tw:p-2.5 tw:bg-[#fcfcfc] tw:min-h-75 tw:flex tw:overflow-auto">
+                        <div 
+                            ref={containerRef}
+                            className={`tw:relative tw:border tw:border-[#ddd] tw:bg-[#fcfcfc] tw:h-300 tw:flex tw:overflow-hidden tw:select-none ${isDragging ? 'tw:cursor-grabbing' : 'tw:cursor-grab'}`}
+                            onMouseDown={handleMouseDown}
+                            onMouseMove={handleMouseMove}
+                            onMouseUp={handleMouseUpOrLeave}
+                            onMouseLeave={handleMouseUpOrLeave}
+                        >
+                            {/* Zoom controls HUD */}
+                            <div className="tw:absolute tw:bottom-4 tw:right-4 tw:z-50 tw:flex tw:flex-col tw:gap-1 tw:bg-white/80 tw:p-1.5 tw:rounded-md tw:border tw:border-[#ccc] tw:shadow-sm">
+                                <button 
+                                    className="btn btn-default btn-xs tw:font-bold" 
+                                    onClick={() => updateZoomAndPan(zoom * 1.2)}
+                                    title="Zoom In"
+                                >+</button>
+                                <button 
+                                    className="btn btn-default btn-xs tw:font-bold" 
+                                    onClick={() => updateZoomAndPan(zoom / 1.2)}
+                                    title="Zoom Out"
+                                >-</button>
+                                <button
+                                    className="btn btn-default btn-xs tw:text-[10px]" 
+                                    onClick={handleResetZoomPan}
+                                    title="Reset View"
+                                >Reset</button>
+                            </div>
+
                             <svg
                                 id="fieldmap_chart_svg"
                                 className="tw:max-w-none tw:shrink-0"
                                 width={svgWidth}
                                 height={svgHeight}
                                 viewBox={`0 0 ${svgWidth} ${svgHeight}`}
+                                style={{ transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`, transformOrigin: '0 0' }}
                             >
                                 <g transform="translate(50, 25)">
                                     {/* Pass 1: Render Plot Geometry (Backgrounds, Borders, Icons) */}
