@@ -11,12 +11,12 @@ use Selenium::Remote::WDKeys 'KEYS';
 use SGN::Model::Cvterm;
 use SGN::Test::Fixture;
 use Selenium::Firefox::Profile;
-use Shared::Phenotypes qw(download_missing_phenotypes_csv);
-use CXGN::Phenotypes::Missing qw(%MISSING_FORMATS @DOWNLOAD_MISSING_FORMATS);
+use Shared::Phenotypes;
+use CXGN::Phenotypes::Missing;
 
 use JSON;
 use File::Slurp qw(read_file);
-use Shared::Genotypes qw($vcf_expected_accessions $vcf_expected_tissue_samples create_tissue_sample_genotypes upload_tissue_sample_genotypes);
+use Shared::Genotypes;
 
 my $t = SGN::Test::WWW::WebDriver->new();
 my $f = SGN::Test::Fixture->new();
@@ -28,7 +28,7 @@ my $mech = SGN::Test::WWW::Mechanize->new;
 my $profile = Selenium::Firefox::Profile->new;
 $profile->set_preference( 'browser.download.folderList', 2 );
 $profile->set_preference( 'browser.download.dir', '/downloads' );
-$profile->set_preference( 'browser.helperApps.neverAsk.saveToDisk', 'application/text' );
+$profile->set_preference( 'browser.helperApps.neverAsk.saveToDisk', 'application/text,application/csv' );
 
 my $driver = Selenium::Remote::Driver->new(
     firefox_profile => $profile,
@@ -54,21 +54,6 @@ is($message_hash->{success}, 1, 'message is success');
 
 my $tissue_sample_protocol_id = $message_hash->{nd_protocol_id};
 my $tissue_sample_project_id = $message_hash->{project_id};
-
-# Setup Firefox profile for automatic downloads
-# The path /downloads on the selenium host is shared with the host and typically 
-# mapped to /selenium/downloads on the breedbase (web) host.
-my $profile = Selenium::Firefox::Profile->new;
-$profile->set_preference( 'browser.download.folderList', 2 );
-$profile->set_preference( 'browser.download.dir', '/downloads' );
-$profile->set_preference( 'browser.helperApps.neverAsk.saveToDisk', 'application/csv' );
-
-my $driver = Selenium::Remote::Driver->new(
-    firefox_profile => $profile,
-    base_url => $ENV{SGN_TEST_SERVER},
-    remote_server_addr => $ENV{SGN_REMOTE_SERVER_ADDR} || 'localhost'
-);
-$t->driver($driver);
 
 $t->while_logged_in_as("submitter", sub {
 
@@ -515,7 +500,7 @@ $t->while_logged_in_as("submitter", sub {
     $t->click_ok('//span[text()="Related Genotype Data"]', 'xpath', 'open related genotype data panel');
     # save the current time, we will need this to find the correct downloaded file
     my $download_time = time();
-    $t->click_ok('wizard-download-genotypes', 'class', 'download genotypes');
+    $t->click_ok('//button[contains(@class, "wizard-download-genotypes")]', 'xpath', 'click download genotypes');
 
     # search for a vcf file that is newer than before we clicked download
     my $vcf_file_path = get_file_newer_than_timestamp(
@@ -523,7 +508,7 @@ $t->while_logged_in_as("submitter", sub {
         $download_time,
         10 ,# maximum find attempts
     );
-    ok(defined($vcf_file_path), 'locate downloaded vcf file');
+    ok(defined($vcf_file_path) && -e $vcf_file_path, 'locate downloaded vcf file');
 
     # patch in the tissue_sample_protocol_id value
     my $vcf_response_expected = $vcf_expected_accessions;
@@ -535,7 +520,7 @@ $t->while_logged_in_as("submitter", sub {
     @vcf_response_observed = grep !/fileDate/, @vcf_response_observed;
     is_deeply(\@vcf_response_observed, \@vcf_response_expected, 'tissue sample vcf matches the expected values');
 
-    unlink($vcf_file_path) or die "Failed to delete $vcf_file_path: $!";
+    ok(defined($vcf_file_path) && -e $vcf_file_path, 'delete downloaded vcf file');
 
     # -----------------------------------------------------------------------------
     # Download VCF File based on tissue sample list
@@ -555,7 +540,7 @@ $t->while_logged_in_as("submitter", sub {
     $t->click_ok('//span[text()="Related Genotype Data"]', 'xpath', 'open related genotype data panel');
     # save the current time, we will need this to find the correct downloaded file
     $download_time = time();
-    $t->click_ok('wizard-download-genotypes', 'class', 'download genotypes');
+    $t->click_ok('//button[contains(@class, "wizard-download-genotypes")]', 'xpath', 'click download genotypes');
 
     # search for a vcf file that is newer than before we clicked download
     my $vcf_file_path = get_file_newer_than_timestamp(
@@ -563,7 +548,7 @@ $t->while_logged_in_as("submitter", sub {
         $download_time,
         10 ,# maximum find attempts
     );
-    ok(defined($vcf_file_path), "locate downloaded vcf file");
+    ok(-e $vcf_file_path, "locate downloaded vcf file");
 
     # patch in the tissue_sample_protocol_id value
     my $vcf_response_expected = $vcf_expected_tissue_samples;
@@ -575,11 +560,13 @@ $t->while_logged_in_as("submitter", sub {
     @vcf_response_observed = grep !/fileDate/, @vcf_response_observed;
     is_deeply(\@vcf_response_observed, \@vcf_response_expected, 'tissue sample vcf matches the expected values');
 
+    ok(unlink($vcf_file_path), 'delete downloaded vcf file');
+
     # -------------------------------------------------------------------------
     # Download missing measurements format
 
     $t->get_ok('/breeders/search', 'navigate to search wizard');
-    sleep(1); # FIXME Need to wait for click handler to be registered    
+    sleep(1); # FIXME Need to wait for click handler to be registered
 
     # COLUMN 1 WIZARD SEARCH - select trials
     $t->click_ok('(//div[@class="panel-heading"]/select)[1]//option[@value="trials"]', 'xpath', 'select trials');
@@ -605,7 +592,7 @@ $t->while_logged_in_as("submitter", sub {
         "2014","134","test","test","139","Kasese solgs trial","This trial was loaded into the fixture to test solgs.","Alpha","","","","","","","","23","test_location","38891","UG120014","","plot","39718","KASESE_TP2013_873","1","32","35876","","","test","","0.24",""';
         # Trim leading whitespace
         $expected_csv =~ s/^[ ]+//mg;
-        my @expected = split "\n", $expected_csv;   
+        my @expected = split "\n", $expected_csv;
 
         my $phenotypes_download_path = "/selenium/downloads/Kasese_solgs_trial_phenotypes.csv";
         my $observed = download_missing_phenotypes_csv(
@@ -617,7 +604,7 @@ $t->while_logged_in_as("submitter", sub {
         );
 
         # Keep only the last three lines which are the header and data
-        my @observed = splice(@$observed, -3); 
+        my @observed = splice(@$observed, -3);
         is_deeply(\@observed, \@expected, 'download wizard has expected missing data ' . $format);
 
     }
@@ -625,29 +612,6 @@ $t->while_logged_in_as("submitter", sub {
     # DONE TESTING
     }
 );
-
-$t->driver()->quit();
+$t->driver->quit();
 $f->clean_up_db();
 done_testing();
-
-# Locate a file that is newer than the given timestamp.
-# Useful when downloading genotype data through the UI,
-# to find the correct output since it's dynamically named.
-sub get_file_newer_than_timestamp {
-     my ($pattern, $time_stamp, $max_attempts) = @_;
-
-    my $num_attempts = 0;
-    my $file_path;
-    while(!$file_path && $num_attempts < $max_attempts){
-        # find a file that is newer than the timestamp in epoch seconds
-        my @downloaded_file_list = `find $pattern -type f -newermt "\@$time_stamp"`;
-        my $num_files = scalar(@downloaded_file_list);
-        $file_path = $num_files > 0 ? $downloaded_file_list[0] : undef;
-        $num_attempts += 1;
-        sleep(1);
-    }
-    if (defined($file_path)){
-        chomp($file_path);
-    }
-    return $file_path;
-}

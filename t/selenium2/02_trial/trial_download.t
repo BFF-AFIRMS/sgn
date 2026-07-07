@@ -8,8 +8,8 @@ use Text::CSV;
 use SGN::Model::Cvterm;
 use File::Slurp qw(read_file);
 
-use Shared::Phenotypes qw(download_missing_phenotypes_csv);
-use CXGN::Phenotypes::Missing qw(%MISSING_FORMATS @DOWNLOAD_MISSING_FORMATS);
+use Shared::Phenotypes;
+use CXGN::Phenotypes::Missing;
 
 my $f = SGN::Test::Fixture->new();
 my $t = SGN::Test::WWW::WebDriver->new();
@@ -151,7 +151,6 @@ $t->while_logged_in_as("curator", sub {
 
     close $fh;
     unlink $trial_csv_path;
-    unlink $download_path;
 
     # -------------------------------------------------------------------------
     # Download missing measurements format
