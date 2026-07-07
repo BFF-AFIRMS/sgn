@@ -28,7 +28,7 @@ sub download_missing_phenotypes_csv {
 
     # Wait for file to download
     my $num_attempts = 0;
-    while (! -e $download_path && $num_attempts < 10){
+    while (! -e $download_path && $num_attempts < 30){
         $num_attempts +=1;
         sleep(1);
     }
