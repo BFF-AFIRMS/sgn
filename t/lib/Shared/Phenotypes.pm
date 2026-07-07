@@ -10,9 +10,6 @@ use strict;
 use warnings;
 use Exporter qw(import);
 use File::Slurp qw(read_file);
-
-use Data::Dumper;
-
 use CXGN::Phenotypes::Missing;
 
 # Default exports
