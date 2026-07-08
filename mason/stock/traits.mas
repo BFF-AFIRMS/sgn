@@ -23,6 +23,7 @@ $stock_id
             jQuery('#traitlist_summary_data').DataTable( {
                 'destroy':true,
                 'ajax': '/stock/'+ <% $stock_id %> + '/datatables/traitlist',
+                'scrollX': true,
             });
         });
     });
