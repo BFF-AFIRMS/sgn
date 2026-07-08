@@ -108,9 +108,7 @@ $trial_stock_type => undef
                             <div class="layout-item">
                                 <label>Missing measurement format: </label>
                                 <select class="form-control" id="create_fieldbook_missing_format_<% $download_type %>">
-                                    <option value="empty">Empty Cell</option>
-                                    <option value="NA">NA</option>
-                                    <option value="period">.</option>
+                                    <& /breeders_toolbox/trial/missing_phenotypes_options.mas &>
                                 </select>
                             </div>
                             <div class="layout-item" style="display:none">

@@ -457,9 +457,7 @@ $dataset_id => undef
               <td colspan="1">
                 Missing measurement format: <br />
                 <select class="wizard-download-phenotypes-missing-format form-control" id="wizard-download-phenotypes-missing-format">
-                  <option value="empty">Empty Cell</option>
-                  <option value="NA">NA</option>
-                  <option value="period">.</option>
+                  <& /breeders_toolbox/trial/missing_phenotypes_options.mas &>
                 </select>
               </td>
               <td colspan="3">

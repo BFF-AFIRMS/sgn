@@ -48,9 +48,7 @@
                 <label class="col-sm-7 control-label">Missing measurement format: </label>
                 <div class="col-sm-5">
                     <select class="form-control" id="download_trials_phenotypes_missing_format">
-                        <option value="empty">Empty Cell</option>
-                        <option value="NA">NA</option>
-                        <option value="period">.</option>
+                        <& /breeders_toolbox/trial/missing_phenotypes_options.mas &>
                     </select>
                 </div>
             </div>
