@@ -93,7 +93,7 @@ sub retrieve_stock_audits : Path('/ajax/audit/retrieve_stock_audits'){
         $before[$counter] = $before;
         $all_audits[$counter] = [$audit_ts, $operation, $username, $logged_in_user, $before, $after, $transactioncode, $primary_key, $is_undo];
         $counter++;
-        }
+    }
 
     
     my @matches;
@@ -113,10 +113,7 @@ sub retrieve_stock_audits : Path('/ajax/audit/retrieve_stock_audits'){
             next; # Skip this iteration in case of error
         }
 
-        my $desired_uniquename = $stock_json_string->{'uniquename'};
-        if ($stock_uniquename eq $desired_uniquename) {
-            push @matches, $all_audits[$i];
-        }
+        push @matches, $all_audits[$i];
     }
 
     my $stock_match_json;
