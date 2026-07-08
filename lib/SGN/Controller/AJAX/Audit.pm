@@ -79,45 +79,25 @@ sub retrieve_table_names : Path('/ajax/audit/retrieve_table_names'){
 sub retrieve_stock_audits : Path('/ajax/audit/retrieve_stock_audits'){
     my $self = shift;
     my $c = shift;
-    my $stock_uniquename = $c->req->param('stock_uniquename');
-    my $q = "SELECT * FROM audit.stock_audit;";
+    my $stock_id = $c->req->param('stock_id');
+    my $q = "SELECT audit_ts, operation, username, logged_in_user, before, after, transactioncode, stock_audit_id, is_undo
+        FROM audit.stock_audit
+        WHERE before->>'stock_id' = ? OR after->>'stock_id' = ?
+        ORDER BY audit_ts ASC;";
     my $h = $c->dbc->dbh->prepare($q);
-    $h->execute();
+    $h->execute($stock_id, $stock_id);
     my @all_audits;
-    my @before;
-    my @after;
-    my $counter = 0;
 
     while (my ($audit_ts, $operation, $username, $logged_in_user, $before, $after, $transactioncode, $primary_key, $is_undo) = $h->fetchrow_array) {
-        $after[$counter] = $after;
-        $before[$counter] = $before;
-        $all_audits[$counter] = [$audit_ts, $operation, $username, $logged_in_user, $before, $after, $transactioncode, $primary_key, $is_undo];
-        $counter++;
+        # Ensure UTF-8 encoding for text fields to prevent encoding issues
+        $before = defined $before ? Encode::decode('UTF-8', $before, Encode::FB_DEFAULT) : "";
+        $after  = defined $after  ? Encode::decode('UTF-8', $after, Encode::FB_DEFAULT)  : "";
+
+        push @all_audits, [$audit_ts, $operation, $username, $logged_in_user, $before, $after, $transactioncode, $primary_key, $is_undo];
     }
 
-    
-    my @matches;
-    for (my $i = 0; $i < $counter; $i++) {
-        my $operation = $all_audits[$i][1];
-        my $stock_json_string;
-
-        eval {
-            my $json_text = ($operation eq "DELETE") ? $before[$i] : $after[$i];
-
-            # Convert Perl Unicode string to UTF-8 encoded bytes before decoding JSON
-            $json_text = Encode::encode('UTF-8', $json_text);
-            $stock_json_string = decode_json($json_text);
-        };
-        if ($@) {
-            warn "Failed to decode JSON at index $i: $@";
-            next; # Skip this iteration in case of error
-        }
-
-        push @matches, $all_audits[$i];
-    }
-
-    my $stock_match_json;
-    $stock_match_json = encode_json(\@matches);
+    my $stock_match_json = encode_json(\@all_audits);
+    utf8::encode($stock_match_json); # Convert to UTF-8 bytes
 
     $c->stash->{rest} = {
         stock_match_after => $stock_match_json,
