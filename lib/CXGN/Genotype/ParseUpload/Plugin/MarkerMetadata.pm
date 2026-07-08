@@ -201,6 +201,12 @@ sub _validate_with_plugin {
         # Get children (recursively) of root cvterm
         my $ontology = [];
         $ontology = $onto->get_children($root_cvterm_id) if $root_cvterm_id;
+        my $composed_ontology = [];
+        my $composed_trait_ont_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'Composed traits', 'composed_trait')->cvterm_id();
+        $composed_ontology = $onto->get_children($composed_trait_ont_cvterm_id);
+
+        # Build hash of names => cvterm ids
+        my $ontology_terms = _parse_ontology_term([$ontology, $composed_ontology]);
 
         # Build hash of names => cvertm ids
         my $ontology_terms = _parse_ontology_term($ontology);
