@@ -243,109 +243,15 @@ sub search {
 
     print STDERR "start date here: ".$self->start_date()." and the end date here: ".$self->end_date()."\n";
 
-    if ($self->trial_list && scalar(@{$self->trial_list})>0) {
-
-        $using_layout_hash = 1;
-        foreach (@{$self->trial_list}){
-            my $trial_layout = CXGN::Trial::TrialLayout->new({schema => $schema, trial_id => $_, experiment_type=>$self->experiment_type()});
-            my $tl = $trial_layout->get_design();
-
-            my @plots_list;
-            while(my($key,$val) = each %$tl){
-                $design_layout_hash{$val->{plot_id}} = $val;
-                if($val->{plant_ids}){
-                    foreach my $p (@{$val->{plant_ids}}){
-                        $design_layout_hash{$p} = $val;
-                    }
-                }
-                if($val->{subplot_ids}){
-                    foreach my $p (@{$val->{subplot_ids}}){
-                        $design_layout_hash{$p} = $val;
-                    }
-                }
-                if($val->{tissue_sample_ids}){
-                    foreach my $p (@{$val->{tissue_sample_ids}}){
-                        $design_layout_hash{$p} = $val;
-                    }
-                }
-
-                if($val->{plot_id}){
-                    push @plots_list, $val->{plot_id};
-                }
-            }
-
-            
-            #For performace reasons it is faster to include specific stock_ids in the query.
-            if ($self->data_level eq 'analysis_instance'){
-                if (!$self->plot_list){
-                    $self->plot_list(\@plots_list);
-                }
-            }
-
-            print STDERR "\n\n fetching layout for  ".$self->data_level. " time: ".  localtime ."\n";
-            if ($self->data_level eq 'plot'){
-                if (!$self->plot_list){
-                    $self->plot_list([]);
-                }
-                my $plots = CXGN::Trial->new({ bcs_schema => $schema, trial_id => $_ })->get_plots();
-                foreach (@$plots){
-                    push @{$self->plot_list}, $_->[0];
-                }
-            }
-
-            if ($self->data_level eq 'accession'){
-                if (!$self->accession_list){
-                    $self->accession_list([]);
-                }
-                my $accessions = CXGN::Trial->new({ bcs_schema => $schema, trial_id => $_ })->get_accessions();
-                # print STDERR "Accessions for trial $_ : ".Dumper($accessions)."\n";
-                foreach (@$accessions){
-                    print STDERR "iterating accessions: " . Dumper( $_) . "\n";
-                    print STDERR "Pushing accession ".$_->{'stock_id'}."\n";
-                    push @{$self->accession_list}, $_->{'stock_id'};
-                }
-
-                if (!$self->plot_list){
-                    $self->plot_list([]);
-                }
-                my $plots = CXGN::Trial->new({ bcs_schema => $schema, trial_id => $_ })->get_plots();
-                foreach (@$plots){
-                    push @{$self->plot_list}, $_->[0];
-                }
-            }
-
-            if ($self->data_level eq 'plant'){
-                if (!$self->plant_list){
-                    $self->plant_list([]);
-                }
-                my $plants = CXGN::Trial->new({ bcs_schema => $schema, trial_id => $_ })->get_plants();
-                foreach (@$plants){
-                    push @{$self->plant_list}, $_->[0];
-                }
-            }
-            if ($self->data_level eq 'subplot'){
-                if (!$self->subplot_list){
-                    $self->subplot_list([]);
-                }
-                my $subplots = CXGN::Trial->new({ bcs_schema => $schema, trial_id => $_ })->get_subplots();
-                foreach (@$subplots){
-                    push @{$self->subplot_list}, $_->[0];
-                }
-            }
-
-
-        }
-    } else {
-        print STDERR "\n\n design_layout_sql for  ".$self->data_level. " time: ".  localtime ."\n";
-        $design_layout_sql = " LEFT JOIN stockprop AS rep ON (observationunit.stock_id=rep.stock_id AND rep.type_id = $rep_type_id)
-            LEFT JOIN stockprop AS block_number ON (observationunit.stock_id=block_number.stock_id AND block_number.type_id = $block_number_type_id)
-            LEFT JOIN stockprop AS plot_number ON (observationunit.stock_id=plot_number.stock_id AND plot_number.type_id = $plot_number_type_id)
-            LEFT JOIN stockprop AS row_number ON (observationunit.stock_id=row_number.stock_id AND row_number.type_id = $row_number_type_id)
-            LEFT JOIN stockprop AS col_number ON (observationunit.stock_id=col_number.stock_id AND col_number.type_id = $col_number_type_id)
-            LEFT JOIN stockprop AS plant_number ON (observationunit.stock_id=plant_number.stock_id AND plant_number.type_id = $plant_number_type_id)
-            LEFT JOIN stockprop AS is_a_control ON (observationunit.stock_id=is_a_control.stock_id AND is_a_control.type_id = $is_a_control_type_id) ";
-        $design_layout_select = " ,rep.value, block_number.value, plot_number.value, is_a_control.value, row_number.value, col_number.value, plant_number.value";
-    }
+    print STDERR "\n\n design_layout_sql for  ".$self->data_level. " time: ".  localtime ."\n";
+    $design_layout_sql = " LEFT JOIN stockprop AS rep ON (observationunit.stock_id=rep.stock_id AND rep.type_id = $rep_type_id)
+        LEFT JOIN stockprop AS block_number ON (observationunit.stock_id=block_number.stock_id AND block_number.type_id = $block_number_type_id)
+        LEFT JOIN stockprop AS plot_number ON (observationunit.stock_id=plot_number.stock_id AND plot_number.type_id = $plot_number_type_id)
+        LEFT JOIN stockprop AS row_number ON (observationunit.stock_id=row_number.stock_id AND row_number.type_id = $row_number_type_id)
+        LEFT JOIN stockprop AS col_number ON (observationunit.stock_id=col_number.stock_id AND col_number.type_id = $col_number_type_id)
+        LEFT JOIN stockprop AS plant_number ON (observationunit.stock_id=plant_number.stock_id AND plant_number.type_id = $plant_number_type_id)
+        LEFT JOIN stockprop AS is_a_control ON (observationunit.stock_id=is_a_control.stock_id AND is_a_control.type_id = $is_a_control_type_id) ";
+    $design_layout_select = " ,rep.value, block_number.value, plot_number.value, is_a_control.value, row_number.value, col_number.value, plant_number.value";
     
     if ($self->exclude_phenotype_outlier) {
         $phenotypeprop_sql = "LEFT JOIN (
