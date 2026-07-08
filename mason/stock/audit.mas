@@ -100,8 +100,8 @@ jQuery(document).ready(function(){
                         jQuery('td',row).css('background-color', 'LightSalmon');
                     }
 
-                }
-                
+                },
+                scrollX: true,
             });
 
             }
