@@ -81,8 +81,8 @@ sub retrieve_stock_audits : Path('/ajax/audit/retrieve_stock_audits'){
     my $c = shift;
     my $stock_id = $c->req->param('stock_id');
     my $q = "SELECT a.audit_ts, 'stock' AS log_source, a.operation, a.username, a.logged_in_user, 
-            CASE WHEN c_b.name IS NOT NULL THEN jsonb_set(a.before, '{type_id}', to_jsonb(c_b.name)) ELSE a.before END AS before, 
-            CASE WHEN c_a.name IS NOT NULL THEN jsonb_set(a.after, '{type_id}', to_jsonb(c_a.name)) ELSE a.after END AS after, 
+            CASE WHEN c_b.name IS NOT NULL THEN jsonb_set(a.before, '{type}', to_jsonb(c_b.name)) - 'type_id' ELSE a.before END AS before, 
+            CASE WHEN c_a.name IS NOT NULL THEN jsonb_set(a.after, '{type}', to_jsonb(c_a.name)) - 'type_id' ELSE a.after END AS after, 
             a.transactioncode, a.stock_audit_id, a.is_undo
         FROM audit.stock_audit a
         LEFT JOIN cvterm c_b ON a.before->>'type_id' = c_b.cvterm_id::text
@@ -90,8 +90,8 @@ sub retrieve_stock_audits : Path('/ajax/audit/retrieve_stock_audits'){
         WHERE a.before->>'stock_id' = ? OR a.after->>'stock_id' = ?
         UNION ALL
         SELECT a.audit_ts, 'stockprop' AS log_source, a.operation, a.username, a.logged_in_user, 
-            CASE WHEN c_b.name IS NOT NULL THEN jsonb_set(a.before, '{type_id}', to_jsonb(c_b.name)) ELSE a.before END AS before, 
-            CASE WHEN c_a.name IS NOT NULL THEN jsonb_set(a.after, '{type_id}', to_jsonb(c_a.name)) ELSE a.after END AS after, 
+            CASE WHEN c_b.name IS NOT NULL THEN jsonb_set(a.before, '{type}', to_jsonb(c_b.name)) - 'type_id' ELSE a.before END AS before, 
+            CASE WHEN c_a.name IS NOT NULL THEN jsonb_set(a.after, '{type}', to_jsonb(c_a.name)) - 'type_id' ELSE a.after END AS after, 
             a.transactioncode, a.stockprop_audit_id, a.is_undo
         FROM audit.stockprop_audit a
         LEFT JOIN cvterm c_b ON a.before->>'type_id' = c_b.cvterm_id::text
