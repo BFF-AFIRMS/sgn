@@ -413,7 +413,9 @@ $dataset_id => undef
                   <option value="" disabled>Data Level</option>
                   <option selected value="all">All</option>
                   <option value="plot">Plots</option>
+                  <option value="subplot">Subplots</option>
                   <option value="plant">Plants</option>
+                  <option value="tissue_sample">Tissue Samples</option>
                 </select>
               </td>
             </tr>
