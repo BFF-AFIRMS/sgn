@@ -201,9 +201,11 @@ sub _validate_with_plugin {
         # Get children (recursively) of root cvterm
         my $ontology = [];
         $ontology = $onto->get_children($root_cvterm_id) if $root_cvterm_id;
+        my $composed_ontology = [];
+        $composed_ontology = $onto->get_children(77547);
 
-        # Build hash of names => cvertm ids
-        my $ontology_terms = _parse_ontology_term($ontology);
+        # Build hash of names => cvterm ids
+        my $ontology_terms = _parse_ontology_term([$ontology, $composed_ontology]);
 
         # Ensure the trait categories are valid ontology terms
         my @missing_categories;

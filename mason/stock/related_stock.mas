@@ -8,8 +8,6 @@ $stock_type => undef
 % if ($stock_type eq 'accession' || $stock_type eq 'plant' || $stock_type eq 'plot' || $stock_type eq 'subplot' || $stock_type eq 'tissue_sample'){
     <&| /page/info_section.mas, id=>'related_stocks_in_trial', title => 'Related stocks in trial', collapsible=>1, collapsed=>1 &>
         <div class="well well-sm">
-            <div class="panel panel-default">
-                <div class="panel-body">
                     <table id = "trial_related_stock" class="table table-hover table-striped">
                         <thead>
                         <tr>
@@ -18,8 +16,6 @@ $stock_type => undef
                         </tr>
                         </thead>
                     </table>
-                </div>
-            </div>
 
             <br>
             <&| /page/info_section.mas, title => 'Copy Stocks to a List', collapsible=>1, collapsed=>1, subtitle=>'<i>Copy the stock names showing in table to a new or exisiting list</i>'&>

@@ -149,7 +149,7 @@ corrInputDataJson <- convertDataFrameToJson(correInputData)
 rownames(correInputData) <- NULL
 
 correInputData <- correInputData %>%
-    select(where(~ n_distinct(.) > 2))
+    select(where(~ n_distinct(.) > 3))
 
 
 coefpvalues <- rcor.test(correInputData,

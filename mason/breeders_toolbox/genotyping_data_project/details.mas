@@ -125,3 +125,11 @@ $trial_owner
         </div>
     </div>
 </div>
+
+% if (-e "mason/projects/trial/$trial_id.mas" ){
+<div class="row" style="margin: 0px">
+        <&| /page/info_section.mas, title=>'Overview', collapsible=>1, collapsed=>0, subtitle=> ""  &>
+            <& "/projects/trial/$trial_id.mas" &>
+        </&>
+</div>
+% }

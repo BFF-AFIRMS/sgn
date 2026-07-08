@@ -34,6 +34,10 @@
   padding: 4px;
   margin-right: 4px;
 }
+
+#stock_search_results thead{
+  white-space: nowrap;
+}
 </style>
 
 <div class="container-fluid">
@@ -265,11 +269,11 @@ my @view_column_options = (@{ $editable_stock_props || [] }, 'organism', 'synony
 
     </&> <!-- closes advanced search -->
 
+    <br/>
     <center>
         <button class="btn btn-default" id="reset_stock_search">Reset</button>
         <button class="btn btn-primary" id="submit_stock_search">Search</button>
     </center>
-    <br/><br/>
   </div>
 </&>
 
@@ -799,7 +803,7 @@ function _load_stock_search_results(stock_type, editable_stockprops_search, stoc
             },
         },
         'stateSave': true,
-        'colReorder': true,
+        'colReorder': false,
         'dom': 'lBfrtip',
         'rowId': 'Stock Id',
         'buttons': [ 'colvis',

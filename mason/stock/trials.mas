@@ -5,10 +5,8 @@ $type_name
 
 <& /util/import_javascript.mas, classes => [ 'jquery', 'jquery.dataTables' ] &>
 
-<div class="panel panel-default">
-	<div class="panel-body panel-body-sm">
 		<b> Trials </b>
-		<br/> <br/>
+		<hr/>
 		<table class="table table-hover table-bordered" id="trial_summary_data">
 			<thead>
 			  <tr>
@@ -18,8 +16,6 @@ $type_name
 			  </tr>
 			</thead>
 		</table>
-	</div>
-</div>
 
 % if ($type_name eq "accession") {
 <div class="panel panel-default">
