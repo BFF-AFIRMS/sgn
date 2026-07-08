@@ -190,14 +190,20 @@ sub check_modify_privileges {
     $user_type ||= '';
 
     if ($user_type eq 'curator') {
+        $self->set_is_owner(1);
 	return 0;
     }
-    if (!$person_id) { $json_hash{login} = 1 ;  }
+    if (!$person_id) {
+        $json_hash{login} = 1;
+        $self->set_json_hash(%json_hash);
+        return 1;
+    }
+
     if ($user_type !~ /submitter|sequencer|curator/) {
         if (!$json_hash{error} ) {
 	    $json_hash{error} = "You must have an account of type submitter to be able to submit data. Please contact SGN to change your account type."; }
 	$self->set_json_hash(%json_hash);
-	return 0;
+	return 1;
     }
     my @owners = $self->get_owners();
 
@@ -205,12 +211,14 @@ sub check_modify_privileges {
 	# check the owner only if the action is not new
 	#
 	$json_hash{error} = "You do not have rights to modify this database entry because you do not own it. [$person_id, @owners]";
-
+        $self->set_json_hash(%json_hash);
+        return 1;
     } else {  $self->set_is_owner(1); }
 
     # override to check privileges for edit, store, delete.
     # return 0 for allow, 1 for not allow.
     $self->set_json_hash(%json_hash);
+    return 0;
 }
 
 =head2 define_object
@@ -298,7 +306,9 @@ sub store {
     my $self = shift;
     my $dont_show_form = shift;
     my %json_hash= $self->get_json_hash();
-    $self->check_modify_privileges();
+    if ($self->check_modify_privileges()) {
+        return 1;
+    }
 
     # for the store we need a properly formatted form so that we can
     # use its validate and store functions.
@@ -328,6 +338,7 @@ sub store {
 	    my $id = $self->get_form()->get_insert_id();
 	    $self->set_object_id($id);
 	}
+        return 0;
     }
     else {
 	# if there was an error, re-display the same forms.
@@ -338,6 +349,7 @@ sub store {
 	$json_hash{html} = $self->get_form()->as_table_string();
 	$self->set_json_hash(%json_hash);
 	#$self->print_json(); #json is printed from the sub-class regardless of the content
+        return 1;
     }
 }
 
