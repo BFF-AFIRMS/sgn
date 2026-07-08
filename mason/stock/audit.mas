@@ -58,7 +58,7 @@ jQuery(document).ready(function(){
             var json_object = JSON.parse(response.stock_match_after);
             var datastring;
             for (var row = 0; row < json_object.length; row++){
-                for (var column = 4; column <= 5; column++){
+                for (var column = 5; column <= 6; column++){
                     datastring = json_object[row][column];
                     if(datastring != null){
                         for(var character = 0; character < datastring.length; character++){
@@ -75,11 +75,12 @@ jQuery(document).ready(function(){
                     json_object[row][column] = datastring;
                 }
             }
-            
+
             jQuery('#stock_audit_results').DataTable({
                 data: json_object,
                 columns: [
                     { title: 'Timestamp' },
+                    { title: 'Source' },
                     { title: 'Operation' },
                     { title: 'Username' },
                     { title: 'Logged in User' },
@@ -90,18 +91,18 @@ jQuery(document).ready(function(){
                     { title: 'Is Undo'},
                 ],
                 "rowCallback" : function (row, data, index){
-                    if(data[1] == "INSERT"){
+                    if(data[2] == "INSERT"){
                         jQuery('td', row).css('background-color', 'HoneyDew');
                     }
-                    if(data[1] == "UPDATE"){
+                    if(data[2] == "UPDATE"){
                         jQuery('td',row).css('background-color', 'LightCyan');
                     }
-                    if(data[1] == "DELETE"){
+                    if(data[2] == "DELETE"){
                         jQuery('td',row).css('background-color', 'LightSalmon');
                     }
 
                 }
-                
+
             });
 
             }
