@@ -48,7 +48,7 @@ use strict;
 use warnings;
 use Carp;
 
-use CXGN::Tools::Text qw | sanitize_string |;
+use CXGN::Tools::Text qw|sanitize_string|;
 
 use CXGN::Page::Form::Static;
 use CXGN::Page::Form::Editable;
@@ -67,7 +67,7 @@ use CXGN::Feed;
 use JSON;
 use YAML;
 
-use base qw /CXGN::Debug/ ;
+use base qw/CXGN::Debug/;
 =head2 new
 
  Usage:        my $s = CXGN::Page::SimpleFormPageSubClass->new();
@@ -96,18 +96,18 @@ sub new {
     __PACKAGE__->SUPER::new();
 
     my $dbh = CXGN::DB::Connection->new();
-    $self->set_ajax_page(CXGN::Scrap::AjaxPage->new() );
+    $self->set_ajax_page(CXGN::Scrap::AjaxPage->new());
 
     $self->{is_owner} = 0;
     $self->set_dbh($dbh);
 
     $self->set_login(CXGN::Login->new($self->get_dbh()));
     my %args = $self->get_ajax_page()->get_all_encoded_arguments("<>&\";"); ##
-    my %json_hash=();
+    my %json_hash = ();
     # sanitize the inputs, we don't want to end up like bobby tables school.
     #
-    foreach my $k (keys (%args)) {
-    	$args{$k} = CXGN::Tools::Text::sanitize_string($args{$k});
+    foreach my $k (keys(%args)) {
+        $args{$k} = CXGN::Tools::Text::sanitize_string($args{$k});
     }
 
     $self->set_args(%args);
@@ -117,39 +117,38 @@ sub new {
     $self->set_action($args{action});
 
     if (!$self->get_action()) {
-	$self->set_action("view");
+        $self->set_action("view");
     }
-    if (!$self->get_object_id && !$args{action} ) {
+    if (!$self->get_object_id && !$args{action}) {
         $self->set_action("new");
     }
-    if (!$self->get_object_id() && $self->get_action()!~/new|store|confirm_store/) {
-	$json_hash{error}='No identifier provided to display data of this page for action view.';
-
+    if (!$self->get_object_id() && $self->get_action() !~ /new|store|confirm_store/) {
+        $json_hash{error} = 'No identifier provided to display data of this page for action view.';
     }
     else {
-	if ($self->get_action()!~/new|view|edit|store|delete|confirm_delete|confirm_store/) {
-	    $json_hash{error}='No identifier provided';
-	}
+        if ($self->get_action() !~ /new|view|edit|store|delete|confirm_delete|confirm_store/) {
+            $json_hash{error} = 'No identifier provided';
+        }
     }
 
     if ($self->get_action() eq "view") {
- 	$self->view();
+        $self->view();
     }
     elsif ($self->get_action() eq "edit") {
- 	$self->edit();
+        $self->edit();
     }
     elsif ($self->get_action() eq "new") {
-	$self->set_object_id(0);
-	my %args = $self->get_args();
-	$args{$self->get_primary_key()}=0;
-	$self->set_args(%args);
-	$self->add();
+        $self->set_object_id(0);
+        my %args = $self->get_args();
+        $args{$self->get_primary_key()} = 0;
+        $self->set_args(%args);
+        $self->add();
     }
     elsif ($self->get_action() eq "store") {
- 	$self->store();
+        $self->store();
     }
     elsif ($self->get_action() eq "confirm_delete") {
-	$self->delete();
+        $self->delete();
     }
     ##action delete is being handled by the JSFormPage javascript object
 
@@ -183,15 +182,15 @@ sub new {
 
 sub check_modify_privileges {
     my $self = shift;
-    my %json_hash= $self->get_json_hash();
+    my %json_hash = $self->get_json_hash();
     # implement quite strict access controls by default
     #
-    my ($person_id, $user_type)=$self->get_login()->has_session();
+    my ($person_id, $user_type) = $self->get_login()->has_session();
     $user_type ||= '';
 
     if ($user_type eq 'curator') {
         $self->set_is_owner(1);
-	return 0;
+        return 0;
     }
     if (!$person_id) {
         $json_hash{login} = 1;
@@ -200,20 +199,22 @@ sub check_modify_privileges {
     }
 
     if ($user_type !~ /submitter|sequencer|curator/) {
-        if (!$json_hash{error} ) {
-	    $json_hash{error} = "You must have an account of type submitter to be able to submit data. Please contact SGN to change your account type."; }
-	$self->set_json_hash(%json_hash);
-	return 1;
+        if (!$json_hash{error}) {
+            $json_hash{error} = "You must have an account of type submitter to be able to submit data. Please contact SGN to change your account type.";
+        }
+        $self->set_json_hash(%json_hash);
+        return 1;
     }
     my @owners = $self->get_owners();
 
-    if ((@owners) && (!(grep { $_ =~ /^$person_id$/ } @owners) )) {
-	# check the owner only if the action is not new
-	#
-	$json_hash{error} = "You do not have rights to modify this database entry because you do not own it. [$person_id, @owners]";
+    if ((@owners) && (!(grep {$_ =~ /^$person_id$/} @owners))) {
+        # check the owner only if the action is not new
+        #
+        $json_hash{error} = "You do not have rights to modify this database entry because you do not own it. [$person_id, @owners]";
         $self->set_json_hash(%json_hash);
         return 1;
-    } else {  $self->set_is_owner(1); }
+    }
+    else {$self->set_is_owner(1);}
 
     # override to check privileges for edit, store, delete.
     # return 0 for allow, 1 for not allow.
@@ -242,7 +243,7 @@ sub check_modify_privileges {
 sub define_object {
     my $self = shift;
 
-    my %json_hash= $self->get_json_hash();
+    my %json_hash = $self->get_json_hash();
     # in the subclass, instantiate your object here and  call
     $self->set_object();
     $self->set_object_id();
@@ -250,10 +251,10 @@ sub define_object {
     $self->set_primary_key();
     $self->set_owners();
 
-    if ( $self->get_object()->get_obsolete() eq 't' ) {
-	$json_hash{error} = "Object is obsolete!";
-	$self->set_json_hash(%json_hash);
-	$self->print_json();
+    if ($self->get_object()->get_obsolete() eq 't') {
+        $json_hash{error} = "Object is obsolete!";
+        $self->set_json_hash(%json_hash);
+        $self->print_json();
     }
 }
 
@@ -305,7 +306,7 @@ sub add {
 sub store {
     my $self = shift;
     my $dont_show_form = shift;
-    my %json_hash= $self->get_json_hash();
+    my %json_hash = $self->get_json_hash();
     if ($self->check_modify_privileges()) {
         return 1;
     }
@@ -318,37 +319,36 @@ sub store {
     # validate the form
     my %errors = $self->get_form()->validate($self->get_args());
     if (!%errors) {
+        #give the user the opportunity to modify, add or remove form parameters before committing them
+        #(this needs to be done after validate() because that assumes it'll have the parameters given on the form as displayed)
+        $self->validate_parameters_before_store();
 
-	#give the user the opportunity to modify, add or remove form parameters before committing them
-	#(this needs to be done after validate() because that assumes it'll have the parameters given on the form as displayed)
-	$self->validate_parameters_before_store();
+        # the form validated. Now let's check if it passes the uniqueness
+        # constraints.
 
-	# the form validated. Now let's check if it passes the uniqueness
-	# constraints.
+        $self->d("**** about to call the get_form->store() ****");
+        $self->get_form()->store($self->get_args());
 
-	$self->d("**** about to call the get_form->store() ****");
-	$self->get_form()->store($self->get_args());
-
-	#give the user the opportunity to do anything related to the form after storing
-	$self->process_parameters_after_store();
+        #give the user the opportunity to do anything related to the form after storing
+        $self->process_parameters_after_store();
 
         # was it an insert? get the insert id
-	#
-	if (!$self->get_object_id()) {
-	    my $id = $self->get_form()->get_insert_id();
-	    $self->set_object_id($id);
-	}
+        #
+        if (!$self->get_object_id()) {
+            my $id = $self->get_form()->get_insert_id();
+            $self->set_object_id($id);
+        }
         return 0;
     }
     else {
-	# if there was an error, re-display the same forms.
-	# the errors will be displayed on the page for each
-	# field that did not validate.
-	#
-	$json_hash{validate} = 1;
-	$json_hash{html} = $self->get_form()->as_table_string();
-	$self->set_json_hash(%json_hash);
-	#$self->print_json(); #json is printed from the sub-class regardless of the content
+        # if there was an error, re-display the same forms.
+        # the errors will be displayed on the page for each
+        # field that did not validate.
+        #
+        $json_hash{validate} = 1;
+        $json_hash{html} = $self->get_form()->as_table_string();
+        $self->set_json_hash(%json_hash);
+        #$self->print_json(); #json is printed from the sub-class regardless of the content
         return 1;
     }
 }
@@ -386,9 +386,9 @@ sub view {
 =cut
 
 sub get_user {
-  my $self=shift;
-  my $person_id = $self->get_login()->has_session();
-  return CXGN::People::Person->new($self->get_dbh(), $person_id);
+    my $self = shift;
+    my $person_id = $self->get_login()->has_session();
+    return CXGN::People::Person->new($self->get_dbh(), $person_id);
 }
 
 =head2 generate_form
@@ -407,9 +407,9 @@ sub get_user {
 
 sub generate_form {
     my $self = shift;
-    my $error=  "Please subclass 'generate_form' function!\n";
+    my $error = "Please subclass 'generate_form' function!\n";
     warn $error;
-    my %json_hash=$self->get_json_hash();
+    my %json_hash = $self->get_json_hash();
     $json_hash{error} = $error;
     $self->set_json_hash(%json_hash);
     $self->print_json();
@@ -433,8 +433,8 @@ sub delete {
     my $self = shift;
     warn "Override 'delete' function in derived class\n";
 
-    my $error="Deleting is not implemented for this object. Override 'delete' function in derived class.";
-    my %json_hash=$self->get_json_hash();
+    my $error = "Deleting is not implemented for this object. Override 'delete' function in derived class.";
+    my %json_hash = $self->get_json_hash();
     $json_hash{error} = $error;
     $self->set_json_hash(%json_hash);
     $self->print_json;
@@ -457,12 +457,12 @@ sub delete {
 =cut
 
 sub display_form {
-    my $self=shift;
-    my %json_hash= $self->get_json_hash();
+    my $self = shift;
+    my %json_hash = $self->get_json_hash();
     # edit links are printed from the javascript object! See JSFormPage.js
     #print $self->get_edit_links();
 
-    if (!($json_hash{html}) ) { $json_hash{html} = $self->get_form()->as_table_string() ; }
+    if (!($json_hash{html})) {$json_hash{html} = $self->get_form()->as_table_string();}
     $self->check_modify_privileges();
 
     $json_hash{"user_type"} = $self->get_user()->get_user_type();
@@ -489,14 +489,14 @@ sub display_form {
 =cut
 
 sub get_ajax_page {
-  my $self=shift;
-  return $self->{ajax_page};
+    my $self = shift;
+    return $self->{ajax_page};
 
 }
 
 sub set_ajax_page {
-  my $self=shift;
-  $self->{ajax_page}=shift;
+    my $self = shift;
+    $self->{ajax_page} = shift;
 }
 
 =head2 get_dbh
@@ -513,14 +513,14 @@ sub set_ajax_page {
 =cut
 
 sub get_dbh {
-  my $self=shift;
-  return $self->{dbh};
+    my $self = shift;
+    return $self->{dbh};
 
 }
 
 sub set_dbh {
-  my $self=shift;
-  $self->{dbh}=shift;
+    my $self = shift;
+    $self->{dbh} = shift;
 }
 
 =head2 get_login
@@ -537,14 +537,14 @@ sub set_dbh {
 =cut
 
 sub get_login {
-  my $self=shift;
-  return $self->{login};
+    my $self = shift;
+    return $self->{login};
 
 }
 
 sub set_login {
-  my $self=shift;
-  $self->{login}=shift;
+    my $self = shift;
+    $self->{login} = shift;
 }
 
 =head2 get_args
@@ -561,15 +561,15 @@ sub set_login {
 =cut
 
 sub get_args {
-  my $self=shift;
-  if (!$self->{args}) { %{$self->{args}} = (); }
-  return %{$self->{args}};
+    my $self = shift;
+    if (!$self->{args}) {%{$self->{args}} = ();}
+    return %{$self->{args}};
 
 }
 
 sub set_args {
-  my $self=shift;
-  %{$self->{args}}=@_;
+    my $self = shift;
+    %{$self->{args}} = @_;
 }
 
 
@@ -587,14 +587,14 @@ sub set_args {
 =cut
 
 sub get_object {
-  my $self=shift;
-  return $self->{object};
+    my $self = shift;
+    return $self->{object};
 
 }
 
 sub set_object {
-  my $self=shift;
-  $self->{object}=shift;
+    my $self = shift;
+    $self->{object} = shift;
 }
 
 =head2 accessors get_object_name, set_object_name
@@ -608,13 +608,13 @@ sub set_object {
 =cut
 
 sub get_object_name {
-  my $self = shift;
-  return $self->{object_name};
+    my $self = shift;
+    return $self->{object_name};
 }
 
 sub set_object_name {
-  my $self = shift;
-  $self->{object_name} = shift;
+    my $self = shift;
+    $self->{object_name} = shift;
 }
 
 
@@ -635,14 +635,14 @@ sub set_object_name {
 =cut
 
 sub get_owners {
-  my $self=shift;
-  return @{$self->{owners}};
+    my $self = shift;
+    return @{$self->{owners}};
 
 }
 
 sub set_owners {
-  my $self=shift;
-  @{$self->{owners}}=@_;
+    my $self = shift;
+    @{$self->{owners}} = @_;
 }
 
 =head2 get_action, set_action
@@ -660,14 +660,14 @@ sub set_owners {
 =cut
 
 sub get_action {
-  my $self=shift;
-  return $self->{action};
+    my $self = shift;
+    return $self->{action};
 
 }
 
 sub set_action {
-  my $self=shift;
-  $self->{action}=shift;
+    my $self = shift;
+    $self->{action} = shift;
 }
 
 
@@ -683,15 +683,14 @@ sub set_action {
 =cut
 
 sub get_primary_key {
-  my $self=shift;
-  return $self->{primary_key};
+    my $self = shift;
+    return $self->{primary_key};
 
 }
 
-
 sub set_primary_key {
-  my $self=shift;
-  $self->{primary_key}=shift;
+    my $self = shift;
+    $self->{primary_key} = shift;
 }
 
 =head2 get_script_name, set_script_name
@@ -707,20 +706,20 @@ sub set_primary_key {
 =cut
 
 sub get_script_name {
-    my $self=shift;
+    my $self = shift;
     if (!exists($self->{script_name})) {
-	#return CXGN::Apache::Request::page_name();
-	return $ENV{SCRIPT_NAME};
+        #return CXGN::Apache::Request::page_name();
+        return $ENV{SCRIPT_NAME};
     }
     else {
-	return $self->{script_name};
+        return $self->{script_name};
     }
 
 }
 
 sub set_script_name {
-    my $self=shift;
-    $self->{script_name}=shift;
+    my $self = shift;
+    $self->{script_name} = shift;
 }
 
 =head2 get_object_id, set_object_id
@@ -735,14 +734,14 @@ sub set_script_name {
 =cut
 
 sub get_object_id {
-  my $self=shift;
-  return $self->{object_id};
+    my $self = shift;
+    return $self->{object_id};
 
 }
 
 sub set_object_id {
-  my $self=shift;
-  $self->{object_id}=shift;
+    my $self = shift;
+    $self->{object_id} = shift;
 }
 
 =head2 get_form, set_form
@@ -762,15 +761,15 @@ sub set_object_id {
 =cut
 
 sub get_form {
-  my $self=shift;
+    my $self = shift;
 
-  return $self->{form};
+    return $self->{form};
 
 }
 
 sub set_form {
-  my $self=shift;
-  $self->{form}=shift;
+    my $self = shift;
+    $self->{form} = shift;
 }
 
 =head2 accessors get_json_hash, set_json_hash
@@ -801,15 +800,15 @@ sub set_form {
 =cut
 
 sub get_json_hash {
-  my $self=shift;
-  if (!$self->{json_hash}) { %{$self->{json_hash}} = (); }
-  return %{$self->{json_hash}};
+    my $self = shift;
+    if (!$self->{json_hash}) {%{$self->{json_hash}} = ();}
+    return %{$self->{json_hash}};
 
 }
 
 sub set_json_hash {
-  my $self=shift;
-  %{$self->{json_hash}}=@_;
+    my $self = shift;
+    %{$self->{json_hash}} = @_;
 }
 
 =head2 accessors get_is_owner, set_is_owner
@@ -823,13 +822,13 @@ sub set_json_hash {
 =cut
 
 sub get_is_owner {
-  my $self = shift;
-  return $self->{is_owner};
+    my $self = shift;
+    return $self->{is_owner};
 }
 
 sub set_is_owner {
-  my $self = shift;
-  $self->{is_owner} = shift;
+    my $self = shift;
+    $self->{is_owner} = shift;
 }
 
 =head2 init_form
@@ -849,14 +848,16 @@ sub init_form {
     my $self = shift;
     my $form_id = shift;
 
-    if ($self->get_action() =~/edit|^store|new/) {
-	$self->set_form( CXGN::Page::Form::Editable -> new({no_buttons=>1, form_id=>$form_id} ) ) ;
+    if ($self->get_action() =~ /edit|^store|new/) {
+        $self->set_form(CXGN::Page::Form::Editable->new({ no_buttons => 1, form_id => $form_id }));
 
-    }elsif ($self->get_action() =~/confirm_store/) {
-	$self->set_form( CXGN::Page::Form::ConfirmStore->new() ) ;
+    }
+    elsif ($self->get_action() =~ /confirm_store/) {
+        $self->set_form(CXGN::Page::Form::ConfirmStore->new());
 
-    }else  {
-	$self->set_form( CXGN::Page::Form::Static -> new() );
+    }
+    else {
+        $self->set_form(CXGN::Page::Form::Static->new());
     }
 
 }
@@ -874,14 +875,14 @@ sub init_form {
 =cut
 
 sub get_request {
-  my $self=shift;
-  return $self->{request};
+    my $self = shift;
+    return $self->{request};
 
 }
 
 sub set_request {
-  my $self=shift;
-  $self->{request}=shift;
+    my $self = shift;
+    $self->{request} = shift;
 }
 
 =head2 validate_parameters_before_store
@@ -931,11 +932,11 @@ sub process_parameters_after_store {
 
 
 sub print_json {
-    my $self=shift;
-    my %results= $self->get_json_hash();
+    my $self = shift;
+    my %results = $self->get_json_hash();
 
-    if ($results{die_error} ) {
-        CXGN::Contact::send_email('AjaxFormPage died',$results{"error"} );
+    if ($results{die_error}) {
+        CXGN::Contact::send_email('AjaxFormPage died', $results{"error"});
     }
     my $json = JSON->new();
     #$self->get_ajax_page()->send_http_header();
@@ -960,45 +961,43 @@ sub print_json {
 =cut
 
 sub send_form_email {
-    my $self   = shift;
-    my $opts=shift;
+    my $self = shift;
+    my $opts = shift;
     $opts ||= {};
-    my $subject=$opts->{subject};
+    my $subject = $opts->{subject};
     my $mailing_list = $opts->{mailing_list};
     my $refering_page_link = $opts->{refering_page};
     my $action = $opts->{action};
 
-    my $user=$self->get_user();
+    my $user = $self->get_user();
 
     my $object_id = $self->get_object_id();
 
     my $username =
         $user->get_first_name() . " "
-	. $user->get_last_name();
+            . $user->get_last_name();
     my $sp_person_id = $user->get_sp_person_id();
 
-
     my $user_link =
-	qq |http://www.sgn.cornell.edu/solpeople/personal-info.pl?sp_person_id=$sp_person_id|;
+        qq|http://www.sgn.cornell.edu/solpeople/personal-info.pl?sp_person_id=$sp_person_id|;
 
     my $usermail = $user->get_private_email();
     my $fdbk_body;
-    if ( $action eq 'delete' ) {
+    if ($action eq 'delete') {
         $fdbk_body =
-	    "$username ($user_link) has obsoleted " . $self->get_object_name() . "  $object_id ($refering_page_link) \n  $usermail";
+            "$username ($user_link) has obsoleted " . $self->get_object_name() . "  $object_id ($refering_page_link) \n  $usermail";
     }
-    elsif ( $object_id == 0 ) {
+    elsif ($object_id == 0) {
         $fdbk_body =
-	    "$username ($user_link) has submitted a new ". $self->get_object_name()  . "   \n$usermail ";
+            "$username ($user_link) has submitted a new " . $self->get_object_name() . "   \n$usermail ";
     }
     else {
         $fdbk_body =
-	    "$username ($user_link) has submitted data for " . $self->get_object_name() ." ($refering_page_link) \n $usermail";
+            "$username ($user_link) has submitted data for " . $self->get_object_name() . " ($refering_page_link) \n $usermail";
     }
 
-    CXGN::Contact::send_email( $subject, $fdbk_body,$mailing_list );
-    CXGN::Feed::update_feed( $subject, $fdbk_body );
+    CXGN::Contact::send_email($subject, $fdbk_body, $mailing_list);
+    CXGN::Feed::update_feed($subject, $fdbk_body);
 }
-
 
 1;
