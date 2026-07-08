@@ -80,13 +80,23 @@ sub retrieve_stock_audits : Path('/ajax/audit/retrieve_stock_audits'){
     my $self = shift;
     my $c = shift;
     my $stock_id = $c->req->param('stock_id');
-    my $q = "SELECT audit_ts, 'stock' AS log_source, operation, username, logged_in_user, before, after, transactioncode, stock_audit_id, is_undo
-        FROM audit.stock_audit
-        WHERE before->>'stock_id' = ? OR after->>'stock_id' = ?
+    my $q = "SELECT a.audit_ts, 'stock' AS log_source, a.operation, a.username, a.logged_in_user, 
+            CASE WHEN c_b.name IS NOT NULL THEN jsonb_set(a.before, '{type_id}', to_jsonb(c_b.name)) ELSE a.before END AS before, 
+            CASE WHEN c_a.name IS NOT NULL THEN jsonb_set(a.after, '{type_id}', to_jsonb(c_a.name)) ELSE a.after END AS after, 
+            a.transactioncode, a.stock_audit_id, a.is_undo
+        FROM audit.stock_audit a
+        LEFT JOIN cvterm c_b ON a.before->>'type_id' = c_b.cvterm_id::text
+        LEFT JOIN cvterm c_a ON a.after->>'type_id' = c_a.cvterm_id::text
+        WHERE a.before->>'stock_id' = ? OR a.after->>'stock_id' = ?
         UNION ALL
-        SELECT audit_ts, 'stockprop' AS log_source, operation, username, logged_in_user, before, after, transactioncode, stockprop_audit_id, is_undo
-        FROM audit.stockprop_audit
-        WHERE before->>'stock_id' = ? OR after->>'stock_id' = ?
+        SELECT a.audit_ts, 'stockprop' AS log_source, a.operation, a.username, a.logged_in_user, 
+            CASE WHEN c_b.name IS NOT NULL THEN jsonb_set(a.before, '{type_id}', to_jsonb(c_b.name)) ELSE a.before END AS before, 
+            CASE WHEN c_a.name IS NOT NULL THEN jsonb_set(a.after, '{type_id}', to_jsonb(c_a.name)) ELSE a.after END AS after, 
+            a.transactioncode, a.stockprop_audit_id, a.is_undo
+        FROM audit.stockprop_audit a
+        LEFT JOIN cvterm c_b ON a.before->>'type_id' = c_b.cvterm_id::text
+        LEFT JOIN cvterm c_a ON a.after->>'type_id' = c_a.cvterm_id::text
+        WHERE a.before->>'stock_id' = ? OR a.after->>'stock_id' = ?
         ORDER BY audit_ts ASC;";
     my $h = $c->dbc->dbh->prepare($q);
     $h->execute($stock_id, $stock_id, $stock_id, $stock_id);
