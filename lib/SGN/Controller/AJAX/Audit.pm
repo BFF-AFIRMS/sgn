@@ -83,9 +83,13 @@ sub retrieve_stock_audits : Path('/ajax/audit/retrieve_stock_audits'){
     my $q = "SELECT audit_ts, operation, username, logged_in_user, before, after, transactioncode, stock_audit_id, is_undo
         FROM audit.stock_audit
         WHERE before->>'stock_id' = ? OR after->>'stock_id' = ?
+        UNION ALL
+        SELECT audit_ts, operation, username, logged_in_user, before, after, transactioncode, stockprop_audit_id, is_undo
+        FROM audit.stockprop_audit
+        WHERE before->>'stock_id' = ? OR after->>'stock_id' = ?
         ORDER BY audit_ts ASC;";
     my $h = $c->dbc->dbh->prepare($q);
-    $h->execute($stock_id, $stock_id);
+    $h->execute($stock_id, $stock_id, $stock_id, $stock_id);
     my @all_audits;
 
     while (my ($audit_ts, $operation, $username, $logged_in_user, $before, $after, $transactioncode, $primary_key, $is_undo) = $h->fetchrow_array) {
