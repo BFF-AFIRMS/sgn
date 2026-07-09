@@ -79,51 +79,42 @@ sub retrieve_table_names : Path('/ajax/audit/retrieve_table_names'){
 sub retrieve_stock_audits : Path('/ajax/audit/retrieve_stock_audits'){
     my $self = shift;
     my $c = shift;
-    my $stock_uniquename = $c->req->param('stock_uniquename');
-    my $q = "SELECT * FROM audit.stock_audit;";
+    my $stock_id = $c->req->param('stock_id');
+    my $q = "SELECT a.audit_ts, 'stock' AS log_source, a.operation, p_b.username AS logged_in_username, 
+            CASE WHEN c_b.name IS NOT NULL THEN jsonb_set(a.before, '{type}', to_jsonb(c_b.name)) - 'type_id' ELSE a.before END AS before, 
+            CASE WHEN c_a.name IS NOT NULL THEN jsonb_set(a.after, '{type}', to_jsonb(c_a.name)) - 'type_id' ELSE a.after END AS after, 
+            a.transactioncode, a.stock_audit_id, a.is_undo
+        FROM audit.stock_audit a
+        LEFT JOIN cvterm c_b ON a.before->>'type_id' = c_b.cvterm_id::text
+        LEFT JOIN cvterm c_a ON a.after->>'type_id' = c_a.cvterm_id::text
+        LEFT JOIN sgn_people.sp_person p_b ON a.logged_in_user = p_b.sp_person_id
+        WHERE a.before->>'stock_id' = ? OR a.after->>'stock_id' = ?
+        UNION ALL
+        SELECT a.audit_ts, 'stockprop' AS log_source, a.operation, p_p.username AS logged_in_username, 
+            CASE WHEN c_b.name IS NOT NULL THEN jsonb_set(a.before, '{type}', to_jsonb(c_b.name)) - 'type_id' ELSE a.before END AS before, 
+            CASE WHEN c_a.name IS NOT NULL THEN jsonb_set(a.after, '{type}', to_jsonb(c_a.name)) - 'type_id' ELSE a.after END AS after, 
+            a.transactioncode, a.stockprop_audit_id, a.is_undo
+        FROM audit.stockprop_audit a
+        LEFT JOIN cvterm c_b ON a.before->>'type_id' = c_b.cvterm_id::text
+        LEFT JOIN cvterm c_a ON a.after->>'type_id' = c_a.cvterm_id::text
+        LEFT JOIN sgn_people.sp_person p_p ON a.logged_in_user = p_p.sp_person_id
+        WHERE a.before->>'stock_id' = ? OR a.after->>'stock_id' = ?
+        ORDER BY audit_ts ASC;";
+
     my $h = $c->dbc->dbh->prepare($q);
-    $h->execute();
+    $h->execute($stock_id, $stock_id, $stock_id, $stock_id);
     my @all_audits;
-    my @before;
-    my @after;
-    my $counter = 0;
 
-    while (my ($audit_ts, $operation, $username, $logged_in_user, $before, $after, $transactioncode, $primary_key, $is_undo) = $h->fetchrow_array) {
-        $after[$counter] = $after;
-        $before[$counter] = $before;
-        $all_audits[$counter] = [$audit_ts, $operation, $username, $logged_in_user, $before, $after, $transactioncode, $primary_key, $is_undo];
-        $counter++;
-        }
+    while (my ($audit_ts, $log_source, $operation, $logged_in_username, $before, $after, $transactioncode, $primary_key, $is_undo) = $h->fetchrow_array) {
+        # Ensure UTF-8 encoding for text fields to prevent encoding issues
+        $before = defined $before ? Encode::decode('UTF-8', $before, Encode::FB_DEFAULT) : "";
+        $after  = defined $after  ? Encode::decode('UTF-8', $after, Encode::FB_DEFAULT)  : "";
 
-    
-    my @matches;
-    for (my $i = 0; $i < $counter; $i++) {
-        my $operation = $all_audits[$i][1];
-        my $stock_json_string;
-
-        eval {
-            my $json_text = ($operation eq "DELETE") ? $before[$i] : $after[$i];
-
-            # Convert Perl Unicode string to UTF-8 encoded bytes before decoding JSON
-            $json_text = Encode::encode('UTF-8', $json_text);
-            $stock_json_string = decode_json($json_text);
-        };
-        if ($@) {
-            warn "Failed to decode JSON at index $i: $@";
-            next; # Skip this iteration in case of error
-        }
-
-        my $desired_uniquename = $stock_json_string->{'uniquename'};
-        if ($stock_uniquename eq $desired_uniquename) {
-            push @matches, $all_audits[$i];
-        }
+        push @all_audits, [$audit_ts, $log_source, $operation, $logged_in_username // '', $before, $after, $transactioncode, $primary_key, $is_undo];
     }
 
-    my $stock_match_json;
-    $stock_match_json = encode_json(\@matches);
-
     $c->stash->{rest} = {
-        stock_match_after => $stock_match_json,
+        stock_match_after => encode_json(\@all_audits)
     }
 };
 

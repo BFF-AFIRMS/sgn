@@ -49,10 +49,10 @@ $stock_id
 
 
 jQuery(document).ready(function(){
-    var stock_uniquename = "<% $stock_uniquename %>";
+    var stock_id = "<% $stock_id %>";
         jQuery.ajax({
             url: '/ajax/audit/retrieve_stock_audits',
-            data: {'stock_uniquename':stock_uniquename},
+            data: {'stock_id':stock_id},
             timeout: 300000,
             success: function(response){
             var json_object = JSON.parse(response.stock_match_after);
@@ -75,13 +75,13 @@ jQuery(document).ready(function(){
                     json_object[row][column] = datastring;
                 }
             }
-            
+
             jQuery('#stock_audit_results').DataTable({
                 data: json_object,
                 columns: [
                     { title: 'Timestamp' },
+                    { title: 'Source' },
                     { title: 'Operation' },
-                    { title: 'Username' },
                     { title: 'Logged in User' },
                     { title: 'Before' },
                     { title: 'After' },
@@ -90,13 +90,14 @@ jQuery(document).ready(function(){
                     { title: 'Is Undo'},
                 ],
                 "rowCallback" : function (row, data, index){
-                    if(data[1] == "INSERT"){
+                    const operation = data[2];
+                    if (operation === "INSERT"){
                         jQuery('td', row).css('background-color', 'HoneyDew');
                     }
-                    if(data[1] == "UPDATE"){
+                    if (operation === "UPDATE"){
                         jQuery('td',row).css('background-color', 'LightCyan');
                     }
-                    if(data[1] == "DELETE"){
+                    if (operation === "DELETE"){
                         jQuery('td',row).css('background-color', 'LightSalmon');
                     }
 
