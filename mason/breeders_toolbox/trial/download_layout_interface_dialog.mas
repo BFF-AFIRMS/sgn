@@ -106,6 +106,12 @@ $trial_stock_type => undef
                                 <input id="create_fieldbook_include_measured_<% $download_type %>" type="checkbox" data-toggle="toggle" />
                             </div>
                             <div class="layout-item">
+                                <label>Missing measurement format: </label>
+                                <select class="form-control" id="create_fieldbook_missing_format_<% $download_type %>">
+                                    <& /breeders_toolbox/trial/missing_phenotypes_options.mas &>
+                                </select>
+                            </div>
+                            <div class="layout-item" style="display:none">
                                 <label>Include summary of overall accession performance (for a list of traits): </label>
                                 <div id="create_fieldbook_with_trait_list_<% $download_type %>"></div>
                             </div>
@@ -552,11 +558,12 @@ function open_create_fieldbook_dialog_<% $download_type %>() {
     var include_plot_order = jQuery('#create_fieldbook_include_plot_order_<% $download_type %>').prop('checked');
     var plot_order = jQuery('#create_fieldbook_plot_order_<% $download_type %>').val();
     var plot_start = jQuery('#create_fieldbook_plot_start_<% $download_type %>').val();
+    var missing_format = jQuery('#create_fieldbook_missing_format_<% $download_type %>').val();
     console.log(format);
     //Calls SGN::Controller:BreedersToolbox::Trial
     for ( let i = 0; i < trial_ids.length; i++ ) {
         let trial_id = parseInt(trial_ids[i]);
-        window.open("/breeders/trial/"+trial_id+"/download/layout?format="+format+"&dataLevel="+data_level+"&treatments="+treatments+"&selected_columns="+selected_columns+"&trait_list_id="+trait_list_id+"&include_measured="+include_measurements+"&include_plot_order="+include_plot_order+"&plot_order="+plot_order+"&plot_start="+plot_start);
+        window.open("/breeders/trial/"+trial_id+"/download/layout?format="+format+"&dataLevel="+data_level+"&treatments="+treatments+"&selected_columns="+selected_columns+"&trait_list_id="+trait_list_id+"&include_measured="+include_measurements+"&include_plot_order="+include_plot_order+"&plot_order="+plot_order+"&plot_start="+plot_start+"&missing_format="+missing_format);
     }
 }
 

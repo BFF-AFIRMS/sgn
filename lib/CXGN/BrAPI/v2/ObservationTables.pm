@@ -51,6 +51,7 @@ sub search {
         folder_list=>$folder_ids_arrayref,
         program_list=>$program_ids_arrayref,
         plot_list=>$plot_ids_arrayref,
+        missing_format=>'undef',
         # phenotype_min_value=>$phenotype_min_value,
         # phenotype_max_value=>$phenotype_max_value,
         # exclude_phenotype_outlier=>$exclude_phenotype_outlier
@@ -134,6 +135,7 @@ sub search_observationunit_tables {
         folder_list=>$folder_ids_arrayref,
         program_list=>$program_ids_arrayref,
         plot_list=>$plot_ids_arrayref,
+        missing_format=>'undef',
         # phenotype_min_value=>$phenotype_min_value,
         # phenotype_max_value=>$phenotype_max_value,
         # exclude_phenotype_outlier=>$exclude_phenotype_outlier

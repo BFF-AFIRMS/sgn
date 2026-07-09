@@ -42,7 +42,16 @@
                 </div>
             </div>
 
-<&| /page/info_section.mas, title=>"Additional Search Options",  collapsible => 1, collapsed=>1 &>
+<&| /page/info_section.mas, title=>"Additional Search Options",  collapsible => 1, collapsed=>1, id => "download_trials_phenotypes_additional_options" &>
+
+            <div class="form-group">
+                <label class="col-sm-7 control-label">Missing measurement format: </label>
+                <div class="col-sm-5">
+                    <select class="form-control" id="download_trials_phenotypes_missing_format">
+                        <& /breeders_toolbox/trial/missing_phenotypes_options.mas &>
+                    </select>
+                </div>
+            </div>
 
             <div class="form-group">
                 <label class="col-sm-7 control-label">For repeated measurements, return the </label>
@@ -212,6 +221,7 @@ jQuery(document).ready(function() {
         var intercrop_accessions = jQuery("#download_trials_phenotypes_intercrop_accessions_option").val();
         var entry_numbers = jQuery("#download_trials_phenotypes_entry_numbers_option").val();
         var trait_synonyms = jQuery("#download_trials_phenotypes_trait_synonyms_option").val();
+        var missing_format = jQuery("#download_trials_phenotypes_missing_format").val();
         var traits = [];
         
         if (jQuery("#download_trials_phenotypes_traits_list_select").val()) {
@@ -231,7 +241,7 @@ jQuery(document).ready(function() {
         }
 
         if (selected.length !== 0) {
-            window.open("/breeders/trials/phenotype/download?trial_list="+JSON.stringify(trial_id_array)+"&format="+format+"&timestamp="+timestamp+"&trait_contains="+JSON.stringify(trait_contains_array)+"&trait_list="+JSON.stringify(traits)+"&accession_list="+JSON.stringify(accessions)+"&plot_list="+JSON.stringify(plots)+"&plant_list="+JSON.stringify(plants)+"&dataLevel="+data_level+"&phenotype_min_value="+phenotype_min_value+"&phenotype_max_value="+phenotype_max_value+"&exclude_phenotype_outlier="+exclude_phenotype_outlier+"&repetitive_measurements="+repetitive_measurements+"&intercrop="+intercrop_accessions+"&entry_numbers="+entry_numbers+"&trait_synonyms="+trait_synonyms);
+            window.open("/breeders/trials/phenotype/download?trial_list="+JSON.stringify(trial_id_array)+"&format="+format+"&timestamp="+timestamp+"&trait_contains="+JSON.stringify(trait_contains_array)+"&trait_list="+JSON.stringify(traits)+"&accession_list="+JSON.stringify(accessions)+"&plot_list="+JSON.stringify(plots)+"&plant_list="+JSON.stringify(plants)+"&dataLevel="+data_level+"&phenotype_min_value="+phenotype_min_value+"&phenotype_max_value="+phenotype_max_value+"&exclude_phenotype_outlier="+exclude_phenotype_outlier+"&repetitive_measurements="+repetitive_measurements+"&intercrop="+intercrop_accessions+"&entry_numbers="+entry_numbers+"&trait_synonyms="+trait_synonyms+"&missing_format="+missing_format);
         }
         else { alert("No leaf nodes selected for download."); }
     });

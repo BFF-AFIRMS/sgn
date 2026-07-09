@@ -7,17 +7,19 @@ Shared::Genotypes - Shared functions for testing genotypes
 package Shared::Genotypes;
 use strict;
 use warnings;
-use Exporter qw(import); # Inherit the standard import routine
+use Exporter qw(import);
 use LWP::UserAgent;
 use JSON;
 
-our @ISA= qw( Exporter );
-
-# Possible exports
-our @EXPORT_OK = qw( create_tissue_sample_genotypes upload_tissue_sample_genotypes $upload_tissue_sample_genotypes $vcf_expected_accessions $vcf_expected_tissue_samples );
-
 # Default exports
-our @EXPORT = qw( create_tissue_sample_genotypes upload_tissue_sample_genotypes $upload_tissue_sample_genotypes $vcf_expected_accessions $vcf_expected_tissue_samples );
+our @EXPORT = qw/
+    create_tissue_sample_genotypes
+    upload_tissue_sample_genotypes
+    get_file_newer_than_timestamp
+    $upload_tissue_sample_genotypes
+    $vcf_expected_accessions
+    $vcf_expected_tissue_samples
+/;
 
 # Shared header between VCF files
 my $vcf_header = '##INFO=<ID=VCFDownload, Description="VCF file for testing uploading genotypes using tissue samples">
@@ -155,3 +157,27 @@ sub upload_tissue_sample_genotypes {
 
     return $response
 }
+
+# Locate a file that is newer than the given timestamp.
+# Useful when downloading genotype data through the UI,
+# to find the correct output since it's dynamically named.
+sub get_file_newer_than_timestamp {
+     my ($pattern, $time_stamp, $max_attempts) = @_;
+
+    my $num_attempts = 0;
+    my $file_path;
+    while(!$file_path && $num_attempts < $max_attempts){
+        # find a file that is newer than the timestamp in epoch seconds
+        my @downloaded_file_list = `find $pattern -type f -newermt "\@$time_stamp"`;
+        my $num_files = scalar(@downloaded_file_list);
+        $file_path = $num_files > 0 ? $downloaded_file_list[0] : undef;
+        $num_attempts += 1;
+        sleep(1);
+    }
+    if (defined($file_path)){
+        chomp($file_path);
+    }
+    return $file_path;
+}
+
+1;

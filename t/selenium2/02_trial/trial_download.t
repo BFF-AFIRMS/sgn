@@ -6,6 +6,10 @@ use SGN::Test::Fixture;
 use Selenium::Firefox::Profile;
 use Text::CSV;
 use SGN::Model::Cvterm;
+use File::Slurp qw(read_file);
+
+use Shared::Phenotypes;
+use CXGN::Phenotypes::Missing;
 
 my $f = SGN::Test::Fixture->new();
 my $t = SGN::Test::WWW::WebDriver->new();
@@ -72,7 +76,8 @@ $t->while_logged_in_as("curator", sub {
 
     # Upload a trial using the progeny
     my $trial_csv_content = "plot_name,accession_name,plot_number,block_number,is_a_control,rep_number,range_number,row_number,col_number\n";
-    $trial_csv_content .= "DownloadParentsPlot1,$progeny_name,1,1,0,1,1,1,1\n";
+    $trial_csv_content .= "DownloadParentsPlot$suffix,$progeny_name,1,1,0,1,1,1,1\n";
+    $trial_csv_content .= "MissingPhenotypesPlot$suffix,$progeny_name,2,1,0,2,1,1,2\n";
 
     my $trial_csv_path = "/tmp/trial_parents_test_$suffix.csv";
     open(my $fh_csv, '>', $trial_csv_path) or die $!;
@@ -146,8 +151,145 @@ $t->while_logged_in_as("curator", sub {
 
     close $fh;
     unlink $trial_csv_path;
+
+    # -------------------------------------------------------------------------
+    # Download missing measurements format
+    # -------------------------------------------------------------------------
+
+    my @missing_formats;
+
+    # Add phenotypes for us to test expected vs observed values
+    $t->get_ok('/breeders/trial/' . $trial_id, "Navigate to new trial detail page");
+    $t->wait_for_network_idle();
+
+    # Add a phenotype to the plot DownloadParentsPlot
+    my $phenotype_value = "10";
+    $t->click_ok("direct_phenotyping_link", "id", "Open direct phenotyping page");
+    $t->click_ok("//select[\@id='plot_name']/option[\@value='DownloadParentsPlot$suffix']", 'xpath', "Select plot name");
+    $t->click_ok('//select[@id="select_traits_for_trait_file"]/option[@title="fresh root weight|CO_334:0000012"]', 'xpath', "Select fresh root weight");
+    $t->send_keys_ok("select_pheno_value", "id", $phenotype_value, "enter phenotype value");
+    $t->click_ok("pagetitle", "id", "click elsewhere to finalize entry");
+    $t->find_element_ok('//div[@id="success-trial-phenotype" and not(contains(@style, "display: none"))]', "xpath", "wait for success indicator");
+
+    my $plot_1_id = $schema->resultset("Stock::Stock")->find({ uniquename => "DownloadParentsPlot$suffix" })->stock_id();
+    my $plot_2_id = $schema->resultset("Stock::Stock")->find({ uniquename => "MissingPhenotypesPlot$suffix" })->stock_id();
+    my $progeny_id = $schema->resultset("Stock::Stock")->find({ uniquename => $progeny_name })->stock_id();
+
+    # Build our expected values for each missing format
+    foreach my $format (@DOWNLOAD_MISSING_FORMATS) {
+        my $char = $MISSING_FORMATS{$format};
+
+        my $expected_csv = '"plot_name","plot_id","accession_name","plot_number","block_number","is_a_control","rep_number","row_number","col_number","fresh root weight|CO_334:0000012"
+        "DownloadParentsPlot' . $suffix . '","' . $plot_1_id . '","' . $progeny_name . '","1","1","","1","1","1","' . $phenotype_value . '"
+        "MissingPhenotypesPlot' . $suffix . '","' . $plot_2_id . '","' . $progeny_name . '","2","1","","2","1","2","' . $char . '"';
+        # Trim leading whitespace
+        $expected_csv =~ s/^[ ]+//mg;
+        my @expected = split "\n", $expected_csv;
+        my @data = ($format, $char, \@expected);
+
+        push(@missing_formats, \@data);
+    }
+
+    # -------------------------------------------------------------------------
+    # Trial -> Experimental Design -> Download Layout
+
+    $t->get_ok('/breeders/trial/' . $trial_id, "Navigate to new trial detail page");
+    $t->wait_for_network_idle();
+
+    # Expand the Experimental Design section to make the download button visible and clickable
+    $t->click_ok('trial_design_section_onswitch', 'id', "Expand experimental design section");
+    $t->wait_for_network_idle();
+    $t->click_ok('trial_download_layout_button', 'id', "Open download layout dialog");
+    $t->click_ok('//input[@id="create_fieldbook_include_measured_TrialLayout"]/parent::*//label[contains(@class, "toggle-off")]', 'xpath', "Click include phenotypes");
+
+    # Test all download formats have the expected values
+    for my $format (@missing_formats){
+        my ($value, $char, $expected) = @$format;
+        my $layout_download_path = "/selenium/downloads/${trial_name}_layout.csv";
+        my $observed = download_missing_phenotypes_csv(
+            $t,
+            'create_fieldbook_missing_format_TrialLayout', # select id
+            $value,                                        # select value
+            'create_fieldbook_ok_button_TrialLayout',      # submit id
+            $layout_download_path,                         # path file will be downloaded to
+        );
+        is_deeply($observed, $expected, 'download layout file has expected values');
+    }
+
+    # -------------------------------------------------------------------------
+    # Trial -> Phenotype Summary Statistics -> Download Trial Data
+
+    # Update our expected values for this download format
+    for my $i (0 .. $#missing_formats) {
+        my $char = $missing_formats[$i][1];
+
+        my $expected_csv = '"studyYear","programDbId","programName","programDescription","studyDbId","studyName","studyDescription","studyDesign","plotWidth","plotLength","fieldSize","fieldTrialIsPlannedToBeGenotyped","fieldTrialIsPlannedToCross","plantingDate","harvestDate","locationDbId","locationName","germplasmDbId","germplasmName","germplasmSynonyms","observationLevel","observationUnitDbId","observationUnitName","replicate","blockNumber","plotNumber","rowNumber","colNumber","entryType","plantNumber","fresh root weight|CO_334:0000012","notes"
+        "2024","134","test","test","' . $trial_id . '","' . $trial_name . '","Test layout download with parents","CRD","","","","no","no","","","23","test_location","' . $progeny_id . '","' . $progeny_name . '","","plot","' . $plot_1_id . '","DownloadParentsPlot' . $suffix . '","1","1","1","1","1","test","","10",""
+        "2024","134","test","test","' . $trial_id . '","' . $trial_name . '","Test layout download with parents","CRD","","","","no","no","","","23","test_location","' . $progeny_id . '","' . $progeny_name . '","","plot","' . $plot_2_id . '","MissingPhenotypesPlot' . $suffix . '","2","1","2","1","2","test","","' . $char . '",""';
+
+        # Trim leading whitespace
+        $expected_csv =~ s/^[ ]+//mg;
+        my @expected = split "\n", $expected_csv;
+        $missing_formats[$i][2] = \@expected
+    }
+
+    $t->get_ok('/breeders/trial/' . $trial_id, "Navigate to new trial detail page");
+    $t->wait_for_network_idle();
+
+    # Expand the Phenotype Summary Statistics section to make the download button visible and clickable
+    $t->click_ok('trial_detail_traits_assayed_onswitch', 'id', "Expand phenotype summary statistics section");
+    $t->wait_for_network_idle();
+
+    $t->click_ok('trial_download_phenotypes_button', 'id', 'click download trial data button');
+    $t->click_ok('//select[@id="download_trial_phenotypes_traits_select"]/option[contains(@title, "fresh root weight")]', 'xpath', "Select fresh root weight");
+    $t->click_ok('download_trial_phenotypes_additional_options_onswitch', 'id', 'Open additional search options');
+
+    # Test all download formats have the expected values
+    for my $format (@missing_formats){
+        my ($value, $char, $expected) = @$format;
+        my $phenotypes_download_path = "/selenium/downloads/${trial_name}_phenotypes.csv";
+        my $observed = download_missing_phenotypes_csv(
+            $t,
+            'download_trial_phenotypes_missing_format', # select id
+            $value,                                     # select value
+            'download_trial_phenotypes_submit_button',  # submit id
+            $phenotypes_download_path,                  # path file will be downloaded to
+        );
+        # Keep only the last three lines which are the header and data
+        my @observed = splice(@$observed, -3);
+        is_deeply(\@observed, $expected, 'download trial data file has expected values');
+    }
+
+    # -------------------------------------------------------------------------
+    # Manage -> Trials -> Download Phenotypes
+
+    # This has the same format as the previous, use those expected values
+
+    $t->get_ok('/breeders/trials/', "Navigate to manage trials page");
+    $t->wait_for_network_idle();
+    $t->click_ok('//i[contains(@class, "jstree-icon")]', 'xpath', 'Expand trial tree');
+    $t->click_ok($trial_name, 'partial_link_text', 'Select trial in tree');
+    $t->click_ok('trials_download_phenotypes_button', 'id', 'Click download phenotypes button');
+
+    $t->click_ok('download_trials_phenotypes_additional_options_onswitch', 'id', 'Open additional search options');
+
+    # Test all download formats have the expected values
+    for my $format (@missing_formats){
+        my ($value, $char, $expected) = @$format;
+        my $phenotypes_download_path = "/selenium/downloads/${trial_name}_phenotypes.csv";
+        my $observed = download_missing_phenotypes_csv(
+            $t,
+            'download_trials_phenotypes_missing_format', # select id
+            $value,                                      # select value
+            'download_trials_phenotypes_submit_button',  # submit id
+            $phenotypes_download_path,                   # path file will be downloaded to
+        );
+        # Keep only the last three lines which are the header and data
+        my @observed = splice(@$observed, -3);
+        is_deeply(\@observed, $expected, 'download trials data file has expected values');
+    }
 });
 
-$t->driver->close();
+$t->driver->quit();
 $f->clean_up_db();
 done_testing();

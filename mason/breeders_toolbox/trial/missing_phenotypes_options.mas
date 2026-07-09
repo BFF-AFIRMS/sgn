@@ -1,0 +1,8 @@
+<%init>
+use CXGN::Phenotypes::Missing;
+
+for my $format (@DOWNLOAD_MISSING_FORMATS ){
+    my $selected = $format eq 'empty' ? 'selected' : '';
+    print "<option value='$format' $selected>$format</option>";
+}
+</%init>

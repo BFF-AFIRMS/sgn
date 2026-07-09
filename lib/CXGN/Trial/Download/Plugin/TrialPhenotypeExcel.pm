@@ -100,6 +100,7 @@ sub download {
     my $phenotype_start_date = $self->start_date();
     my $phenotype_end_date = $self->end_date();
     my $repetitive_measurements = $self->repetitive_measurements();
+    my $missing_format = $self->missing_format();
 
 
     $self->trial_download_log($trial_id, "trial phenotypes");
@@ -137,7 +138,8 @@ sub download {
             include_trait_synonyms=>$include_trait_synonyms,
             phenotype_start_date => $phenotype_start_date,
             phenotype_end_date => $phenotype_end_date,
-            repetitive_measurements => $repetitive_measurements
+            repetitive_measurements => $repetitive_measurements,
+            missing_format => $missing_format,
         );
         @data = $phenotypes_search->get_phenotype_matrix();
     }

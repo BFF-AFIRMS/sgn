@@ -138,3 +138,7 @@ div.wizard-panel .panel-body {
 .btn.wizard-btn-tag {
   pointer-events: none;
 }
+
+#wiz-down-1-c td, #wiz-down-3-c td {
+  white-space: normal;
+}

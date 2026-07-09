@@ -761,7 +761,8 @@ sub studies_table {
 		trial_list=>\@trial_ids_array,
 		trait_list=>\@trait_ids_array,
 		include_timestamp=>1,
-        exclude_phenotype_outlier=>$exclude_phenotype_outlier
+		exclude_phenotype_outlier=>$exclude_phenotype_outlier,
+		missing_format=>'undef',
 	);
 	my @data = $phenotypes_search->get_phenotype_matrix();
 	#print STDERR Dumper \@data;

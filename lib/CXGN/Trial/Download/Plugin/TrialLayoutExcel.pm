@@ -87,6 +87,7 @@ sub download {
         include_plot_order => $self->include_plot_order,
         plot_order => $self->plot_order,
         plot_start => $self->plot_start,
+        missing_format => $self->missing_format,
     });
     my $output = $trial_layout_download->get_layout_output();
     if ($output->{error_messages}){
