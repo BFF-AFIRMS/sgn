@@ -80,7 +80,7 @@ sub retrieve_stock_audits : Path('/ajax/audit/retrieve_stock_audits'){
     my $self = shift;
     my $c = shift;
     my $stock_id = $c->req->param('stock_id');
-    my $q = "SELECT a.audit_ts, 'stock' AS log_source, a.operation, a.username, p_b.username AS logged_in_username, 
+    my $q = "SELECT a.audit_ts, 'stock' AS log_source, a.operation, p_b.username AS logged_in_username, 
             CASE WHEN c_b.name IS NOT NULL THEN jsonb_set(a.before, '{type}', to_jsonb(c_b.name)) - 'type_id' ELSE a.before END AS before, 
             CASE WHEN c_a.name IS NOT NULL THEN jsonb_set(a.after, '{type}', to_jsonb(c_a.name)) - 'type_id' ELSE a.after END AS after, 
             a.transactioncode, a.stock_audit_id, a.is_undo
@@ -90,7 +90,7 @@ sub retrieve_stock_audits : Path('/ajax/audit/retrieve_stock_audits'){
         LEFT JOIN sgn_people.sp_person p_b ON a.logged_in_user = p_b.sp_person_id
         WHERE a.before->>'stock_id' = ? OR a.after->>'stock_id' = ?
         UNION ALL
-        SELECT a.audit_ts, 'stockprop' AS log_source, a.operation, a.username, p_p.username AS logged_in_username, 
+        SELECT a.audit_ts, 'stockprop' AS log_source, a.operation, p_p.username AS logged_in_username, 
             CASE WHEN c_b.name IS NOT NULL THEN jsonb_set(a.before, '{type}', to_jsonb(c_b.name)) - 'type_id' ELSE a.before END AS before, 
             CASE WHEN c_a.name IS NOT NULL THEN jsonb_set(a.after, '{type}', to_jsonb(c_a.name)) - 'type_id' ELSE a.after END AS after, 
             a.transactioncode, a.stockprop_audit_id, a.is_undo
@@ -105,12 +105,12 @@ sub retrieve_stock_audits : Path('/ajax/audit/retrieve_stock_audits'){
     $h->execute($stock_id, $stock_id, $stock_id, $stock_id);
     my @all_audits;
 
-    while (my ($audit_ts, $log_source, $operation, $username, $logged_in_username, $before, $after, $transactioncode, $primary_key, $is_undo) = $h->fetchrow_array) {
+    while (my ($audit_ts, $log_source, $operation, $logged_in_username, $before, $after, $transactioncode, $primary_key, $is_undo) = $h->fetchrow_array) {
         # Ensure UTF-8 encoding for text fields to prevent encoding issues
         $before = defined $before ? Encode::decode('UTF-8', $before, Encode::FB_DEFAULT) : "";
         $after  = defined $after  ? Encode::decode('UTF-8', $after, Encode::FB_DEFAULT)  : "";
 
-        push @all_audits, [$audit_ts, $log_source, $operation, $username, $logged_in_username // '', $before, $after, $transactioncode, $primary_key, $is_undo];
+        push @all_audits, [$audit_ts, $log_source, $operation, $logged_in_username // '', $before, $after, $transactioncode, $primary_key, $is_undo];
     }
 
     my $stock_match_json = encode_json(\@all_audits);
