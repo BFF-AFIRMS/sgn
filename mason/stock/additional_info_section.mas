@@ -74,7 +74,7 @@ $original_stock_link
 
 <div class="panel panel-default">
     <div class="panel-body panel-body-sm">
-        <b>Stock editors: </b>
+        <b>Stock owners: </b>
         <br/>
         <% $editor_link %>
     </div>
