@@ -113,11 +113,8 @@ sub retrieve_stock_audits : Path('/ajax/audit/retrieve_stock_audits'){
         push @all_audits, [$audit_ts, $log_source, $operation, $logged_in_username // '', $before, $after, $transactioncode, $primary_key, $is_undo];
     }
 
-    my $stock_match_json = encode_json(\@all_audits);
-    utf8::encode($stock_match_json); # Convert to UTF-8 bytes
-
     $c->stash->{rest} = {
-        stock_match_after => $stock_match_json,
+        stock_match_after => encode_json(\@all_audits)
     }
 };
 
