@@ -720,16 +720,18 @@ solGS.cluster = {
     this.clusterResult(clusterArgs);
   },
 
-  clusteringOptions: function (clusterPopId) {
+  clusteringOptions: function (clusterPopId, context) {
     var clusterTypeId = this.clusterTypeSelectId(clusterPopId);
     var kNumId = this.clusterKnumSelectId(clusterPopId);
     var dataTypeId = this.clusterDataTypeSelectId(clusterPopId);
     var selectionPropId = this.clusterSelPropSelectId(clusterPopId);
 
-    var dataType = jQuery("#" + dataTypeId).val() || "genotype";
-    var clusterType = jQuery("#" + clusterTypeId).val() || "k-means";
-    var kNumber = jQuery("#" + kNumId).val() || 'default';
-    var selectionProp = jQuery("#" + selectionPropId).val();
+    var $ctx = context ? jQuery(context) : jQuery(document);
+
+    var dataType = $ctx.find("#" + dataTypeId).val() || "genotype";
+    var clusterType = $ctx.find("#" + clusterTypeId).val() || "k-means";
+    var kNumber = $ctx.find("#" + kNumId).val() || 'default';
+    var selectionProp = $ctx.find("#" + selectionPropId).val();
 
     if (typeof kNumber === "string") {
       kNumber = kNumber.replace(/\s+/g, "");
@@ -1227,7 +1229,8 @@ jQuery(document).ready(function () {
 
       var clusterOptsId = "cluster_options";
       var clusterPopId = solGS.cluster.getClusterPopId(selectedId, dataStr);
-      var clusterOpts = solGS.cluster.clusteringOptions(clusterPopId);
+      var row = jQuery(e.target).closest("tr");
+      var clusterOpts = solGS.cluster.clusteringOptions(clusterPopId, row);
 
       var clusterArgs = {
         selected_id: selectedId,
