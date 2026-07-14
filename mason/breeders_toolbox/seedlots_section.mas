@@ -51,6 +51,7 @@ jQuery(document).ready(function(){
                 { title: "Material Type", "data": "material_type"},
                 { title: "", "data": "seedlot_stock_uniquename"}
             ],
+            scrollX: true,
         });
 
         seedlots_table.draw();
