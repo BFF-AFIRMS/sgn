@@ -471,9 +471,7 @@ jQuery(document).ready(function () {
                 $group.find('.range-row-error').hide();
             }
             
-            if (minVal !== '' || maxVal !== '') {
-                ranges_values.push(minVal + ',' + maxVal);
-            }
+            ranges_values.push(minVal + ',' + maxVal);
         });
 
         editable_stockprops_search[prop]["value"] = ranges_values.join(';');
@@ -582,8 +580,12 @@ jQuery(document).ready(function () {
             current_val = ',';
         }
         const ranges = current_val.split(';');
+        console.log("prev ranges: ", ranges);
         ranges.splice(index + 1, 0, ',');
+        console.log("new ranges: ", ranges);
         editable_stockprops_search[prop]["value"] = ranges.join(';');
+        console.log("prev: ", current_val);
+        console.log("new: ", editable_stockprops_search[prop]["value"]);
         _draw_editable_stockprops_search_fields();
     });
 
