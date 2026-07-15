@@ -580,12 +580,8 @@ jQuery(document).ready(function () {
             current_val = ',';
         }
         const ranges = current_val.split(';');
-        console.log("prev ranges: ", ranges);
         ranges.splice(index + 1, 0, ',');
-        console.log("new ranges: ", ranges);
         editable_stockprops_search[prop]["value"] = ranges.join(';');
-        console.log("prev: ", current_val);
-        console.log("new: ", editable_stockprops_search[prop]["value"]);
         _draw_editable_stockprops_search_fields();
     });
 
