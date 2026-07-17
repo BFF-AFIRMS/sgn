@@ -18,7 +18,7 @@ $editable_stock_props_definitions
     <div class="modal-content">
       <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="addAccessionsDialog">Add Accessions</h4>
+        <h4 class="modal-title" id="addAccessionsDialog">Add UIs</h4>
       </div>
       <div class="modal-body">
         <div class="container-fluid">
@@ -34,7 +34,7 @@ $editable_stock_props_definitions
                     <hr>
                     <form class="form-horizontal" role="form" name="new_accessions_form" id="new_accessions_form">
                         <div class="form-group">
-                            <label class="col-sm-4 control-label">Choose a List of Accessions to Add: </label>
+                            <label class="col-sm-4 control-label">Choose a List of UIs to Add: </label>
                             <div class="col-sm-8" id="list_div" name="list_div">
                             </div>
                         </div>
@@ -53,7 +53,7 @@ $editable_stock_props_definitions
                                 <input type="checkbox" id="fuzzy_check" name="fuzzy_check" checked disabled></input>
 % }
                                 <br/>
-                                <small>Note: Use the fuzzy search to match similar names to prevent uploading of duplicate accessions. Fuzzy searching is much slower than regular search. </small>
+                                <small>Note: Use the fuzzy search to match similar names to prevent uploading of duplicate UIs. Fuzzy searching is much slower than regular search. </small>
                             </div>
                         </div>
                     </form>
@@ -93,7 +93,7 @@ $editable_stock_props_definitions
 %#                                <input type="checkbox" id="fuzzy_check_upload_accessions" name="fuzzy_check_upload_accessions" checked disabled></input>
 %# }
                                 <br/>
-                                <small>Note: Use the fuzzy search to match similar names to prevent uploading of duplicate accessions. Fuzzy searching is much slower than regular search. Only a curator can disable the fuzzy search.</small>
+                                <small>Note: Use the fuzzy search to match similar names to prevent uploading of duplicate UIs. Fuzzy searching is much slower than regular search. Only a curator can disable the fuzzy search.</small>
                             </div>
                         </div>
                         <div class="form-group">
@@ -101,21 +101,21 @@ $editable_stock_props_definitions
                             <div class="col-sm-8">
                                 <input type="checkbox" id="append_synonyms" name="append_synonyms" checked />
                                 <br />
-                                <small>When checked, add synonyms of existing accession entries to the synonyms already stored in the database.  When not checked, remove any existing synonyms of existing accession entries and store only the synonyms in the upload file.</small>
+                                <small>When checked, add synonyms of existing UI entries to the synonyms already stored in the database.  When not checked, remove any existing synonyms of existing UI entries and store only the synonyms in the upload file.</small>
                             </div>
                         </div>
                         <div class="form-group">
-                            <label class="col-sm-4 control-label">Create Accession List:</label>
+                            <label class="col-sm-4 control-label">Create UI List:</label>
                             <div class="col-sm-8">
                                 <input type="checkbox" id="create_accession_list" name="create_accession_list" />
                                 <br />
-                                <small>When checked, automatically create a new accession list with the accessions in your upload file.</small>
+                                <small>When checked, automatically create a new UI list with the UIs in your upload file.</small>
                                 <input id="create_accession_list_name" name="create_accession_list_name" class='form-control input-sm' placeholder='New List Name' />
                             </div>
                         </div>
                     </form>
 
-                    <& /help/file_upload_type.mas, type => "Accessions", optional_column => 1 &>
+                    <& /help/file_upload_type.mas, type => "UI", optional_column => 1 &>
 
                 </div>
 
@@ -136,7 +136,7 @@ $editable_stock_props_definitions
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="uploadAccessionsInfoDialog">Upload Accessions Template Information</h4>
+                <h4 class="modal-title" id="uploadAccessionsInfoDialog">Upload UIs Template Information</h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
@@ -163,7 +163,7 @@ $editable_stock_props_definitions
 
                     <b>Comma Separated Fields:</b>
                     <ul>
-                    <li>The following fields can take comma-separated values to indicate there are several values for the accession: organization_name, synonym
+                    <li>The following fields can take comma-separated values to indicate there are several values for the UI: organization_name, synonym
 %  foreach my $editable_stockprop (sort keys %$editable_stock_props) {
 %                   print ", $editable_stockprop";
 %  }
@@ -172,14 +172,14 @@ $editable_stock_props_definitions
 
                     <b>Required Fields:</b>
                     <ul>
-                    <li>accession_name (must be unique)</li>
+                    <li>UI name (must be unique)</li>
                     <li>species_name (must exist in the database)</li>
                     </ul>
                     <b>Optional Fields:</b>
                     <ul>
 		    <li>description - a free text description of the stock.</li>
-                    <li>population_name (a population is a grouping of accessions. If the population already exists in the database, the accession will be added to it; otherwise, a new population will be created). Multiple populations can be specified, using the pipe symbol (|) as the separator (for example, pop1|pop2|pop3)</li>
-                    <li>synonym (an accession can be known by many names including local popular names. a synonym name can be used instead of the accession_name throughout the database; because of this, synonyms must themselves be unique. e.g. accession_synonym1,accession_synonym001)</li>
+                    <li>population_name (a population is a grouping of UIs. If the population already exists in the database, the UI will be added to it; otherwise, a new population will be created). Multiple populations can be specified, using the pipe symbol (|) as the separator (for example, pop1|pop2|pop3)</li>
+                    <li>synonym (a UI can be known by many names including local popular names. a synonym name can be used instead of the accession_name throughout the database; because of this, synonyms must themselves be unique. e.g. UI_synonym1,UI_synonym001)</li>
 %  foreach my $editable_stockprop (sort keys %$editable_stock_props) {
 %    if (exists($editable_stock_props_definitions->{$editable_stockprop})) {
 %                   print "<li>$editable_stockprop (".$editable_stock_props_definitions->{$editable_stockprop}.")</li>";
@@ -189,7 +189,7 @@ $editable_stock_props_definitions
 %  }
                     </ul>
                 </div>
-                <& /help/file_upload_type.mas, type => "Accessions", optional_column => 1 &>
+                <& /help/file_upload_type.mas, type => "UI", optional_column => 1 &>
             </div>
             <div class="modal-footer">
                 <button id="close_trial_upload_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
@@ -203,21 +203,21 @@ $editable_stock_props_definitions
     <div class="modal-content ui-front">
       <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="reviewAbsentDialog">Accessions to be Added</h4>
+        <h4 class="modal-title" id="reviewAbsentDialog">UIs to be Added</h4>
       </div>
       <div class="modal-body">
         <div class="container-fluid">
             <div id="add_accessions_using_list_inputs" style="display:none">
-                <label for="species_name_input">Species name for added accessions</label>
+                <label for="species_name_input">Species name for added UIs</label>
                 <input class="form-control" type="text" id="species_name_input" value="<% $preferred_species %>"></input>
                 <br><br>
-                <label for="population_name_input">Population name for added accessions (optional)</label>
+                <label for="population_name_input">Population name for added UIs (optional)</label>
                 <input class="form-control" type="text" id="population_name_input"></input>
                 <br><br>
-                <label for="organization_name_input">Organization name for added accessions (optional)</label>
+                <label for="organization_name_input">Organization name for added UIs (optional)</label>
                 <input class="form-control" type="text" id="organization_name_input"></input>
                 <br><br>
-                <b>The following accessions are new and will be added to the database:</b>
+                <b>The following UIs are new and will be added to the database:</b>
                 <div id="count_of_absent_accessions"></div>
                 <br>
                 <div id="view_absent"></div>
@@ -227,7 +227,7 @@ $editable_stock_props_definitions
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-	<button type="button" class="btn btn-primary" name="review_absent_accessions_submit" id="review_absent_accessions_submit">Add Accessions</button>
+	<button type="button" class="btn btn-primary" name="review_absent_accessions_submit" id="review_absent_accessions_submit">Add UIs</button>
       </div>
     </div>
   </div>
@@ -242,7 +242,7 @@ $editable_stock_props_definitions
       </div>
       <div class="modal-body">
         <div class="container-fluid">
-    	  <b>Accessions were found with similar names.</b>
+    	  <b>UIs were found with similar names.</b>
   	  <br/><br/>
   	  <div id="view_fuzzy_matches"></div>
         </div>
@@ -260,11 +260,11 @@ $editable_stock_props_definitions
     <div class="modal-content">
       <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="reviewFoundDialog">Found Accessions</h4>
+        <h4 class="modal-title" id="reviewFoundDialog">Found UIs</h4>
       </div>
       <div class="modal-body">
         <div class="container-fluid">
-    	  <b>The following accessions already exist in the database:</b>
+    	  <b>The following UIs already exist in the database:</b>
   	  <div id="count_of_found_accessions"></div>
   	  <br/>
   	  <div id="view_found_matches"></div>
@@ -282,7 +282,7 @@ $editable_stock_props_definitions
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="addAccessionsSavedDialog">Accessions Saved</h4>
+                <h4 class="modal-title" id="addAccessionsSavedDialog">UIs Saved</h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">

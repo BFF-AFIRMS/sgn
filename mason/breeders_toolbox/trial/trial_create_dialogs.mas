@@ -1,4 +1,3 @@
-
 <%args>
 $locations
 $breeding_programs
@@ -69,10 +68,10 @@ rect.bordered {
                         <&| /util/workflow.mas, id=> "trial_design_workflow" &>
                             <&| /util/workflow.mas:step, title=> "Intro" &>
                                 <& /page/page_title.mas, title=>"This workflow will guide you through designing a new trial in the database" &>
-                                <p>A field trial represents a field where each plot has a globally unique plot name, a sequential plot number that is unique in the trial (e.g. 101, 102, 103 for three separate plots), and an accession representing the genotype being tested in that plot. In cases where crosses/families are being evaluated (e.g. F1 hybrid, backcrossing), cross unique ids or family names can be used instead of accessions. Each plot can belong to different blocks and reps depending on the experimental design you are using (e.g. complete block vs augmented design). Each plot can have a row number and col number indicating the relative position of the plot in the field.</p>
+                                <p>A field trial represents a field where each plot has a globally unique plot name, a sequential plot number that is unique in the trial (e.g. 101, 102, 103 for three separate plots), and an UI representing the genotype being tested in that plot. In cases where crosses/families are being evaluated (e.g. F1 hybrid, backcrossing), cross unique ids or family names can be used instead of UIs. Each plot can belong to different blocks and reps depending on the experimental design you are using (e.g. complete block vs augmented design). Each plot can have a row number and col number indicating the relative position of the plot in the field.</p>
                                 <p>To design a trial you need to provide a globally unique trial name. The plot names will be generated based on the trial name you provide (e.g. if the trial name is 2018MyTrial, plot_names will be generated like 2018MyTrial_101, 2018MyTrial_102, etc).</p>
-                                <p>You also need to provide a list of accessions, cross unique ids or family names to use. Based on the design you have picked, the accessions, cross unique ids or family names will be randomized over the blocks or replicates in the trial.</p>
-                                <p>You can provide a list of accessions to use as controls or checks in your experiment.</p>
+                                <p>You also need to provide a list of UIs, cross unique ids or family names to use. Based on the design you have picked, the UIs, cross unique ids or family names will be randomized over the blocks or replicates in the trial.</p>
+                                <p>You can provide a list of UIs to use as controls or checks in your experiment.</p>
                                 <p>Depending on the design you have picked, you will need to provide different design parameters (e.g. for complete block you will need to provide number of blocks, while for alpha lattice you will need to provide block size and number of replicates.).</p>
                                 <p>A trial can represent a yield trial, a phenotyping trial, a crossing block, a greenhouse, a nursery, etc.</p>
                                 <p>A plot can have many plants, which the database can track as separate entities, allowing you to record plant level observations and information.</p>
@@ -305,7 +304,7 @@ rect.bordered {
                                     <div class="col-sm-9">
                                         <select class="form-control" id="select_stock_type">
                                             <option value="">Select a stock type</option>
-                                            <option value="accession">accession</option>
+                                            <option value="accession">UI</option>
                                             <option value="cross">cross</option>
                                             <option value="family_name">family_name</option>
                                         </select>
@@ -368,9 +367,9 @@ rect.bordered {
                                 <& /page/page_title.mas, title=>"Design your trial layout" &>
                                 <div class="well well-sm">
                                     <div class="form-group form-group-sm" id="show_list_of_accession_section" >
-                                        <center><h4>Which accessions will be in the field?</h4></center>
+                                        <center><h4>Which UIs will be in the field?</h4></center>
                                         <hr>
-                                        <label class="col-sm-7 control-label">List of accessions to include (required):</label>
+                                        <label class="col-sm-7 control-label">List of UIs to include (required):</label>
                                         <div class="col-sm-5" id="select_list" name="select_list">
                                         </div>
                                     </div>
@@ -416,22 +415,22 @@ rect.bordered {
                                         </div>
                                     </div>
                                     <div class="form-group form-group-sm" id="crbd_show_list_of_checks_section" style="display: none" >
-                                        <label class="col-sm-7 control-label">List of checks to include. Checks list should be separate from accessions list. (optional): </label>
+                                        <label class="col-sm-7 control-label">List of checks to include. Checks list should be separate from UIs list. (optional): </label>
                                         <div class="col-sm-5" id="crbd_list_of_checks_section" >
                                         </div>
                                     </div>
                                     <div class="form-group form-group-sm" id="crbd_show_list_of_cross_checks_section" style="display: none" >
-                                        <label class="col-sm-7 control-label">List of checks to include. Checks list should be accessions list. (optional): </label>
+                                        <label class="col-sm-7 control-label">List of checks to include. Checks list should be UIs list. (optional): </label>
                                         <div class="col-sm-5" id="crbd_list_of_cross_checks_section" >
                                         </div>
                                     </div>
                                     <div class="form-group form-group-sm" id="crbd_show_list_of_family_name_checks_section" style="display: none" >
-                                        <label class="col-sm-7 control-label">List of checks to include. Checks list should be accessions list. (optional): </label>
+                                        <label class="col-sm-7 control-label">List of checks to include. Checks list should be UIs list. (optional): </label>
                                         <div class="col-sm-5" id="crbd_list_of_family_name_checks_section" >
                                         </div>
                                     </div>
                                     <div class="form-group form-group-sm" id="show_list_of_unrep_accession" style="display: none" >
-                                        <label class="col-sm-7 control-label">List of unreplicated accession (required):</label>
+                                        <label class="col-sm-7 control-label">List of unreplicated UI (required):</label>
                                         <div class="col-sm-5" id="list_of_unrep_accession"  >
                                         </div>
                                     </div>
@@ -446,7 +445,7 @@ rect.bordered {
                                         </div>
                                     </div>
                                     <div class="form-group form-group-sm" id="show_list_of_rep_accession" style="display: none" >
-                                        <label class="col-sm-7 control-label">List of replicated accession (required): </label>
+                                        <label class="col-sm-7 control-label">List of replicated UI (required): </label>
                                         <div class="col-sm-5" id="list_of_rep_accession" >
                                         </div>
                                     </div>
@@ -483,7 +482,7 @@ rect.bordered {
                                     </div>
                                 </div>
                                 <div class="form-group form-group-sm" id="show_no_of_rep_times" style="display: none" >
-                                    <label class="col-sm-7 control-label">Number of times replicated accessions are replicated: </label>
+                                    <label class="col-sm-7 control-label">Number of times replicated UIs are replicated: </label>
                                     <div class="col-sm-5"  >
                                         <div class="input-group">
                                             <span class="input-group-addon"><i class="glyphicon glyphicon-qrcode"></i></span>
@@ -666,7 +665,7 @@ rect.bordered {
                                             <center><h4>Which seedlots will you grow in the field? <br/><small>This is optional and can be decided later. If you do not know exactly which seedlot packets you will be planting at this time, you can add this information on the Trial Detail Page after the trial has been saved in the database.</small></h4></center>
                                             <hr>
                                             <div class="form-group form-group-sm" id="show_list_of_seedlots_section" >
-                                                <label class="col-sm-7 control-label">List of seedlots for selected accessions (optional):</label>
+                                                <label class="col-sm-7 control-label">List of seedlots for selected UIs (optional):</label>
                                                 <div class="col-sm-5" id="select_seedlot_list" name="select_seedlot_list">
                                                 </div>
                                             </div>
@@ -676,7 +675,7 @@ rect.bordered {
                                                     <input type="number" class="form-control" id="num_seed_per_plot" name="num_seed_per_plot" />
                                                 </div>
                                             </div>
-                                            <center>Need a list of seedlots for the selected accessions?&nbsp;&nbsp;&nbsp;&nbsp;<button name="convert_accessions_to_seedlots" class="btn btn-default btn-sm" style="margin:6px 0px 0px 0px" type="button" >Search Seedlots for Accessions</button></center>
+                                            <center>Need a list of seedlots for the selected UIs?&nbsp;&nbsp;&nbsp;&nbsp;<button name="convert_accessions_to_seedlots" class="btn btn-default btn-sm" style="margin:6px 0px 0px 0px" type="button" >Search Seedlots for UIs</button></center>
                                         </div>
                                     </div>
 
@@ -768,7 +767,7 @@ rect.bordered {
 
                                 <div id="field_map_options" >
                                     <!--<div class="form-group form-group-sm" >
-                                        <label class="col-sm-7 control-label">Number of columns per row (uses accession number by default): </label>
+                                        <label class="col-sm-7 control-label">Number of columns per row (uses UI number by default): </label>
                                         <div class="col-sm-5" >
                                             <input type="text" class="form-control" id="fieldMap_col_number" name="fieldMap_col_number" />
                                         </div>
@@ -952,19 +951,19 @@ Development Core Team, 2009).</p></center>
                         <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
                         <b>Design Parameters:</b>
                         </h4>
-                            <center><p> The parameters will consider a sample partially replicated design trial with 200 unreplicated accessions, 119 accessions replicated 4 times, 26 rows in design, 26 columns in design, bock sequence of 13 by 2 (13, 2) i.e 2 blocks with each having 13 rows; sub-block sequence of block of 13 by 1 (13, 1) i.e 1 sub-block with each having 13 rows in each block. </p></center>
+                            <center><p> The parameters will consider a sample partially replicated design trial with 200 unreplicated UIs, 119 UIs replicated 4 times, 26 rows in design, 26 columns in design, bock sequence of 13 by 2 (13, 2) i.e 2 blocks with each having 13 rows; sub-block sequence of block of 13 by 1 (13, 1) i.e 1 sub-block with each having 13 rows in each block. </p></center>
 
                         <dl>
-                            <dt>List of Unreplicated Accession</dt>
+                            <dt>List of Unreplicated UI</dt>
                             <ul>
                                 <li>
-                                    <dd> You're expected to provide the list of unreplicated accessions in this selectbox. E.g. is a list of 200 accessions.</dd>
+                                    <dd> You're expected to provide the list of unreplicated UIs in this selectbox. E.g. is a list of 200 UIs.</dd>
                                 </li>
                             </ul>
-                            <dt>List of Replicated Accession</dt>
+                            <dt>List of Replicated UI</dt>
                             <ul>
                                 <li>
-                                    <dd>List of replicated accessions should be provided in this selectbox. E.g. is a list of 119 accessions.</dd>
+                                    <dd>List of replicated UIs should be provided in this selectbox. E.g. is a list of 119 UIs.</dd>
                                 </li>
                             </ul>
                             <dt>Number of rows in design</dt>
@@ -979,10 +978,10 @@ Development Core Team, 2009).</p></center>
                                     <dd> Provide the number of columns you want to have in the design. E.g. 26 number of columns. </dd>
                                 </li>
                             </ul>
-                            <dt>Number of Times Replicated Accessions are Replicated</dt>
+                            <dt>Number of Times Replicated UIs are Replicated</dt>
                             <ul>
                                 <li>
-                                    <dd>Provide the number of times you want the replicated accessions to be replicated. E.g. 4</dd>
+                                    <dd>Provide the number of times you want the replicated UIs to be replicated. E.g. 4</dd>
                                 </li>
                             </ul>
                             <dt>Block Sequence</dt>
@@ -1008,7 +1007,7 @@ Development Core Team, 2009).</p></center>
                                 <dd>The product of the number of rows and columns in the design should equal the total number of plots.</dd>
                             </li>
                             <li>
-                                <dd>The sum of the unreplicated accessions and the replicated accessions (given the number of times it was replicated) should equal the total number of plots. </dd>
+                                <dd>The sum of the unreplicated UIs and the replicated UIs (given the number of times it was replicated) should equal the total number of plots. </dd>
                             </li>
                         </ul>
                         </dt></dl>

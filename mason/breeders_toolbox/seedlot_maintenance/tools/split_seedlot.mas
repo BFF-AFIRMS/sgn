@@ -7,7 +7,7 @@
         <h5 class="panel-title">Split Seedlot</h5>
     </div>
     <div class="panel-body">
-        <p>This tool will split an existing Seedlot - keeping the existing Seedlot and creating a new one with the same Accession as the contents.</p>
+        <p>This tool will split an existing Seedlot - keeping the existing Seedlot and creating a new one with the same UI as the contents.</p>
 
         <br />
 
@@ -53,7 +53,7 @@
                     <div class="form-group">
                         <label class="col-sm-3 control-label" style="text-align: right">Contents</label>
                         <div class="col-sm-9">
-                            <input class="form-control" id="seedlot_split_new_contents" type="text" value="" placeholder="Required, must be an existing Accession name">
+                            <input class="form-control" id="seedlot_split_new_contents" type="text" value="" placeholder="Required, must be an existing UI name">
                         </div>
                     </div>
 
@@ -458,7 +458,7 @@
             return displayError("Box name required!");
         }
         if ( !data.seedlot_accession_uniquename || data.seedlot_accession_uniquename === "" ) {
-            return displayError("Seedlot Contents / Accession required!");
+            return displayError("Seedlot Contents / UI required!");
         }
         if ( !data.seedlot_breeding_program_id || data.seedlot_breeding_program_id === "" ) {
             return displayError("Breeding Program required!");

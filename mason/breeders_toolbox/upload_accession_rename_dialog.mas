@@ -10,7 +10,7 @@
       </div>
       <div class="modal-body">
         <div class="container-fluid">
-          <input type="checkbox" checked id="store_old_name_as_synonym" />&nbsp;Store old names as synonyms of the accessions</div>
+          <input type="checkbox" checked id="store_old_name_as_synonym" />&nbsp;Store old names as synonyms of the UIs</div>
  	<table class="table table-hover">
     	  <tbody></tbody>
   	</table>
@@ -35,7 +35,7 @@
       </div>
       <div class="modal-body">
         <div class="container-fluid">
- 	  <h2>The accession renaming list upload was successful.</h2>
+ 	  <h2>The UI renaming list upload was successful.</h2>
 	  
 	  Successfully renamed:<br />
 	  <div class="bg-success" id="list_of_uploaded_rename_accessions">
@@ -60,7 +60,7 @@
     <div class="modal-content">
       <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="uploadRenameAccessionsDialog">Upload Rename Accessions Information</h4>
+        <h4 class="modal-title" id="uploadRenameAccessionsDialog">Upload Rename UIs Information</h4>
       </div>
       <div class="modal-body">
         <div class="container-fluid">
@@ -73,7 +73,7 @@
   	  </&>
 
   	  <form method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_rename_accessions_form" name="upload_rename_accessions_form">
-    	    <label for="rename_accession_uploaded_file" style="display: inline-block; width: 300px;">Upload Rename Accessions File:</label>
+    	    <label for="rename_accession_uploaded_file" style="display: inline-block; width: 300px;">Upload Rename UIs File:</label>
     	    <input type="file" name="rename_accessions_uploaded_file" id="rename_accessions_uploaded_file" encoding="multipart/form-data" />
     	  </form>
         </div>
@@ -95,7 +95,7 @@
       </div>
       <div class="modal-body">
         <div class="container-fluid">
- 	  <b>Accession renaming information may be uploaded in tab-delimited text file format</b>
+ 	  <b>UI renaming information may be uploaded in tab-delimited text file format</b>
 	  <br>
 	  <p>(.xls or .xlsx formats are <b>NOT</b> supported)</p>
 	  <hr>
@@ -125,4 +125,3 @@
     </div>
   </div>
 </div>
-

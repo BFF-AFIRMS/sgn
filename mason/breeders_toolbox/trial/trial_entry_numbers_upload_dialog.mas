@@ -1,4 +1,3 @@
-
 <%args>
 $trial_id => undef
 $trial_name => undef
@@ -28,9 +27,9 @@ $trial_name => undef
             </tbody>
           </table>
           <b>Column Definitions:</b><br>
-          <b>accession_name:</b> (required) the unique name of the Accession record, must exist in the database<br>
+          <b>accession_name:</b> (required) the unique name of the UI record, must exist in the database<br>
           <b>trial_names:</b> (required) the name(s) of the Trials to assign entry numbers in (can include more than one comma-separated Trial name)<br>
-          <b>entry_number:</b> The entry number to assign to the Accession in all of the specified Trial(s).  The entry number should be unique in this set of Trial(s).<br>
+          <b>entry_number:</b> The entry number to assign to the UI in all of the specified Trial(s).  The entry number should be unique in this set of Trial(s).<br>
           <br>
           <form method="post" enctype="multipart/form-data" encoding="multipart/form-data" id="upload_entry_numbers_form" name="upload_entry_numbers_form">
             <label for="upload_entry_numbers_file" style="display: inline-block;">Entry Numbers File:</label>

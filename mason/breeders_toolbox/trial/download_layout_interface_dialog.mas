@@ -1,4 +1,3 @@
-
 <%args>
 $trial_id => undef
 $trial_name => undef
@@ -112,7 +111,7 @@ $trial_stock_type => undef
                                 </select>
                             </div>
                             <div class="layout-item" style="display:none">
-                                <label>Include summary of overall accession performance (for a list of traits): </label>
+                                <label>Include summary of overall UI performance (for a list of traits): </label>
                                 <div id="create_fieldbook_with_trait_list_<% $download_type %>"></div>
                             </div>
                             <div class="layout-item">
@@ -391,15 +390,15 @@ function show_available_columns_<% $download_type %>(level){
         'col_number': { label: 'Col Number', desc: 'The column number that this plot is in. If you partition the field into a grid, this would be the horizontal position (x coordinate). Not all trials have this information saved.' },
         'family_name': { label: 'Family Name', desc: 'The family name which was planted in the plot.' },
         'cross_unique_id': { label: 'Cross Unique ID', desc: 'The cross unique id which was planted in the plot.' },
-        'accession_name': { label: 'Accession Name', desc: 'The accession name which was planted in the plot.' },
+        'accession_name': { label: 'UI Name', desc: 'The UI name which was planted in the plot.' },
         'is_a_control': { label: 'Is a Control', desc: 'This is either 1 or 0, meaning that the plot is a control in the experiment or not.' },
-        'synonyms': { label: 'Synonyms', desc: 'Accession names can have many synonyms. Synonyms are useful for capturing locally used accession names.' },
+        'synonyms': { label: 'Synonyms', desc: 'UI names can have many synonyms. Synonyms are useful for capturing locally used UI names.' },
         'trial_name': { label: 'Trial Name', desc: 'The trial name that the plot is in will appear.' },
         'location_name': { label: 'Location Name', desc: 'The location that this trial is in will appear.' },
         'year': { label: 'Year', desc: 'The year that this trial occured will appear.' },
-        'pedigree': { label: 'Pedigree', desc: 'The pedigree of the accession which was planted in the plot will appear. Only shows parents.' },
-        'female_parent': { label: 'Female Parent', desc: 'The female parent of the accession which was planted in the plot.' },
-        'male_parent': { label: 'Male Parent', desc: 'The male parent of the accession which was planted in the plot.' },
+        'pedigree': { label: 'Pedigree', desc: 'The pedigree of the UI which was planted in the plot will appear. Only shows parents.' },
+        'female_parent': { label: 'Female Parent', desc: 'The female parent of the UI which was planted in the plot.' },
+        'male_parent': { label: 'Male Parent', desc: 'The male parent of the UI which was planted in the plot.' },
         'tier': { label: 'Tier', desc: 'A combined view of row_number/col_number. If the field is drawn as a grid, the row_number is the y coordinate and the col_number is the x coordinate.' },
         'seedlot_name': { label: 'Seedlot Name', desc: 'The source seedlot_name from which the plot was planted. Not all trials have this information saved.' },
         'seed_transaction_operator': { label: 'Seed Transaction Operator', desc: 'The operator who created the seedlot_transaction between the seedlot and the plot. The seedlot_name indicates the source from which the plot was planted. Not all trials have this information saved.' },

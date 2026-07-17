@@ -1,4 +1,3 @@
-
 <%args>
 
 
@@ -12,8 +11,8 @@
 <dt><a href="/breeders/manage_programs">Breeding Programs</a></dt>
 <dd>Add new breeding program information.</dd>
 
-<dt><a href="/breeders/accessions">Accessions</a></dt>
-<dd>Manage accessions. Add new accessions using fuzzy matching.</dd>
+<dt><a href="/breeders/accessions">UI</a></dt>
+<dd>Manage UI. Add new UI using fuzzy matching.</dd>
 
 <dt><a href="/breeders/trials">Field Trials</a></dt>
 <dd>Manage trials. Add new trials and create field layouts.</dd>
@@ -28,19 +27,16 @@
 <dd>Create new crosses.</dd>
 
 <dt><a href="/breeders/phenotyping">Phenotyping</a></dt>
-<dd>Upload phenotype information for accessions in the database.</dd>
+<dd>Upload phenotype information for UI in the database.</dd>
 
 <dt><a href="/fieldbook">Fieldbook</a><dt>
 <dd>Create files for the Android Fieldbook app, upload files from Fieldbook to the database.
 
 <dt><a href="/barcode">Barcodes</a></dt>
-<dd>Download barcodes for accessions and plots.</dd>
+<dd>Download barcodes for UI and plots.</dd>
 
 <dt><a href="/breeders/download">Download Data</a></dt>
 <dd>Download phenotypic and genotypic data by trial, triat and location.</dd>
 
 </div>
-
-
-
 

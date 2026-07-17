@@ -1,4 +1,3 @@
-
 <%args>
 $seedlot_id
 $uniquename
@@ -210,7 +209,7 @@ $default_seedlot_material_type => undef
                                                             <div class="panel-body">
                                                                 <div class="form-group">
 % if ($content_accession_name){
-                                                                    <label class="col-sm-3 control-label">Accession name: </label>
+                                                                    <label class="col-sm-3 control-label">UI name: </label>
                                                                     <div class="col-sm-9" >
                                                                         <input class="form-control" id="transaction_new_seedlot_accession_uniquename" disabled value="<% $content_accession_name %>">
                                                                     </div>
@@ -408,7 +407,7 @@ $default_seedlot_material_type => undef
                             <div class="panel panel-default">
                                 <div class="panel-body">
                                     <div class="form-group">
-                                        <label class="col-sm-3 control-label">Accession name: </label>
+                                        <label class="col-sm-3 control-label">UI name: </label>
                                         <div class="col-sm-9" >
                                             <input class="form-control" id="edit_seedlot_details_accession" value="<% $content_accession_name %>">
                                         </div>
@@ -593,10 +592,10 @@ $default_seedlot_material_type => undef
                 to_new_seedlot_quality = jQuery('#transaction_new_seedlot_quality').val();
 
                 if (to_new_seedlot_accession_name == '' && to_new_seedlot_cross_name == '') {
-                    alert("Please provide an accession name or a cross unique id as the content of the seedlot."); return;
+                    alert("Please provide a UI name or a cross unique id as the content of the seedlot."); return;
                 }
                 if (to_new_seedlot_accession_name != '' && to_new_seedlot_cross_name != '') {
-                    alert("Please provide an accession name OR a cross unique id as the content of the seedlot. Not both."); return;
+                    alert("Please provide a UI name OR a cross unique id as the content of the seedlot. Not both."); return;
                 }
                 if (to_new_seedlot_location_name == ''){
                     alert("Please provide a location for new seedlot."); return;
@@ -773,10 +772,10 @@ $default_seedlot_material_type => undef
         } else if (location == ''){
             alert('Location must not be blank');
         } else if (accession == '' && cross == '') {
-            alert("Please provide an accession name or a cross unique id as the content of the seedlot."); return;
+            alert("Please provide a UI name or a cross unique id as the content of the seedlot."); return;
         }
         else if (accession != '' && cross != '') {
-            alert("Please provide an accession name OR a cross unique id as the content of the seedlot. Not both."); return;
+            alert("Please provide a UI name OR a cross unique id as the content of the seedlot. Not both."); return;
         } else if (material_type == ''){
             alert('Please select a material type');
         }

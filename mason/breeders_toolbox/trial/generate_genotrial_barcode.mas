@@ -26,7 +26,7 @@ $plate_id=> ''
                     <& /util/barcode.mas, identifier => "$identifier", trial_id=> "$trial_id", trial_name=> "$trial_name", format=>"trial_qrcode"  &>
                     </div>
                 <p>
-                    <button type="button" class="btn btn-primary" name="geno_trial_accession_barcode" id="geno_trial_accession_barcode">Accessions Barcode</button>
+                    <button type="button" class="btn btn-primary" name="geno_trial_accession_barcode" id="geno_trial_accession_barcode">UIs Barcode</button>
                     <button type="button" class="btn btn-primary" name="trial_tissue_sample_barcode" id="trial_tissue_sample_barcode">Tissue Samples Barcode</button>
                     <button type="button" class="btn btn-primary" name="trial_plateID_barcode" id="trial_plateID_barcode">PlateID Barcode</button>
                     <button type="button" class="btn btn-primary" name="genotyping_custom_barcode" id="genotyping_custom_barcode">Custom Barcode</button>
@@ -55,7 +55,7 @@ $plate_id=> ''
                 <div class="container-fluid">
                     <p>
                         <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
-                        Generate barcode for plots and accessions.
+                        Generate barcode for plots and UIs.
                     </p>
                     OR  <button type="button" class="btn btn-primary" name="custom_barcode_page_link" id="custom_barcode_page_link">Design Custom Barcode</button>  ON LABEL DESIGNER PAGE!
                     <center>
@@ -325,7 +325,7 @@ jQuery(document).ready(function () {
                 jQuery('#geno_trial_accessions').html(trial_accessions_html);
                 },
                 error: function(response){
-                      alert("Error retrieving accessions.");
+                      alert("Error retrieving UIs.");
                 }
         });
     });
@@ -346,7 +346,7 @@ jQuery(document).ready(function () {
                     jQuery('#geno_trial_accessions').html(trial_accessions_html);
                 },
                 error: function(response){
-                    alert("Error retrieving accessions.");
+                    alert("Error retrieving UIs.");
                 }
         });
     });

@@ -39,14 +39,14 @@ $data_level => undef
                             </center>
                         </div>
                     </&>
-                    <&| /util/workflow.mas:step, title=> "Accessions" &>
-                        <& /page/page_title.mas, title=>"Select the accessions to use" &>
+                    <&| /util/workflow.mas:step, title=> "UIs" &>
+                        <& /page/page_title.mas, title=>"Select the UIs to use" &>
 
                         <div class="container-fluid">
                             <div class="form-horizontal">
 
                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">Accessions (Leave empty for all): </label>
+                                    <label class="col-sm-3 control-label">UIs (Leave empty for all): </label>
                                     <div class="col-sm-9" >
                                         <div id="trial_analysis_genotype_comparison_workflow_accessions_div"></div>
                                     </div>
@@ -208,7 +208,7 @@ jQuery(document).ready(function(){
                         alert(response.error);
                     }
                     else {
-                        var html = '<img src="'+response.figure+'"><hr><table class="table table-hover table-bordered"><thead><tr><th>Rank</th><th>Rank Group</th><th>Accession Name</th><th>Value</th></tr></thead><tbody>';
+                        var html = '<img src="'+response.figure+'"><hr><table class="table table-hover table-bordered"><thead><tr><th>Rank</th><th>Rank Group</th><th>UI Name</th><th>Value</th></tr></thead><tbody>';
                         for (var i=0; i<response.sorted_accessions.length; i++) {
                             var accession_name = response.sorted_accessions[i];
                             var value = response.sorted_values[i];

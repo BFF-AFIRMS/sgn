@@ -1,4 +1,3 @@
-
 <%args>
 $trial_id => undef
 $trial_name => undef
@@ -20,7 +19,7 @@ $trial_name => undef
             <&| /util/workflow.mas:step, title=> "Intro" &>
               <& /page/page_title.mas, title=>"Generate Entry Numbers Template" &>
               <div class="well">
-                  <p>This workflow will generate an Excel spreadsheet which can be used to upload entry numbers (numbers assigned to acccessions in a set of trials).  In the first step, select one or more trials you want to assign accession entry numbers.  Then, download the Excel template containing the selected trials' accessions.  Once you have the entry numbers filled in, use the <strong>Upload Template</strong> function to upload the accession numbers to the database.</p>
+                  <p>This workflow will generate an Excel spreadsheet which can be used to upload entry numbers (numbers assigned to UIs in a set of trials).  In the first step, select one or more trials you want to assign UI entry numbers.  Then, download the Excel template containing the selected trials' UIs.  Once you have the entry numbers filled in, use the <strong>Upload Template</strong> function to upload the UI numbers to the database.</p>
               </div>
 
               <div class="center">
@@ -71,8 +70,8 @@ $trial_name => undef
 
               <div id="set_entry_numbers_template">
                 <div class="well">
-                  <p style="margin: 0">Download the generated template and fill in the <strong>entry_number</strong> column for each Accession 
-                  you want to assign an entry number to.  An entry number is not required for each Accession, but each entry number 
+                  <p style="margin: 0">Download the generated template and fill in the <strong>entry_number</strong> column for each UI 
+                  you want to assign an entry number to.  An entry number is not required for each UI, but each entry number 
                   should be unique for this set of Trial(s).  Once you have filled out the template, you can upload it to the database 
                   using the <strong>Upload Template</strong> function.</p>
                 </div>

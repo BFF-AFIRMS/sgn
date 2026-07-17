@@ -1,5 +1,3 @@
-
-
 <%args>
 $trial_id
 $genotyping_plate_format => '96'
@@ -26,7 +24,7 @@ jQuery(document).ready(function () {
         success: function(response){
             //console.log(response);
             jQuery("#working_modal").modal("hide");
-            var trial_plate_layout_html = "<table class='table table-hover table-condensed table-bordered' id='trial_plate_layout_table'><thead><tr><th>Well</th><th>Accession Name</th></tr></thead><tbody>";
+            var trial_plate_layout_html = "<table class='table table-hover table-condensed table-bordered' id='trial_plate_layout_table'><thead><tr><th>Well</th><th>UI Name</th></tr></thead><tbody>";
 
             var col_max = 1;
             if (<% $genotyping_plate_format %> == '96'){

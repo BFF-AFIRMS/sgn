@@ -80,7 +80,7 @@
                 <body>
                     <tr>
                         <td>plot_name</td>
-                        <td>accession_name</td>
+                        <td>UI_name</td>
                         <td>plot_number</td>
                         <td>block_number</td>
                         <td>is_a_control</td>
@@ -113,7 +113,7 @@
                     <thead>
                         <tr>
                             <th>plot_name</th>
-                            <th>accession_name</th>
+                            <th>UI_name</th>
                             <th>plot_number</th>
                             <th>block_number</th>
                             <th>is_a_control</th>
@@ -139,7 +139,7 @@
                     <thead>
                         <tr>
                             <th>plot_name</th>
-                            <th>accession_name</th>
+                            <th>UI_name</th>
                             <th>plot_number</th>
                             <th>block_number</th>
                             <th>is_a_control</th>

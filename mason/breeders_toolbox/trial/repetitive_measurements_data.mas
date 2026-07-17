@@ -57,7 +57,7 @@ const regression = d3.regressionLinear()
             <select class="form-control" id="repetitive_measurement_observation_level" style="min-width: 160px; padding: 4px;">
                 <option value="plot">Plots</option>
                 <option value="plant">Plants</option>
-                <option value="accession">Accessions</option>
+                <option value="accession">UIs</option>
                 <option value="subplot">Subplots</option>
                 <option value="tissue_sample">Tissue Samples</option>
             </select>
@@ -348,14 +348,14 @@ jQuery(document).ready(function() {
 
         var tableCols = [
                 { title: 'Observation Unit Name'},
-                { title: 'Accession Name' },
+                { title: 'UI Name' },
                 { title: 'Repetitive Values' },
                 { title: 'Repetitive Line Graph'}
         ];
 
         if (observation_level == 'accession') {
             tableCols = [
-		       { title: 'Accession Name' },
+		       { title: 'UI Name' },
                { title: 'Repetitive Values' },
 			   { title: 'Repetitive Line Graph'}
 		   ];

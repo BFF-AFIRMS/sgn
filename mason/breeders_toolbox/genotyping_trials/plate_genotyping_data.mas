@@ -13,7 +13,7 @@ $trial_id
                 <th>Protocol</th>
                 <th>Sample Name</th>
                 <th>Sample Type</th>
-                <th>Accession Name</th>
+                <th>UI Name</th>
                 <th>Synonyms</th>
                 <th>Description</th>
                 <th>Number of Marker Scores</th>
@@ -38,9 +38,9 @@ $trial_id
                             <label class="col-sm-4 control-label">Sample Unit Level: </label>
                             <div class="col-sm-8">
                                 <select class="form-control" id="genotyping_plate_sample_unit_level">
-                                    <option value="accession">accession</option>
+                                    <option value="accession">UI</option>
                                     <option value="genotyping_plate_sample_name">sample name</option>
-                                    <option value="sample_name_and_accession">sample name and accession name</option>
+                                    <option value="sample_name_and_accession">sample name and UI name</option>
                                 </select>
                             </div>
                         </div>

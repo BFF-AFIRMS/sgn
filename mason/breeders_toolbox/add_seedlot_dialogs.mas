@@ -82,7 +82,7 @@ $default_seedlot_material_type => undef
                             <div class="panel panel-default">
                                 <div class="panel-body">
                                     <div class="form-group">
-                                        <label class="col-sm-3 control-label">Accession name: </label>
+                                        <label class="col-sm-3 control-label">UI name: </label>
                                         <div class="col-sm-9" >
                                             <input class="form-control" id="seedlot_accession_uniquename" placeholder="One Content Required" disabled value="<% $accession_uniquename %>">
                                         </div>
@@ -106,7 +106,7 @@ $default_seedlot_material_type => undef
                             <div class="panel panel-default">
                                 <div class="panel-body">
                                     <div class="form-group">
-                                        <label class="col-sm-3 control-label">Accession name: </label>
+                                        <label class="col-sm-3 control-label">UI name: </label>
                                         <div class="col-sm-9" >
                                             <input class="form-control" id="seedlot_accession_uniquename" placeholder="One Content Required">
                                         </div>
@@ -244,10 +244,10 @@ jQuery(document).ready(function(){
         else if (isNaN(weight)) { alert("If inputting a weight, it must be a numeric value."); return; }
         else if (breeding_program_id == '') { alert("Please select a breeding program"); return; }
         else if (accession_uniquename == '' && cross_uniquename == '') {
-            alert("Please provide an accession name or a cross unique id as the content of the seedlot."); return;
+            alert("Please provide a UI name or a cross unique id as the content of the seedlot."); return;
         }
         else if (accession_uniquename != '' && cross_uniquename != '') {
-            alert("Please provide an accession name OR a cross unique id as the content of the seedlot. Not both."); return;
+            alert("Please provide a UI name OR a cross unique id as the content of the seedlot. Not both."); return;
         }
         else {
 

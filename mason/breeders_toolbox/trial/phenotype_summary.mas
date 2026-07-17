@@ -1,4 +1,3 @@
-
 <%args>
 $trial_id
 $trial_stock_type => undef
@@ -303,9 +302,9 @@ input[type="text"] {
             plants_stock_text = 'Trait Values for Plants in this Trial grouped by Cross Unique ID';
             tissue_samples_stock_text = 'Trait Values for Tissue Samples in this Trial grouped by Cross Unique ID';
         } else {
-            plots_stock_text = 'Trait Values for Plots in this Trial grouped by Accession';
-            plants_stock_text = 'Trait Values for Plants in this Trial grouped by Accession';
-            tissue_samples_stock_text = 'Trait Values for Tissue Samples in this Trial grouped by Accession';
+            plots_stock_text = 'Trait Values for Plots in this Trial grouped by UI';
+            plants_stock_text = 'Trait Values for Plants in this Trial grouped by UI';
+            tissue_samples_stock_text = 'Trait Values for Tissue Samples in this Trial grouped by UI';
         }
         jQuery('#plots_stock_option').text(plots_stock_text);
         jQuery('#plants_stock_option').text(plants_stock_text);
@@ -482,7 +481,7 @@ input[type="text"] {
             } else if (type == 'cross') {
                 html = html +'<table id="phenotype_summary_data" class="display"><thead><tr><th>Cross Unique ID</th>'+treatment_html+'<th>Trait</th><th>Mean</th><th>Min</th><th>Max</th><th>Std Dev</th><th>CV</th><th>Count</th><th>Percent Missing</th><th>Histogram</th></tr></thead><tbody></tbody></table>';
             } else {
-                html = html +'<table id="phenotype_summary_data" class="display"><thead><tr><th>Accession</th>'+treatment_html+'<th>Trait</th><th>Mean</th><th>Min</th><th>Max</th><th>Std Dev</th><th>CV</th><th>Count</th><th>Percent Missing</th><th>Histogram</th></tr></thead><tbody></tbody></table>';
+                html = html +'<table id="phenotype_summary_data" class="display"><thead><tr><th>UI</th>'+treatment_html+'<th>Trait</th><th>Mean</th><th>Min</th><th>Max</th><th>Std Dev</th><th>CV</th><th>Count</th><th>Percent Missing</th><th>Histogram</th></tr></thead><tbody></tbody></table>';
             }
         }
         return html;

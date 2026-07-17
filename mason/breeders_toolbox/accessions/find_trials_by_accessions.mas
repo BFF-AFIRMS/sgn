@@ -7,7 +7,7 @@
 <form id="accession_list_selector">
 <table class="table borderless" cellpadding="10" border="0" >
   <tbody>
-  <p>Select accession list:</p>
+  <p>Select UI list:</p>
     <td>
       <div id="accession_list">
       </div>
@@ -22,7 +22,7 @@
 <table id="trial_summary_data" style="margin-top: 50px;" class="display">
 <thead>
   <tr>
-    <th>Accession name</th>
+    <th>UI name</th>
     <th>Number of associated trials</th>
     <th>Trial list</th>
   </tr>
@@ -84,13 +84,13 @@ jQuery('#shared_trials_2_lists').hide();
 
 	if (!accession_list_id) {
       	    enable_ui();
-      	    alert("You need to select an accession list!");
+      	    alert("You need to select a UI list!");
 	    return;
       	    }
 
       	if (accession_validation != 1) {
       	    enable_ui();
-      	    alert("Accession list did not pass validation. Please correct the list and try again");
+      	    alert("UI list did not pass validation. Please correct the list and try again");
 	    return;
       	    }
 

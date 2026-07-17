@@ -1,4 +1,3 @@
-
 <%args>
 $trial_id => ''
 $trial_name => ''
@@ -323,12 +322,12 @@ $trial_stock_type => undef
                             <button type="button" class="btn btn-primary" name="cross_barcodes" id="cross_barcodes">Cross Unique ID Barcodes</button>
                         </p>
                         <p>
-                            <button type="button" class="btn btn-primary" name="female_accession_barcodes" id="female_accession_barcodes">Female Accession Barcodes</button>
+                            <button type="button" class="btn btn-primary" name="female_accession_barcodes" id="female_accession_barcodes">Female UI Barcodes</button>
                             <button type="button" class="btn btn-primary" name="female_plot_barcodes" id="female_plot_barcodes">Female Plot Barcodes</button>
                             <button type="button" class="btn btn-primary" name="female_plant_barcodes" id="female_plant_barcodes">Female Plant Barcodes</button>
                         </p>
                         <p>
-                            <button type="button" class="btn btn-primary" name="male_accession_barcodes" id="male_accession_barcodes">Male Accession Barcodes</button>
+                            <button type="button" class="btn btn-primary" name="male_accession_barcodes" id="male_accession_barcodes">Male UI Barcodes</button>
                             <button type="button" class="btn btn-primary" name="male_plot_barcodes" id="male_plot_barcodes">Male Plot Barcodes</button>
                             <button type="button" class="btn btn-primary" name="male_plant_barcodes" id="male_plant_barcodes">Male Plant Barcodes</button>
                         </p>
@@ -359,8 +358,8 @@ jQuery(document).ready(function () {
         dialog_subtitle = 'Generate barcodes for plots, plants and cross unique ids used in this trial.';
         barcode_button_label = 'Cross Unique ID Barcodes';
     } else {
-        dialog_subtitle = 'Generate barcodes for plots, plants and accessions used in this trial.';
-        barcode_button_label = 'Accession Barcodes';
+        dialog_subtitle = 'Generate barcodes for plots, plants and UI used in this trial.';
+        barcode_button_label = 'UI Barcodes';
     }
 
     jQuery('#barcode_dialog_subtitle').text(dialog_subtitle);
@@ -374,7 +373,7 @@ jQuery(document).ready(function () {
         } else if (trial_stock_type == 'cross') {
             jQuery('#barcode_dialog_subtitle2').text('Generate barcodes for Cross unique ids used in this trial');
         } else {
-            jQuery('#barcode_dialog_subtitle2').text('Generate barcodes for accessions used in this trial');
+            jQuery('#barcode_dialog_subtitle2').text('Generate barcodes for UI used in this trial');
         }
 
     	jQuery.ajax ( {
@@ -390,7 +389,7 @@ jQuery(document).ready(function () {
         		jQuery('#trial_accessions').html(trial_accessions_html);
             },
             error: function(response){
-        		      alert("Error retrieving accessions.");
+        		      alert("Error retrieving UI.");
             }
         });
     });
@@ -477,7 +476,7 @@ jQuery(document).ready(function () {
     jQuery('#female_accession_barcodes').click(function() {
         jQuery('#generate_crossing_experiment_barcode_dialog').modal("hide");
         jQuery('#generate_trial_barcode_dialog').modal("show");
-        jQuery('#barcode_dialog_subtitle2').text('Generate barcodes for female accessions');
+        jQuery('#barcode_dialog_subtitle2').text('Generate barcodes for female UI');
 
         jQuery.ajax ( {
             url : '/ajax/breeders/trial/'+<% $trial_id %>+'/get_female_accessions',
@@ -495,7 +494,7 @@ jQuery(document).ready(function () {
 
             },
             error: function(response){
-                alert("Error retrieving female accessions.");
+                alert("Error retrieving female UI.");
             }
         });
     });
@@ -504,7 +503,7 @@ jQuery(document).ready(function () {
     jQuery('#male_accession_barcodes').click(function() {
         jQuery('#generate_crossing_experiment_barcode_dialog').modal("hide");
         jQuery('#generate_trial_barcode_dialog').modal("show");
-        jQuery('#barcode_dialog_subtitle2').text('Generate barcodes for male accessions');
+        jQuery('#barcode_dialog_subtitle2').text('Generate barcodes for male UI');
 
         jQuery.ajax ( {
             url : '/ajax/breeders/trial/'+<% $trial_id %>+'/get_male_accessions',
@@ -522,7 +521,7 @@ jQuery(document).ready(function () {
 
             },
             error: function(response){
-                alert("Error retrieving male accessions.");
+                alert("Error retrieving male UI.");
             }
         });
     });

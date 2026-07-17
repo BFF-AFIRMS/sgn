@@ -1,4 +1,3 @@
-
 <%args>
 $accessions
 $preferred_species => ""
@@ -10,13 +9,13 @@ $show_grafting_interface => ''
 
 <& /util/import_javascript.mas, classes => [ 'bootstrap_min.js', 'jquery.iframe-post-form','CXGN.List','CXGN.BreedersToolbox.Accessions', 'CXGN.BreedersToolbox.UploadPedigrees', 'CXGN.BreedersToolbox.UploadGrafts', 'CXGN.BreedersToolbox.UploadRenameAccessions', 'CXGN.BreedersToolbox.DerivedAccessions'] &>
 
-<& /page/page_title.mas, title=>"Manage Accessions" &>
+<& /page/page_title.mas, title=>"Manage UI" &>
 
 <div class="container-fluid">
 
 <div class="well">
 
-<&| /page/info_section.mas, title=>'Accessions', collapsible=>1, collapsed=>0, subtitle=> ""  &>
+<&| /page/info_section.mas, title=>'UI', collapsible=>1, collapsed=>0, subtitle=> ""  &>
 
 <& /breeders_toolbox/accessions.mas, accessions=>$accessions &>
 <& /breeders_toolbox/add_accessions_dialogs.mas, preferred_species=>$preferred_species, editable_stock_props=>$editable_stock_props, editable_stock_props_definitions=>$editable_stock_props_definitions &>
@@ -29,37 +28,37 @@ $show_grafting_interface => ''
 <& /breeders_toolbox/derived_accession_usage_info_dialog.mas &>
 
 </br>
-<button class="btn btn-default" name="add_accessions_link">Add Accessions Or Upload Accession Info</button> <button class="btn btn-default" id="upload_pedigrees_link">Upload Pedigree File</button> <button class="btn btn-default" id="upload_rename_accessions_link" name="upload_rename_accessions_link">Rename Accessions</button>
+<button class="btn btn-default" name="add_accessions_link">Add UI Or Upload UI Info</button> <button class="btn btn-default" id="upload_pedigrees_link">Upload Pedigree File</button> <button class="btn btn-default" id="upload_rename_accessions_link" name="upload_rename_accessions_link">Rename UI</button>
 % if (<%$show_grafting_interface%>) {
     <button class="btn btn-default" id="upload_grafts_link" >Upload Grafts</button>
 % }
 </br>
-<div class="btn-group"><button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Add Derived Accessions&nbsp;<span class="caret"></span></button><ul class="dropdown-menu"><li><a href="#" id="about_derived_accessions_link">About Derived Accessions</a></li><li><a href="#" id="add_derived_accessions_using_list_link">Using a List</a></li><li><a href="#" id="upload_derived_accession_file_link" name="upload_derived_accession_file_link">Upload a File</a></li><li></ul></div>
+<div class="btn-group"><button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Add Derived UI&nbsp;<span class="caret"></span></button><ul class="dropdown-menu"><li><a href="#" id="about_derived_accessions_link">About Derived UI</a></li><li><a href="#" id="add_derived_accessions_using_list_link">Using a List</a></li><li><a href="#" id="upload_derived_accession_file_link" name="upload_derived_accession_file_link">Upload a File</a></li><li></ul></div>
 
 <div>
   </br>
-  <a href="/search/stocks">Search Accessions</a>
+  <a href="/search/stocks">Search UI</a>
 </div>
 
 </&>
 </div><!-- closes well -->
 
 <div class="well">
-  <&| /page/info_section.mas, title=>"Accessions with Pedigree Information", id=> "accessions_with_pedigree", collapsible=>1, collapsed=>1&>
+  <&| /page/info_section.mas, title=>"UI with Pedigree Information", id=> "accessions_with_pedigree", collapsible=>1, collapsed=>1&>
     <table class="table table-hover table-bordered" id="accessions_with_pedigree_table">
       <thead>
         <tr>
-          <th>Accession Name</th>
+          <th>UI Name</th>
           <th>Female Parent</th>
           <th>Male Parent</th>
           <th>Cross Type</th>
         </tr>
       </thead>
     </table>
-    <a href="/search/download_all_accessions_with_pedigree" class="btn btn-sm btn-default">Download All Accessions and Pedigree Info</a>
+    <a href="/search/download_all_accessions_with_pedigree" class="btn btn-sm btn-default">Download All UI and Pedigree Info</a>
     <br>
     <br>
-    <&| /page/info_section.mas, title => 'Copy accessions to a List', collapsible=>1, collapsed=>1, subtitle=>'<i>Copy the accession names to a new or exisiting list</i>'&>
+    <&| /page/info_section.mas, title => 'Copy UI to a List', collapsible=>1, collapsed=>1, subtitle=>'<i>Copy the UI names to a new or exisiting list</i>'&>
       <br>
       <div style="text-align:right" id="accessions_with_pedigree_to_list_menu"></div>
       <div id="accession_names_with_pedigree" style="display: none;"></div>
@@ -68,18 +67,18 @@ $show_grafting_interface => ''
 </div><!-- closes well -->
 
 <div class="well">
-  <&| /page/info_section.mas, title=>"Accessions Missing Pedigree Information", id=> "accessions_missing_pedigree", collapsible=>1, collapsed=>1&>
+  <&| /page/info_section.mas, title=>"UI Missing Pedigree Information", id=> "accessions_missing_pedigree", collapsible=>1, collapsed=>1&>
     <table class="table table-hover table-bordered" id="accessions_missing_pedigree_table">
       <thead>
         <tr>
-          <th>Accession Name</th>
+          <th>UI Name</th>
           <th>Submitter</th>
         </tr>
       </thead>
     </table>
     <br>
     <br>
-    <&| /page/info_section.mas, title => 'Copy accessions to a List', collapsible=>1, collapsed=>1, subtitle=>'<i>Copy the accession names to a new or exisiting list</i>'&>
+    <&| /page/info_section.mas, title => 'Copy UI to a List', collapsible=>1, collapsed=>1, subtitle=>'<i>Copy the UI names to a new or exisiting list</i>'&>
       <br>
       <div style="text-align:right" id="accessions_missing_pedigree_to_list_menu"></div>
       <div id="accession_names_missing_pedigree" style="display: none;"></div>
@@ -88,7 +87,7 @@ $show_grafting_interface => ''
 </div><!-- closes well -->
 
 <div class="well">
-  <&| /page/info_section.mas, title=>'Find Trials in Common', collapsible=>1, collapsed=>0, subtitle=>'<i>Use a list of accessions to search for trials that contain them all</i>'&>
+  <&| /page/info_section.mas, title=>'Find Trials in Common', collapsible=>1, collapsed=>0, subtitle=>'<i>Use a list of UI to search for trials that contain them all</i>'&>
 
   <& /breeders_toolbox/accessions/find_trials_by_accessions.mas &>
 

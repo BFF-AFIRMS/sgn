@@ -36,12 +36,12 @@ $locations
                                 <li>The Cross Tool can track any pollinations in a breeding program.</li>
                                 <li>Each cross has a globally unique cross id.</li>
                                 <li>Supported cross types are: biparental, self, open, backcross, sib, polycross, bulk, bulk_self, bulk_open, doubled_haploid, or dihaploid_induction</li>
-                                <li>For an open pollinated cross, the cross can be defined as between female accession A and male population P1 (populations in the database are defined strictly as groups of accessions). If the male parent is not known, it can be left blank.</li>
+                                <li>For an open pollinated cross, the cross can be defined as between female UI A and male population P1 (populations in the database are defined strictly as groups of UIs). If the male parent is not known, it can be left blank.</li>
                                 <li>For backcross cross type, cross unique id can be used as one of the parents.</li>
                                 <li>An individual cross can be linked to the specific female plot or plant, as well as to the specific male plot or plant.</li>
                                 <li>A cross can have other data associated to it, such as number of flowers, pollination date, etc.</li>
                                 <li>Seed produced by a cross can be managed using a seedlot.</li>
-                                <li>Progenies from a cross can become named accessions in the database.</li>
+                                <li>Progenies from a cross can become named UIs in the database.</li>
                             </ul>
 
                             <br/>
@@ -200,13 +200,13 @@ $locations
                                      </div><br/><br/>
                                 </div>
                                 <div class="form-group" id="polycross_accessions" style="display: none">
-                                    <label class="col-sm-2 control-label">Accessions to use in Polycross: </label>
+                                    <label class="col-sm-2 control-label">UIs to use in Polycross: </label>
                                     <div class="col-sm-10">
                                         <div id="polycross_accession_list"></div>
                                     </div><br/><br/>
                                 </div>
                                 <div class="form-group" id="reciprocal_accessions" style="display: none">
-                                    <label class="col-sm-2 control-label">Accessions to use in Reciprocal cross: </label>
+                                    <label class="col-sm-2 control-label">UIs to use in Reciprocal cross: </label>
                                     <div class="col-sm-10">
                                         <div id="reciprocal_accession_list"></div>
                                     </div><br/><br/>
@@ -357,7 +357,7 @@ $locations
                                     <tr>
                                         <td>
                                             <div class="form-group">
-                                                <label title="You may choose to create accessions for the progeny of the cross at this time." class="col-sm-9 control-label">Add New Accessions for Progeny: </label>
+                                                <label title="You may choose to create UIs for the progeny of the cross at this time." class="col-sm-9 control-label">Add New UIs for Progeny: </label>
                                                 <div class="col-sm-3">
                                                     <input id="create_progeny_checkbox" type="checkbox"/>
                                                 </div>
@@ -457,9 +457,9 @@ $locations
                       Group of Crosses:
                     </h2>
 
-                    <p><b>polycross:</b> Creates a group of open pollinated crosses. Each accession in the selected list becomes the female parent in an open cross, and all the members of the list grouped together form the male parent.<p>
-                    <p><b>reciprocal:</b> Creates a group of biparental crosses. Starting with a list of accessions, all possible biparental cross combinations are made between them.<p>
-                    <p><b>multicross:</b> Creates a group of biparental crosses. Starting with a list of maternal accessions and a list of paternal accessions, direct crosses are made in order.<p>
+                    <p><b>polycross:</b> Creates a group of open pollinated crosses. Each UI in the selected list becomes the female parent in an open cross, and all the members of the list grouped together form the male parent.<p>
+                    <p><b>reciprocal:</b> Creates a group of biparental crosses. Starting with a list of UIs, all possible biparental cross combinations are made between them.<p>
+                    <p><b>multicross:</b> Creates a group of biparental crosses. Starting with a list of maternal UIs and a list of paternal UIs, direct crosses are made in order.<p>
                 </div>
             </div>
             <div class="modal-footer">
