@@ -165,7 +165,7 @@
     /* Wells */
     --well-box-shadow: var(--button-box-shadow);
     --well-background-color: var(--gray-100);
-    --well-border-color: var(--gray-500);
+    --well-border-color: var(--gray-300);
     --well-border: 1px solid var(--well-border-color);
 
 }
@@ -579,7 +579,7 @@ td.infosectionsubtitle {
 .panel-default {
     margin-top: var(--padding-lg);
     margin-bottom: 0px;
-    border: 1px solid var(--gray-500);
+    border: 1px solid var(--gray-300);
     padding: var(--padding-xl);
 }
 
