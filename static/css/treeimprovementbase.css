@@ -275,7 +275,7 @@ Bootstrap
     flex-wrap: wrap;
 }
 
-.flex-wrap-row > [class*='col-'] {
+.flex-wrap-row > .flex-wrap-col {
     float: none;
     flex-grow: 1;
     min-width: fit-content;
