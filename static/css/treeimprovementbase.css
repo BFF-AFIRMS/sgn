@@ -298,6 +298,10 @@ Buttons
     margin-right:     var(--padding-sm);
 }
 
+.btn-group .btn {
+    margin-right: 0px;
+}
+
 a.btn {
     color: var(--button-text-color);
 }
