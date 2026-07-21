@@ -23,6 +23,8 @@ sub BUILD {   # adjust the cvterm ids for phenotyping trials
 	 'plot_name',
 	 'plot_number',
 	 'block_number',
+	 'stake',
+	 'set',
 	 'rep_number',
 	 'is_a_control',
 	 'range_number',
