@@ -12,7 +12,7 @@ use CXGN::Trial;
 use CXGN::Trait;
 
 my @REQUIRED_COLUMNS = qw|trial_name breeding_program location year design_type description accession_name plot_number block_number|;
-my @OPTIONAL_COLUMNS = qw|intercrop_accession_name plot_name trial_type trial_stock_type plot_width plot_length field_size planting_date transplanting_date harvest_date is_a_control rep_number range_number row_number col_number seedlot_name num_seed_per_plot weight_gram_seed_per_plot entry_number|;
+my @OPTIONAL_COLUMNS = qw|intercrop_accession_name plot_name trial_type trial_stock_type plot_width plot_length field_size planting_date transplanting_date harvest_date is_a_control rep_number range_number row_number col_number stake set seedlot_name num_seed_per_plot weight_gram_seed_per_plot entry_number|;
 # Any additional columns that are not required or optional will be parsed as treatments.
 
 # VALID DESIGN TYPES
@@ -141,6 +141,8 @@ sub _validate_with_plugin {
         my $range_number = $data->{'range_number'};
         my $row_number = $data->{'row_number'};
         my $col_number = $data->{'col_number'};
+        my $stake = $data->{'stake'};
+        my $set = $data->{'set'};
         my $seedlot_name = $data->{'seedlot_name'};
         my $num_seed_per_plot = $data->{'num_seed_per_plot'};
         my $weight_gram_seed_per_plot = $data->{'weight_gram_seed_per_plot'};
@@ -232,6 +234,12 @@ sub _validate_with_plugin {
         }
         if ($col_number && !($col_number =~ /^\d+?$/)) {
             push @error_messages, "Row $row: col_number <strong>$col_number</strong> must be a positive integer.";
+        }
+        if ($stake && !($stake =~ /^\d+?$/)) {
+            push @error_messages, "Row $row: stake <strong>$stake</strong> must be a positive integer.";
+        }
+        if ($set && !($set =~ /^\d+?$/)) {
+            push @error_messages, "Row $row: set <strong>$set</strong> must be a positive integer.";
         }
 
         # Seedlots: add seedlot_name / accession_name to seedlot_pairs
@@ -616,6 +624,8 @@ sub _parse_with_plugin {
         my $range_number = $row->{'range_number'};
         my $row_number = $row->{'row_number'};
         my $col_number = $row->{'col_number'};
+        my $stake = $row->{'stake'};
+        my $set = $row->{'set'};
         my $seedlot_name = $row->{'seedlot_name'};
         my $num_seed_per_plot = $row->{'num_seed_per_plot'} || 0;
         my $weight_gram_seed_per_plot = $row->{'weight_gram_seed_per_plot'} || 0;
@@ -722,6 +732,12 @@ sub _parse_with_plugin {
         }
         if ($col_number) {
             $design_details{$key}->{col_number} = $col_number;
+        }
+        if ($stake) {
+            $design_details{$key}->{stake} = $stake;
+        }
+        if ($set) {
+            $design_details{$key}->{set} = $set;
         }
         if ($seedlot_name){
             $design_details{$key}->{seedlot_name} = $seedlot_name;
