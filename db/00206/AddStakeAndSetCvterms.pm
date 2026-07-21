@@ -13,7 +13,7 @@ see the perldoc of parent class for more details.
 
 =head1 DESCRIPTION
 
-This patch adds the 'stake' and 'set' cvterms to the 'stock_property' cv.
+This patch adds the 'stake_number' and 'set_number' cvterms to the 'stock_property' cv.
 
 =head1 AUTHOR
 
@@ -33,7 +33,7 @@ package AddStakeAndSetCvterms;
 use Moose;
 extends 'CXGN::Metadata::Dbpatch';
 
-has '+description' => ( default => 'Adds stake and set cvterms to the stock_property cv' );
+has '+description' => ( default => 'Adds stake_number and set_number cvterms to the stock_property cv' );
 
 sub patch {
     my $self=shift;
@@ -44,18 +44,18 @@ sub patch {
 
     print STDOUT "\nExecuting the SQL commands.\n";
 
-    # Insert 'stake' property
+    # Insert 'stake_number' property
     $self->dbh->do(<<EOSQL);
 INSERT INTO cvterm (cv_id, name, definition)
-SELECT cv_id, 'stake', 'Stake identifier for a plot'
+SELECT cv_id, 'stake_number', 'Stake identifier for a plot'
 FROM cv WHERE name = 'stock_property'
 ON CONFLICT (name, cv_id, is_obsolete) DO NOTHING;
 EOSQL
 
-    # Insert 'set' property
+    # Insert 'set_number' property
     $self->dbh->do(<<EOSQL);
 INSERT INTO cvterm (cv_id, name, definition)
-SELECT cv_id, 'set', 'Set identifier for a plot'
+SELECT cv_id, 'set_number', 'Set identifier for a plot'
 FROM cv WHERE name = 'stock_property'
 ON CONFLICT (name, cv_id, is_obsolete) DO NOTHING;
 EOSQL

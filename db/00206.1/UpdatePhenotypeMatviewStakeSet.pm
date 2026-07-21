@@ -13,7 +13,7 @@ see the perldoc of parent class for more details.
 
 =head1 DESCRIPTION
 
-This patch updates the materialized_phenotype_jsonb_table view to include stake and set properties for observation units.
+This patch updates the materialized_phenotype_jsonb_table view to include stake_number and set_number properties for observation units.
 
 =head1 AUTHOR
 
@@ -35,7 +35,7 @@ use SGN::Model::Cvterm;
 use Bio::Chado::Schema;
 extends 'CXGN::Metadata::Dbpatch';
 
-has '+description' => ( default => 'Updates materialized_phenotype_jsonb_table view to include stake and set properties' );
+has '+description' => ( default => 'Updates materialized_phenotype_jsonb_table view to include stake_number and set_number properties' );
 
 sub patch {
     my $self=shift;
@@ -51,8 +51,8 @@ sub patch {
     my $plant_number_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant_index_number', 'stock_property')->cvterm_id();
     my $row_number_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'row_number', 'stock_property')->cvterm_id();
     my $col_number_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'col_number', 'stock_property')->cvterm_id();
-    my $stake_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'stake', 'stock_property')->cvterm_id();
-    my $set_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'set', 'stock_property')->cvterm_id();
+    my $stake_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'stake_number', 'stock_property')->cvterm_id();
+    my $set_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'set_number', 'stock_property')->cvterm_id();
     my $is_a_control_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'is a control', 'stock_property')->cvterm_id();
     my $notes_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'notes', 'stock_property')->cvterm_id();
     my $year_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'project year', 'project_property')->cvterm_id();
@@ -97,7 +97,7 @@ sub patch {
     $self->dbh->do(<<EOSQL);
 DROP MATERIALIZED VIEW IF EXISTS public.materialized_phenotype_jsonb_table CASCADE;
 CREATE MATERIALIZED VIEW public.materialized_phenotype_jsonb_table AS
-SELECT observationunit.stock_id AS observationunit_stock_id, observationunit.uniquename AS observationunit_uniquename, observationunit_cvterm.name AS observationunit_type_name, germplasm.uniquename AS germplasm_uniquename, germplasm.stock_id AS germplasm_stock_id, rep.value AS rep, block_number.value AS block, plot_number.value AS plot_number, row_number.value AS row_number, col_number.value AS col_number, stake.value AS stake, set_prop.value AS set_number, plant_number.value AS plant_number, is_a_control.value AS is_a_control, string_agg(distinct(notes.value), ', ') AS notes, project.project_id AS trial_id, project.name AS trial_name, project.description AS trial_description, plot_width.value AS plot_width, plot_length.value AS plot_length, field_size.value AS field_size, field_trial_is_planned_to_be_genotyped.value AS field_trial_is_planned_to_be_genotyped, field_trial_is_planned_to_cross.value AS field_trial_is_planned_to_cross, max(breeding_program.project_id) AS breeding_program_id, breeding_program.name AS breeding_program_name, breeding_program.description AS breeding_program_description, year.value AS year, design.value AS design, location_id.value AS location_id, planting_date.value AS planting_date, harvest_date.value AS harvest_date, folder.project_id AS folder_id, folder.name AS folder_name, folder.description AS folder_description, seedplot_planted.value AS seedlot_transaction, seedlot.stock_id AS seedlot_stock_id, seedlot.uniquename AS seedlot_uniquename, seedlot_current_weight.value AS seedlot_current_weight_gram, seedlot_current_count.value AS seedlot_current_count, seedlot_seedlot_box.value AS seedlot_box_name,
+SELECT observationunit.stock_id AS observationunit_stock_id, observationunit.uniquename AS observationunit_uniquename, observationunit_cvterm.name AS observationunit_type_name, germplasm.uniquename AS germplasm_uniquename, germplasm.stock_id AS germplasm_stock_id, rep.value AS rep, block_number.value AS block, plot_number.value AS plot_number, row_number.value AS row_number, col_number.value AS col_number, stake.value AS stake_number, set_prop.value AS set_number, plant_number.value AS plant_number, is_a_control.value AS is_a_control, string_agg(distinct(notes.value), ', ') AS notes, project.project_id AS trial_id, project.name AS trial_name, project.description AS trial_description, plot_width.value AS plot_width, plot_length.value AS plot_length, field_size.value AS field_size, field_trial_is_planned_to_be_genotyped.value AS field_trial_is_planned_to_be_genotyped, field_trial_is_planned_to_cross.value AS field_trial_is_planned_to_cross, max(breeding_program.project_id) AS breeding_program_id, breeding_program.name AS breeding_program_name, breeding_program.description AS breeding_program_description, year.value AS year, design.value AS design, location_id.value AS location_id, planting_date.value AS planting_date, harvest_date.value AS harvest_date, folder.project_id AS folder_id, folder.name AS folder_name, folder.description AS folder_description, seedplot_planted.value AS seedlot_transaction, seedlot.stock_id AS seedlot_stock_id, seedlot.uniquename AS seedlot_uniquename, seedlot_current_weight.value AS seedlot_current_weight_gram, seedlot_current_count.value AS seedlot_current_count, seedlot_seedlot_box.value AS seedlot_box_name,
     COALESCE(
         jsonb_object_agg(treatment.name, treatment.description) FILTER (WHERE treatment.name IS NOT NULL), 
         '{"No ManagementFactor": null}'::jsonb

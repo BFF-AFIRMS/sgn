@@ -254,9 +254,9 @@ has 'replicate_cvterm_id' => (isa => 'Int', is => 'rw');
 
 has 'block_cvterm_id' => (isa => 'Int', is => 'rw');
 
-has 'stake_cvterm_id' => (isa => 'Int', is => 'rw');
+has 'stake_number_cvterm_id' => (isa => 'Int', is => 'rw');
 
-has 'set_cvterm_id' => (isa => 'Int', is => 'rw');
+has 'set_number_cvterm_id' => (isa => 'Int', is => 'rw');
 
 has 'plot_number_cvterm_id' => (isa => 'Int', is => 'rw');
 
@@ -351,9 +351,9 @@ sub BUILD {
 
     $self->set_block_cvterm_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'block', 'stock_property')->cvterm_id());
 
-    $self->set_stake_cvterm_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'stake', 'stock_property')->cvterm_id());
+    $self->set_stake_number_cvterm_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'stake_number', 'stock_property')->cvterm_id());
 
-    $self->set_set_cvterm_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'set', 'stock_property')->cvterm_id());
+    $self->set_set_number_cvterm_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'set_number', 'stock_property')->cvterm_id());
 
     $self->set_plot_number_cvterm_id(SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'plot number', 'stock_property')->cvterm_id());
 
@@ -582,12 +582,12 @@ sub store {
                 $block_number = 1;
             }
             my $stake_number;
-            if ($design{$key}->{stake}) {
-                $stake_number = $design{$key}->{stake};
+            if ($design{$key}->{stake_number}) {
+                $stake_number = $design{$key}->{stake_number};
             }
             my $set_number;
-            if ($design{$key}->{set}) {
-                $set_number = $design{$key}->{set};
+            if ($design{$key}->{set_number}) {
+                $set_number = $design{$key}->{set_number};
             }
             my $rep_number;
             if ($design{$key}->{rep_number}) { #set rep number to 1 if no reps are specified
@@ -697,10 +697,10 @@ sub store {
                     { type_id => $self->get_plot_number_cvterm_id, value => $plot_number }
                 );
                 if ($stake_number) {
-                    push @plot_stock_props, { type_id => $self->get_stake_cvterm_id, value => $stake_number };
+                    push @plot_stock_props, { type_id => $self->get_stake_number_cvterm_id, value => $stake_number };
                 }
                 if ($set_number) {
-                    push @plot_stock_props, { type_id => $self->get_set_cvterm_id, value => $set_number };
+                    push @plot_stock_props, { type_id => $self->get_set_number_cvterm_id, value => $set_number };
                 }
                 if ($is_a_control) {
                     push @plot_stock_props, { type_id => $self->get_is_control_cvterm_id, value => $is_a_control };
