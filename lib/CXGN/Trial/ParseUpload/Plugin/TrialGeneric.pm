@@ -36,7 +36,9 @@ sub _validate_with_plugin {
         optional_columns => \@OPTIONAL_COLUMNS,
         column_aliases => {
             'stock_name' => [ 'accession_name', 'cross_unique_id', 'family_name' ],
-            'intercrop_stock_name' => [ 'intercrop_accession_name', 'intercrop_cross_unique_id', 'intercrop_family_name' ]
+            'intercrop_stock_name' => [ 'intercrop_accession_name', 'intercrop_cross_unique_id', 'intercrop_family_name' ],
+            'stake_number' => [ 'stake' ],
+            'set_number' => [ 'set' ]
         },
         column_arrays => [ 'intercrop_stock_name' ]
     );

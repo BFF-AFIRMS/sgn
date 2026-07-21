@@ -69,7 +69,9 @@ sub _validate_with_plugin {
         optional_columns => \@OPTIONAL_COLUMNS,
         column_arrays => [ 'intercrop_accession_name' ],
         column_aliases => {
-            'accession_name' => [ 'stock_name', 'cross_unique_id', 'family_name' ]
+            'accession_name' => [ 'stock_name', 'cross_unique_id', 'family_name' ],
+            'stake_number' => [ 'stake' ],
+            'set_number' => [ 'set' ]
         }
     );
     my $parsed = $parser->parse();
