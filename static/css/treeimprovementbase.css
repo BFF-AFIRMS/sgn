@@ -838,13 +838,6 @@ Table
     box-sizing: border-box;
 }
 
-.table-flow-scroll {
-    display: flow;
-    overflow: auto;
-    /* TBD: Investigate this */
-    /*width: 100%;*/
-}
-
 .borderless {
     border-width: 0px;
 }
@@ -853,10 +846,6 @@ Table
     white-space: normal;
     /* Limit the second column width in trial details, so that the QR code is beside it */
     max-width: 320px;
-}
-
-.dataTables_wrapper {
-    overflow: auto;
 }
 
 /* Left align numbers and dates (right aligned by default since datatables 2.0+) */

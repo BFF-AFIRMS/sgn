@@ -146,7 +146,9 @@ jQuery(document).ready(function(){
                 }
                 html = html + "</tbody></table>";
                 jQuery('#trial_additional_uploaded_files_div').html(html);
-                jQuery('#trial_additional_uploaded_files_table').DataTable();
+                jQuery('#trial_additional_uploaded_files_table').DataTable({
+                    scrollX: true,
+                });
             },
             error: function(response){
                 alert("Error retrieving additional uploaded files.");
