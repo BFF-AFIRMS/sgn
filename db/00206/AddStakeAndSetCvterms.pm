@@ -44,19 +44,35 @@ sub patch {
 
     print STDOUT "\nExecuting the SQL commands.\n";
 
+    # Insert 'stake_number' dbxref
+    $self->dbh->do(<<EOSQL);
+INSERT INTO dbxref (db_id, accession, version)
+SELECT db_id, 'stake_number', '' FROM db WHERE name = 'null'
+ON CONFLICT (db_id, accession, version) DO NOTHING;
+EOSQL
+
     # Insert 'stake_number' property
     $self->dbh->do(<<EOSQL);
-INSERT INTO cvterm (cv_id, name, definition)
-SELECT cv_id, 'stake_number', 'Stake identifier for a plot'
-FROM cv WHERE name = 'stock_property'
+INSERT INTO cvterm (cv_id, name, definition, dbxref_id, is_obsolete)
+SELECT cv.cv_id, 'stake_number', 'Stake identifier for a plot', dbxref.dbxref_id, 0
+FROM cv, dbxref, db
+WHERE cv.name = 'stock_property' AND db.name = 'null' AND dbxref.db_id = db.db_id AND dbxref.accession = 'stake_number'
 ON CONFLICT (name, cv_id, is_obsolete) DO NOTHING;
+EOSQL
+
+    # Insert 'set_number' dbxref
+    $self->dbh->do(<<EOSQL);
+INSERT INTO dbxref (db_id, accession, version)
+SELECT db_id, 'set_number', '' FROM db WHERE name = 'null'
+ON CONFLICT (db_id, accession, version) DO NOTHING;
 EOSQL
 
     # Insert 'set_number' property
     $self->dbh->do(<<EOSQL);
-INSERT INTO cvterm (cv_id, name, definition)
-SELECT cv_id, 'set_number', 'Set identifier for a plot'
-FROM cv WHERE name = 'stock_property'
+INSERT INTO cvterm (cv_id, name, definition, dbxref_id, is_obsolete)
+SELECT cv.cv_id, 'set_number', 'Set identifier for a plot', dbxref.dbxref_id, 0
+FROM cv, dbxref, db
+WHERE cv.name = 'stock_property' AND db.name = 'null' AND dbxref.db_id = db.db_id AND dbxref.accession = 'set_number'
 ON CONFLICT (name, cv_id, is_obsolete) DO NOTHING;
 EOSQL
 
