@@ -184,6 +184,8 @@ CREATE INDEX materialized_phenotype_jsonb_table_trial_idx ON public.materialized
 CREATE INDEX materialized_phenotype_jsonb_table_trial_name_idx ON public.materialized_phenotype_jsonb_table(trial_name) WITH (fillfactor=100);
 ALTER MATERIALIZED VIEW public.materialized_phenotype_jsonb_table OWNER TO web_usr;
 EOSQL
+
+print "You're done!\n";
 }
 
 1;
