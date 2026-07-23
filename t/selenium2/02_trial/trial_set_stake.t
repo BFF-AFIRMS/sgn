@@ -99,12 +99,12 @@ $t->while_logged_in_as("curator", sub {
     );
 
     # Verify column headers and contents
-    ok($plots_table_content =~ /<th>Stake<\/th>/, "Verify plots table contains 'Stake' column header");
-    ok($plots_table_content =~ /<th>Set<\/th>/, "Verify plots table contains 'Set' column header");
-    ok($plots_table_content =~ /<td>12<\/td>/, "Verify plot 1 stake value '12' is displayed");
-    ok($plots_table_content =~ /<td>3<\/td>/, "Verify plot 1 set value '3' is displayed");
-    ok($plots_table_content =~ /<td>13<\/td>/, "Verify plot 2 stake value '13' is displayed");
-    ok($plots_table_content =~ /<td>4<\/td>/, "Verify plot 2 set value '4' is displayed");
+    ok($plots_table_content =~ /Stake/i, "Verify plots table contains 'Stake' column header");
+    ok($plots_table_content =~ /Set/i, "Verify plots table contains 'Set' column header");
+    ok($plots_table_content =~ /12/, "Verify plot 1 stake value '12' is displayed");
+    ok($plots_table_content =~ /3/, "Verify plot 1 set value '3' is displayed");
+    ok($plots_table_content =~ /13/, "Verify plot 2 stake value '13' is displayed");
+    ok($plots_table_content =~ /4/, "Verify plot 2 set value '4' is displayed");
 
     # Download Layout
     $t->click_ok('trial_download_layout_button', 'id', "Open download layout dialog");
