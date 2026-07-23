@@ -2337,7 +2337,7 @@ sub get_trial_plot_select : Path('/ajax/html/select/plots_from_trial/') Args(0) 
     my $h = $schema->storage()->dbh()->prepare($plots_q);
     $h->execute($intercrop_plot_of_id, $plot_of_id, \@plots, $plot_num_id, $row_num_id, $col_num_id, $rep_id, $block_id, $stake_id, $set_id, $synonym_id, $plot_num_id, $row_num_id, $col_num_id, $rep_id, $block_id, $stake_id, $set_id, $synonym_id);
 
-    my $html = "<table id=\"plots_from_trial_select_table\" width=\"100%\"><thead><tr><th></th><th>Plot</th><th>Number</th><th>(Row, Column)</th><th>Rep</th><th>Block</th><th>Stake Number</th><th>Set Number</th><th>Accession</th></tr></thead><tbody>";
+    my $html = "<table id=\"plots_from_trial_select_table\" width=\"100%\"><thead><tr><th></th><th>Plot</th><th>Number</th><th>(Row, Column)</th><th>Rep</th><th>Block</th><th>Stake</th><th>Set</th><th>Accession</th></tr></thead><tbody>";
 
     while (my ($plot_id, $plot_name, $plot_number, $row, $column, $rep, $block, $stake_number, $set_number, $accession_id, $accession_name, $synonyms, $intercrop_accession_id, $intercrop_accession_name, $intercrop_synonyms) = $h->fetchrow_array()) {
 
