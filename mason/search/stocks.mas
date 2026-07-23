@@ -263,10 +263,10 @@ my @view_column_options = (@{ $editable_stock_props || [] }, 'organism', 'synony
 
     </&> <!-- closes advanced search -->
 
-    <center>
+    <div class="tw:text-center tw:m-2">
         <button class="btn btn-default" id="reset_stock_search">Reset</button>
         <button class="btn btn-primary" id="submit_stock_search">Search</button>
-    </center>
+    </div>
     <br/><br/>
   </div>
 </&>
@@ -280,18 +280,18 @@ my @view_column_options = (@{ $editable_stock_props || [] }, 'organism', 'synony
     <div class="row">
       <div class="col-sm-11">
         <div class="form-group form-group-sm">
-          <label class="col-sm-4 control-label" for="editable_stockprop_view_column_term">View Another Property: </label>
+          <label class="col-lg-3 col-md-4 col-sm-4 control-label" for="editable_stockprop_view_column_term">View Another Property: </label>
           <div class="col-sm-8" >
-            <div class="form-group">
-              <div class="input-group">
-                <span class="input-group-btn">
+            <div class="form-inline">
+              <div class="form-group">
                   <select class="form-control" id="editable_stockprop_view_column_term" name="editable_stockprop_view_column_term">
 %  foreach my $stockprop (@view_column_options){
                     <option title="<% $stockprop %>" value="<% $stockprop %>" ><% $stockprop %></option>
 %  }
                   </select>
-                </span>
-                  <span class="input-group-btn">
+              </div>
+              <div class="form-group">
+                  <span class="btn-group">
                     <button class="btn btn-primary btn-sm" id="editable_stockprop_view_column_add">Add</button>
                     <button class="btn btn-sm btn-danger" id="editable_stockprop_view_column_remove">Remove</button>
                     <button class="btn btn-sm btn-default" id="reset_stock_columns">Reset</button>

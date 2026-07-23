@@ -165,7 +165,7 @@
     /* Wells */
     --well-box-shadow: var(--button-box-shadow);
     --well-background-color: var(--gray-100);
-    --well-border-color: var(--gray-500);
+    --well-border-color: var(--gray-300);
     --well-border: 1px solid var(--well-border-color);
 
 }
@@ -275,7 +275,7 @@ Bootstrap
     flex-wrap: wrap;
 }
 
-.flex-wrap-row > [class*='col-'] {
+.flex-wrap-row > .flex-wrap-col {
     float: none;
     flex-grow: 1;
     min-width: fit-content;
@@ -296,6 +296,10 @@ Buttons
     border:           1px solid var(--button-border-color);
     box-shadow:       var(--button-box-shadow);
     margin-right:     var(--padding-sm);
+}
+
+.btn-group .btn {
+    margin-right: 0px;
 }
 
 a.btn {
@@ -579,7 +583,7 @@ td.infosectionsubtitle {
 .panel-default {
     margin-top: var(--padding-lg);
     margin-bottom: 0px;
-    border: 1px solid var(--gray-500);
+    border: 1px solid var(--gray-300);
     padding: var(--padding-xl);
 }
 
