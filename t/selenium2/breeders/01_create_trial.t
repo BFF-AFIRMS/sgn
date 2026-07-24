@@ -13,12 +13,7 @@ my $t = SGN::Test::WWW::WebDriver->new();
 my $f = SGN::Test::Fixture->new();
 
 $t->while_logged_in_as("submitter", sub {
-	$t->get_ok('/breeders/trials');
-
-	$t->click_ok("refresh_jstree_html", "name", "refresh tree");
-	$t->wait_for_working_dialog();
-
-	$t->click_ok('add_project_link', 'id', "find add trial link");
+	$t->get_ok('/breeders/trial/create');
 
 	# SCREEN 1 /Intro/
 	$t->click_ok('next_step_intro_button', 'id', 'go to next screen - Intro');
@@ -106,10 +101,13 @@ $t->while_logged_in_as("submitter", sub {
 	$t->click_ok('new_trial_confirm_submit', 'id', "find new trial confirm and submit");
 	$t->wait_for_working_dialog();
 
+	$t->wait_for_network_idle();
+
 	# Very strange, but the only way to catch the complete trial button. Standard selectors without an extended XPath solution don't work.
 	$t->find_element_ok('create_trial_success_complete_button', 'id', "find success button after trial upload to database");
 	$t->click_ok('//div[@class="panel-body"]//div[@class="workflow-complete-message workflow-message-show"]//center//button[@id="create_trial_success_complete_button"]',
 		'xpath', 'click complete button on last screen and finish a modal process');
+	$t->wait_for_network_idle();
 
 	$t->click_ok("refresh_jstree_html", "name", "refresh tree with new trial added");
 
