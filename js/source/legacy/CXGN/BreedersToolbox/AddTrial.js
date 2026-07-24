@@ -59,6 +59,30 @@ jQuery(document).ready(function ($) {
         return 'trial_create_form_state_' + draftId;
     }
 
+    function cleanupOldDrafts() {
+        var prefix = 'trial_create_form_state_';
+        var drafts = [];
+        for (var i = 0; i < localStorage.length; i++) {
+            var key = localStorage.key(i);
+            if (key && key.indexOf(prefix) === 0) {
+                var lastModified = 0;
+                try {
+                    var item = JSON.parse(localStorage.getItem(key));
+                    if (item) {
+                        lastModified = item.last_modified || item._last_modified || 0;
+                    }
+                } catch (e) {}
+                drafts.push({ key: key, lastModified: lastModified });
+            }
+        }
+        if (drafts.length > 10) {
+            drafts.sort(function(a, b) { return b.lastModified - a.lastModified; });
+            for (var j = 10; j < drafts.length; j++) {
+                localStorage.removeItem(drafts[j].key);
+            }
+        }
+    }
+
     function saveTrialFormState() {
         var form = jQuery('#create_new_trial_form');
         if (!form.length) return;
@@ -75,13 +99,19 @@ jQuery(document).ready(function ($) {
                 data[key] = jQuery(this).val();
             }
         });
-        localStorage.setItem(getDraftKey(), JSON.stringify(data));
+        var draft = {
+            last_modified: Date.now(),
+            data
+        };
+        localStorage.setItem(getDraftKey(), JSON.stringify(draft));
+        cleanupOldDrafts();
     }
 
     function restoreTrialFormState() {
         var stateStr = localStorage.getItem(getDraftKey());
         if (!stateStr) return;
-        var data = JSON.parse(stateStr);
+        var draft = JSON.parse(stateStr);
+        var data = (draft && draft.data) ? draft.data : draft;
         var form = jQuery('#create_new_trial_form');
         if (!form.length) return;
         for (var key in data) {
