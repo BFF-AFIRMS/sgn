@@ -128,14 +128,12 @@ jQuery(document).ready(function ($) {
     }
 
     if (window.location.pathname === '/breeders/trial/create') {
-        get_select_box('years', 'add_project_year', {'auto_generate': 1 });
-        get_select_box('trial_types', 'add_project_type', {'empty':1} );
-        populate_trial_linkage_selects();
-        
-        // Restore state immediately for static inputs and again after dynamic elements load
+        get_select_box('years', 'add_project_year', {'auto_generate': 1, 'after_load': restoreTrialFormState });
+        get_select_box('trial_types', 'add_project_type', {'empty':1, 'after_load': restoreTrialFormState } );
+        populate_trial_linkage_selects(restoreTrialFormState);
+
+        // Restore state immediately for static inputs
         restoreTrialFormState();
-        setTimeout(restoreTrialFormState, 500);
-        setTimeout(restoreTrialFormState, 1500);
     }
 
     jQuery(document).on('change keyup', '#create_new_trial_form input, #create_new_trial_form select, #create_new_trial_form textarea', function() {
@@ -2601,8 +2599,8 @@ jQuery(document).ready(function ($) {
         populate_trial_linkage_selects();
     });
 
-    function populate_trial_linkage_selects(){
-        get_select_box('trials', 'add_project_trial_source', {'id':'add_project_trial_source_select', 'name':'add_project_trial_source_select', 'breeding_program_name':jQuery('#select_breeding_program').val(), 'multiple':1, 'empty':1} );
+    function populate_trial_linkage_selects(callback){
+        get_select_box('trials', 'add_project_trial_source', {'id':'add_project_trial_source_select', 'name':'add_project_trial_source_select', 'breeding_program_name':jQuery('#select_breeding_program').val(), 'multiple':1, 'empty':1, 'after_load': callback} );
     }
 
     jQuery('button[name="new_trial_add_treatments"]').click(function(){
