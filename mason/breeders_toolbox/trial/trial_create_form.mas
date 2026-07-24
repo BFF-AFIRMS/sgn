@@ -206,8 +206,7 @@ $design_types => ()
             </div>
             <hr>
             <center>
-            <button type="button" class="btn btn-lg btn-primary" name="create_trial_validate_form_button" id="create_trial_validate_form_button">First validate the form</button>
-            <button type="button" class="btn btn-lg btn-primary" disabled onclick="Workflow.complete(this); return false;" name="create_trial_submit">Continue to Next Step</button>
+            <button type="button" class="btn btn-lg btn-primary" id="create_trial_submit" name="create_trial_submit">Continue to Next Step</button>
             </center>
 
         </&>

@@ -112,8 +112,8 @@ jQuery(document).ready(function ($) {
         saveTrialFormState();
     });
 
-    jQuery('#create_trial_validate_form_button').click(function(){
-        create_trial_validate_form();
+    jQuery('#create_trial_submit').click(function(){
+        create_trial_validate_form(this);
     });
 
     jQuery('#add_plant_entries').on('change', function() {
@@ -128,7 +128,7 @@ jQuery(document).ready(function ($) {
         greenhouse_show_num_plants_section()
     });
 
-    function create_trial_validate_form(){
+    function create_trial_validate_form(btn_elem){
         var trial_name = $("#new_trial_name").val();
         var breeding_program = $("#select_breeding_program").val();
         var location = $("#add_project_location").val().toString().trim(); // remove whitespace
@@ -195,11 +195,11 @@ jQuery(document).ready(function ($) {
             alert("Please select a stock type");
         }
         else {
-            verify_create_trial_name(trial_name);
+            verify_create_trial_name(trial_name, btn_elem);
         }
     }
 
-    function verify_create_trial_name(trial_name){
+    function verify_create_trial_name(trial_name, btn_elem){
         jQuery.ajax( {
             url: '/ajax/trial/verify_trial_name?trial_name='+trial_name,
             beforeSend: function() {
@@ -212,7 +212,9 @@ jQuery(document).ready(function ($) {
                     jQuery('[name="create_trial_submit"]').attr('disabled', true);
                 }
                 else {
-                    jQuery('[name="create_trial_submit"]').attr('disabled', false);
+                    if (btn_elem) {
+                        Workflow.complete(btn_elem);
+                    }
                 }
             },
             error: function(response) {

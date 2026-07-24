@@ -55,8 +55,6 @@ $t->while_logged_in_as("submitter", sub {
 	$t->click_ok('select_design_method', 'id', "find field trial description input");
 	$t->click_ok('//select[@id="select_design_method"]/option[@value="CRD"]', 'xpath', "find randomized method of design");
 
-	$t->click_ok('create_trial_validate_form_button', 'id', "find form validation button and click");
-
 	$t->click_ok('button[name="create_trial_submit"]', 'css', "find form submit button and click");
 
 
