@@ -47,6 +47,18 @@ jQuery(document).ready(function ($) {
     var num_cols;
     var inherits_plot_treatments;
 
+    function getDraftKey() {
+        var urlParams = new URLSearchParams(window.location.search);
+        var draftId = urlParams.get('draft_id');
+        if (!draftId) {
+            draftId = 'draft_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7);
+            urlParams.set('draft_id', draftId);
+            var newUrl = window.location.pathname + '?' + urlParams.toString();
+            window.history.replaceState(null, '', newUrl);
+        }
+        return 'trial_create_form_state_' + draftId;
+    }
+
     function saveTrialFormState() {
         var form = jQuery('#create_new_trial_form');
         if (!form.length) return;
@@ -63,11 +75,11 @@ jQuery(document).ready(function ($) {
                 data[key] = jQuery(this).val();
             }
         });
-        localStorage.setItem('trial_create_form_state', JSON.stringify(data));
+        localStorage.setItem(getDraftKey(), JSON.stringify(data));
     }
 
     function restoreTrialFormState() {
-        var stateStr = localStorage.getItem('trial_create_form_state');
+        var stateStr = localStorage.getItem(getDraftKey());
         if (!stateStr) return;
         var data = JSON.parse(stateStr);
         var form = jQuery('#create_new_trial_form');
@@ -2436,7 +2448,7 @@ jQuery(document).ready(function ($) {
                 if (response.error) {
                     alert(response.error);
                 } else {
-                    localStorage.removeItem('trial_create_form_state');
+                    localStorage.removeItem(getDraftKey());
                     refreshTrailJsTree(0);
                     Workflow.complete('#new_trial_confirm_submit');
                     Workflow.focus("#trial_design_workflow", -1); //Go to success page
