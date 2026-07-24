@@ -1,4 +1,3 @@
-
 <%args>
 $trial_ids
 $dialog_type => undef
@@ -107,7 +106,7 @@ $dialog_name => undef
             </div>
 
             <div class="form-group">
-                <label class="col-sm-7 control-label">Include Intercrop Accessions: </label>
+                <label class="col-sm-7 control-label">Include Intercrop UIs: </label>
                 <div class="col-sm-5" >
                     <select class="form-control" id="download_trial_phenotypes_intercrop_option">
                         <option value="0">No</option>

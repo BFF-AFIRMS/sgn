@@ -117,7 +117,7 @@ $design_types => ()
 <& /breeders_toolbox/upload_locations_dialogs.mas &>
 
 <div class="well well-sm">
-<h1>Accessions</h1><br/>
+<h1>UIs</h1><br/>
 <table class="table table-bordered">
 <thead>
 <tr><th>Add</th><th>Manage</th><th>Search</th></tr>
@@ -125,13 +125,13 @@ $design_types => ()
 <tbody>
 <tr>
 <td>
-<a name="add_accessions_link"><p>Add Accessions Using List</p></a>
+<a name="add_accessions_link"><p>Add UIs Using List</p></a>
 </td>
 <td>
-<a href="/breeders/accessions"><p>Go To Manage Accessions Page</p></a>
+<a href="/breeders/accessions"><p>Go To Manage UIs Page</p></a>
 </td>
 <td>
-<a href="/search/stocks"><p>Go To Accessions Search</p></a>
+<a href="/search/stocks"><p>Go To UIs Search</p></a>
 </td>
 </tr>
 </tbody>
@@ -151,7 +151,7 @@ $design_types => ()
 <a id="manage_accessions_populations_new"><p>Add New Population</p></a>
 </td>
 <td>
-<a href="/breeders/accessions"><p>Go To Manage Accessions Page</p></a>
+<a href="/breeders/accessions"><p>Go To Manage UIs Page</p></a>
 </td>
 <td>
 <a href="/search/stocks"><p>Go To Stock Search</p></a>
@@ -200,7 +200,7 @@ $design_types => ()
 <a id="upload_pedigrees_link"><p>Upload Many Pedigrees</p></a>
 </td>
 <td>
-<a href="/breeders/accessions"><p>Go To Manage Accessions Page</p></a>
+<a href="/breeders/accessions"><p>Go To Manage UIs Page</p></a>
 </td>
 <td>
 <a href="/search/cross"><p>Go To Search Crosses</p></a>

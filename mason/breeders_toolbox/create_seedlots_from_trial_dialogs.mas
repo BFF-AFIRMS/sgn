@@ -21,8 +21,8 @@ $default_seedlot_material_type => undef
                         <&| /util/workflow.mas:step, title=> "Intro" &>
                             <& /page/page_title.mas, title=>"Introduction" &>
                             <p>
-                                This workflow will guide you through the process of creating seedlots from the accessions
-                                in a field trial.  You can create one new seedlot for each plot or unique accession
+                                This workflow will guide you through the process of creating seedlots from the UIs
+                                in a field trial.  You can create one new seedlot for each plot or unique UI
                                 in the trial.  You can also set the initial contents (count or weight) of the seedlot
                                 as the value of a recorded trait from the trial.
                             </p>
@@ -60,13 +60,13 @@ $default_seedlot_material_type => undef
                             <& /page/page_title.mas, title=>"Select Seedlots" &>
 
                             <p>
-                                Seedlots can be generated from either each <strong>accession</strong> or <strong>plot</strong>
+                                Seedlots can be generated from either each <strong>UI</strong> or <strong>plot</strong>
                                 <span class='create_seedlots_trial_subplots_available'> or <strong>subplot</strong></span>
                                 <span class='create_seedlots_trial_plants_available'> or <strong>plant</strong></span>
                                 in this trial.
                             </p>
                             <ul>
-                                <li>If you select <strong>accessions</strong>: <span id="create_seedlots_trial_accession_count"></span> seedlots will be created</li>
+                                <li>If you select <strong>UIs</strong>: <span id="create_seedlots_trial_accession_count"></span> seedlots will be created</li>
                                 <li>If you select <strong>plots</strong>: <span id="create_seedlots_trial_plot_count"></span> seedlots will be created</li>
                                 <li class='create_seedlots_trial_subplots_available_list'>If you select <strong>subplots</strong>: <span id="create_seedlots_trial_subplot_count"></span> seedlots will be created</li>
                                 <li class='create_seedlots_trial_plants_available_list'>If you select <strong>plants</strong>: <span id="create_seedlots_trial_plant_count"></span> seedlots will be created</li>
@@ -78,7 +78,7 @@ $default_seedlot_material_type => undef
                                 <div class="col-sm-3"></div>
                                 <div class="col-sm-6" >
                                     <select id="create_seedlots_trial_stock_type" class="form-control">
-                                        <option value="accessions">Accessions</option>
+                                        <option value="accessions">UIs</option>
                                         <option value="plots">Plots</option>
                                         <option class="create_seedlots_trial_subplots_available" value="subplots">Subplots</option>
                                         <option class="create_seedlots_trial_plants_available" value="plants">Plants</option>
@@ -146,8 +146,8 @@ $default_seedlot_material_type => undef
                                 Each seedlot needs to have its initial contents (either a count or a weight) set.  You
                                 can either set the same initial value for each seedlot, use the value from one of the
                                 traits recorded for this trial, or compute a new value from the recorded traits for this
-                                trial.  If you are creating a seedlot for each accession and select a trait or a computed
-                                value as their initial value, then the sum of the trait values for each of the accession's
+                                trial.  If you are creating a seedlot for each UI and select a trait or a computed
+                                value as their initial value, then the sum of the trait values for each of the UI's
                                 plots will be used.  The contents of each seedlot can be modified in the table below
                                 before its creation.
                             </p>
@@ -200,7 +200,7 @@ $default_seedlot_material_type => undef
                                         Use the following variables as substitutions for the trait values to compute a new value
                                         for the initial seedlot contents.  If you are creating one seedlot <strong>per plot</strong>, then
                                         the single plot trait value will be used in the computation.  If you are creating one seedlot
-                                        <strong>per accession</strong>, then the sum of the trait values for each plot of that accession
+                                        <strong>per UI</strong>, then the sum of the trait values for each plot of that UI
                                         will be used in the computation.
                                     </p>
                                     <table class="table table-striped">
@@ -714,7 +714,7 @@ $default_seedlot_material_type => undef
 
         let html = "<thead></tr>";
         if ( stock_type === 'accessions' ) html += "<th>Trial Name</th>";
-        html += "<th>Accession Name</th>";
+        html += "<th>UI Name</th>";
         if ( ["plots", "subplots", "plants"].includes(stock_type) ) html += "<th>Plot Number</th>";
         if ( ["plots", "subplots", "plants"].includes(stock_type)  ) html += "<th>Rep</th>";
         if ( ["plots", "subplots", "plants"].includes(stock_type)  ) html += "<th>Block</th>";
@@ -949,7 +949,7 @@ $default_seedlot_material_type => undef
         let html = "<thead><tr>";
         html += "<th>Seedlot Name</th>";
         html += "<th>Breeding Program</th>";
-        html += "<th>Source Accession</th>";
+        html += "<th>Source UI</th>";
         if ( stock_type === 'plots' ) html += "<th>Source Plot</th>";
         if ( stock_type === 'subplots' ) html += "<th>Source Subplot</th>";
         if ( stock_type === 'plants' ) html += "<th>Source Plant</th>";
@@ -1258,7 +1258,7 @@ $default_seedlot_material_type => undef
                             let accessions = [];
                             for ( let i = 0; i < response.accessions[0].length; i++ ) {
                                 if ( response.accessions[0][i].stock_type !== 'accession' ) {
-                                    error = `This tool only supports trials with plots that contain accessions.  This trial has one or more plots that contain a ${response.accessions[0][i].stock_type}.`;
+                                    error = `This tool only supports trials with plots that contain UIs.  This trial has one or more plots that contain a ${response.accessions[0][i].stock_type}.`;
                                 }
                                 accessions.push({
                                     id: response.accessions[0][i].stock_id,
@@ -1268,10 +1268,10 @@ $default_seedlot_material_type => undef
                             resolve(accessions);
                         }
                         else {
-                            reject('Could not lookup trial accessions');
+                            reject('Could not lookup trial UIs');
                         }
                     },
-                    error: () => reject('Could not lookup trial accessions')
+                    error: () => reject('Could not lookup trial UIs')
                 });
             });
         }

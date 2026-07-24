@@ -1,4 +1,3 @@
-
 <%args>
 $timestamp
 $preferred_species
@@ -84,7 +83,7 @@ $default_seedlot_material_type => undef
             </div>
         </div>
         <div class="form-group form-group-sm">
-            <label class="col-sm-3 control-label">Contents (Accession Uniquename): </label>
+            <label class="col-sm-3 control-label">Contents (UI Uniquename): </label>
             <div class="col-sm-7" >
                 <input class="form-control" id="search_seedlot_form_contents_accession" type="text" />
             </div>

@@ -1,4 +1,3 @@
-
 <& /util/import_javascript.mas, classes => [ 'jstree.dist.jstree' ] &>
 
 <%once>
@@ -79,7 +78,7 @@
             </div>
 
             <div class="form-group">
-                <label class="col-sm-7 control-label">Include Intercrop Accessions: </label>
+                <label class="col-sm-7 control-label">Include Intercrop UIs: </label>
                 <div class="col-sm-5" >
                     <select class="form-control" id="download_trials_phenotypes_intercrop_accessions_option">
                         <option value="0">No</option>
@@ -99,7 +98,7 @@
             </div>
 
             <div class="form-group">
-                <label class="col-sm-7 control-label">Accession List (None gives all available accessions): </label>
+                <label class="col-sm-7 control-label">UI List (None gives all available UIs): </label>
                 <div class="col-sm-5" >
                     <div id="download_trials_phenotypes_accessions">
                     </div>

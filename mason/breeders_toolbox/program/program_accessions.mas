@@ -1,4 +1,3 @@
-
 <%args>
 $program_id
 </%args>
@@ -6,7 +5,7 @@ $program_id
 <table id="accession_summary_data" class="display">
     <thead>
         <tr>
-            <th>Accession name</th>
+            <th>UI name</th>
             <th>Description</th>
         </tr>
     </thead>

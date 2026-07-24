@@ -1,4 +1,3 @@
-
 <%args>
 $odk_crossing_data_service_name => undef
 $odk_crossing_data_service_url => undef
@@ -325,10 +324,10 @@ jQuery(document).ready(function () {
                                                     var status = plant_status_summary[plot_name][status_type];
                                                     //console.log(status);
                                                     if (status_type == 'status'){
-                                                        plant_status_html = plant_status_html + '<tr><td>' + plot_name + '</td><td>' + status['status_date'] + '</td><td><b>Status:</b><br/>Accession Name: ' + status['status_accession_name'] + '<br/>Trial Name: ' + status['status_trial_name'] + '<br/>User: ' + status['status_user'] + '<br/>Status Location: ' + status['status_location'] + '<br/>Status: ' + status['status_message'] + '<br/>Note: ' + status['status_note'] + '<br/>Image: ' + status['attachment_display_thumb'] + '<br/></td></tr>';
+                                                        plant_status_html = plant_status_html + '<tr><td>' + plot_name + '</td><td>' + status['status_date'] + '</td><td><b>Status:</b><br/>UI Name: ' + status['status_accession_name'] + '<br/>Trial Name: ' + status['status_trial_name'] + '<br/>User: ' + status['status_user'] + '<br/>Status Location: ' + status['status_location'] + '<br/>Status: ' + status['status_message'] + '<br/>Note: ' + status['status_note'] + '<br/>Image: ' + status['attachment_display_thumb'] + '<br/></td></tr>';
                                                     }
                                                     if (status_type == 'flowering'){
-                                                        plant_status_html = plant_status_html + '<tr><td>' + plot_name + '</td><td>' + status['FieldActivities/Flowering/flowering_date'] + '</td><td><b>Flowering:</b><br/>Accession Name: ' + status['FieldActivities/Flowering/flowerName'] + '<br/>Plant Sex: ' + status['FieldActivities/Flowering/plantSex'] + '<br/></td></tr>';
+                                                        plant_status_html = plant_status_html + '<tr><td>' + plot_name + '</td><td>' + status['FieldActivities/Flowering/flowering_date'] + '</td><td><b>Flowering:</b><br/>UI Name: ' + status['FieldActivities/Flowering/flowerName'] + '<br/>Plant Sex: ' + status['FieldActivities/Flowering/plantSex'] + '<br/></td></tr>';
                                                     }
                                                 }
                                             }

@@ -23,7 +23,7 @@ $sample_tissue_types => ();
                                 <& /page/page_title.mas, title=>"This workflow will guide you through adding a sampling trial in the database" &>
                                 <p>Sampling trials can represent 96 or 384 well plates, or more generically any sampling scheme.</p>
                                 <p>Each sample has a globally unique tissue sample ID.</p>
-                                <p>The "contents" of each sample can be either a tissue sample, plant name, plot name, or accession name. This "source" name must be in the database already. This is useful if you provide a field trial entity (such as a plot or plant or tissue sample name), so that phenotypes and genotypes can be directly compared.</p>
+                                <p>The "contents" of each sample can be either a tissue sample, plant name, plot name, or UI name. This "source" name must be in the database already. This is useful if you provide a field trial entity (such as a plot or plant or tissue sample name), so that phenotypes and genotypes can be directly compared.</p>
 
                                 <br/><br/>
                                 <center>
@@ -142,7 +142,7 @@ $sample_tissue_types => ();
                                     <div class="well well-sm">
                                         <ul>
                                             <li>Select a list for the source material of each tissue sample. Then indicate how many replicates are required.</li>
-                                            <li>Note: From the most desirable to least desirable source observation unit you can choose: tissue samples, plants, plots, or accessions</li>
+                                            <li>Note: From the most desirable to least desirable source observation unit you can choose: tissue samples, plants, plots, or UIs</li>
                                         </ul>
                                     </div>
                                     <div class="form-group">
@@ -296,7 +296,7 @@ $sample_tissue_types => ();
                     <ul>
                     <li>date (should be YYYY-MM-DD)</li>
                     <li>sample_name (the globally unique identifier for the sample)</li>
-                    <li>source_observation_unit_name (must exist in the database. the identifier of the origin material. in order of most desirable identifier to least desirable identifier that can be used here: tissue sample name, plant name, plot name, accession name. For blank wells, you can write BLANK here and place a 1 in the is_blank column also.)</li>
+                    <li>source_observation_unit_name (must exist in the database. the identifier of the origin material. in order of most desirable identifier to least desirable identifier that can be used here: tissue sample name, plant name, plot name, UI name. For blank wells, you can write BLANK here and place a 1 in the is_blank column also.)</li>
                     <li>sample_number (the sample number for the sample. Must be unique within this sampling trial)</li>
                     <li>replicate (the replicate number for the sample)</li>
 % my $tissue_string = join(', ', @$sample_tissue_types);
@@ -408,7 +408,7 @@ jQuery(document).ready(function(){
             sampling_data.list_id = jQuery('#sampling_trial_accession_select_box_list_select').val();
             var l = new CXGN.List();
             if (! l.validate(sampling_data.list_id, 'accessions', true) && ! l.validate(sampling_data.list_id, 'plots', true) && ! l.validate(sampling_data.list_id, 'plants', true) && ! l.validate(sampling_data.list_id, 'tissue_samples', true)) {
-                alert('The list contains elements that are not accessions or plots or plants or tissue_samples.');
+                alert('The list contains elements that are not UIs or plots or plants or tissue_samples.');
                 return;
             }
             var elements = l.getList(sampling_data.list_id);

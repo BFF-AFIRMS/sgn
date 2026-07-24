@@ -169,12 +169,12 @@ $trial_stock_type => undef
                   Editing Options:
                 </h4>
                 <dl>
-                  <dt>Replace Plot Accession</dt>
-                  <dd>A plot accession can be replaced by an accession within or outside of the trial. To do this, <b>click on the plot</b> and <b>provide the name of the new accession</b> (must already exist in the database).</dd>
-                  <dt>Replace Trial Accession</dt>
-                  <dd>An accession used in a trial can be replaced by a new accession or another accession from the trial. When this replace option is used, it replaces every instances (plots and plants) of that accession in the trial. To do this, <b>click on the Edit Field Map link</b> by the top right of the physical trial layout section; <b>click on Replace Accession button</b>; <b>select accession</b> to replace from the trial and <b>provide a new accession</b> (must already exit in the database); <b>click on Replace Trial Accession button</b> to complete the operation.</dd>
+                  <dt>Replace Plot UI</dt>
+                  <dd>A plot UI can be replaced by a UI within or outside of the trial. To do this, <b>click on the plot</b> and <b>provide the name of the new UI</b> (must already exist in the database).</dd>
+                  <dt>Replace Trial UI</dt>
+                  <dd>A UI used in a trial can be replaced by a new UI or another UI from the trial. When this replace option is used, it replaces every instances (plots and plants) of that UI in the trial. To do this, <b>click on the Edit Field Map link</b> by the top right of the physical trial layout section; <b>click on Replace UI button</b>; <b>select UI</b> to replace from the trial and <b>provide a new UI</b> (must already exit in the database); <b>click on Replace Trial UI button</b> to complete the operation.</dd>
                   <dt>Change dimensions</dt>
-                  <dd>Click on the change dimensions button to alter the dimensions of the field map, and the respective row and column attributes of the plots in your trial. Clicking on this button will open a dialogue that prompts you to enter an accession name if the change you are making will result in dimensions that are larger than the amount of plots in your trial. The result is that the map will fill in the extra space with filler plots, and the filler plots will have the accession entered in input in the dialogue.</dd>
+                  <dd>Click on the change dimensions button to alter the dimensions of the field map, and the respective row and column attributes of the plots in your trial. Clicking on this button will open a dialogue that prompts you to enter a UI name if the change you are making will result in dimensions that are larger than the amount of plots in your trial. The result is that the map will fill in the extra space with filler plots, and the filler plots will have the UI entered in input in the dialogue.</dd>
                   <dt>Invert rows</dt>
                   <dd>Check invert rows to observe your trial from the top down instead of the bottom up. This change is only present on your visualization, and the trial data will not be changed.</dd>
                   <dt>Plot Layout</dt>
@@ -192,8 +192,8 @@ $trial_stock_type => undef
                   <dt>Transpose Fieldmap</dt>
                   <dd>This button transposes the x and y coordinates of each plot in your map. Borders will adjust accordingly.</dd>
                   <!--
-                  <dt>Substitute Plot Accessions<dt>
-                  <dd>This feature allows you to switch plot accessions between any two plots. To switch the accessions of two plots, <b>click on the Edit Field Map link</b>; <b>click on Substitute Accession button</b>; <b>select the plots to switch there accessions</b>; <b>click on Substitute Plot Accession</b> to switch the accession in those plots.</dd>
+                  <dt>Substitute Plot UIs<dt>
+                  <dd>This feature allows you to switch plot UIs between any two plots. To switch the UIs of two plots, <b>click on the Edit Field Map link</b>; <b>click on Substitute UI button</b>; <b>select the plots to switch there UIs</b>; <b>click on Substitute Plot UI</b> to switch the UI in those plots.</dd>
                   -->
                 </dl>
 
@@ -213,7 +213,7 @@ $trial_stock_type => undef
                   Note:
                 </h4>
                 <dd>- You have to be a <b>curator</b> or a <b>submitter and associated to the breeding program</b> of the trial to use the features of this tool.</dd>
-                <dd>- <b>Input boxes</b> used within the field map tool will automatically (<b>autocomplete</b>) give accession name options from the database when you start typing the accession name.</dd>
+                <dd>- <b>Input boxes</b> used within the field map tool will automatically (<b>autocomplete</b>) give UI name options from the database when you start typing the UI name.</dd>
                 <dd>- <b>Changes can only be made to the physical layout when phenotypes are not yet upload for the trial.</b></dd>
 
                 </div>
@@ -422,7 +422,7 @@ jQuery("#correct_spatial").click(function() {
           'scrollX': true,
           'columns': [
             { 'title': 'Plot' },
-            { 'title': 'Accession' },
+            { 'title': 'UI' },
             { 'title': 'Trait' },
             { 'title': 'Original' },
             { 'title': 'Corrected' },
@@ -528,8 +528,8 @@ jQuery(document).on('click', '#confirm_store_spatial_correction', async function
 
   				  for (n=0; n<response.plot_name.length; n++){
   			 			for (i=0; i<response.plot_name[n].length; i++) {
-  			 		    trial_plot_name_html = trial_plot_name_html + "<option value=" + response.plot_id[n][i] + "," + response.acc[n][i] + ">" + "Plot:" + response.plot_name[n][i] + "," + " Number:" + response.plot_number[n][i] + "," +" Accession:"+ response.acc[n][i] +"</option>";
-  							trial_plot_number_html = trial_plot_number_html + "<option value=" + response.plot_id[n][i] + "," + response.acc[n][i] + ">" + "Plot:" + response.plot_name[n][i] + "," + " Number:" + response.plot_number[n][i] + "," +" Accession:"+ response.acc[n][i] + "</option>";
+  			 		    trial_plot_name_html = trial_plot_name_html + "<option value=" + response.plot_id[n][i] + "," + response.acc[n][i] + ">" + "Plot:" + response.plot_name[n][i] + "," + " Number:" + response.plot_number[n][i] + "," +" UI:"+ response.acc[n][i] +"</option>";
+  							trial_plot_number_html = trial_plot_number_html + "<option value=" + response.plot_id[n][i] + "," + response.acc[n][i] + ">" + "Plot:" + response.plot_name[n][i] + "," + " Number:" + response.plot_number[n][i] + "," +" UI:"+ response.acc[n][i] + "</option>";
   				 		}
   					}
   					trial_plot_name_html = trial_plot_name_html + "</select>";
@@ -675,19 +675,19 @@ jQuery(document).on('click', '#confirm_store_spatial_correction', async function
         subs_message_title = 'Substitute Cross Unique ID';
         subs_success_message = 'Crosss Unique ID was substituted successfully.';
     } else {
-        edit_dialog_title = 'Replace Trial Accessions Within A Trial Plots';
-        replace_button_label = 'Replace Accession';
-        // substitute_button_label = 'Substitute Accession';
-        replace_dialog_title = 'Replace Trial Accession in '.concat(trial_name);
-        replace_stock_text1 = 'Select Accession: ';
-        replace_stock_text2 = 'Enter New Accession: ';
-        replace_button_submit = 'Replace Trial Accession';
-        // substitute_dialog_title = 'Substitute Plot Accession in '.concat(trial_name);
-        // substitute_button_submit = 'Substitute Plot Accession';
-        replace_message_title = 'Replace Trial Accession';
-        replace_success_message = 'Accession was replaced successfully.';
-        // subs_message_title = 'Substitute Plot Accession';
-        // subs_success_message = 'Accession was substituted successfully.';
+        edit_dialog_title = 'Replace Trial UIs Within A Trial Plots';
+        replace_button_label = 'Replace UI';
+        // substitute_button_label = 'Substitute UI';
+        replace_dialog_title = 'Replace Trial UI in '.concat(trial_name);
+        replace_stock_text1 = 'Select UI: ';
+        replace_stock_text2 = 'Enter New UI: ';
+        replace_button_submit = 'Replace Trial UI';
+        // substitute_dialog_title = 'Substitute Plot UI in '.concat(trial_name);
+        // substitute_button_submit = 'Substitute Plot UI';
+        replace_message_title = 'Replace Trial UI';
+        replace_success_message = 'UI was replaced successfully.';
+        // subs_message_title = 'Substitute Plot UI';
+        // subs_success_message = 'UI was substituted successfully.';
     }
 
     jQuery('#edit_field_map_title').text(edit_dialog_title);

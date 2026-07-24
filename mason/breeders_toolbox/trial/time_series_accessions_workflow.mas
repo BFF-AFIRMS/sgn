@@ -1,3 +1,4 @@
+
 <%args>
 $trial_id => undef
 $data_level => undef
@@ -5,7 +6,7 @@ $data_level => undef
 
 
 <div class="well well-sm">
-    <button class="btn btn-primary" id="trial_detail_page_analysis_time_series_accessions_workflow">Get Time-Series Plots For Accessions On Saved Measurements</button>
+    <button class="btn btn-primary" id="trial_detail_page_analysis_time_series_accessions_workflow">Get Time-Series Plots For UI On Saved Measurements</button>
 </div>
 <hr>
 
@@ -39,14 +40,14 @@ $data_level => undef
                             </center>
                         </div>
                     </&>
-                    <&| /util/workflow.mas:step, title=> "Accessions" &>
-                        <& /page/page_title.mas, title=>"Select the accessions to plot" &>
+                    <&| /util/workflow.mas:step, title=> "UI" &>
+                        <& /page/page_title.mas, title=>"Select the UI to plot" &>
 
                         <div class="container-fluid">
                             <div class="form-horizontal">
 
                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">Accessions (Leave empty for all): </label>
+                                    <label class="col-sm-3 control-label">UI (Leave empty for all): </label>
                                     <div class="col-sm-9" >
                                         <div id="trial_analysis_time_series_accessions_workflow_accessions_div"></div>
                                     </div>
@@ -141,7 +142,7 @@ jQuery(document).ready(function(){
                 },
                 error: function(response){
                     jQuery("#working_modal").modal("hide");
-                    alert('Error doing time series accessions!');
+                    alert('Error doing time series UI!');
                 }
             });
         }

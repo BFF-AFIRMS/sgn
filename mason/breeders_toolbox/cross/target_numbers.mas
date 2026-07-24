@@ -7,8 +7,8 @@ $trial_id
     <table class="table table-hover table-bordered" id="target_numbers_and_progress_table">
         <thead>
             <tr>
-                <th>Female Accession</th>
-                <th>Male Accession</th>
+                <th>Female UI</th>
+                <th>Male UI</th>
                 <th>Target No. of Seeds</th>
                 <th>Actual No. of Seeds</th>
                 <th>Target No. of Progenies</th>

@@ -1,4 +1,3 @@
-
 <%args>
 $trial_id
 $trial_name
@@ -156,7 +155,7 @@ DEPRECATED. THIS SHOULD BE DONE VIA BRAPI
                     <span style="font-size:3.5em;" class="glyphicon glyphicon-qrcode"></span>
                 </div>
                 <div class="col-sm-7">
-                    <h4>Generate barcode labels for samples, accessions or plate ID.</h4>
+                    <h4>Generate barcode labels for samples, UIs or plate ID.</h4>
                 </div>
                 <div class="col-sm-2">
                     <& /breeders_toolbox/trial/generate_genotrial_barcode.mas, trial_name => $trial_name, trial_id => $trial_id, identifier => $identifier_prefix, plate_id=> $plate_id &>

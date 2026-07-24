@@ -1,4 +1,3 @@
-
 <div class="modal fade" id="upload_progenies_new_accessions_dialog" name="upload_progenies_new_accessions_dialog" tabindex="-1" role="dialog" aria-labelledby="updateProgeniesDialog">
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
@@ -67,7 +66,7 @@
                     <br>
                         <b>-cross_unique_id</b> (must exist in the database)
                     <br>
-                        <b>-progeny_name</b> (accession names must NOT already exist in the database, must have only one progeny for each row, you can add many progenies by adding more rows)
+                        <b>-progeny_name</b> (UI names must NOT already exist in the database, must have only one progeny for each row, you can add many progenies by adding more rows)
                     <br>
                 </div>
             </div>
@@ -165,7 +164,7 @@
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
-                    <div class="well">To Overwrite Parents In the Case That An Accession Already Has Male or Female Parents <input type="checkbox" checked id="cross_upload_overwrite_pedigrees" /></div>
+                    <div class="well">To Overwrite Parents In the Case That An UI Already Has Male or Female Parents <input type="checkbox" checked id="cross_upload_overwrite_pedigrees" /></div>
                         <table class="table table-hover">
                             <tbody></tbody>
                         </table>
@@ -212,7 +211,7 @@
                     <br>
                         <b>-cross_unique_id</b> (must exist in the database)
                     <br>
-                        <b>-progeny_name</b> (accession names must already EXIST in the database, must have only one progeny for each row, you can add many progenies by adding more rows)
+                        <b>-progeny_name</b> (UI names must already EXIST in the database, must have only one progeny for each row, you can add many progenies by adding more rows)
                     <br>
                 </div>
             </div>

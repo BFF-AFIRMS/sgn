@@ -7,7 +7,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="uploadDerivedAccessionsDialog">Upload Derived Accessions</h4>
+                <h4 class="modal-title" id="uploadDerivedAccessionsDialog">Upload Derived UIs</h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
@@ -47,7 +47,7 @@
                 <div class="container-fluid">
                     <p>
                         <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
-                        The derived accessions were saved successfully.
+                        The derived UIs were saved successfully.
                     </p>
                 </div>
             </div>
@@ -63,7 +63,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="uploadDerivedAccessionsErrorDialog">Upload Derived Accessions Error</h4>
+                <h4 class="modal-title" id="uploadDerivedAccessionsErrorDialog">Upload Derived UIs Error</h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
@@ -84,7 +84,7 @@
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="uploadDerivedAccessionsInfoDialog">Upload Template Information For Derived Accessions</h4>
+                <h4 class="modal-title" id="uploadDerivedAccessionsInfoDialog">Upload Template Information For Derived UIs</h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
@@ -106,12 +106,12 @@
 
                     <b>Required fields:</b>
                     <ul>
-                        <li>source_name (must be in the database. Stock type can be accession, plant or tissue sample)</li>
+                        <li>source_name (must be in the database. Stock type can be UI, plant or tissue sample)</li>
                         <li>derived_accession_name (must NOT exist in the database)</li>
                         <li>description</li>
                     </ul>
                 </div>
-                <& /help/file_upload_type.mas, type => "Derived Accessions", optional_column => 0 &>
+                <& /help/file_upload_type.mas, type => "Derived UIs", optional_column => 0 &>
             </div>
             <div class="modal-footer">
                 <button id="close_derived_accession_info_upload_dialog" type="button" class="btn btn-default" data-dismiss="modal">Close</button>

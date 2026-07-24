@@ -25,9 +25,9 @@ $trial_stock_type
 %    $list_label = 'Family Name List:';
 %    $table_header = 'Family Name';
 % } else {
-%    $title = 'Add Additional Accessions or Plants in This Greenhouse Trial';
-%    $list_label = 'Accession List:';
-%    $table_header = 'Accession Name';
+%    $title = 'Add Additional UIs or Plants in This Greenhouse Trial';
+%    $list_label = 'UI List:';
+%    $table_header = 'UI Name';
 % }
 
 <div class="modal fade" id="add_additional_stocks_using_list_dialog" name="add_additional_stocks_using_list_dialog" tabindex="-1" role="dialog" aria-labelledby="addAdditionalStocksUsingListDialog">
@@ -47,8 +47,8 @@ $trial_stock_type
                                     <div class="col-sm-7">
                                         <select class="form-control" id="addition_type">
                                             <option value="">Select a type</option>
-                                            <option value="new_accessions">add additional accessions</option>
-                                            <option value="additional_plants">add additional plants for accessions already in the greenhouse</option>
+                                            <option value="new_accessions">add additional UIs</option>
+                                            <option value="additional_plants">add additional plants for UIs already in the greenhouse</option>
                                         </select>
                                     </div>
                                 </div>
@@ -213,7 +213,7 @@ jQuery(document).ready(function(){
             },
             error: function() {
                 jQuery("#working_modal").modal("hide");
-                alert('An error occurred storing additional accessions for greenhouse trial.');
+                alert('An error occurred storing additional UIs for greenhouse trial.');
                 jQuery('#add_additional_stocks_using_list_dialog').modal("hide");
             },
         });

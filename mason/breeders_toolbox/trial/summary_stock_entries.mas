@@ -24,7 +24,7 @@ $trial_stock_type
 % } elsif ($trial_stock_type eq 'family_name') {
                             <th>Family Name</th>
 % } else {
-                            <th>Accession</th>
+                            <th>UI</th>
 % }
                             <th>Plot</th>
                             <th>Plant</th>

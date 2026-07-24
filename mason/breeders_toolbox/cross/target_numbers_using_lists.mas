@@ -99,7 +99,7 @@ $trial_id
                     <h4>
                         List of Female Parents and List of Male Parents:
                     </h4>
-                    <p>Lists must be 'accessions' list type and all of the female and male parents in the lists must exist as uniquenames in the database.</p>
+                    <p>Lists must be 'UI' list type and all of the female and male parents in the lists must exist as uniquenames in the database.</p>
                 </div>
             </div>
             <div class="modal-footer">

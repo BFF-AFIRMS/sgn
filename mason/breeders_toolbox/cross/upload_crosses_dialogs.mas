@@ -32,7 +32,7 @@ $breeding_program_id => undef
                                             <li><b>backcross:</b> An individual plant pollinated by one of its parents. Cross Unique ID can be used as one of the parents.</li>
                                             <li><b>sib:</b> Mating between individuals that have at least one parent in common. Generally between two individuals within the same plot.</li>
                                             <li><b>polycross:</b> Mating between individual female parent from a population and the corresponding male population.</li>
-                                            <li><b>bulk:</b> A group of plants (usually a related family) pollinated by an individual plant (between a female population and a male accession).</li>
+                                            <li><b>bulk:</b> A group of plants (usually a related family) pollinated by an individual plant (between a female population and a male UI).</li>
                                             <li><b>bulk_open:</b> A group of plants (usually a related family) that are pollinated by another group of plants or open pollinated (between a female population and a male population or unknown male parent).</li>
                                             <li><b>bulk_self:</b> A group of plants (usually a related family) that are self pollinated (each individual selfed, not combined pollen).</li>
                                             <li><b>doubled_haploid:</b> Plants derived from doubling the chromosome number of haploid tissue.</li>
@@ -43,7 +43,7 @@ $breeding_program_id => undef
                                 <li>An individual cross can be linked to a female plot or plant, as well as a male plot or plant.</li>
                                 <li>A cross can have a number of properties associated to it, such as number of flowers, pollination date, etc.</li>
                                 <li>A cross can produce seed, which goes into a seedlot.</li>
-                                <li>A cross can ultimately produce progeny, which then become named accessions in the database.</li>
+                                <li>A cross can ultimately produce progeny, which then become named UIs in the database.</li>
                             </ul>
 
                             <br/><br/>
@@ -248,7 +248,7 @@ $breeding_program_id => undef
                     <b>Required columns:</b>
                     <ul>
                         <li><b>cross_unique_id</b> (must NOT exist in the database)</li>
-                        <li><b>cross_combination</b> (required in the header, but value for cross combination (e.g. female accession/male accession) may be left blank)</li>
+                        <li><b>cross_combination</b> (required in the header, but value for cross combination (e.g. female UI/male UI) may be left blank)</li>
                         <li><b>cross_type</b> (must be one of the following: biparental, self, open, sib, polycross, backcross, bulk, bulk_open, bulk_self, doubled_haploid, dihaploid_induction)</li>
                         <ul class="a">
                             <li><b>biparental:</b> An individual plant pollinated by another individual plant.</li>
@@ -257,14 +257,14 @@ $breeding_program_id => undef
                             <li><b>backcross:</b> An individual plant pollinated by one of its parents.</li>
                             <li><b>sib:</b> Mating between individuals that have at least one parent in common. Generally between two individuals within the same plot.</li>
                             <li><b>polycross:</b> Mating between individual female parent from a population and the corresponding male population.</li>
-                            <li><b>bulk:</b> A group of plants (usually a related family) pollinated by an individual plant (between a female population and a male accession).</li>
+                            <li><b>bulk:</b> A group of plants (usually a related family) pollinated by an individual plant (between a female population and a male UI).</li>
                             <li><b>bulk_open:</b> A group of plants (usually a related family) that are pollinated by another group of plants or open pollinated (between a female population and a male population or unknown male parent).</li>
                             <li><b>bulk_self:</b> A group of plants (usually a related family) that are self pollinated (each individual selfed, not combined pollen).</li>
                             <li><b>doubled_haploid:</b> Plants derived from doubling the chromosome number of haploid tissue.</li>
                             <li><b>dihaploid_induction</b>: Plants derived from reducing the chromosome set from 4 to 2.</li>
                         </ul>
-                        <li><b>female_parent:</b> Female parent names must exist as <b>uniquenames</b> in the database, can be accession, plot, plant or population stock type.</li>
-                        <li><b>male_parent:</b> Required in the header, but value may be left blank for most cross types. Must be specified for biparental, sib, backcross, polycross and bulk cross types. When specified, male parent names must exist as <b>uniquenames</b> in the database, can be accession, plot, plant or population stock type.</li>
+                        <li><b>female_parent:</b> Female parent names must exist as <b>uniquenames</b> in the database, can be UI, plot, plant or population stock type.</li>
+                        <li><b>male_parent:</b> Required in the header, but value may be left blank for most cross types. Must be specified for biparental, sib, backcross, polycross and bulk cross types. When specified, male parent names must exist as <b>uniquenames</b> in the database, can be UI, plot, plant or population stock type.</li>
                     </ul>
                     <b>Optional columns (additional parent info):</b> You can add additional parent info after male_plant column by using one or more of these column headers.
                     <ul>

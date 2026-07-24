@@ -26,7 +26,7 @@
                             <div class="col-sm-8">
                                 <select class="form-control" id="member_type">
                                     <option value="">Select a member type</option>
-                                    <option value="accessions">accessions</option>
+                                    <option value="accessions">UIs</option>
                                     <option value="plots">plots</option>
                                     <option value="plants">plants</option>
                                 </select>
@@ -34,7 +34,7 @@
                         </div>
                         <div id="population_accession_list" style="display:none">
                             <div class="form-group">
-                                <label class="col-sm-4 control-label">Choose a List of Accessions to Add: </label>
+                                <label class="col-sm-4 control-label">Choose a List of UIs to Add: </label>
                                 <div class="col-sm-8" id="create_population_accession_list_div" name="create_population_accession_list_div">
                                 </div>
                             </div>

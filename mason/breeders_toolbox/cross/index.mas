@@ -1,4 +1,3 @@
-
 <%args>
 $cross_id
 $cross_name => ''
@@ -95,9 +94,9 @@ $identifier_prefix => ''
                             <tr>
                                 <th>Cross Combination</th>
                                 <th>Cross Type</th>
-                                <th>Female Accession</th>
+                                <th>Female UI</th>
                                 <th>Female Ploidy</th>
-                                <th>Male Accession</th>
+                                <th>Male UI</th>
                                 <th>Male Ploidy</th>
                                 <th>Female Plot</th>
                                 <th>Male Plot</th>

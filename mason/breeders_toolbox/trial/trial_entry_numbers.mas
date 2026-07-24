@@ -1,4 +1,3 @@
-
 <%args>
 $trial_id
 $trial_name
@@ -69,7 +68,7 @@ $trial_name
             autoWidth: false,
             data: [],
             columns: [
-                { title: "Accession", data: "stock_name" },
+                { title: "UI", data: "stock_name" },
                 { title: "Entry Number", data: "entry_number"}
             ],
             columnDefs: [

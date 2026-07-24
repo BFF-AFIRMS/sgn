@@ -842,7 +842,7 @@ jQuery(document).ready(function() {
                         manage_drone_imagery_analytics_phenotype_training_file = response.stats_tempfile;
                         manage_drone_imagery_analytics_grm_training_file = response.grm_file;
 
-                        html = html + '<table class="table table-bordered table-hover"><thead><tr><th>Accessions</th>';
+                        html = html + '<table class="table table-bordered table-hover"><thead><tr><th>UI</th>';
                         for (var i=0; i<manage_drone_imagery_analytics_trait_names.length; i++) {
                             html = html + '<th>'+manage_drone_imagery_analytics_trait_names[i]+'</th>';
                         }

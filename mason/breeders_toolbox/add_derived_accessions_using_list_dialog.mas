@@ -7,18 +7,18 @@
         <div class="modal-content ui-front">
             <div class="modal-header">
                 <button type="reset" class="close" id="add_derived_accessions_using_list_dismiss_button_1" name="add_derived_accessions_using_list_dismiss_button" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <center><h4 class="modal-title" id="addDerivedAccessions">Add New Accessions Derived from Accessions/Plants/Tissue Samples Using a List</h4></center>
+                <center><h4 class="modal-title" id="addDerivedAccessions">Add New UIs Derived from UIs/Plants/Tissue Samples Using a List</h4></center>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
                     <&| /util/workflow.mas, id=> "add_derived_accessions_workflow" &>
                         <&| /util/workflow.mas:step, title=> "Intro" &>
-                            <& /page/page_title.mas, title=>"Add Derived Accessions" &>
+                            <& /page/page_title.mas, title=>"Add Derived UIs" &>
                             <ul>
-                                <li>List must be accessions, plants or tissue samples list type</li>
+                                <li>List must be UIs, plants or tissue samples list type</li>
                                 <li>Names in the list must exist in the database</li>
-                                <li>Derived accession names must not exist in the database</li>
-                                <li>Description provided will be stored as description for the specify derived accession</li>
+                                <li>Derived UI names must not exist in the database</li>
+                                <li>Description provided will be stored as description for the specify derived UI</li>
                             </ul>
                             <hr>
                             <center>
@@ -26,8 +26,8 @@
                             </center>
                         </&>
                         <form class="form-horizontal" role="form" name="add_derived_accessions_form" id="add_derived_accessions_form">
-                            <&| /util/workflow.mas:step, title=> "Add New Derived Accessions" &>
-                                <& /page/page_title.mas, title=>"Enter information about derived accessions" &>
+                            <&| /util/workflow.mas:step, title=> "Add New Derived UIs" &>
+                                <& /page/page_title.mas, title=>"Enter information about derived UIs" &>
                                 <br/>
                                 <br/>
                                 <div class="form-horizontal">
@@ -36,7 +36,7 @@
                                         <div class="col-sm-8">
                                             <select class="form-control" id="derived_from_type">
                                                 <option value="">Select a type</option>
-                                                <option value="accessions">accessions</option>
+                                                <option value="accessions">UIs</option>
                                                 <option value="plants">plants</option>
                                                 <option value="tissue_samples">tissue samples</option>
                                             </select>
@@ -65,10 +65,10 @@
                         </form>
 
                         <&| /util/workflow.mas:complete, title=> "Complete" &>
-                            <& /page/page_title.mas, title=>"Finished! Your new accessions were stored" &>
+                            <& /page/page_title.mas, title=>"Finished! Your new UIs were stored" &>
                             <p>
                                 <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
-                                New derived accessions were added successfully
+                                New derived UIs were added successfully
                             </p>
                             <br/>
                         </&>
@@ -117,7 +117,7 @@ jQuery(document).ready(function(){
     function add_derived_accessions_form (derived_from_list_id) {
         const derived_from_list = list.getList(derived_from_list_id);
 
-        var html = '<table class="table table-bordered" id="accession_info_table"><thead><tr><th>Source Name</th><th>New Accession Name</th><th>Description</th></tr></thead><tbody>';
+        var html = '<table class="table table-bordered" id="accession_info_table"><thead><tr><th>Source Name</th><th>New UI Name</th><th>Description</th></tr></thead><tbody>';
         for (var i=0; i<derived_from_list.length; i++){
             html = html + '<tr><td>' + derived_from_list[i] + '</td><td><input class="form-control"  name ="new_derived_accession_name" id="new_derived_accession_name_'+ i +'" value="" placeholder="Required"/></td><td><input class="form-control"  name ="accession_description" id="accession_description_'+ i +'" value="" placeholder="Required"/></td></tr>';
         };
@@ -142,7 +142,7 @@ jQuery(document).ready(function(){
             let derived_accession_name = jQuery('#new_derived_accession_name_'+ i ).val();
             let accession_description = jQuery('#accession_description_'+ i ).val();
             if (derived_accession_name === '') {
-                alert("please provide new accession name for:" + stock_name);
+                alert("please provide new UI name for:" + stock_name);
                 return;
             }
             if (accession_description === '') {
@@ -178,7 +178,7 @@ jQuery(document).ready(function(){
 
             error: function() {
                 jQuery("#working_modal").modal("hide");
-                alert('An error occurred storing new accessions.');
+                alert('An error occurred storing new UIs.');
             },
         });
     });

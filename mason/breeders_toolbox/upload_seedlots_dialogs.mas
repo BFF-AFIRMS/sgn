@@ -21,7 +21,7 @@ $default_seedlot_material_type => undef
                             <li>Seedlots represent physical plant materials in packets/containers.</li>
                             <li>Plant material in a seedlot can be seed, root, clone, plant, tissue culture or gametophype.</li>
                             <li>If you would like to set a default material type for seedlots, please contact us.</li>
-                            <li>These plant materials can be from crosses or for named accessions.</li>
+                            <li>These plant materials can be from crosses or for named UIs.</li>
                             <li>Seedlots can have a specific location, box, weight_gram, and count.</li>
                             <li>Seedlots can belong to breeding programs and organizations.</li>
                             <li>Seedlots can be used in trials (e.g. they were planted in a plot) and they can be harvested from a plot or plant (e.g. a cross was performed and seeds were collected.)</li>
@@ -41,7 +41,7 @@ $default_seedlot_material_type => undef
                                 <div class="col-sm-9">
                                     <select class="form-control" id="upload_seedlots_type_select" name="upload_seedlots_type_select">
                                         <option value=""></option>
-                                        <option data-desc="If you have seedlots for named accessions, such as seed that was ordered from a vendor, use this option. Use this option if the plant material was not harvested from a cross that is in the database." value="from_accession">I have seedlots for named accessions</option>
+                                        <option data-desc="If you have seedlots for named UIs, such as seed that was ordered from a vendor, use this option. Use this option if the plant material was not harvested from a cross that is in the database." value="from_accession">I have seedlots for named UIs</option>
                                         <option data-desc="If you have seedlots that were harvested from crosses that are in the database, use this option." value="from_cross">I have seedlots harvested from crosses</option>
                                     </select>
                                 </div>
@@ -60,7 +60,7 @@ $default_seedlot_material_type => undef
                             <br/><br/>
                             <div style="text-align: center">
                                 <div id="upload_seedlots_accessions_template_section" style="display:none">
-                                    <button class="btn btn-info" name="guided_help_seedlot_upload_format_button">Information about file format for uploading seedlots of named accessions</button><br/><br/>
+                                    <button class="btn btn-info" name="guided_help_seedlot_upload_format_button">Information about file format for uploading seedlots of named UIs</button><br/><br/>
                                 </div>
                                 <div id="upload_seedlots_crosses_template_section" style="display:none">
                                     <button class="btn btn-info" name="guided_help_seedlot_crosses_upload_format_button">Information about file format for uploading seedlots harvested</button><br/><br/>
@@ -145,16 +145,16 @@ $default_seedlot_material_type => undef
                                 <div id="upload_seedlots_missing_accessions_div" style="display:none">
                                     <div class="well">
                                         <ul>
-                                            <li>Accessions must exist in the database prior to adding seedlots of them. The reason for this is that an accession can be exist in many seedlots and therefore exists as a separate entity in the database. We also want to be careful about adding new accessions into the database because we do not want incorrectly duplicated data.</li>
-                                            <li>When adding accessions into the database, you can use either a list of accessions or an Excel file.</li>
+                                            <li>UIs must exist in the database prior to adding seedlots of them. The reason for this is that a UI can be exist in many seedlots and therefore exists as a separate entity in the database. We also want to be careful about adding new UIs into the database because we do not want incorrectly duplicated data.</li>
+                                            <li>When adding UIs into the database, you can use either a list of UIs or an Excel file.</li>
                                         </ul>
                                     </div>
 
                                     <div id="upload_seedlots_add_missing_accessions_html">
                                     </div>
 
-                                    <button class="btn btn-info" name="add_accessions_link">Add your accessions to the database</button><br/><br/>
-                                    <button class="btn btn-primary" onclick="Workflow.complete(this);">Once all your accessions are in the database Click Here</button><br/><br/>
+                                    <button class="btn btn-info" name="add_accessions_link">Add your UIs to the database</button><br/><br/>
+                                    <button class="btn btn-primary" onclick="Workflow.complete(this);">Once all your UIs are in the database Click Here</button><br/><br/>
                                 </div>
                                 <div id="upload_seedlots_missing_crosses_div" style="display:none">
                                     <div class="well">
@@ -245,7 +245,7 @@ $default_seedlot_material_type => undef
         <div class="modal-content">
             <div class="modal-header" style="text-align: center">
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="uploadSeedlotInfoDialog">Upload Template Information For Named Accessions</h4>
+                <h4 class="modal-title" id="uploadSeedlotInfoDialog">Upload Template Information For Named UIs</h4>
             </div>
             <div class="modal-body">
                 <div class="container-fluid">
@@ -333,7 +333,7 @@ $default_seedlot_material_type => undef
                     <b>Required fields:</b>
                     <ul>
                     <li>seedlot_name (must be unique)</li>
-                    <li>cross_unique_id (must exist in the database. a cross_unique_id can represent a cross between accessions e.g. AxB, but a cross can also represent a cross between specific plots in the field if you have this information)</li>
+                    <li>cross_unique_id (must exist in the database. a cross_unique_id can represent a cross between UIs e.g. AxB, but a cross can also represent a cross between specific plots in the field if you have this information)</li>
                     <li>operator_name (the name of the person who oversaw the inventory process. can be any name.)</li>
                     <li>
                     amount (number of materials in seedlot. can be provided in conjunction with weight_gram. must provide a value for amount or weight_gram or both.)
@@ -465,7 +465,7 @@ jQuery(document).ready(function(){
                     jQuery('#upload_seedlots_missing_accessions_or_crosses_div').show();
                     if (response.missing_accessions){
                         jQuery('#upload_seedlots_missing_accessions_div').show();
-                        var missing_accessions_html = "<div class='well well-sm'><h3>Add the missing accessions to a list</h3><div id='upload_seedlots_missing_accessions' style='display:none'></div><div id='upload_seedlots_add_missing_accessions'></div></div><br/>";
+                        var missing_accessions_html = "<div class='well well-sm'><h3>Add the missing UIs to a list</h3><div id='upload_seedlots_missing_accessions' style='display:none'></div><div id='upload_seedlots_add_missing_accessions'></div></div><br/>";
                         jQuery("#upload_seedlots_add_missing_accessions_html").html(missing_accessions_html);
 
                         var missing_accessions_vals = '';
@@ -482,7 +482,7 @@ jQuery(document).ready(function(){
                     }
                 } else {
                     jQuery('#upload_seedlots_missing_accessions_or_crosses_div').hide();
-                    var no_missing_accessions_html = '<button class="btn btn-primary" onclick="Workflow.skip(this);">There were no errors regarding missing accessions or crosses  Click Here</button><br/><br/>';
+                    var no_missing_accessions_html = '<button class="btn btn-primary" onclick="Workflow.skip(this);">There were no errors regarding missing UIs or crosses  Click Here</button><br/><br/>';
                     jQuery('#upload_seedlots_no_error_messages_accessions_html').html(no_missing_accessions_html);
                     Workflow.skip('#upload_seedlots_missing_accessions_or_crosses_div', false);
                 }

@@ -1,4 +1,3 @@
-
 <style>
 @media (min-width: 768px) {
   .modal-xl {
@@ -30,7 +29,7 @@
                     </div>
 
                     <ul class="nav nav-pills nav-justified" id="cross_wishlist_tab_select">
-                        <li id="cross_wishlist_list_tab"><a data-toggle="tab" href="#with_lists">Using Accession Lists</a></li>
+                        <li id="cross_wishlist_list_tab"><a data-toggle="tab" href="#with_lists">Using UI Lists</a></li>
                         <li class="active" id="cross_wishlist_no_list_tab"><a data-toggle="tab" href="#not_with_lists">Using Crossing Blocks</a></li>
                         <li id="cross_wishlist_upload_tab"><a data-toggle="tab" href="#upload_wishlist">Uploading Cross Combinations</a></li>
                     </ul>
@@ -72,12 +71,12 @@
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">Female Accession List: </label>
+                                    <label class="col-sm-3 control-label">Female UI List: </label>
                                     <div class="col-sm-9" id="female_accession_list_div" name="female_accession_list_div">
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">Male Accession List: </label>
+                                    <label class="col-sm-3 control-label">Male UI List: </label>
                                     <div class="col-sm-9" id="male_accession_list_div" name="male_accession_list_div">
                                     </div>
                                 </div>
@@ -115,7 +114,7 @@
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="col-sm-3 control-label">Female Accession Name(s):</label>
+                                    <label class="col-sm-3 control-label">Female UI Name(s):</label>
                                     <div class="col-sm-9" >
                                         <div id="cross_wishlist_female_accession_select_div">
                                             <p>First Select A Trial</p>
@@ -324,8 +323,8 @@
                         Required columns:
                     </b>
                     <ul>
-                        <li><b>female_accession</b> (accession names must exist as <b>uniquenames</b> in the database and are in the selected female trial. Wishlist will include all of the female plots in the trial.)</li>
-                        <li><b>male_accession</b> (accession names must exist as <b>uniquenames</b> in the database)</li>
+                        <li><b>female_accession</b> (UI names must exist as <b>uniquenames</b> in the database and are in the selected female trial. Wishlist will include all of the female plots in the trial.)</li>
+                        <li><b>male_accession</b> (UI names must exist as <b>uniquenames</b> in the database)</li>
                         <li><b>priority</b> (1 is the most important) </li>
                     </ul>
                 </div>
@@ -344,7 +343,7 @@ var lo = new CXGN.List();
 
 function draw_cross_grid(female_accessions, male_accessions){
     console.log("draw cross grid");
-    var cross_grid_html = '<h3>Set Cross Priorities: 1 is highest and 60 is lowest</h3><h4>Female Accessions Are in First Column and Male Accessions Are in Header</h4><table class="table table-bordered"><thead><tr><th>Female Accessions</th>';
+    var cross_grid_html = '<h3>Set Cross Priorities: 1 is highest and 60 is lowest</h3><h4>Female UIs Are in First Column and Male UIs Are in Header</h4><table class="table table-bordered"><thead><tr><th>Female UIs</th>';
     for(var i=0; i<male_accessions.length; i++){
         cross_grid_html = cross_grid_html + '<th>' + male_accessions[i] + '</th>';
     }
@@ -396,8 +395,8 @@ jQuery(document).ready(function($) {
 
     jQuery("#create_cross_wishlist").click(function() {
         jQuery("#create_cross_wishlist_dialog").modal("show");
-        jQuery("#female_accession_list_div").html(lo.listSelect('female_accession_list_div', ["accessions"], "Please select list with < 60 accessions", undefined, undefined ));
-        jQuery("#male_accession_list_div").html(lo.listSelect('male_accession_list_div', ["accessions"], "Please select list with < 60 accessions", undefined, undefined ));
+        jQuery("#female_accession_list_div").html(lo.listSelect('female_accession_list_div', ["accessions"], "Please select list with < 60 UIs", undefined, undefined ));
+        jQuery("#male_accession_list_div").html(lo.listSelect('male_accession_list_div', ["accessions"], "Please select list with < 60 UIs", undefined, undefined ));
         var female_accessions;
         var male_accessions
         if (jQuery('#female_accession_list_div_list_select').val() != '' && jQuery('#male_accession_list_div_list_select').val() != '' ) {
@@ -476,11 +475,11 @@ jQuery(document).ready(function($) {
             var male_accession_list_id = $('#male_accession_list_div_list_select').val();
             var female_trial_id = jQuery('#cross_wishlist_list_female_trial_id').val();
             if (! lo.legacy_validate(female_accession_list_id, 'accessions', true)) {
-                alert('The female accession list contains elements that are not accessions.');
+                alert('The female UI list contains elements that are not UIs.');
                 return;
             }
             if (! lo.legacy_validate(male_accession_list_id, 'accessions', true)) {
-                alert('The male accession list contains elements that are not accessions.');
+                alert('The male UI list contains elements that are not UIs.');
                 return;
             }
 
@@ -737,7 +736,7 @@ jQuery(document).ready(function($) {
         for (f in female_male_tracker){
             var male_array = female_male_tracker[f];
             if (male_array.length > male_accession_limit){
-                alert('A maximum of 60 male accessions can be selected for each cross!');
+                alert('A maximum of 60 male UIs can be selected for each cross!');
                 return;
             }
         }
@@ -974,7 +973,7 @@ jQuery(document).ready(function($) {
             },
             error: function(response) {
                 jQuery('#working_modal').modal('hide');
-                alert("An error occurred checking accession list");
+                alert("An error occurred checking UI list");
             }
         });
 

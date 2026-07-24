@@ -1,3 +1,4 @@
+
 <%args>
 $locations
 $programs
@@ -23,13 +24,13 @@ $facilities
                     <ul>
                         <li>Genotyping plates represent 96 or 384 well plates.</li>
                         <li>Each well in the plate has a unique tissue sample ID.</li>
-                        <li>The "contents" of each well can be either a tissue sample, plant name, plot name, or accession name. This "source" name must be in the database already.</li>
+                        <li>The "contents" of each well can be either a tissue sample, plant name, plot name, or UI name. This "source" name must be in the database already.</li>
                         <li>If you choose to submit your genotyping plate to a genotyping facility (Cornell IGD, Intertek, BGI, etc) we can generate the files they require for you. Please be aware of their requirements, such as blank well positions and concentrations.</li>
                     </ul>
 
                     <b><p>How do I record a genotyping plate?</p></b>
                     <ul>
-                        <li>1) Know what the "source" units for each well will be (either a tissue sample, plant, plot, or accession name). These "source" names must exist in the database (e.g. as tissue samples or plants or plots from a trial, or just as accession names). Ideally you will have the barcodes from the field with you.</li>
+                        <li>1) Know what the "source" units for each well will be (either a tissue sample, plant, plot, or UI name). These "source" names must exist in the database (e.g. as tissue samples or plants or plots from a trial, or just as UI names). Ideally you will have the barcodes from the field with you.</li>
                         <li>2) Use the "Coordinate" Android Application to scan your "source" barcodes and record the position of the tissue sample in the 96 or 384 well plate. If you prefer you can create your own XLS file and upload that, if you do not want to use the Coordinate Application. Alternatively you can let the database generate the genotyping plate for you, and then produce the plate in that layout.</li>
                         <li><b>For more info about the "Coordinate" Android Application go to <a href="https://play.google.com/store/apps/details?id=org.wheatgenetics.coordinate">Coordinate</a>.</b></li>
                         <li>3) Click "Add Genotyping Plate" and fill in the form completely.</li>

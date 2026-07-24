@@ -95,7 +95,7 @@ $latest_trial_activity => undef
 % if ($trial_stock_type) {
 %     print "$trial_stock_type";
 % } else {
-%     print "accession";
+%     print "UI";
 % }
                     </div>
                 </td>
@@ -273,3 +273,5 @@ $latest_trial_activity => undef
         </table>
     </div>
 </div>
+
+----END

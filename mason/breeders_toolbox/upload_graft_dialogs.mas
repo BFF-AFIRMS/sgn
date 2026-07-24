@@ -10,7 +10,7 @@
       </div>
       <div class="modal-body">
         <div class="container-fluid">
-          <!-- div class="well">To Overwrite previous scion and/or rootstocks, in the case that an accession already has scions/rootstocks <input type="checkbox" checked id="graft_upload_overwrite_graft" /></div -->
+          <!-- div class="well">To Overwrite previous scion and/or rootstocks, in the case that an UI already has scions/rootstocks <input type="checkbox" checked id="graft_upload_overwrite_graft" /></div -->
  	  <table class="table table-hover">
     	    <tbody></tbody>
   	  </table>
@@ -108,21 +108,21 @@
 	  <table class="table table-hover table-bordered">
   	  <body>
 	    <tr>
-    	      <td>scion accession</td>
-              <td>rootstock accession</td>
+    	      <td>scion UI</td>
+              <td>rootstock UI</td>
   	    </tr>
 	  </body>
 	  </table>
 	  
 	  <h4>Required fields:</h4>
 	  <ul>
-            <li>scion accession (exact name must exist in the database)</li>
-            <li>rootstock accession (must exist in the database)</li>
+            <li>scion UI (exact name must exist in the database)</li>
+            <li>rootstock UI (must exist in the database)</li>
 	  </ul>
 	  
 	  <h4>Notes</h4>
 	  <ul>
-	    <li>The graft accession will be created in the database upon upload. The name of the graft will be "scion"+"rootstock", where "+" is the default graft separator character. The default separator can be changed before upload. The default can be changed in the sgn_local.conf, default_graft_separator key.
+	    <li>The graft UI will be created in the database upon upload. The name of the graft will be "scion"+"rootstock", where "+" is the default graft separator character. The default separator can be changed before upload. The default can be changed in the sgn_local.conf, default_graft_separator key.
 	  </ul>
         </div>
 	
@@ -133,4 +133,3 @@
     </div>
   </div>
 </div>
-
