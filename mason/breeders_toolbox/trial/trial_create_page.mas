@@ -5,7 +5,7 @@ $management_factor_types => ()
 $design_types => ()
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'CXGN.TrialTreeFolders', 'd3.d3v4Min.js', 'moment_min', 'daterangepicker' ] &>
+<& /util/import_javascript.mas, classes => [ 'CXGN.TrialTreeFolders', 'd3.d3v4Min.js', 'moment_min', 'daterangepicker', 'CXGN.BreedersToolbox.AddTrial', 'CXGN.BreedersToolbox.Trial' ] &>
 
 <style>
 #container_field_map_view {display: none; }
@@ -13,11 +13,9 @@ $design_types => ()
 #no_map_view_MSG {display: none; }
 
 #container_fm {
-    //border:2px dashed #000;
     height: 390px;
     width: 700px;
     overflow: auto;
-    //overflow: scroll;
     display: none;
     margin: 10px;
 }
@@ -53,20 +51,12 @@ rect.bordered {
 
 </style>
 
-<div class="modal fade" id="add_project_dialog" name="add_project_dialog" tabindex="-1" role="dialog" aria-labelledby="addProjectDialog">
-    <div class="modal-dialog modal-xl" role="document">
-        <div class="modal-content">
-            <div class="modal-header" style="text-align: center">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                <h4 class="modal-title" id="addProjectDialog">Design New Trial</h4>
-            </div>
-            <div class="modal-body">
-                <div class="container-fluid">
-                     <& /breeders_toolbox/trial/trial_create_form.mas, locations => $locations, breeding_programs => $breeding_programs, management_factor_types => $management_factor_types, design_types => $design_types &>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-sm-12">
+            <& /page/page_title.mas, title=>"Design New Trial" &>
+            <div class="well">
+                 <& /breeders_toolbox/trial/trial_create_form.mas, locations => $locations, breeding_programs => $breeding_programs, management_factor_types => $management_factor_types, design_types => $design_types &>
             </div>
         </div>
     </div>
@@ -88,8 +78,7 @@ rect.bordered {
                         <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
                           <b>Background:</b>
                         </h4>
-                          <center><p>Partially replicated designs have some treatments that are unreplicated and rely on replicated treatments to make the trial analysable. The design were described in Cullis et al. (2006). It is recommended that at least 20% of the experimental units are occupied by replicated treatments. The aim of these experiments is usually to select promising treatments from a set of replicated and unreplicated test treatments, with check and quality standard treatments providing the necessary replication overall to give a valid experiment. DiGGer (Coombes, 2002) was used to implement this design. DiGGer is a flexible tool for creating experimental designs that are efficient for specified blocking and correlation patterns. DiGGer package (http://www.austatgen.org/files/software/downloads) is an add-on for the statistical computing language and environment R (R
-Development Core Team, 2009).</p></center>
+                          <center><p>Partially replicated designs have some treatments that are unreplicated and rely on replicated treatments to make the trial analysable. The design were described in Cullis et al. (2006). It is recommended that at least 20% of the experimental units are occupied by replicated treatments. The aim of these experiments is usually to select promising treatments from a set of replicated and unreplicated test treatments, with check and quality standard treatments providing the necessary replication overall to give a valid experiment. DiGGer (Coombes, 2002) was used to implement this design. DiGGer is a flexible tool for creating experimental designs that are efficient for specified blocking and correlation patterns. DiGGer package (http://www.austatgen.org/files/software/downloads) is an add-on for the statistical computing language and environment R (R Development Core Team, 2009).</p></center>
                         <h4>
                         <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
                         <b>Design Parameters:</b>

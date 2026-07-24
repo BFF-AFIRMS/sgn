@@ -58,7 +58,7 @@ $design_types => ()
                                         <h4>Design a completely new experimental field trial in the database</h4>
                                     </div>
                                     <div class="col-sm-2">
-                                        <button id="add_project_link" class="btn btn-primary btn-sm">Go</button>
+                                        <button onclick="location.href='/breeders/trial/create'" class="btn btn-primary btn-sm">Go</button>
                                     </div>
                                 </div>
                             </div>

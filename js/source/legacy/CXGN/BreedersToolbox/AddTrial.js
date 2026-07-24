@@ -47,6 +47,59 @@ jQuery(document).ready(function ($) {
     var num_cols;
     var inherits_plot_treatments;
 
+    function saveTrialFormState() {
+        var form = jQuery('#create_new_trial_form');
+        if (!form.length) return;
+        var data = {};
+        form.find('input, select, textarea').each(function() {
+            var id = jQuery(this).attr('id');
+            var name = jQuery(this).attr('name');
+            var type = jQuery(this).attr('type');
+            if (!id && !name) return;
+            var key = id || name;
+            if (type === 'checkbox' || type === 'radio') {
+                data[key] = jQuery(this).is(':checked');
+            } else {
+                data[key] = jQuery(this).val();
+            }
+        });
+        localStorage.setItem('trial_create_form_state', JSON.stringify(data));
+    }
+
+    function restoreTrialFormState() {
+        var stateStr = localStorage.getItem('trial_create_form_state');
+        if (!stateStr) return;
+        var data = JSON.parse(stateStr);
+        var form = jQuery('#create_new_trial_form');
+        if (!form.length) return;
+        for (var key in data) {
+            var elem = form.find('#' + key).length ? form.find('#' + key) : form.find('[name="' + key + '"]');
+            if (!elem.length) continue;
+            var type = elem.attr('type');
+            if (type === 'checkbox' || type === 'radio') {
+                elem.prop('checked', data[key]);
+            } else {
+                elem.val(data[key]);
+            }
+            elem.trigger('change');
+        }
+    }
+
+    if (window.location.pathname === '/breeders/trial/create') {
+        get_select_box('years', 'add_project_year', {'auto_generate': 1 });
+        get_select_box('trial_types', 'add_project_type', {'empty':1} );
+        populate_trial_linkage_selects();
+        
+        // Restore state immediately for static inputs and again after dynamic elements load
+        restoreTrialFormState();
+        setTimeout(restoreTrialFormState, 500);
+        setTimeout(restoreTrialFormState, 1500);
+    }
+
+    jQuery(document).on('change keyup', '#create_new_trial_form input, #create_new_trial_form select, #create_new_trial_form textarea', function() {
+        saveTrialFormState();
+    });
+
     jQuery('#create_trial_validate_form_button').click(function(){
         create_trial_validate_form();
     });
@@ -2383,6 +2436,7 @@ jQuery(document).ready(function ($) {
                 if (response.error) {
                     alert(response.error);
                 } else {
+                    localStorage.removeItem('trial_create_form_state');
                     refreshTrailJsTree(0);
                     Workflow.complete('#new_trial_confirm_submit');
                     Workflow.focus("#trial_design_workflow", -1); //Go to success page

@@ -55,7 +55,7 @@ $design_types => ()
 <tr>
 <td>
 <a name="upload_trial_link"><p>Upload An Existing Trial</p></a>
-<a id="add_project_link"><p>Design A New Trial</p></a>
+<a href="/breeders/trial/create"><p>Design A New Trial</p></a>
 </td>
 <td>
 <a href="/breeders/trials"><p>Go To Manage Trials</p></a>
