@@ -2317,7 +2317,7 @@ jQuery(document).ready(function ($) {
     });
 
 
-    function add_plants_per_plot() {
+    function add_plants_per_plot(callback) {
         if (plants_per_plot && plants_per_plot != 0) {
             jQuery.ajax( {
                 url: '/ajax/breeders/trial/'+trial_id+'/create_plant_entries/',
@@ -2337,16 +2337,22 @@ jQuery(document).ready(function ($) {
                   else {
                     jQuery('#add_plants_dialog').modal("hide");
                   }
+                  if (typeof callback === 'function') callback();
                 },
                 error: function(response) {
-                  alert(response);
+                  if (response.status !== 0) {
+                    alert(response.responseText || "Error adding plants per plot");
+                  }
+                  if (typeof callback === 'function') callback();
                 },
               });
+        } else {
+            if (typeof callback === 'function') callback();
         }
     }
 
     function save_experimental_design(design_json) {
-        
+
         var list = new CXGN.List();
         var name = jQuery('#new_trial_name').val();
         var year = jQuery('#add_project_year').val();
@@ -2480,11 +2486,15 @@ jQuery(document).ready(function ($) {
                 } else {
                     localStorage.removeItem(getDraftKey());
                     refreshTrailJsTree(0);
-                    Workflow.complete('#new_trial_confirm_submit');
-                    Workflow.focus("#trial_design_workflow", -1); //Go to success page
-                    Workflow.check_complete("#trial_design_workflow");
+                    var finishWorkflow = function() {
+                        Workflow.complete('#new_trial_confirm_submit');
+                        Workflow.focus("#trial_design_workflow", -1); //Go to success page
+                        Workflow.check_complete("#trial_design_workflow");
+                    };
                     if (design_type != "greenhouse" && design_type != "splitplot") {
-                        add_plants_per_plot();
+                        add_plants_per_plot(finishWorkflow);
+                    } else {
+                        finishWorkflow();
                     }
                 }
             },
