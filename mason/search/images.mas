@@ -116,7 +116,7 @@ jQuery(document).ready(function () {
         }});
     });
 
-    const searchManager = window.jsMod['managers.search_state'].create({
+    const searchManager = window.jsMod['managers/search_state'].create({
         submitButtonSelector: '#image_search_submit',
         resetButtonSelector: '#reset_image_search',
         elements: {

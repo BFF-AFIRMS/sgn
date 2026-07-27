@@ -666,7 +666,7 @@ jQuery(document).ready(function () {
     });
 
     // Instantiate the unified Search State Manager configuration
-    const searchManager = window.jsMod['managers.search_state'].create({
+    const searchManager = window.jsMod['managers/search_state'].create({
         submitButtonSelector: '#submit_stock_search',
         resetButtonSelector: '#reset_stock_search',
         onReset: function() {
@@ -716,7 +716,7 @@ jQuery(document).ready(function () {
     });
 
     // Instantiate a separate manager to independently persist and reset custom table columns
-    const columnManager = window.jsMod['managers.search_state'].create({
+    const columnManager = window.jsMod['managers/search_state'].create({
         submitButtonSelector: ['#editable_stockprop_view_column_add', '#editable_stockprop_view_column_remove'],
         resetButtonSelector: '#reset_stock_columns',
         elements: {

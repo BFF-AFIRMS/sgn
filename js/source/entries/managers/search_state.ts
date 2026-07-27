@@ -444,7 +444,7 @@ export class SearchStateManager {
  * Factory helper method to initialize the state manager
  * 
  * @example
- * var searchManager = window.jsMod['managers.search_state'].create({
+ * var searchManager = window.jsMod['managers/search_state'].create({
  *     submitButtonSelector: '#search_submit',
  *     resetButtonSelector: '#search_reset',
  *     elements: {

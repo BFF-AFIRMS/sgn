@@ -5,7 +5,7 @@ $management_factor_types => ()
 $design_types => ()
 </%args>
 
-<& /util/import_javascript.mas, entries => ['managers.form_draft'], classes => [ 'CXGN.TrialTreeFolders', 'd3.d3v4Min.js', 'moment_min', 'daterangepicker', 'CXGN.BreedersToolbox.AddTrial', 'CXGN.BreedersToolbox.Trial' ] &>
+<& /util/import_javascript.mas, entries => ['managers/form_draft'], classes => [ 'CXGN.TrialTreeFolders', 'd3.d3v4Min.js', 'moment_min', 'daterangepicker', 'CXGN.BreedersToolbox.AddTrial', 'CXGN.BreedersToolbox.Trial' ] &>
 
 <style>
 #container_field_map_view {display: none; }
