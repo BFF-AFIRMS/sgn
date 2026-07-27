@@ -1,4 +1,4 @@
-import $ from 'jquery';
+const $ = (window as any).jQuery || (window as any).$;
 
 export type FormPrimitiveValue = string | number | boolean | string[] | undefined | null;
 export type FormStateData = Record<string, FormPrimitiveValue>;
@@ -149,5 +149,5 @@ export class FormDraft {
 }
 
 if (typeof window !== 'undefined') {
-    (window as unknown as Record<string, unknown>).FormDraft = FormDraft;
+    (window as any).FormDraft = FormDraft;
 }
