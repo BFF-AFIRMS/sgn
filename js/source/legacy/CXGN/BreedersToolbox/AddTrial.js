@@ -47,83 +47,28 @@ jQuery(document).ready(function ($) {
     var num_cols;
     var inherits_plot_treatments;
 
-    function getDraftKey() {
-        var urlParams = new URLSearchParams(window.location.search);
-        var draftId = urlParams.get('draft_id');
-        if (!draftId) {
-            draftId = 'draft_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7);
-            urlParams.set('draft_id', draftId);
-            var newUrl = window.location.pathname + '?' + urlParams.toString();
-            window.history.replaceState(null, '', newUrl);
-        }
-        return 'trial_create_form_state_' + draftId;
-    }
-
-    function cleanupOldDrafts() {
-        var prefix = 'trial_create_form_state_';
-        var drafts = [];
-        for (var i = 0; i < localStorage.length; i++) {
-            var key = localStorage.key(i);
-            if (key && key.indexOf(prefix) === 0) {
-                var lastModified = 0;
-                try {
-                    var item = JSON.parse(localStorage.getItem(key));
-                    if (item) {
-                        lastModified = item.last_modified || item._last_modified || 0;
-                    }
-                } catch (e) {}
-                drafts.push({ key: key, lastModified: lastModified });
-            }
-        }
-        if (drafts.length > 10) {
-            drafts.sort(function(a, b) { return b.lastModified - a.lastModified; });
-            for (var j = 10; j < drafts.length; j++) {
-                localStorage.removeItem(drafts[j].key);
-            }
-        }
-    }
+    var trialFormDraft = new FormDraft({
+        formSelector: '#create_new_trial_form',
+        draftPrefix: 'trial_create_form_state_',
+        stepSelector: '#trial_design_workflow .workflow-content > li.workflow-focus'
+    });
 
     function saveTrialFormState() {
-        var form = jQuery('#create_new_trial_form');
-        if (!form.length) return;
-        var data = {};
-        form.find('input, select, textarea').each(function() {
-            var id = jQuery(this).attr('id');
-            var name = jQuery(this).attr('name');
-            var type = jQuery(this).attr('type');
-            if (!id && !name) return;
-            var key = id || name;
-            if (type === 'checkbox' || type === 'radio') {
-                data[key] = jQuery(this).is(':checked');
-            } else {
-                data[key] = jQuery(this).val();
-            }
-        });
-        var draft = {
-            last_modified: Date.now(),
-            data
-        };
-        localStorage.setItem(getDraftKey(), JSON.stringify(draft));
-        cleanupOldDrafts();
+        trialFormDraft.saveFormState();
     }
 
     function restoreTrialFormState() {
-        var stateStr = localStorage.getItem(getDraftKey());
-        if (!stateStr) return;
-        var draft = JSON.parse(stateStr);
-        var data = (draft && draft.data) ? draft.data : draft;
-        var form = jQuery('#create_new_trial_form');
-        if (!form.length) return;
-        for (var key in data) {
-            var elem = form.find('#' + key).length ? form.find('#' + key) : form.find('[name="' + key + '"]');
-            if (!elem.length) continue;
-            var type = elem.attr('type');
-            if (type === 'checkbox' || type === 'radio') {
-                elem.prop('checked', data[key]);
-            } else {
-                elem.val(data[key]);
+        var draft = trialFormDraft.restoreFormState();
+        if (!draft) return;
+        var currentStep = (draft && typeof draft.current_step !== 'undefined') ? draft.current_step : 0;
+        if (currentStep > 0) {
+            for (var i = 0; i < currentStep; i++) {
+                jQuery('#trial_design_workflow .workflow-prog > li').eq(i).addClass('workflow-complete');
             }
-            elem.trigger('change');
+            Workflow.focus('#trial_design_workflow', currentStep);
+            if (currentStep === 6 && !jQuery('#trial_design_information').children().length) {
+                generate_experimental_design();
+            }
         }
     }
 
@@ -138,6 +83,10 @@ jQuery(document).ready(function ($) {
 
     jQuery(document).on('change keyup', '#create_new_trial_form input, #create_new_trial_form select, #create_new_trial_form textarea', function() {
         saveTrialFormState();
+    });
+
+    jQuery(document).on('click', '#trial_design_workflow .workflow-prog li, #create_new_trial_form button', function() {
+        setTimeout(saveTrialFormState, 200);
     });
 
     jQuery('#create_trial_submit').click(function(){
@@ -242,6 +191,7 @@ jQuery(document).ready(function ($) {
                 else {
                     if (btn_elem) {
                         Workflow.complete(btn_elem);
+                        saveTrialFormState();
                     }
                 }
             },
@@ -865,6 +815,7 @@ jQuery(document).ready(function ($) {
                 } else {
 
                     Workflow.focus("#trial_design_workflow", 6); //Go to review page
+                    saveTrialFormState();
 
                     if(response.warning_message){
                         jQuery('#trial_design_warning_message').html("<center><div class='well'><h4 class='text-warning'>Warning: "+response.warning_message+"</h4></div></center>");
@@ -2484,7 +2435,7 @@ jQuery(document).ready(function ($) {
                 if (response.error) {
                     alert(response.error);
                 } else {
-                    localStorage.removeItem(getDraftKey());
+                    trialFormDraft.clearDraft();
                     refreshTrailJsTree(0);
                     var finishWorkflow = function() {
                         Workflow.complete('#new_trial_confirm_submit');
