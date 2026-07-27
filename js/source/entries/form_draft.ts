@@ -14,6 +14,8 @@ export interface FormDraftOptions {
     draftPrefix: string;
     maxDrafts?: number;
     stepSelector?: string;
+    workflowSelector?: string;
+    onRestoreStep?: (step: number, draft: DraftData) => void;
 }
 
 export class FormDraft {
@@ -21,12 +23,16 @@ export class FormDraft {
     private draftPrefix: string;
     private maxDrafts: number;
     private stepSelector?: string;
+    private workflowSelector?: string;
+    private onRestoreStep?: (step: number, draft: DraftData) => void;
 
     constructor(options: FormDraftOptions) {
         this.formSelector = options.formSelector;
         this.draftPrefix = options.draftPrefix;
         this.maxDrafts = options.maxDrafts ?? 10;
         this.stepSelector = options.stepSelector;
+        this.workflowSelector = options.workflowSelector;
+        this.onRestoreStep = options.onRestoreStep;
     }
 
     public getDraftKey(): string {
@@ -140,6 +146,24 @@ export class FormDraft {
                 $elem.val(val as string | number | string[]);
             }
             $elem.trigger('change');
+        }
+
+        const currentStep = typeof draft.current_step !== 'undefined' ? draft.current_step : 0;
+        if (currentStep > 0 && this.workflowSelector) {
+            const Workflow = (window as any).Workflow;
+            const $workflow = $(this.workflowSelector);
+            if ($workflow.length) {
+                for (let i = 0; i < currentStep; i++) {
+                    $workflow.find('.workflow-prog > li').eq(i).addClass('workflow-complete');
+                }
+                if (Workflow && typeof Workflow.focus === 'function') {
+                    Workflow.focus(this.workflowSelector, currentStep);
+                }
+            }
+        }
+
+        if (this.onRestoreStep && typeof currentStep !== 'undefined') {
+            this.onRestoreStep(currentStep, draft);
         }
 
         return draft;

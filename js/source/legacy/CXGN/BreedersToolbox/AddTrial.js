@@ -50,7 +50,13 @@ jQuery(document).ready(function ($) {
     var trialFormDraft = new FormDraft({
         formSelector: '#create_new_trial_form',
         draftPrefix: 'trial_create_form_state_',
-        stepSelector: '#trial_design_workflow .workflow-content > li.workflow-focus'
+        stepSelector: '#trial_design_workflow .workflow-content > li.workflow-focus',
+        workflowSelector: '#trial_design_workflow',
+        onRestoreStep: function(currentStep) {
+            if (currentStep === 6 && !jQuery('#trial_design_information').children().length) {
+                generate_experimental_design();
+            }
+        }
     });
 
     function saveTrialFormState() {
@@ -58,18 +64,7 @@ jQuery(document).ready(function ($) {
     }
 
     function restoreTrialFormState() {
-        var draft = trialFormDraft.restoreFormState();
-        if (!draft) return;
-        var currentStep = (draft && typeof draft.current_step !== 'undefined') ? draft.current_step : 0;
-        if (currentStep > 0) {
-            for (var i = 0; i < currentStep; i++) {
-                jQuery('#trial_design_workflow .workflow-prog > li').eq(i).addClass('workflow-complete');
-            }
-            Workflow.focus('#trial_design_workflow', currentStep);
-            if (currentStep === 6 && !jQuery('#trial_design_information').children().length) {
-                generate_experimental_design();
-            }
-        }
+        trialFormDraft.restoreFormState();
     }
 
     if (window.location.pathname === '/breeders/trial/create') {
