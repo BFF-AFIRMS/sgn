@@ -1072,6 +1072,7 @@ jQuery(document).ready(function ($) {
             document.getElementById("list_of_rep_family_name").innerHTML = list.listSelect("list_of_rep_family_name", [ 'family_names' ], "Required: e.g. 119", 'refresh', undefined);
         }
 
+        jQuery('#select_design_method').change();
     });
 
     $(document).on('change', '#select_design_method', function () {
