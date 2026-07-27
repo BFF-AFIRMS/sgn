@@ -260,7 +260,9 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
     my $trial_list = $c->req->param("trial_list");
     my $accession_list = $c->req->param("accession_list");
     my $plot_list = $c->req->param("plot_list");
+    my $subplot_list = $c->req->param("subplot_list");
     my $plant_list = $c->req->param("plant_list");
+    my $tissue_sample_list = $c->req->param("tissue_sample_list");
     my $trait_contains = $c->req->param("trait_contains");
     my $phenotype_min_value = $c->req->param("phenotype_min_value") && $c->req->param("phenotype_min_value") ne 'null' ? $c->req->param("phenotype_min_value") : "";
     my $phenotype_max_value = $c->req->param("phenotype_max_value") && $c->req->param("phenotype_max_value") ne 'null' ? $c->req->param("phenotype_max_value") : "";
@@ -308,10 +310,20 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
 	print STDERR "plot list: ".Dumper $plot_list."\n";
 	@plot_list = @{_parse_list_from_json($plot_list)};
     }
+    my @subplot_list;
+    if ($subplot_list && $subplot_list ne 'null') {
+	print STDERR "subplot list: ".Dumper $subplot_list."\n";
+	@subplot_list = @{_parse_list_from_json($subplot_list)};
+    }
     my @plant_list;
     if ($plant_list && $plant_list ne 'null') {
 	print STDERR "plant list: ".Dumper $plant_list."\n";
 	@plant_list = @{_parse_list_from_json($plant_list)};
+    }
+    my @tissue_sample_list;
+    if ($tissue_sample_list && $tissue_sample_list ne 'null') {
+	print STDERR "tissue_sample list: ".Dumper $tissue_sample_list."\n";
+	@tissue_sample_list = @{_parse_list_from_json($tissue_sample_list)};
     }
 
     #Input list arguments can be arrays of integer ids or strings; however, when fed to CXGN::Trial::Download, they must be arrayrefs of integer ids
@@ -354,6 +366,16 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
             push @plot_list_int, $stock_id;
         }
     }
+    my @subplot_list_int;
+    foreach (@subplot_list) {
+        if ($_ =~ m/^\d+$/) {
+            push @subplot_list_int, $_;
+        } else {
+            my $stock_lookup = CXGN::Stock::StockLookup->new({ schema => $schema, stock_name=>$_ });
+            my $stock_id = $stock_lookup->get_stock_exact()->stock_id();
+            push @subplot_list_int, $stock_id;
+        }
+    }
     my @accession_list_int;
     foreach (@accession_list) {
         if ($_ =~ m/^\d+$/) {
@@ -372,6 +394,16 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
             my $stock_lookup = CXGN::Stock::StockLookup->new({ schema => $schema, stock_name=>$_ });
             my $stock_id = $stock_lookup->get_stock_exact()->stock_id();
             push @plant_list_int, $stock_id;
+        }
+    }
+    my @tissue_sample_list_int;
+    foreach (@tissue_sample_list) {
+        if ($_ =~ m/^\d+$/) {
+            push @tissue_sample_list_int, $_;
+        } else {
+            my $stock_lookup = CXGN::Stock::StockLookup->new({ schema => $schema, stock_name=>$_ });
+            my $stock_id = $stock_lookup->get_stock_exact()->stock_id();
+            push @tissue_sample_list_int, $stock_id;
         }
     }
     my @trial_list_int;
@@ -431,7 +463,9 @@ sub download_phenotypes_action : Path('/breeders/trials/phenotype/download') Arg
         trial_list => \@trial_list_int,
         accession_list => \@accession_list_int,
         plot_list => \@plot_list_int,
+        subplot_list => \@subplot_list_int,
         plant_list => \@plant_list_int,
+        tissue_sample_list => \@tissue_sample_list_int,
         filename => $tempfile,
         format => $plugin,
         data_level => $data_level,

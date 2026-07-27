@@ -609,7 +609,89 @@ $t->while_logged_in_as("submitter", sub {
 
     }
 
-    # DONE TESTING
+
+    # -------------------------------------------------------------------------
+    # Test phenotype downloads at the plant level
+
+    $t->get_ok('/breeders/search', 'navigate to search wizard');
+    sleep(1); # FIXME Need to wait for click handler to be registered
+
+    # COLUMN 1 WIZARD SEARCH - select trials
+    $t->click_ok('(//div[@class="panel-heading"]/select)[1]//option[@value="trials"]', 'xpath', 'select trials');
+    $t->click_ok('(//div[@class="panel-body"])[1]//a[contains(text(), "Kasese solgs trial")]//preceding-sibling::button' , 'xpath', 'select Kasese solgs trial in column 1');
+    # COLUMN 2 WIZARD SEARCH - select plants
+    $t->click_ok('(//div[@class="panel-heading"]/select)[2]//option[@value="plants"]', 'xpath', 'select plants');
+    $t->click_ok('(//div[@class="panel-body"])[2]//a[contains(text(), "KASESE_TP2013_1043_plant1")]//preceding-sibling::button' , 'xpath', 'select KASESE_TP2013_1043_plant1');
+    $t->click_ok('(//div[@class="panel-body"])[2]//a[contains(text(), "KASESE_TP2013_1044_plant1")]//preceding-sibling::button' , 'xpath', 'select KASESE_TP2013_1044_plant1');
+
+    # open download phenotype data
+    $t->click_ok('//span[text()="Related Trial Phenotypes"]', 'xpath', 'open related phenotypes data panel');
+    $t->click_ok('//select[contains(@class, "wizard-download-phenotypes-level")]/option[@value="plant"]', 'xpath', 'select download plant level');
+
+    # check expected values
+    my $expected_csv = '"studyYear","programDbId","programName","programDescription","studyDbId","studyName","studyDescription","studyDesign","plotWidth","plotLength","fieldSize","fieldTrialIsPlannedToBeGenotyped","fieldTrialIsPlannedToCross","plantingDate","harvestDate","locationDbId","locationName","germplasmDbId","germplasmName","germplasmSynonyms","observationLevel","observationUnitDbId","observationUnitName","replicate","blockNumber","plotNumber","rowNumber","colNumber","entryType","plantNumber","fresh root weight|CO_334:0000012","notes"
+    "2014","134","test","test","139","Kasese solgs trial","This trial was loaded into the fixture to test solgs.","Alpha","","","","","","","","23","test_location","39131","UG120307","","plant","41782","KASESE_TP2013_1043_plant1","1","60","36058","","","test","1","10",""
+    "2014","134","test","test","139","Kasese solgs trial","This trial was loaded into the fixture to test solgs.","Alpha","","","","","","","","23","test_location","38930","UG120059","","plant","41786","KASESE_TP2013_1044_plant1","1","60","36059","","","test","1","10",""
+    ';
+    # Trim leading whitespace
+    $expected_csv =~ s/^[ ]+//mg;
+    my @expected = split "\n", $expected_csv;
+    my $missing_format = 'empty';
+    my $phenotypes_download_path = "/selenium/downloads/Kasese_solgs_trial_phenotypes.csv";
+    my $observed = download_missing_phenotypes_csv(
+        $t,
+        'wizard-download-phenotypes-missing-format', # select id
+        $missing_format,                             # select value
+        'wizard-download-phenotypes-btn',            # submit id
+        $phenotypes_download_path,                   # path file will be downloaded to
+    );
+    # Keep only the last lines which are the header and data
+    my @observed = splice(@$observed, -3);
+    is_deeply(\@observed, \@expected, 'download wizard has expected data for plants');
+
+    # -------------------------------------------------------------------------
+    # Test phenotype downloads at the tissue sample level
+
+    $t->click_ok('(//div[@class="panel-heading"]/select)[2]//option[@value="tissue_sample"]', 'xpath', 'select tissue samples');
+
+    # Filter tissue samples
+    $t->send_keys_ok('(//div[contains(@class, "wizard-column")])[2]//textarea', 'xpath', 'KASESE_TP2013_1043_plant1_leaf_1', 'type tissue sample filter');
+    $t->send_keys_ok('(//div[contains(@class, "wizard-column")])[2]//textarea', 'xpath', KEYS->{'return'}, 'send return in search box');
+    $t->send_keys_ok('(//div[contains(@class, "wizard-column")])[2]//textarea', 'xpath', 'KASESE_TP2013_1044_plant1_leaf_2', 'type tissue sample filter');
+    $t->send_keys_ok('(//div[contains(@class, "wizard-column")])[2]//textarea', 'xpath', KEYS->{'return'}, 'send return in search box');
+    $t->send_keys_ok('(//div[contains(@class, "wizard-column")])[2]//textarea', 'xpath', 'KASESE_TP2013_1045_plant1_leaf_3', 'type tissue sample filter');
+
+    # Grab a couple of tissue samples
+    $t->click_ok('(//div[@class="panel-body"])[2]//a[contains(text(), "KASESE_TP2013_1043_plant1_leaf_1")]//preceding-sibling::button' , 'xpath', 'select KASESE_TP2013_1043_plant1_leaf_1');
+    $t->click_ok('(//div[@class="panel-body"])[2]//a[contains(text(), "KASESE_TP2013_1044_plant1_leaf_2")]//preceding-sibling::button' , 'xpath', 'select KASESE_TP2013_1044_plant1_leaf_2');
+    $t->click_ok('(//div[@class="panel-body"])[2]//a[contains(text(), "KASESE_TP2013_1045_plant1_leaf_3")]//preceding-sibling::button' , 'xpath', 'select KASESE_TP2013_1045_plant1_leaf_3');
+
+    # select download level
+    $t->click_ok('//select[contains(@class, "wizard-download-phenotypes-level")]/option[@value="tissue_sample"]', 'xpath', 'select download tissue_sample level');
+
+    # check expected values
+    my $expected_csv = '"studyYear","programDbId","programName","programDescription","studyDbId","studyName","studyDescription","studyDesign","plotWidth","plotLength","fieldSize","fieldTrialIsPlannedToBeGenotyped","fieldTrialIsPlannedToCross","plantingDate","harvestDate","locationDbId","locationName","germplasmDbId","germplasmName","germplasmSynonyms","observationLevel","observationUnitDbId","observationUnitName","replicate","blockNumber","plotNumber","rowNumber","colNumber","entryType","plantNumber","fresh root weight|CO_334:0000012","notes"
+    "2014","134","test","test","139","Kasese solgs trial","This trial was loaded into the fixture to test solgs.","Alpha","","","","","","","","23","test_location","39131","UG120307","","tissue_sample","41783","KASESE_TP2013_1043_plant1_leaf_1","","","","","","test","","11",""
+    "2014","134","test","test","139","Kasese solgs trial","This trial was loaded into the fixture to test solgs.","Alpha","","","","","","","","23","test_location","38930","UG120059","","tissue_sample","41788","KASESE_TP2013_1044_plant1_leaf_2","","","","","","test","","12",""
+    "2014","134","test","test","139","Kasese solgs trial","This trial was loaded into the fixture to test solgs.","Alpha","","","","","","","","23","test_location","38931","UG120060","","tissue_sample","41793","KASESE_TP2013_1045_plant1_leaf_3","","","","","","test","","13",""'
+    ;
+
+    # Trim leading whitespace
+    $expected_csv =~ s/^[ ]+//mg;
+    my @expected = split "\n", $expected_csv;
+    my $missing_format = 'empty';
+    my $phenotypes_download_path = "/selenium/downloads/Kasese_solgs_trial_phenotypes.csv";
+    my $observed = download_missing_phenotypes_csv(
+        $t,
+        'wizard-download-phenotypes-missing-format', # select id
+        $missing_format,                             # select value
+        'wizard-download-phenotypes-btn',            # submit id
+        $phenotypes_download_path,                   # path file will be downloaded to
+    );
+    # Keep only the last lines which are the header and data
+    my @observed = splice(@$observed, -4);
+    is_deeply(\@observed, \@expected, 'download wizard has expected data for tissue samples');
+
     }
 );
 $t->driver()->quit();

@@ -18,6 +18,7 @@ my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
         accession_list=>$accession_list,
         plot_list=>$plot_list,
         plant_list=>$plant_list,
+        tissue_sample_list=>$tissue_sample_list,
         subplot_list=>$subplot_list,
         exclude_phenotype_outlier=>0,
         include_timestamp=>$include_timestamp,
@@ -99,6 +100,11 @@ has 'plot_list' => (
 );
 
 has 'plant_list' => (
+    isa => 'ArrayRef[Int]|Undef',
+    is => 'rw',
+);
+
+has 'tissue_sample_list' => (
     isa => 'ArrayRef[Int]|Undef',
     is => 'rw',
 );
@@ -383,45 +389,39 @@ sub search {
 
     my $analysis_result_stock_list = $self->analysis_result_stock_list;
     
+    # germplasm filters
     if ($self->analysis_result_stock_list && scalar(@{$self->analysis_result_stock_list})>0) {
         print STDERR "Native search adding analysis result_stock_list to sql\n";
         my $accession_sql = _sql_from_arrayref($self->analysis_result_stock_list);
         push @where_clause, "germplasm.stock_id in ($accession_sql)";
     }
-
-    # print STDERR "plot list is ".Dumper($self->plot_list)."\n";
-    if (($self->plot_list && scalar(@{$self->plot_list})>0) && ($self->plant_list && scalar(@{$self->plant_list})>0) && ($self->subplot_list && scalar(@{$self->subplot_list})>0)) {
-        my $plot_and_plant_and_subplot_sql = _sql_from_arrayref($self->plot_list) .",". _sql_from_arrayref($self->plant_list) .",". _sql_from_arrayref($self->subplot_list);
-        push @where_clause, "observationunit.stock_id in ($plot_and_plant_and_subplot_sql)";
-    } elsif (($self->plot_list && scalar(@{$self->plot_list})>0) && ($self->plant_list && scalar(@{$self->plant_list})>0)) {
-        my $plot_and_plant_sql = _sql_from_arrayref($self->plot_list) .",". _sql_from_arrayref($self->plant_list);
-        push @where_clause, "observationunit.stock_id in ($plot_and_plant_sql)";
-    } elsif (($self->plot_list && scalar(@{$self->plot_list})>0) && ($self->subplot_list && scalar(@{$self->subplot_list})>0)) {
-        my $plot_and_subplot_sql = _sql_from_arrayref($self->plot_list) .",". _sql_from_arrayref($self->subplot_list);
-        push @where_clause, "observationunit.stock_id in ($plot_and_subplot_sql)";
-    } elsif (($self->plant_list && scalar(@{$self->plant_list})>0) && ($self->subplot_list && scalar(@{$self->subplot_list})>0)) {
-        my $plant_and_subplot_sql = _sql_from_arrayref($self->plant_list) .",". _sql_from_arrayref($self->subplot_list);
-        push @where_clause, "observationunit.stock_id in ($plant_and_subplot_sql)";
-    } elsif ($self->plot_list && scalar(@{$self->plot_list})>0 && (!$self->accession_list || scalar(@{$self->accession_list}) == 0)) {
-        my $plot_sql = _sql_from_arrayref($self->plot_list);
-        push @where_clause, "observationunit.stock_id in ($plot_sql)";
-    } elsif ($self->plant_list && scalar(@{$self->plant_list})>0) {
-        my $plant_sql = _sql_from_arrayref($self->plant_list);
-        push @where_clause, "observationunit.stock_id in ($plant_sql)";
-    } elsif ($self->subplot_list && scalar(@{$self->subplot_list})>0) {
-        my $subplot_sql = _sql_from_arrayref($self->subplot_list);
-        push @where_clause, "observationunit.stock_id in ($subplot_sql)";
-
-    } elsif (($self->plot_list && scalar(@{$self->plot_list})>0) && ($self->accession_list && scalar(@{$self->accession_list})>0)) {
-        #if only accessions are given, we need to join to analysis_result and get all analysis results for those accessions
-        my $accession_sql = _sql_from_arrayref($self->accession_list);
-        my $plot_sql = _sql_from_arrayref($self->plot_list);
-        push @where_clause, "observationunit.stock_id in ($plot_sql) AND germplasm.stock_id in ($accession_sql)";
-    } elsif (($self->accession_list && scalar(@{$self->accession_list})>0) && ($self->plot_list && scalar(@{$self->plot_list})==0)) {
+    # Accessions are special, they are filtered on the germplasm column
+    if ($self->accession_list && scalar(@{$self->accession_list})>0){
         my $accession_sql = _sql_from_arrayref($self->accession_list);
         push @where_clause, "germplasm.stock_id in ($accession_sql)";
     }
 
+    # observationunit filters
+    my @where_observationunit_ids;
+    if ($self->tissue_sample_list && scalar(@{$self->tissue_sample_list})>0){
+        push(@where_observationunit_ids, $self->tissue_sample_list);
+    }
+    if ($self->plant_list && scalar(@{$self->plant_list})>0){
+        push(@where_observationunit_ids, $self->plant_list);
+    }
+    if ($self->subplot_list && scalar(@{$self->subplot_list})>0){
+        push(@where_observationunit_ids, $self->subplot_list);
+    }
+    if ($self->plot_list && scalar(@{$self->plot_list})>0){
+        push(@where_observationunit_ids, $self->plot_list);
+    }
+    if (scalar(@where_observationunit_ids)>0){
+        my $observationunit_sql = _sql_from_arrayref(@where_observationunit_ids);
+        push @where_clause, "observationunit.stock_id in ($observationunit_sql)";
+    }
+
+
+    # project filters
     if ($self->trial_list && scalar(@{$self->trial_list})>0) {
         my $trial_sql = _sql_from_arrayref($self->trial_list);
         push @where_clause, "project.project_id in ($trial_sql)";
@@ -536,6 +536,8 @@ sub search {
     }
 
     my  $q = $select_clause . $from_clause . $where_clause . $group_by . $order_clause . $limit_clause . $offset_clause;
+
+    print STDERR "Native Search Query\n$q\n";
 
     my $location_rs = $schema->resultset('NaturalDiversity::NdGeolocation')->search();
     my %location_id_lookup;
