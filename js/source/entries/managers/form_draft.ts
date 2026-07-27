@@ -41,7 +41,7 @@ export class FormDraft {
         const urlParams = new URLSearchParams(window.location.search);
         let draftId = urlParams.get('draft_id');
         if (!draftId) {
-            draftId = 'draft_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7);
+            draftId = Date.now() + '_' + Math.random().toString(36).substring(2, 7);
             urlParams.set('draft_id', draftId);
             const newUrl = window.location.pathname + '?' + urlParams.toString();
             window.history.replaceState(null, '', newUrl);
