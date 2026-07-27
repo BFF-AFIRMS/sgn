@@ -12,16 +12,19 @@ export interface DraftData {
 export interface FormDraftOptions {
     formSelector: string;
     draftPrefix: string;
-    maxDrafts?: number;
     stepSelector?: string;
     workflowSelector?: string;
     onRestoreStep?: (step: number, draft: DraftData) => void;
 }
 
+/**
+ * Number of drafts to keep in localStorage. Older drafts will be removed when this limit is exceeded.
+ */
+const MAX_DRAFTS = 10;
+
 export class FormDraft {
     private formSelector: string;
     private draftPrefix: string;
-    private maxDrafts: number;
     private stepSelector?: string;
     private workflowSelector?: string;
     private onRestoreStep?: (step: number, draft: DraftData) => void;
@@ -29,7 +32,6 @@ export class FormDraft {
     constructor(options: FormDraftOptions) {
         this.formSelector = options.formSelector;
         this.draftPrefix = options.draftPrefix;
-        this.maxDrafts = options.maxDrafts ?? 10;
         this.stepSelector = options.stepSelector;
         this.workflowSelector = options.workflowSelector;
         this.onRestoreStep = options.onRestoreStep;
@@ -67,9 +69,9 @@ export class FormDraft {
                 drafts.push({ key, lastModified });
             }
         }
-        if (drafts.length > this.maxDrafts) {
+        if (drafts.length > MAX_DRAFTS) {
             drafts.sort((a, b) => b.lastModified - a.lastModified);
-            for (let j = this.maxDrafts; j < drafts.length; j++) {
+            for (let j = MAX_DRAFTS; j < drafts.length; j++) {
                 localStorage.removeItem(drafts[j].key);
             }
         }
