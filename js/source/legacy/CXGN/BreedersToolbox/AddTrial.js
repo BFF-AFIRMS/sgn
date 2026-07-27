@@ -47,7 +47,7 @@ jQuery(document).ready(function ($) {
     var num_cols;
     var inherits_plot_treatments;
 
-    var trialFormDraft = new FormDraft({
+    var formDraft = new FormDraft({
         formSelector: '#create_new_trial_form',
         draftPrefix: 'trial_create_form_state_',
         stepSelector: '#trial_design_workflow .workflow-content > li.workflow-focus',
@@ -59,29 +59,21 @@ jQuery(document).ready(function ($) {
         }
     });
 
-    function saveTrialFormState() {
-        trialFormDraft.saveFormState();
-    }
-
-    function restoreTrialFormState() {
-        trialFormDraft.restoreFormState();
-    }
-
     if (window.location.pathname === '/breeders/trial/create') {
-        get_select_box('years', 'add_project_year', {'auto_generate': 1, 'after_load': restoreTrialFormState });
-        get_select_box('trial_types', 'add_project_type', {'empty':1, 'after_load': restoreTrialFormState } );
-        populate_trial_linkage_selects(restoreTrialFormState);
+        get_select_box('years', 'add_project_year', {'auto_generate': 1, 'after_load': () => formDraft.restoreFormState() } );
+        get_select_box('trial_types', 'add_project_type', {'empty':1, 'after_load': () => formDraft.restoreFormState() } );
+        populate_trial_linkage_selects(() => formDraft.restoreFormState());
 
         // Restore state immediately for static inputs
-        restoreTrialFormState();
+        formDraft.restoreFormState();
     }
 
     jQuery(document).on('change keyup', '#create_new_trial_form input, #create_new_trial_form select, #create_new_trial_form textarea', function() {
-        saveTrialFormState();
+        formDraft.saveFormState();
     });
 
     jQuery(document).on('click', '#trial_design_workflow .workflow-prog li, #create_new_trial_form button', function() {
-        setTimeout(saveTrialFormState, 200);
+        setTimeout(() => formDraft.saveFormState(), 200);
     });
 
     jQuery('#create_trial_submit').click(function(){
@@ -186,7 +178,7 @@ jQuery(document).ready(function ($) {
                 else {
                     if (btn_elem) {
                         Workflow.complete(btn_elem);
-                        saveTrialFormState();
+                        formDraft.saveFormState();
                     }
                 }
             },
@@ -810,7 +802,7 @@ jQuery(document).ready(function ($) {
                 } else {
 
                     Workflow.focus("#trial_design_workflow", 6); //Go to review page
-                    saveTrialFormState();
+                    formDraft.saveFormState();
 
                     if(response.warning_message){
                         jQuery('#trial_design_warning_message').html("<center><div class='well'><h4 class='text-warning'>Warning: "+response.warning_message+"</h4></div></center>");
@@ -2430,7 +2422,7 @@ jQuery(document).ready(function ($) {
                 if (response.error) {
                     alert(response.error);
                 } else {
-                    trialFormDraft.clearDraft();
+                    formDraft.clearDraft();
                     refreshTrailJsTree(0);
                     var finishWorkflow = function() {
                         Workflow.complete('#new_trial_confirm_submit');
