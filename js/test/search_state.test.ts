@@ -1,5 +1,5 @@
 import test from 'tape';
-import { create } from '../source/entries/search_state';
+import { create } from '../source/entries/managers/search_state';
 
 import jQuery from 'jquery';
 

@@ -159,7 +159,7 @@ jQuery(document).ready(function (){
         });
     });
 
-    const searchManager = window.jsMod['search_state'].create({
+    const searchManager = window.jsMod['managers.search_state'].create({
         submitButtonSelector: ['#search_crosses_male_female', '#search_all_crosses_using_male'],
         elements: {
             male_parent: { selector: '#cross_male' },

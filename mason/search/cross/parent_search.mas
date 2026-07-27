@@ -100,7 +100,7 @@ jQuery(document).ready(function (){
         });
     });
 
-    const searchManager = window.jsMod['search_state'].create({
+    const searchManager = window.jsMod['managers.search_state'].create({
         submitButtonSelector: '#search_parents',
         elements: {
             accession_list_id: { selector: '#accession_list_select', type: 'select' }
