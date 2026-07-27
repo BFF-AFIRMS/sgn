@@ -1,4 +1,4 @@
-const $ = (window as any).jQuery || (window as any).$;
+const $: JQueryStatic = (window as any).jQuery || (window as any).$;
 
 export type FormPrimitiveValue = string | number | boolean | string[] | undefined | null;
 export type FormStateData = Record<string, FormPrimitiveValue>;
@@ -118,7 +118,9 @@ export class FormDraft {
             return null;
         }
 
-        const data = draft && draft.data ? draft.data : (draft as unknown as FormStateData);
+        if (!draft || !draft.data) return null;
+        const { data } = draft;
+
         const $form = $(this.formSelector);
         if (!$form.length) return draft;
 
