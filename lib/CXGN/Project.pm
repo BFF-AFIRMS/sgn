@@ -6102,8 +6102,14 @@ sub get_recently_modified_trials {
     }
 
     #print STDERR "INTERVAL is $interval\n";
-    my $q = "select distinct(project.project_id), phenotype.create_date from project join nd_experiment_project using(project_id) join nd_experiment_phenotype using(nd_experiment_id) join phenotype using(phenotype_id) where phenotype.create_date + interval '1 $interval' > current_date order by phenotype.create_date desc limit ? ";
-
+    my $q = "select project.project_id, max(phenotype.create_date)
+    from project
+    join nd_experiment_project using(project_id)
+    join nd_experiment_phenotype using(nd_experiment_id)
+    join phenotype using(phenotype_id)
+    where phenotype.create_date + interval '1 $interval' > current_date
+    group by project.project_id
+    order by max(phenotype.create_date) desc limit ?";
     my $h = $bcs_schema->storage->dbh()->prepare($q);
 
     $h->execute($limit);
