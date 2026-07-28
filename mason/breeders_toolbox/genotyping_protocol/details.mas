@@ -13,7 +13,7 @@ $assay_type
 </%args>
 
 <div class="row">
-    <div class="col-sm-12" style="overflow: auto; min-width: 0px">
+    <div class="col-sm-12 tw:min-w-0 tw:overflow-auto">
 
         <table class="table table-hover table-bordered" >
 
