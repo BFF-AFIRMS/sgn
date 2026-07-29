@@ -14,7 +14,7 @@ export interface FormDraftOptions {
     draftPrefix: string;
     stepSelector?: string;
     workflowSelector?: string;
-    onRestoreStep?: (step: number, draft: DraftData) => void;
+    onRestoreStep?: (step: number, draft: DraftData | null) => void;
 }
 
 /**
@@ -27,7 +27,7 @@ export class FormDraft {
     private draftPrefix: string;
     private stepSelector?: string;
     private workflowSelector?: string;
-    private onRestoreStep?: (step: number, draft: DraftData) => void;
+    private onRestoreStep?: (step: number, draft: DraftData | null) => void;
 
     constructor(options: FormDraftOptions) {
         this.formSelector = options.formSelector;
@@ -35,20 +35,117 @@ export class FormDraft {
         this.stepSelector = options.stepSelector;
         this.workflowSelector = options.workflowSelector;
         this.onRestoreStep = options.onRestoreStep;
+
+        if (typeof window !== 'undefined') {
+            window.addEventListener('popstate', () => {
+                const stepIndex = this.getStepFromUrl();
+                this.navigateToStep(stepIndex, false);
+            });
+        }
+    }
+
+    public getStepFromUrl(): number {
+        if (typeof window === 'undefined') return 0;
+        const urlParams = new URLSearchParams(window.location.search);
+        const stepStr = urlParams.get('step');
+        if (stepStr) {
+            const parsed = parseInt(stepStr, 10);
+            if (!isNaN(parsed) && parsed > 0) {
+                return parsed - 1;
+            }
+        }
+        return 0;
+    }
+
+    public updateStepInUrl(stepIndex?: number, push: boolean = true): void {
+        if (typeof window === 'undefined') return;
+        if (typeof stepIndex === 'undefined' && this.stepSelector) {
+            const idx = $(this.stepSelector).index();
+            if (idx >= 0) {
+                stepIndex = idx;
+            }
+        }
+        if (typeof stepIndex === 'undefined' || stepIndex < 0) return;
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const currentUrlStep = urlParams.get('step');
+        const newStepStr = String(stepIndex + 1);
+
+        if (currentUrlStep !== newStepStr) {
+            urlParams.set('step', newStepStr);
+            const newUrl = window.location.pathname + '?' + urlParams.toString();
+            if (push) {
+                window.history.pushState({ draftId: urlParams.get('draft_id'), step: stepIndex }, '', newUrl);
+            } else {
+                window.history.replaceState({ draftId: urlParams.get('draft_id'), step: stepIndex }, '', newUrl);
+            }
+        }
+    }
+
+    public navigateToStep(stepIndex: number, updateUrl: boolean = false): void {
+        if (stepIndex < 0 || !this.workflowSelector) return;
+
+        const Workflow = (window as any).Workflow;
+        const $workflow = $(this.workflowSelector);
+        if ($workflow.length) {
+            const $progItems = $workflow.find('.workflow-prog > li');
+            $progItems.removeClass('workflow-complete');
+            for (let i = 0; i < stepIndex; i++) {
+                $progItems.eq(i).addClass('workflow-complete');
+            }
+            if (Workflow && typeof Workflow.focus === 'function') {
+                Workflow.focus(this.workflowSelector, stepIndex);
+            }
+        }
+
+        if (updateUrl) {
+            this.updateStepInUrl(stepIndex, true);
+        }
+
+        const draft = this.getDraftData();
+        if (this.onRestoreStep) {
+            this.onRestoreStep(stepIndex, draft);
+        }
     }
 
     public getDraftKey(): string {
+        if (typeof window === 'undefined') return this.draftPrefix;
         const urlParams = new URLSearchParams(window.location.search);
         let draftId = urlParams.get('draft_id');
+        let needsUpdate = false;
+
         if (!draftId) {
             draftId = Date.now() + '_' + Math.random().toString(36).substring(2, 7);
             urlParams.set('draft_id', draftId);
-            const newUrl = window.location.pathname + '?' + urlParams.toString();
-            window.history.replaceState(null, '', newUrl);
+            needsUpdate = true;
         }
-        return `${this.draftPrefix}${draftId}`;
-    }
 
+        const key = `${this.draftPrefix}${draftId}`;
+
+        if (!urlParams.has('step')) {
+            let defaultStep = 1;
+            try {
+                const itemStr = localStorage.getItem(key);
+                if (itemStr) {
+                    const item = JSON.parse(itemStr);
+                    if (item && typeof item.current_step === 'number' && item.current_step >= 0) {
+                        defaultStep = item.current_step + 1;
+                    }
+                }
+            } catch (e) {
+                // ignore
+            }
+            urlParams.set('step', String(defaultStep));
+            needsUpdate = true;
+        }
+
+        if (needsUpdate) {
+            const newUrl = window.location.pathname + '?' + urlParams.toString();
+            window.history.replaceState({ draftId, step: this.getStepFromUrl() }, '', newUrl);
+        }
+
+        return key;
+    }
     public cleanupOldDrafts(): void {
         const drafts: { key: string; lastModified: number }[] = [];
         for (let i = 0; i < localStorage.length; i++) {
@@ -98,75 +195,55 @@ export class FormDraft {
             }
         });
 
-        let currentStep: number | undefined;
-        if (this.stepSelector) {
-            const index = $(this.stepSelector).index();
-            if (index >= 0) {
-                currentStep = index;
-            }
-        }
-
         const draft: DraftData = {
             last_modified: Date.now(),
-            current_step: currentStep,
             data
         };
 
         localStorage.setItem(this.getDraftKey(), JSON.stringify(draft));
         this.cleanupOldDrafts();
+        this.updateStepInUrl();
     }
 
-    public restoreFormState(): DraftData | null {
+    public getDraftData(): DraftData | null {
+        if (typeof localStorage === 'undefined') return null;
         const stateStr = localStorage.getItem(this.getDraftKey());
         if (!stateStr) return null;
-        let draft: DraftData;
         try {
-            draft = JSON.parse(stateStr) as DraftData;
+            return JSON.parse(stateStr) as DraftData;
         } catch (e) {
             return null;
         }
+    }
 
-        if (!draft || !draft.data) return null;
-        const { data } = draft;
-
+    public restoreFormState(): DraftData | null {
+        const draft = this.getDraftData();
         const $form = $(this.formSelector);
-        if (!$form.length) return draft;
 
-        for (const key in data) {
-            if (!Object.prototype.hasOwnProperty.call(data, key)) continue;
-            let $elem = $form.find('#' + key);
-            if (!$elem.length) {
-                $elem = $form.find('[name="' + key + '"]');
-            }
-            if (!$elem.length) continue;
+        if (draft && draft.data && $form.length) {
+            const { data } = draft;
 
-            const type = $elem.attr('type');
-            const val = data[key];
-            if (type === 'checkbox' || type === 'radio') {
-                $elem.prop('checked', Boolean(val));
-            } else {
-                $elem.val(val as string | number | string[]);
-            }
-            $elem.trigger('change');
-        }
-
-        const currentStep = typeof draft.current_step !== 'undefined' ? draft.current_step : 0;
-        if (currentStep > 0 && this.workflowSelector) {
-            const Workflow = (window as any).Workflow;
-            const $workflow = $(this.workflowSelector);
-            if ($workflow.length) {
-                for (let i = 0; i < currentStep; i++) {
-                    $workflow.find('.workflow-prog > li').eq(i).addClass('workflow-complete');
+            for (const key in data) {
+                if (!Object.prototype.hasOwnProperty.call(data, key)) continue;
+                let $elem = $form.find('#' + key);
+                if (!$elem.length) {
+                    $elem = $form.find('[name="' + key + '"]');
                 }
-                if (Workflow && typeof Workflow.focus === 'function') {
-                    Workflow.focus(this.workflowSelector, currentStep);
+                if (!$elem.length) continue;
+
+                const type = $elem.attr('type');
+                const val = data[key];
+                if (type === 'checkbox' || type === 'radio') {
+                    $elem.prop('checked', Boolean(val));
+                } else {
+                    $elem.val(val as string | number | string[]);
                 }
+                $elem.trigger('change');
             }
         }
 
-        if (this.onRestoreStep && typeof currentStep !== 'undefined') {
-            this.onRestoreStep(currentStep, draft);
-        }
+        const currentStep = this.getStepFromUrl();
+        this.navigateToStep(currentStep, false);
 
         return draft;
     }
