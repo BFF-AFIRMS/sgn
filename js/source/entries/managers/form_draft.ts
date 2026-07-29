@@ -58,6 +58,11 @@ export class FormDraft {
     private draftPrefix: string;
     private workflow?: FormWorkflowOptions;
     private draftId: string = '';
+    /**
+     * Tracks whether a `popstate` (browser back/forward navigation) event occurred.
+     * When true, the next `saveFormState()` call forces a new history state push via `updateStepInUrl`
+     * to truncate orphaned forward history states if the user edits form fields after navigating back.
+     */
     private poppedState: boolean = false;
 
     /**
@@ -130,10 +135,13 @@ export class FormDraft {
     }
 
     /**
-     * Updates the URL `step` parameter and pushes a new state to browser history if the step has changed.
+     * Synchronizes the browser URL `step` query parameter with the current workflow step.
      *
-     * @param stepIndex - The 0-indexed step index to set in the URL. If omitted, attempts to infer from workflow.stepSelector.
-     * @param force - If true, forces a history state push even if the step URL parameter matches stepIndex.
+     * @param stepIndex - The 0-indexed target step index. If omitted (`undefined`), inspects the DOM via
+     *                    `workflow.stepSelector` to infer the currently focused step element.
+     * @param force - If `true`, forces a `window.history.pushState()` call even if the step parameter matches
+     *                `stepIndex`. This truncates forward browser history when a user modifies a form field after
+     *                navigating back.
      */
     public updateStepInUrl(stepIndex?: number, force: boolean = false): void {
         if (typeof window === 'undefined') return;
@@ -224,7 +232,10 @@ export class FormDraft {
 
     /**
      * Serializes input values from the target form and saves them to localStorage under the current draft key.
-     * Also triggers pruning of old drafts and updates the URL step state.
+     *
+     * Also prunes old drafts and invokes `updateStepInUrl(undefined, forcePush)` to:
+     * 1. Infer the active step index from the DOM and push a history state if the step changed.
+     * 2. Clear forward history by forcing a history state push if the edit occurred after back navigation (`poppedState`).
      */
     public saveFormState(): void {
         const $form = $(this.formSelector);
