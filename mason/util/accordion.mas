@@ -125,6 +125,7 @@ jQuery(document).ready(function($) {
         var panels = $container.find('.accordion-step-panel');
         var numPanels = panels.length;
         var unlockedUpTo = 0;
+        var updateTimeout = null;
 
         function getValidationFn(v) {
             if (typeof v === 'function') return v;
@@ -174,7 +175,7 @@ jQuery(document).ready(function($) {
 
         function getFirstFailingStep() {
             var chain = Promise.resolve({ index: numPanels, message: null });
-            
+
             function check(i) {
                 return function(currentResult) {
                     if (currentResult.index < numPanels) {
@@ -196,36 +197,42 @@ jQuery(document).ready(function($) {
         }
 
         function updateAccordionState() {
-            getFirstFailingStep().then(function(failing) {
-                var maxUnlocked = failing.index;
+            if (updateTimeout) {
+                clearTimeout(updateTimeout);
+            }
+            updateTimeout = setTimeout(function() {
+                updateTimeout = null;
+                getFirstFailingStep().then(function(failing) {
+                    var maxUnlocked = failing.index;
 
-                panels.each(function(idx) {
-                    var $heading = $(this).find('.accordion-step-heading');
-                    if (idx > maxUnlocked) {
-                        $heading.addClass('accordion-locked');
-                    } else {
-                        $heading.removeClass('accordion-locked');
-                    }
-                });
+                    panels.each(function(idx) {
+                        var $heading = $(this).find('.accordion-step-heading');
+                        if (idx > maxUnlocked) {
+                            $heading.addClass('accordion-locked');
+                        } else {
+                            $heading.removeClass('accordion-locked');
+                        }
+                    });
 
-                for (var i = maxUnlocked + 1; i < numPanels; i++) {
-                    var $collapse = $('#' + containerId + '_collapse_' + i);
-                    if ($collapse.hasClass('in')) {
-                        $collapse.collapse('hide');
-                    }
-                }
-
-                for (var j = unlockedUpTo + 1; j <= maxUnlocked; j++) {
-                    if (j < numPanels) {
-                        var $collapseToOpen = $('#' + containerId + '_collapse_' + j);
-                        if (!$collapseToOpen.hasClass('in')) {
-                            $collapseToOpen.collapse('show');
+                    for (var i = maxUnlocked + 1; i < numPanels; i++) {
+                        var $collapse = $('#' + containerId + '_collapse_' + i);
+                        if ($collapse.hasClass('in')) {
+                            $collapse.collapse('hide');
                         }
                     }
-                }
 
-                unlockedUpTo = maxUnlocked;
-            });
+                    for (var j = unlockedUpTo + 1; j <= maxUnlocked; j++) {
+                        if (j < numPanels) {
+                            var $collapseToOpen = $('#' + containerId + '_collapse_' + j);
+                            if (!$collapseToOpen.hasClass('in')) {
+                                $collapseToOpen.collapse('show');
+                            }
+                        }
+                    }
+
+                    unlockedUpTo = maxUnlocked;
+                });
+            }, 150);
         }
 
         var $firstCollapse = $('#' + containerId + '_collapse_0');

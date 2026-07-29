@@ -66,6 +66,7 @@ export class FormDraft {
      * to truncate orphaned forward history states if the user edits form fields after navigating back.
      */
     private poppedState: boolean = false;
+    private isRestoring: boolean = false;
 
     /**
      * Creates an instance of FormDraft and attaches a `popstate` window event listener
@@ -244,6 +245,7 @@ export class FormDraft {
      * This function should be called whenever the form state changes (e.g., on input change events) to persist the latest draft.
      */
     public saveFormState(): void {
+        if (this.isRestoring) return;
         const $form = $(this.formSelector);
         if (!$form.length) return;
 
@@ -301,35 +303,40 @@ export class FormDraft {
      * @returns The restored DraftData object, or null if no draft was found.
      */
     public restoreFormState(): DraftData | null {
-        const draft = this.getDraftData();
-        const $form = $(this.formSelector);
+        this.isRestoring = true;
+        try {
+            const draft = this.getDraftData();
+            const $form = $(this.formSelector);
 
-        if (draft && draft.data && $form.length) {
-            const { data } = draft;
+            if (draft && draft.data && $form.length) {
+                const { data } = draft;
 
-            for (const key in data) {
-                if (!Object.prototype.hasOwnProperty.call(data, key)) continue;
-                let $elem = $form.find('#' + key);
-                if (!$elem.length) {
-                    $elem = $form.find('[name="' + key + '"]');
+                for (const key in data) {
+                    if (!Object.prototype.hasOwnProperty.call(data, key)) continue;
+                    let $elem = $form.find('#' + key);
+                    if (!$elem.length) {
+                        $elem = $form.find('[name="' + key + '"]');
+                    }
+                    if (!$elem.length) continue;
+
+                    const type = $elem.attr('type');
+                    const val = data[key];
+                    if (type === 'checkbox' || type === 'radio') {
+                        $elem.prop('checked', Boolean(val));
+                    } else {
+                        $elem.val(val as string | number | string[]);
+                    }
+                    $elem.trigger('change');
                 }
-                if (!$elem.length) continue;
-
-                const type = $elem.attr('type');
-                const val = data[key];
-                if (type === 'checkbox' || type === 'radio') {
-                    $elem.prop('checked', Boolean(val));
-                } else {
-                    $elem.val(val as string | number | string[]);
-                }
-                $elem.trigger('change');
             }
+
+            const currentStep = this.getStepFromUrl();
+            this.navigateToStep(currentStep);
+
+            return draft;
+        } finally {
+            this.isRestoring = false;
         }
-
-        const currentStep = this.getStepFromUrl();
-        this.navigateToStep(currentStep);
-
-        return draft;
     }
 
     /**
