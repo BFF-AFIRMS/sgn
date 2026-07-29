@@ -1,26 +1,50 @@
 const $: JQueryStatic = (window as any).jQuery || (window as any).$;
 
+/**
+ * Primitive data types that can be stored in a form field draft state.
+ */
 export type FormPrimitiveValue = string | number | boolean | string[] | undefined | null;
+
+/**
+ * Key-value map representing serialized form field identifiers (ID or name) and their corresponding values.
+ */
 export type FormStateData = Record<string, FormPrimitiveValue>;
 
+/**
+ * Structure of draft data stored in localStorage.
+ */
 export interface DraftData {
+    /** Epoch timestamp (in milliseconds) when the draft was last saved. */
     last_modified: number;
+    /** Map of serialized form field keys and values. */
     data: FormStateData;
 }
 
+/**
+ * Options used to initialize a FormDraft manager instance.
+ */
 export interface FormDraftOptions {
+    /** CSS selector for the form element to persist and restore. */
     formSelector: string;
+    /** Prefix string for localStorage keys (e.g. 'trial_create_form_state_'). */
     draftPrefix: string;
+    /** Optional CSS selector for identifying the currently active step element. */
     stepSelector?: string;
+    /** Optional CSS selector for the workflow container element. */
     workflowSelector?: string;
+    /** Optional callback invoked when restoring or navigating to a workflow step. */
     onRestoreStep?: (step: number, draft: DraftData | null) => void;
 }
 
 /**
- * Number of drafts to keep in localStorage. Older drafts will be removed when this limit is exceeded.
+ * Maximum number of drafts to retain in localStorage per prefix before pruning older entries.
  */
 const MAX_DRAFTS = 10;
 
+/**
+ * Manages form draft persistence in localStorage, URL state synchronization (draft_id and step),
+ * and step navigation for multi-step workflows.
+ */
 export class FormDraft {
     private formSelector: string;
     private draftPrefix: string;
@@ -29,6 +53,12 @@ export class FormDraft {
     private onRestoreStep?: (step: number, draft: DraftData | null) => void;
     private poppedState: boolean = false;
 
+    /**
+     * Creates an instance of FormDraft and attaches a `popstate` window event listener
+     * to handle browser history navigation (back/forward) for workflow steps.
+     *
+     * @param options - Configuration parameters for the form draft manager.
+     */
     constructor(options: FormDraftOptions) {
         this.formSelector = options.formSelector;
         this.draftPrefix = options.draftPrefix;
@@ -45,6 +75,11 @@ export class FormDraft {
         }
     }
 
+    /**
+     * Retrieves the current 0-indexed workflow step index from the URL `step` parameter.
+     *
+     * @returns The 0-indexed step index parsed from the URL, or 0 if missing or invalid.
+     */
     public getStepFromUrl(): number {
         if (typeof window === 'undefined') return 0;
         const urlParams = new URLSearchParams(window.location.search);
@@ -58,6 +93,12 @@ export class FormDraft {
         return 0;
     }
 
+    /**
+     * Updates the URL `step` parameter and pushes a new state to browser history if the step has changed.
+     *
+     * @param stepIndex - The 0-indexed step index to set in the URL. If omitted, attempts to infer from stepSelector.
+     * @param force - If true, forces a history state push even if the step URL parameter matches stepIndex.
+     */
     public updateStepInUrl(stepIndex?: number, force: boolean = false): void {
         if (typeof window === 'undefined') return;
         if (typeof stepIndex === 'undefined' && this.stepSelector) {
@@ -79,6 +120,12 @@ export class FormDraft {
         }
     }
 
+    /**
+     * Navigates the workflow UI to the specified step index, optionally updating the browser URL.
+     *
+     * @param stepIndex - The 0-indexed target step index to focus.
+     * @param updateUrl - If true, updates the step in the browser URL and history.
+     */
     public navigateToStep(stepIndex: number, updateUrl: boolean = false): void {
         if (stepIndex < 0 || !this.workflowSelector) return;
 
@@ -106,6 +153,12 @@ export class FormDraft {
         }
     }
 
+    /**
+     * Resolves or generates the unique localStorage draft key for the current form,
+     * ensuring URL parameters `draft_id` and `step` are set.
+     *
+     * @returns The full localStorage key string (e.g. 'trial_create_form_state_1700000000_abc12').
+     */
     public getDraftKey(): string {
         if (typeof window === 'undefined') return this.draftPrefix;
         const urlParams = new URLSearchParams(window.location.search);
@@ -117,7 +170,6 @@ export class FormDraft {
             urlParams.set('draft_id', draftId);
             needsUpdate = true;
         }
-
         const key = `${this.draftPrefix}${draftId}`;
 
         if (!urlParams.has('step')) {
@@ -132,6 +184,10 @@ export class FormDraft {
 
         return key;
     }
+
+    /**
+     * Removes older draft records matching `draftPrefix` from localStorage if the total count exceeds MAX_DRAFTS.
+     */
     public cleanupOldDrafts(): void {
         const drafts: { key: string; lastModified: number }[] = [];
         for (let i = 0; i < localStorage.length; i++) {
@@ -160,6 +216,10 @@ export class FormDraft {
         }
     }
 
+    /**
+     * Serializes input values from the target form and saves them to localStorage under the current draft key.
+     * Also triggers pruning of old drafts and updates the URL step state.
+     */
     public saveFormState(): void {
         const $form = $(this.formSelector);
         if (!$form.length) return;
@@ -193,6 +253,11 @@ export class FormDraft {
         this.updateStepInUrl(undefined, forcePush);
     }
 
+    /**
+     * Fetches and parses the draft data object for the current form from localStorage.
+     *
+     * @returns The parsed DraftData object if present, or null if unreadable/absent.
+     */
     public getDraftData(): DraftData | null {
         if (typeof localStorage === 'undefined') return null;
         const stateStr = localStorage.getItem(this.getDraftKey());
@@ -204,6 +269,12 @@ export class FormDraft {
         }
     }
 
+    /**
+     * Restores form input values from localStorage into the form DOM elements,
+     * fires change events for each updated field, and navigates to the step specified in the URL.
+     *
+     * @returns The restored DraftData object, or null if no draft was found.
+     */
     public restoreFormState(): DraftData | null {
         const draft = this.getDraftData();
         const $form = $(this.formSelector);
@@ -236,6 +307,9 @@ export class FormDraft {
         return draft;
     }
 
+    /**
+     * Removes the draft item for the current form from localStorage.
+     */
     public clearDraft(): void {
         localStorage.removeItem(this.getDraftKey());
     }
