@@ -57,6 +57,7 @@ export class FormDraft {
     private formSelector: string;
     private draftPrefix: string;
     private workflow?: FormWorkflowOptions;
+    private draftId: string = '';
     private poppedState: boolean = false;
 
     /**
@@ -69,6 +70,7 @@ export class FormDraft {
         this.formSelector = options.formSelector;
         this.draftPrefix = options.draftPrefix;
         this.workflow = options.workflow;
+        this.draftId = this.ensureUrlParams();
 
         if (typeof window !== 'undefined') {
             window.addEventListener('popstate', () => {
@@ -77,6 +79,36 @@ export class FormDraft {
                 this.navigateToStep(stepIndex, false);
             });
         }
+    }
+
+    /**
+     * Ensures `draft_id` and `step` parameters exist in the URL query parameters on initialization.
+     *
+     * @returns The resolved or newly generated draft ID string.
+     */
+    private ensureUrlParams(): string {
+        if (typeof window === 'undefined') return 'default';
+        const urlParams = new URLSearchParams(window.location.search);
+        let draftId = urlParams.get('draft_id');
+        let needsUpdate = false;
+
+        if (!draftId) {
+            draftId = Date.now() + '_' + Math.random().toString(36).substring(2, 7);
+            urlParams.set('draft_id', draftId);
+            needsUpdate = true;
+        }
+
+        if (!urlParams.has('step')) {
+            urlParams.set('step', '1');
+            needsUpdate = true;
+        }
+
+        if (needsUpdate) {
+            const newUrl = window.location.pathname + '?' + urlParams.toString();
+            window.history.replaceState({ draftId, step: this.getStepFromUrl() }, '', newUrl);
+        }
+
+        return draftId;
     }
 
     /**
@@ -157,36 +189,12 @@ export class FormDraft {
     }
 
     /**
-     * Resolves or generates the unique localStorage draft key for the current form,
-     * ensuring URL parameters `draft_id` and `step` are set.
+     * Retrieves the unique localStorage key for the current form draft.
      *
      * @returns The full localStorage key string (e.g. 'trial_create_form_state_1700000000_abc12').
      */
     public getDraftKey(): string {
-        if (typeof window === 'undefined') return this.draftPrefix;
-        const urlParams = new URLSearchParams(window.location.search);
-        let draftId = urlParams.get('draft_id');
-        let needsUpdate = false;
-
-        if (!draftId) {
-            draftId = Date.now() + '_' + Math.random().toString(36).substring(2, 7);
-            urlParams.set('draft_id', draftId);
-            needsUpdate = true;
-        }
-
-        const key = `${this.draftPrefix}${draftId}`;
-
-        if (!urlParams.has('step')) {
-            urlParams.set('step', '1');
-            needsUpdate = true;
-        }
-
-        if (needsUpdate) {
-            const newUrl = window.location.pathname + '?' + urlParams.toString();
-            window.history.replaceState({ draftId, step: this.getStepFromUrl() }, '', newUrl);
-        }
-
-        return key;
+        return `${this.draftPrefix}${this.draftId}`;
     }
 
     /**
