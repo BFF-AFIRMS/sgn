@@ -191,7 +191,7 @@ jQuery(document).ready(function ($) {
         });
     }
 
-    $(document).on('focusout', '#select_list_list_select', function() {
+    $(document).on('focusout change', '#select_list_list_select', function() {
         if ($('#select_list_list_select').val()) {
             stock_list_id = $('#select_list_list_select').val();
             stock_list = JSON.stringify(list.getList(stock_list_id));
@@ -204,7 +204,7 @@ jQuery(document).ready(function ($) {
         }
     });
 
-    $(document).on('focusout', '#select_cross_list_list_select', function() {
+    $(document).on('focusout change', '#select_cross_list_list_select', function() {
         if ($('#select_cross_list_list_select').val()) {
             cross_list_id = $('#select_cross_list_list_select').val();
             cross_list = JSON.stringify(list.getList(cross_list_id));
@@ -212,7 +212,7 @@ jQuery(document).ready(function ($) {
         }
     });
 
-    $(document).on('focusout', '#select_family_name_list_list_select', function() {
+    $(document).on('focusout change', '#select_family_name_list_list_select', function() {
         if ($('#select_family_name_list_list_select').val()) {
             family_name_list_id = $('#select_family_name_list_list_select').val();
             family_name_list = JSON.stringify(list.getList(family_name_list_id));
@@ -220,7 +220,7 @@ jQuery(document).ready(function ($) {
         }
     });
 
-    $(document).on('focusout', '#list_of_checks_section_list_select', function() {
+    $(document).on('focusout change', '#list_of_checks_section_list_select', function() {
         if ($('#list_of_checks_section_list_select').val()) {
             check_stock_list_id = $('#list_of_checks_section_list_select').val();
             check_stock_list = JSON.stringify(list.getList(check_stock_list_id));
@@ -233,7 +233,7 @@ jQuery(document).ready(function ($) {
         }
     });
 
-    $(document).on('focusout', '#list_of_cross_checks_section_list_select', function() {
+    $(document).on('focusout change', '#list_of_cross_checks_section_list_select', function() {
         if ($('#list_of_cross_checks_section_list_select').val()) {
             check_cross_list_id = $('#list_of_cross_checks_section_list_select').val();
             check_cross_list = JSON.stringify(list.getList(check_cross_list_id));
@@ -241,7 +241,7 @@ jQuery(document).ready(function ($) {
         }
     });
 
-    $(document).on('focusout', '#list_of_family_name_checks_section_list_select', function() {
+    $(document).on('focusout change', '#list_of_family_name_checks_section_list_select', function() {
         if ($('#list_of_family_name_checks_section_list_select').val()) {
             check_family_name_list_id = $('#list_of_family_name_checks_section_list_select').val();
             check_family_name_list = JSON.stringify(list.getList(check_family_name_list_id));
@@ -249,7 +249,7 @@ jQuery(document).ready(function ($) {
         }
     });
 
-    $(document).on('focusout', '#crbd_list_of_checks_section_list_select', function() {
+    $(document).on('focusout change', '#crbd_list_of_checks_section_list_select', function() {
         if ($('#crbd_list_of_checks_section_list_select').val()) {
             crbd_check_stock_list_id = $('#crbd_list_of_checks_section_list_select').val();
             crbd_check_stock_list = JSON.stringify(list.getList(crbd_check_stock_list_id));
@@ -262,7 +262,7 @@ jQuery(document).ready(function ($) {
         }
     });
 
-    $(document).on('focusout', '#crbd_list_of_cross_checks_section_list_select', function() {
+    $(document).on('focusout change', '#crbd_list_of_cross_checks_section_list_select', function() {
         if ($('#crbd_list_of_cross_checks_section_list_select').val()) {
             crbd_check_cross_list_id = $('#crbd_list_of_cross_checks_section_list_select').val();
             crbd_check_cross_list = JSON.stringify(list.getList(crbd_check_cross_list_id));
@@ -270,7 +270,7 @@ jQuery(document).ready(function ($) {
         }
     });
 
-    $(document).on('focusout', '#crbd_list_of_family_name_checks_section_list_select', function() {
+    $(document).on('focusout change', '#crbd_list_of_family_name_checks_section_list_select', function() {
         if ($('#crbd_list_of_family_name_checks_section_list_select').val()) {
             crbd_check_family_name_list_id = $('#crbd_list_of_family_name_checks_section_list_select').val();
             crbd_check_family_name_list = JSON.stringify(list.getList(crbd_check_family_name_list_id));
@@ -278,7 +278,7 @@ jQuery(document).ready(function ($) {
         }
     });
 
-    $(document).on('focusout', '#list_of_unrep_accession_list_select', function() {
+    $(document).on('focusout change', '#list_of_unrep_accession_list_select', function() {
         if ($('#list_of_unrep_accession_list_select').val()) {
             unrep_stock_list_id = $('#list_of_unrep_accession_list_select').val();
             unrep_stock_list = JSON.stringify(list.getList(unrep_stock_list_id));
@@ -291,7 +291,7 @@ jQuery(document).ready(function ($) {
         }
     });
 
-    $(document).on('focusout', '#list_of_unrep_cross_list_select', function() {
+    $(document).on('focusout change', '#list_of_unrep_cross_list_select', function() {
         if ($('#list_of_unrep_cross_list_select').val()) {
             unrep_cross_list_id = $('#list_of_unrep_cross_list_select').val();
             unrep_cross_list = JSON.stringify(list.getList(unrep_cross_list_id));
@@ -299,7 +299,7 @@ jQuery(document).ready(function ($) {
         }
     });
 
-    $(document).on('focusout', '#list_of_unrep_family_name_list_select', function() {
+    $(document).on('focusout change', '#list_of_unrep_family_name_list_select', function() {
         if ($('#list_of_unrep_family_name_list_select').val()) {
             unrep_family_name_list_id = $('#list_of_unrep_family_name_list_select').val();
             unrep_family_name_list = JSON.stringify(list.getList(unrep_family_name_list_id));
@@ -307,7 +307,7 @@ jQuery(document).ready(function ($) {
         }
     });
 
-    $(document).on('focusout', '#list_of_rep_accession_list_select', function() {
+    $(document).on('focusout change', '#list_of_rep_accession_list_select', function() {
         if ($('#list_of_rep_accession_list_select').val()) {
             rep_stock_list_id = $('#list_of_rep_accession_list_select').val();
             rep_stock_list = JSON.stringify(list.getList(rep_stock_list_id));
@@ -320,7 +320,7 @@ jQuery(document).ready(function ($) {
         }
     });
 
-    $(document).on('focusout', '#list_of_rep_cross_list_select', function() {
+    $(document).on('focusout change', '#list_of_rep_cross_list_select', function() {
         if ($('#list_of_rep_cross_list_select').val()) {
             rep_cross_list_id = $('#list_of_rep_cross_list_select').val();
             rep_cross_list = JSON.stringify(list.getList(rep_cross_list_id));
@@ -328,7 +328,7 @@ jQuery(document).ready(function ($) {
         }
     });
 
-    $(document).on('focusout', '#list_of_rep_family_name_list_select', function() {
+    $(document).on('focusout change', '#list_of_rep_family_name_list_select', function() {
         if ($('#list_of_rep_family_name_list_select').val()) {
             rep_family_name_list_id = $('#list_of_rep_family_name_list_select').val();
             rep_family_name_list = JSON.stringify(list.getList(rep_family_name_list_id));
@@ -336,7 +336,7 @@ jQuery(document).ready(function ($) {
         }
     });
 
-    $(document).on('focusout', '#select_seedlot_list_list_select', function() {
+    $(document).on('focusout change', '#select_seedlot_list_list_select', function() {
         if ($('#select_seedlot_list_list_select').val() ) {
             seedlot_list_id = $('#select_seedlot_list_list_select').val();
             seedlot_list = JSON.stringify(list.getList(seedlot_list_id));
