@@ -56,12 +56,117 @@ jQuery(document).ready(function ($) {
             stepSelector: '#trial_design_workflow .workflow-content > li.workflow-focus',
             workflowSelector: '#trial_design_workflow',
             onRestoreStep: function(currentStep) {
-                if (currentStep === 6 && !jQuery('#trial_design_information').children().length && !isRestoringDesign) {
+                if (currentStep === 2 && !jQuery('#trial_design_information').children().length && !isRestoringDesign) {
                     generate_experimental_design();
                 }
             }
         }
     });
+
+    window.validate_trial_info = function() {
+        var trial_name = $("#new_trial_name").val();
+        var breeding_program = $("#select_breeding_program").val();
+        var location = $("#add_project_location").val();
+        var trial_year = $("#add_project_year").val();
+        var description = $("#add_project_description").val();
+        var design_type = $("#select_design_method").val();
+        var stock_type = $("#select_stock_type").val();
+
+        if (!trial_name) return "Please supply a trial name";
+        if (!breeding_program) return "Please select a breeding program";
+        if (!location || (Array.isArray(location) && location.length === 0)) return "Please select at least one location";
+        if (!trial_year) return "Please select a trial year";
+        if (!description) return "Please supply a description!";
+        if (!stock_type) return "Please select a stock type";
+        if (!design_type) return "Please select a design type";
+
+        return new Promise(function(resolve) {
+            jQuery.ajax({
+                url: '/ajax/trial/verify_trial_name?trial_name=' + encodeURIComponent(trial_name),
+                success: function(response) {
+                    if (response.error) {
+                        resolve(response.error);
+                    } else {
+                        resolve(true);
+                    }
+                },
+                error: function() {
+                    resolve("An error occurred checking trial name uniqueness on the server.");
+                }
+            });
+        });
+    };
+
+    window.validate_design_info = function() {
+        var design_type = $("#select_design_method").val();
+        var stock_type = $("#select_stock_type").val();
+
+        var stock_list_id, unreplicated_stock_list_id, replicated_stock_list_id;
+
+        if (stock_type === "accession") {
+            stock_list_id = $('#select_list_list_select').val();
+            replicated_stock_list_id = $('#list_of_rep_accession_list_select').val();
+            unreplicated_stock_list_id = $('#list_of_unrep_accession_list_select').val();
+        } else if (stock_type === "cross") {
+            stock_list_id = $('#select_cross_list_list_select').val();
+            replicated_stock_list_id = $('#list_of_rep_cross_list_select').val();
+            unreplicated_stock_list_id = $('#list_of_unrep_cross_list_select').val();
+        } else if (stock_type === "family_name") {
+            stock_list_id = $('#select_family_name_list_list_select').val();
+            replicated_stock_list_id = $('#list_of_rep_family_name_list_select').val();
+            unreplicated_stock_list_id = $('#list_of_unrep_family_name_list_select').val();
+        }
+
+        if (design_type === 'p-rep') {
+            if (!unreplicated_stock_list_id || !replicated_stock_list_id) {
+                return "Please select unreplicated and replicated stock lists";
+            }
+            var rep_list = JSON.stringify(list.getList(replicated_stock_list_id));
+            var unrep_list = JSON.stringify(list.getList(unreplicated_stock_list_id));
+            return new Promise(function(resolve) {
+                jQuery.post('/ajax/trial/verify_stock_list', { stock_list: rep_list })
+                    .then(function(res1) {
+                        if (res1.error) return resolve("Replicated list error: " + res1.error);
+                        return jQuery.post('/ajax/trial/verify_stock_list', { stock_list: unrep_list });
+                    })
+                    .then(function(res2) {
+                        if (res2 && res2.error) return resolve("Unreplicated list error: " + res2.error);
+                        resolve(true);
+                    })
+                    .catch(function() {
+                        resolve("An error occurred validating the lists on the server.");
+                    });
+            });
+        } else {
+            if (!stock_list_id) {
+                return "Please select a list of stocks to include in the trial";
+            }
+            var target_list = JSON.stringify(list.getList(stock_list_id));
+            var url = '/ajax/trial/verify_stock_list';
+            if (stock_type === 'cross') {
+                url = '/ajax/trial/verify_cross_list';
+            } else if (stock_type === 'family_name') {
+                url = '/ajax/trial/verify_family_name_list';
+            }
+            return new Promise(function(resolve) {
+                jQuery.post(url, { stock_list: target_list })
+                    .done(function(response) {
+                        if (response.error) {
+                            resolve(response.error);
+                        } else {
+                            resolve(true);
+                        }
+                    })
+                    .fail(function() {
+                        resolve("An error occurred validating the stock list on the server.");
+                    });
+            });
+        }
+    };
+
+    window.validate_trial_linkage = function() { return true; };
+    window.validate_field_map_info = function() { return true; };
+    window.validate_plot_naming = function() { return true; };
 
     if (window.location.pathname === '/breeders/trial/create') {
         get_select_box('years', 'add_project_year', {'auto_generate': 1, 'after_load': () => formDraft.restoreFormState() } );
@@ -80,10 +185,6 @@ jQuery(document).ready(function ($) {
         setTimeout(() => formDraft.saveFormState(), 200);
     });
 
-    jQuery('#create_trial_submit').click(function(){
-        create_trial_validate_form(this);
-    });
-
     jQuery('#add_plant_entries').on('change', function() {
         let plants_per_plot = jQuery(this).val();
         jQuery('#greenhouse_default_num_plants_per_accession_val').val(plants_per_plot);
@@ -95,79 +196,7 @@ jQuery(document).ready(function ($) {
         jQuery('#add_plant_entries').val(plants_per_plot);
         greenhouse_show_num_plants_section()
     });
-
-    function create_trial_validate_form(btn_elem){
-        var trial_name = $("#new_trial_name").val();
-        var breeding_program = $("#select_breeding_program").val();
-        var location = $("#add_project_location").val().toString().trim(); // remove whitespace
-        var trial_year = $("#add_project_year").val();
-        var planting_date = $("#add_project_planting_date").val();
-        var description = $("#add_project_description").val();
-        var design_type = $("#select_design_method").val();
-        var stock_type = $("#select_stock_type").val();
-        var plot_width = $("#add_project_plot_width").val();
-        var plot_length = $("#add_project_plot_length").val();
-	    var plot_numbering_scheme = jQuery('input[name="plot_numbering_scheme"]:checked').val();
-        plants_per_plot = $("#add_plant_entries").val();
-        num_rows = jQuery('#trial_create_rows_per_plot').val();
-        num_cols = jQuery('#trial_create_cols_per_plot').val();
-        if (jQuery('#trial_create_rows_and_columns_to_plants').is(':checked')) { 
-
-            include_plant_coordinates = 1;
-
-            if (num_rows == "" || num_cols == "" || num_rows * num_cols == 0) {
-                alert("You need to specify the number of rows and columns to give plant coordinates within plots.");
-                return;
-            }
-            if (num_rows * num_cols < plants_per_plot) {
-                alert("Only one plant per (row, column) coordinate is allowed. You must specify fewer plants per plot, or add rows and columns.");
-                return;
-            }
-        }
-        inherits_plot_treatments = $("trial_create_plants_per_plot_inherit_treatments").val();
-
-        if (trial_name === '') {
-            alert("Please supply a trial name");
-        }
-        else if (breeding_program === '') {
-            alert("Please select a breeding program");
-        }
-        else if (location === '') {
-            alert("Please select at least one location");
-        }
-        else if (trial_year === '') {
-            alert("Please select a trial year");
-        }
-        else if (plot_width < 0 ){
-            alert("Please check the plot width");
-        }
-        else if (plot_width > 13){
-            alert("Please check the plot width is too high");
-        }
-        else if (plot_length < 0){
-            alert("Please check the plot length");
-        }
-        else if (plot_length > 13){
-            alert("Please check the plot length is too high");
-        }
-        else if (plants_per_plot > 500) {
-            alert("Please no more than 500 plants per plot.");
-        }
-        else if (description === '') {
-            alert("Please supply a description!");
-        }
-        else if (design_type === '') {
-            alert("Please select a design type");
-        }
-        else if (stock_type === '') {
-            alert("Please select a stock type");
-        }
-        else {
-            verify_create_trial_name(trial_name, btn_elem);
-        }
-    }
-
-    function verify_create_trial_name(trial_name, btn_elem){
+    function verify_create_trial_name(trial_name, btn_elem, callback){
         jQuery.ajax( {
             url: '/ajax/trial/verify_trial_name?trial_name='+trial_name,
             beforeSend: function() {
@@ -183,6 +212,9 @@ jQuery(document).ready(function ($) {
                     if (btn_elem) {
                         Workflow.complete(btn_elem);
                         formDraft.saveFormState();
+                    }
+                    if (typeof callback === 'function') {
+                        callback();
                     }
                 }
             },
@@ -833,7 +865,7 @@ jQuery(document).ready(function ($) {
                     alert(response.error);
                 } else {
 
-                    Workflow.focus("#trial_design_workflow", 6); //Go to review page
+                    Workflow.focus("#trial_design_workflow", 2); //Go to review page
                     formDraft.saveFormState();
 
                     if(response.warning_message){
@@ -1048,34 +1080,24 @@ jQuery(document).ready(function ($) {
     }
 
     //When the user submits the form, input validation happens here before proceeding to design generation
-    $(document).on('click', '#new_trial_submit', function () {
+    $(document).on('click', '#new_trial_submit, button[name="create_trial_submit"]', function () {
         d3.selectAll("#container_field_map_view > *").remove();
         jQuery("#container_field_map_view").css("display", "none");
-        var name = $('#new_trial_name').val();
-        var year = $('#add_project_year').val();
-        var planting_date = $('#add_project_planting_date').val();
-        var desc = $('textarea#add_project_description').val();
-        if (name == '') {
-            alert('Trial name required');
-            return;
-        }
-        if (year === '' || desc === '') {
-            alert('Year and description are required.');
-            return;
-        }
-        if(desc === '') {
-            alert('Description is required.');
-            return;
-        }
-        if (stock_list_verified == 1 && seedlot_list_verified == 1){
-            generate_experimental_design();
-        } else if (cross_list_verified == 1 && stock_list_verified == 0 && family_name_list_verified == 0){
-            generate_experimental_design();
-        } else if (family_name_list_verified == 1 && cross_list_verified == 0 && stock_list_verified == 0){
-            generate_experimental_design();
+
+        var accordion = $('#trial_design_accordion').data('accordionWorkflow');
+        if (accordion) {
+            accordion.validateAll().then(function(failing) {
+                if (failing.index < 5) {
+                    alert("Please resolve errors in the design steps first: " + failing.message);
+                } else {
+                    var name = $('#new_trial_name').val();
+                    verify_create_trial_name(name, this, function() {
+                        generate_experimental_design();
+                    });
+                }
+            });
         } else {
-            alert('Accession list, seedlot list, cross list or family name list is not valid!');
-            return;
+            generate_experimental_design();
         }
     });
 

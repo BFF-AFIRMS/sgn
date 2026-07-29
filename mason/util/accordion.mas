@@ -1,0 +1,276 @@
+<%doc>
+Generic Accordion Component
+Encapsulates accordion workflow behavior.
+Accepts a list of steps with content and validation functions.
+Usage:
+  <&| /util/accordion.mas, id => "my_accordion" &>
+      <&| /util/accordion.mas:step, id => "step1", title => "Step 1", validate => "validate_step1" &>
+          Content for Step 1
+      </&>
+      ...
+  </&>
+Or:
+  <& /util/accordion.mas, id => "my_accordion", steps => [
+      { id => "step1", title => "Step 1", content => "...", validate => "validate_step1" },
+      ...
+  ] &>
+</%doc>
+<%args>
+  $id
+  $steps => undef
+</%args>
+
+<%shared>
+  my @step_ids = ();
+  my @titles = ();
+  my @contents = ();
+  my @validations = ();
+</%shared>
+
+<%init>
+  @step_ids = ();
+  @titles = ();
+  @contents = ();
+  @validations = ();
+
+  if ($steps && ref $steps eq 'ARRAY') {
+      foreach my $s (@$steps) {
+          push @step_ids, $s->{id} || '';
+          push @titles, $s->{title} || '';
+          push @contents, $s->{content} || '';
+          push @validations, $s->{validate} || $s->{validation} || '';
+      }
+  }
+</%init>
+
+<%method step>
+  <%args>
+    $id => ""
+    $title => ""
+    $validate => ""
+    $validation => ""
+  </%args>
+  <%init>
+    push @step_ids, $id;
+    push @titles, $title;
+    push @contents, $m->content;
+    push @validations, $validate || $validation;
+  </%init>
+</%method>
+
+<%perl>
+  $m->content; # Execute body to collect method calls
+  my $json = JSON::XS->new();
+  my $validations_json = $json->encode(\@validations);
+</%perl>
+
+<style media="screen">
+  .accordion-workflow .panel-heading {
+      position: relative;
+      user-select: none;
+  }
+  .accordion-workflow .accordion-toggle {
+      display: block;
+      text-decoration: none;
+      font-weight: bold;
+      color: #333;
+  }
+  .accordion-workflow .accordion-toggle:hover,
+  .accordion-workflow .accordion-toggle:focus {
+      text-decoration: none;
+  }
+  .accordion-workflow .accordion-step-icon {
+      margin-right: 8px;
+      transition: transform 0.2s ease-in-out;
+  }
+  .accordion-workflow .panel-collapse.in + .panel-heading .accordion-step-icon,
+  .accordion-workflow .panel-heading.active .accordion-step-icon {
+      transform: rotate(90deg);
+  }
+  .accordion-workflow .panel-heading.accordion-locked {
+      opacity: 0.7;
+      background-color: #f9f9f9;
+  }
+</style>
+
+<div id="<% $id %>" class="panel-group accordion-workflow">
+% for (my $i = 0; $i < scalar(@titles); $i++) {
+%   my $step_id = $step_ids[$i] || ($id . "_step_" . $i);
+    <div class="panel panel-default accordion-step-panel" id="<% $id %>_panel_<% $i %>" data-step-index="<% $i %>">
+        <div class="panel-heading accordion-step-heading" id="<% $id %>_heading_<% $i %>">
+            <h4 class="panel-title">
+                <a class="accordion-toggle" href="#<% $id %>_collapse_<% $i %>">
+                    <span class="accordion-step-icon glyphicon glyphicon-chevron-right"></span>
+                    <% $titles[$i] %>
+                </a>
+            </h4>
+        </div>
+        <div id="<% $id %>_collapse_<% $i %>" class="panel-collapse collapse">
+            <div class="panel-body">
+                <% $contents[$i] %>
+            </div>
+        </div>
+    </div>
+% }
+</div>
+
+<script type="text/javascript">
+jQuery(document).ready(function($) {
+    (function() {
+        var containerId = <% $id | JSON %>;
+        var validations = <% $validations_json %>;
+        var $container = $('#' + containerId);
+        if (!$container.length) return;
+
+        var panels = $container.find('.accordion-step-panel');
+        var numPanels = panels.length;
+        var unlockedUpTo = 0;
+
+        function getValidationFn(v) {
+            if (typeof v === 'function') return v;
+            if (typeof v === 'string' && v.trim() !== '') {
+                if (typeof window[v] === 'function') {
+                    return window[v];
+                }
+            }
+            return function() { return true; };
+        }
+
+        var validationFns = validations.map(getValidationFn);
+
+        function normalizeResult(res) {
+            if (res === true || res === null || res === undefined || res === '') {
+                return { valid: true };
+            }
+            if (typeof res === 'string') {
+                return { valid: false, message: res };
+            }
+            if (typeof res === 'object' && res.valid === false) {
+                return { valid: false, message: res.message || 'Validation failed' };
+            }
+            if (res === false) {
+                return { valid: false, message: 'Validation failed' };
+            }
+            return { valid: true };
+        }
+
+        function validateStep(i) {
+            var fn = validationFns[i];
+            if (!fn) return Promise.resolve({ valid: true });
+            try {
+                var res = fn();
+                if (res instanceof Promise) {
+                    return res.then(function(val) {
+                        return normalizeResult(val);
+                    }).catch(function(err) {
+                        return { valid: false, message: err.message || 'Error validating step' };
+                    });
+                }
+                return Promise.resolve(normalizeResult(res));
+            } catch(e) {
+                return Promise.resolve({ valid: false, message: e.message || 'Error validating step' });
+            }
+        }
+
+        function getFirstFailingStep() {
+            var chain = Promise.resolve({ index: numPanels, message: null });
+            
+            function check(i) {
+                return function(currentResult) {
+                    if (currentResult.index < numPanels) {
+                        return currentResult;
+                    }
+                    return validateStep(i).then(function(res) {
+                        if (!res.valid) {
+                            return { index: i, message: res.message };
+                        }
+                        return { index: numPanels, message: null };
+                    });
+                };
+            }
+
+            for (var i = 0; i < numPanels; i++) {
+                chain = chain.then(check(i));
+            }
+            return chain;
+        }
+
+        function updateAccordionState() {
+            getFirstFailingStep().then(function(failing) {
+                var maxUnlocked = failing.index;
+
+                panels.each(function(idx) {
+                    var $heading = $(this).find('.accordion-step-heading');
+                    if (idx > maxUnlocked) {
+                        $heading.addClass('accordion-locked');
+                    } else {
+                        $heading.removeClass('accordion-locked');
+                    }
+                });
+
+                for (var i = maxUnlocked + 1; i < numPanels; i++) {
+                    var $collapse = $('#' + containerId + '_collapse_' + i);
+                    if ($collapse.hasClass('in')) {
+                        $collapse.collapse('hide');
+                    }
+                }
+
+                for (var j = unlockedUpTo + 1; j <= maxUnlocked; j++) {
+                    if (j < numPanels) {
+                        var $collapseToOpen = $('#' + containerId + '_collapse_' + j);
+                        if (!$collapseToOpen.hasClass('in')) {
+                            $collapseToOpen.collapse('show');
+                        }
+                    }
+                }
+
+                unlockedUpTo = maxUnlocked;
+            });
+        }
+
+        var $firstCollapse = $('#' + containerId + '_collapse_0');
+        if (!$firstCollapse.hasClass('in')) {
+            $firstCollapse.collapse('show');
+        }
+
+        panels.each(function(idx) {
+            var $panel = $(this);
+            var $heading = $panel.find('.accordion-step-heading');
+            var $collapse = $panel.find('.panel-collapse');
+
+            $heading.on('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                getFirstFailingStep().then(function(failing) {
+                    if (idx > failing.index) {
+                        alert(failing.message);
+                        return false;
+                    }
+
+                    if ($collapse.hasClass('in')) {
+                        $collapse.collapse('hide');
+                    } else {
+                        $collapse.collapse('show');
+                    }
+                });
+            });
+        });
+
+        $container.on('change keyup input', 'input, select, textarea', function() {
+            updateAccordionState();
+        });
+
+        setTimeout(function() {
+            updateAccordionState();
+        }, 150);
+
+        $container.data('accordionWorkflow', {
+            updateState: function() { updateAccordionState(); },
+            validateAll: function() { return getFirstFailingStep(); }
+        });
+
+        window[containerId + '_update'] = updateAccordionState;
+    })();
+});
+</script>

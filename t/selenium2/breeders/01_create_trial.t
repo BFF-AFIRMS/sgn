@@ -50,9 +50,6 @@ $t->while_logged_in_as("submitter", sub {
 	$t->click_ok('select_design_method', 'id', "find field trial description input");
 	$t->click_ok('//select[@id="select_design_method"]/option[@value="CRD"]', 'xpath', "find randomized method of design");
 
-	$t->click_ok('button[name="create_trial_submit"]', 'css', "find form submit button and click");
-
-
 	# SCREEN 3 /Design Information/
 
 	$t->send_keys_ok('rep_count', 'id', "1", "find trial replicates count input");
@@ -62,8 +59,6 @@ $t->while_logged_in_as("submitter", sub {
 
 	$t->click_ok('crbd_list_of_checks_section_list_select', 'id', "find accessions to include select");
 	$t->click_ok('//select[@id="crbd_list_of_checks_section_list_select"]//option[@value ="4"]', "xpath", "find checks for list");
-
-	$t->click_ok('next_step_design_information_button', 'id', 'go to next screen - Design Information');
 
 	# SCREEN 4 /Trail Linkage/
 
@@ -76,14 +71,10 @@ $t->while_logged_in_as("submitter", sub {
 	$t->click_ok('add_project_trial_will_be_crossed', 'id', "find project trial will be crossed select");
 	$t->click_ok('//select[@id="add_project_trial_will_be_crossed"]/option[contains(@value, "no")]', "xpath", "select project trial will be crossed option as 'no'");
 
-	$t->click_ok('next_step_trail_linkage_button', 'id', 'go to next screen - Trail Linkage');
-
 	# SCREEN 5 /Field map information/
 	$t->send_keys_ok('fieldMap_row_number', 'id', "1", "find field map row number input");
 	$t->click_ok('plot_layout_format', 'id', "find plot layout format select");
 	$t->click_ok('//select[@id="plot_layout_format"]//option[contains(@value, "zigzag")]', "xpath", "find checks for list");
-
-	$t->click_ok('next_step_field_map_button', 'id', 'go to next screen - Field map information');
 
 	# SCREEN 6 /Custom plot naming/
 	$t->send_keys_ok('plot_prefix', 'id', "prefix_sel_", "find plot prefix input");
