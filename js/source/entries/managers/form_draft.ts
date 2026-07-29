@@ -28,6 +28,7 @@ export class FormDraft {
     private stepSelector?: string;
     private workflowSelector?: string;
     private onRestoreStep?: (step: number, draft: DraftData | null) => void;
+    private poppedState: boolean = false;
 
     constructor(options: FormDraftOptions) {
         this.formSelector = options.formSelector;
@@ -38,6 +39,7 @@ export class FormDraft {
 
         if (typeof window !== 'undefined') {
             window.addEventListener('popstate', () => {
+                this.poppedState = true;
                 const stepIndex = this.getStepFromUrl();
                 this.navigateToStep(stepIndex, false);
             });
@@ -57,7 +59,7 @@ export class FormDraft {
         return 0;
     }
 
-    public updateStepInUrl(stepIndex?: number, push: boolean = true): void {
+    public updateStepInUrl(stepIndex?: number, push: boolean = true, force: boolean = false): void {
         if (typeof window === 'undefined') return;
         if (typeof stepIndex === 'undefined' && this.stepSelector) {
             const idx = $(this.stepSelector).index();
@@ -71,7 +73,7 @@ export class FormDraft {
         const currentUrlStep = urlParams.get('step');
         const newStepStr = String(stepIndex + 1);
 
-        if (currentUrlStep !== newStepStr) {
+        if (force || currentUrlStep !== newStepStr) {
             urlParams.set('step', newStepStr);
             const newUrl = window.location.pathname + '?' + urlParams.toString();
             if (push) {
@@ -99,6 +101,7 @@ export class FormDraft {
         }
 
         if (updateUrl) {
+            this.poppedState = false;
             this.updateStepInUrl(stepIndex, true);
         }
 
@@ -202,7 +205,9 @@ export class FormDraft {
 
         localStorage.setItem(this.getDraftKey(), JSON.stringify(draft));
         this.cleanupOldDrafts();
-        this.updateStepInUrl();
+        const forcePush = this.poppedState;
+        this.poppedState = false;
+        this.updateStepInUrl(undefined, true, forcePush);
     }
 
     public getDraftData(): DraftData | null {
