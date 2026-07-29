@@ -135,17 +135,16 @@ export class FormDraft {
     }
 
     /**
-     * Synchronizes the browser URL `step` query parameter with the current workflow step.
+     * Synchronizes the browser URL `step` query parameter with the active workflow step in the DOM.
      *
-     * @param stepIndex - The 0-indexed target step index. If omitted (`undefined`), inspects the DOM via
-     *                    `workflow.stepSelector` to infer the currently focused step element.
      * @param force - If `true`, forces a `window.history.pushState()` call even if the step parameter matches
-     *                `stepIndex`. This truncates forward browser history when a user modifies a form field after
-     *                navigating back.
+     *                the current step. This truncates forward browser history when a user modifies a form field
+     *                after navigating back.
      */
-    public updateStepInUrl(stepIndex?: number, force: boolean = false): void {
+    public updateStepInUrl(force: boolean = false): void {
         if (typeof window === 'undefined') return;
-        if (typeof stepIndex === 'undefined' && this.workflow?.stepSelector) {
+        let stepIndex: number | undefined;
+        if (this.workflow?.stepSelector) {
             const idx = $(this.workflow.stepSelector).index();
             if (idx >= 0) {
                 stepIndex = idx;
@@ -156,6 +155,7 @@ export class FormDraft {
         const urlParams = new URLSearchParams(window.location.search);
         const currentUrlStep = urlParams.get('step');
         const newStepStr = String(stepIndex + 1);
+
         if (force || currentUrlStep !== newStepStr) {
             urlParams.set('step', newStepStr);
             const newUrl = window.location.pathname + '?' + urlParams.toString();
@@ -233,7 +233,7 @@ export class FormDraft {
     /**
      * Serializes input values from the target form and saves them to localStorage under the current draft key.
      *
-     * Also prunes old drafts and invokes `updateStepInUrl(undefined, forcePush)` to:
+     * Also prunes old drafts and invokes `updateStepInUrl(forcePush)` to:
      * 1. Infer the active step index from the DOM and push a history state if the step changed.
      * 2. Clear forward history by forcing a history state push if the edit occurred after back navigation (`poppedState`).
      */
@@ -250,7 +250,6 @@ export class FormDraft {
             if (!id && !name) return;
             const key = id || name;
             if (!key) return;
-
             if (type === 'checkbox' || type === 'radio') {
                 data[key] = $elem.is(':checked');
             } else {
@@ -267,7 +266,7 @@ export class FormDraft {
         this.cleanupOldDrafts();
         const forcePush = this.poppedState;
         this.poppedState = false;
-        this.updateStepInUrl(undefined, forcePush);
+        this.updateStepInUrl(forcePush);
     }
 
     /**
