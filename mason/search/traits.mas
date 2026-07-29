@@ -2,7 +2,7 @@
 <%args>
 </%args>
 
-<& /util/import_javascript.mas, classes => [ ], entries => [ 'search_state' ] &>
+<& /util/import_javascript.mas, classes => [ ], entries => [ 'managers/search_state' ] &>
 <& /util/import_css.mas, paths => ['/documents/inc/datatables/custom_datatable_select_styles.css'] &>
 
 <& /page/page_title.mas, title => "Trait Search" &>

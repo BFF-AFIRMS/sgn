@@ -19,7 +19,7 @@
   }
 </%perl>
 
-<& /util/import_javascript.mas, entries => [ 'search_state' ] &>
+<& /util/import_javascript.mas, entries => [ 'managers/search_state' ] &>
 
 <style>
 #stock_search_results_div {

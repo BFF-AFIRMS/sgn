@@ -1,4 +1,4 @@
-<& /util/import_javascript.mas, entries => [ 'search_state' ] &>
+<& /util/import_javascript.mas, entries => [ 'managers/search_state' ] &>
 
 <div class="well well-sm">
     <div class="panel panel-default">

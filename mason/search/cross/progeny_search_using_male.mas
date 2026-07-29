@@ -1,5 +1,5 @@
 <& /page/page_title.mas, title=>'Search Progenies of Male Parents / Populations' &>
-<& /util/import_javascript.mas, entries => [ 'search_state', 'functions' ] &>
+<& /util/import_javascript.mas, entries => [ 'managers/search_state', 'functions' ] &>
 <br>
 <&| /page/info_section.mas, title => 'Search', collapsible=>1, collapsed=>0&>
     <div class="row" id="progeny_search_form_male_parent" >

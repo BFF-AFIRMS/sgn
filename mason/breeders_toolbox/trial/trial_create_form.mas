@@ -718,7 +718,7 @@ $design_types => ()
                 <div id="no_map_view_MSG" >No field map to display...</div>
             </div>
 
-            <div id="trial_design_view_layout_return">
+            <div id="trial_design_view_layout_return" class="tw:overflow-x-auto">
             </div>
             <br/>
             <center>
