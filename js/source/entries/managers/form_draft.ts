@@ -16,6 +16,8 @@ export type FormStateData = Record<string, FormPrimitiveValue>;
 export interface DraftData {
     /** Epoch timestamp (in milliseconds) when the draft was last saved. */
     last_modified: number;
+    /** Highest 0-indexed step index completed or reached by the user. */
+    max_step?: number;
     /** Map of serialized form field keys and values. */
     data: FormStateData;
 }
@@ -135,8 +137,10 @@ export class FormDraft {
      *
      * Automatically inspects and consumes `poppedState`. If a back-navigation occurred prior to
      * this sync, forces a `window.history.pushState()` call to truncate orphaned forward history.
+     *
+     * @returns The active 0-indexed step index, or undefined if no step selector is configured/found.
      */
-    public updateStepInUrl(): void {
+    public updateStepInUrl(): number | undefined {
         const force = this.poppedState;
         this.poppedState = false;
 
@@ -147,7 +151,7 @@ export class FormDraft {
                 stepIndex = idx;
             }
         }
-        if (stepIndex === undefined) return;
+        if (stepIndex === undefined) return undefined;
 
         const urlParams = new URLSearchParams(window.location.search);
         const currentUrlStep = urlParams.get('step');
@@ -158,6 +162,8 @@ export class FormDraft {
             const newUrl = window.location.pathname + '?' + urlParams.toString();
             window.history.pushState({ draftId: urlParams.get('draft_id'), step: stepIndex }, '', newUrl);
         }
+
+        return stepIndex;
     }
 
     /**
@@ -168,12 +174,14 @@ export class FormDraft {
     public navigateToStep(stepIndex: number): void {
         if (stepIndex < 0 || !this.workflow) return;
 
+        const draft = this.getDraftData();
         const $workflow = $(this.workflow.workflowSelector);
         if ($workflow.length) {
             const $progItems = $workflow.find('.workflow-prog > li');
-            // Workflow.focus does not update the progress bar completed steps, so we add/remove the 'workflow-complete' class here.
+            const maxStep = Math.max(stepIndex, draft?.max_step ?? 0);
+            // Workflow.focus does not update the progress bar completed steps, so we update the 'workflow-complete' class here.
             $progItems.removeClass('workflow-complete');
-            for (let i = 0; i < stepIndex; i++) {
+            for (let i = 0; i < maxStep; i++) {
                 $progItems.eq(i).addClass('workflow-complete');
             }
 
@@ -183,7 +191,6 @@ export class FormDraft {
             }
         }
 
-        const draft = this.getDraftData();
         if (this.workflow.onRestoreStep) {
             this.workflow.onRestoreStep(stepIndex, draft);
         }
@@ -257,14 +264,18 @@ export class FormDraft {
             }
         });
 
+        const currentStep = this.updateStepInUrl();
+        const existingDraft = this.getDraftData();
+        const maxStep = Math.max(existingDraft?.max_step ?? 0, currentStep ?? 0);
+
         const draft: DraftData = {
             last_modified: Date.now(),
+            max_step: maxStep,
             data
         };
 
         localStorage.setItem(this.getDraftKey(), JSON.stringify(draft));
         this.cleanupOldDrafts();
-        this.updateStepInUrl();
     }
 
     /**
