@@ -21,6 +21,18 @@ export interface DraftData {
 }
 
 /**
+ * Configuration for multi-step workflow navigation and URL step tracking.
+ */
+export interface FormWorkflowOptions {
+    /** CSS selector for the workflow container element (e.g. '#trial_design_workflow'). */
+    workflowSelector: string;
+    /** CSS selector for identifying the currently active step element in the DOM (e.g. '.workflow-content > li.workflow-focus'). */
+    stepSelector: string;
+    /** Optional callback invoked when restoring or navigating to a workflow step. */
+    onRestoreStep?: (step: number, draft: DraftData | null) => void;
+}
+
+/**
  * Options used to initialize a FormDraft manager instance.
  */
 export interface FormDraftOptions {
@@ -28,12 +40,8 @@ export interface FormDraftOptions {
     formSelector: string;
     /** Prefix string for localStorage keys (e.g. 'trial_create_form_state_'). */
     draftPrefix: string;
-    /** Optional CSS selector for identifying the currently active step element. */
-    stepSelector?: string;
-    /** Optional CSS selector for the workflow container element. */
-    workflowSelector?: string;
-    /** Optional callback invoked when restoring or navigating to a workflow step. */
-    onRestoreStep?: (step: number, draft: DraftData | null) => void;
+    /** Optional workflow configuration for multi-step form workflows. */
+    workflow?: FormWorkflowOptions;
 }
 
 /**
@@ -48,9 +56,7 @@ const MAX_DRAFTS = 10;
 export class FormDraft {
     private formSelector: string;
     private draftPrefix: string;
-    private stepSelector?: string;
-    private workflowSelector?: string;
-    private onRestoreStep?: (step: number, draft: DraftData | null) => void;
+    private workflow?: FormWorkflowOptions;
     private poppedState: boolean = false;
 
     /**
@@ -62,9 +68,7 @@ export class FormDraft {
     constructor(options: FormDraftOptions) {
         this.formSelector = options.formSelector;
         this.draftPrefix = options.draftPrefix;
-        this.stepSelector = options.stepSelector;
-        this.workflowSelector = options.workflowSelector;
-        this.onRestoreStep = options.onRestoreStep;
+        this.workflow = options.workflow;
 
         if (typeof window !== 'undefined') {
             window.addEventListener('popstate', () => {
@@ -96,13 +100,13 @@ export class FormDraft {
     /**
      * Updates the URL `step` parameter and pushes a new state to browser history if the step has changed.
      *
-     * @param stepIndex - The 0-indexed step index to set in the URL. If omitted, attempts to infer from stepSelector.
+     * @param stepIndex - The 0-indexed step index to set in the URL. If omitted, attempts to infer from workflow.stepSelector.
      * @param force - If true, forces a history state push even if the step URL parameter matches stepIndex.
      */
     public updateStepInUrl(stepIndex?: number, force: boolean = false): void {
         if (typeof window === 'undefined') return;
-        if (typeof stepIndex === 'undefined' && this.stepSelector) {
-            const idx = $(this.stepSelector).index();
+        if (typeof stepIndex === 'undefined' && this.workflow?.stepSelector) {
+            const idx = $(this.workflow.stepSelector).index();
             if (idx >= 0) {
                 stepIndex = idx;
             }
@@ -127,10 +131,10 @@ export class FormDraft {
      * @param updateUrl - If true, updates the step in the browser URL and history.
      */
     public navigateToStep(stepIndex: number, updateUrl: boolean = false): void {
-        if (stepIndex < 0 || !this.workflowSelector) return;
+        if (stepIndex < 0 || !this.workflow) return;
 
         const Workflow = (window as any).Workflow;
-        const $workflow = $(this.workflowSelector);
+        const $workflow = $(this.workflow.workflowSelector);
         if ($workflow.length) {
             const $progItems = $workflow.find('.workflow-prog > li');
             $progItems.removeClass('workflow-complete');
@@ -138,7 +142,7 @@ export class FormDraft {
                 $progItems.eq(i).addClass('workflow-complete');
             }
             if (Workflow && typeof Workflow.focus === 'function') {
-                Workflow.focus(this.workflowSelector, stepIndex);
+                Workflow.focus(this.workflow.workflowSelector, stepIndex);
             }
         }
 
@@ -146,10 +150,9 @@ export class FormDraft {
             this.poppedState = false;
             this.updateStepInUrl(stepIndex);
         }
-
         const draft = this.getDraftData();
-        if (this.onRestoreStep) {
-            this.onRestoreStep(stepIndex, draft);
+        if (this.workflow.onRestoreStep) {
+            this.workflow.onRestoreStep(stepIndex, draft);
         }
     }
 
@@ -170,6 +173,7 @@ export class FormDraft {
             urlParams.set('draft_id', draftId);
             needsUpdate = true;
         }
+
         const key = `${this.draftPrefix}${draftId}`;
 
         if (!urlParams.has('step')) {

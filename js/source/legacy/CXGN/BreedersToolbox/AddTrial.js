@@ -52,11 +52,13 @@ jQuery(document).ready(function ($) {
     var formDraft = new FormDraft({
         formSelector: '#create_new_trial_form',
         draftPrefix: 'trial_create_form_state_',
-        stepSelector: '#trial_design_workflow .workflow-content > li.workflow-focus',
-        workflowSelector: '#trial_design_workflow',
-        onRestoreStep: function(currentStep) {
-            if (currentStep === 6 && !jQuery('#trial_design_information').children().length && !isRestoringDesign) {
-                generate_experimental_design();
+        workflow: {
+            stepSelector: '#trial_design_workflow .workflow-content > li.workflow-focus',
+            workflowSelector: '#trial_design_workflow',
+            onRestoreStep: function(currentStep) {
+                if (currentStep === 6 && !jQuery('#trial_design_information').children().length && !isRestoringDesign) {
+                    generate_experimental_design();
+                }
             }
         }
     });
