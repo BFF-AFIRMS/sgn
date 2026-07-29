@@ -98,6 +98,20 @@ $t->while_logged_in_as("submitter", sub {
 	$t->click_ok('redo_trial_layout_button', 'id', "find redo randomization and click button");
 	$t->wait_for_working_dialog();
 
+	# TEST PAGE REFRESH AND DRAFT RESTORATION ON STEP 6 (REVIEW DESIGN)
+	my $current_url = $t->driver->get_current_url();
+	ok($current_url =~ /draft_id=/, "URL contains draft_id parameter");
+
+	$t->get_ok($current_url, "Refresh page at review design step with draft_id");
+	$t->wait_for_network_idle();
+
+	$t->find_element_ok('trial_design_information', 'id', "Verify review design section is restored after refresh");
+	my $design_info_text = $t->get_text('trial_design_information', 'id');
+	ok($design_info_text =~ /Completely Randomized Design/, "Verify restored design type in trial design info");
+	ok($design_info_text =~ /Number of locations/, "Verify restored locations in trial design info");
+	ok($design_info_text =~ /Number of accessions/, "Verify restored accessions in trial design info");
+	ok($design_info_text =~ /Number of reps/, "Verify restored reps in trial design info");
+
 	$t->click_ok('new_trial_confirm_submit', 'id', "find new trial confirm and submit");
 	$t->wait_for_working_dialog();
 
