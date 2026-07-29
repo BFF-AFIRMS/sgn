@@ -76,7 +76,7 @@ export class FormDraft {
             window.addEventListener('popstate', () => {
                 this.poppedState = true;
                 const stepIndex = this.getStepFromUrl();
-                this.navigateToStep(stepIndex, false);
+                this.navigateToStep(stepIndex);
             });
         }
     }
@@ -148,7 +148,6 @@ export class FormDraft {
         const urlParams = new URLSearchParams(window.location.search);
         const currentUrlStep = urlParams.get('step');
         const newStepStr = String(stepIndex + 1);
-
         if (force || currentUrlStep !== newStepStr) {
             urlParams.set('step', newStepStr);
             const newUrl = window.location.pathname + '?' + urlParams.toString();
@@ -157,12 +156,11 @@ export class FormDraft {
     }
 
     /**
-     * Navigates the workflow UI to the specified step index, optionally updating the browser URL.
+     * Navigates the workflow UI to the specified step index and triggers step restore callbacks.
      *
      * @param stepIndex - The 0-indexed target step index to focus.
-     * @param updateUrl - If true, updates the step in the browser URL and history.
      */
-    public navigateToStep(stepIndex: number, updateUrl: boolean = false): void {
+    public navigateToStep(stepIndex: number): void {
         if (stepIndex < 0 || !this.workflow) return;
 
         const Workflow = (window as any).Workflow;
@@ -178,10 +176,6 @@ export class FormDraft {
             }
         }
 
-        if (updateUrl) {
-            this.poppedState = false;
-            this.updateStepInUrl(stepIndex);
-        }
         const draft = this.getDraftData();
         if (this.workflow.onRestoreStep) {
             this.workflow.onRestoreStep(stepIndex, draft);
@@ -314,7 +308,7 @@ export class FormDraft {
         }
 
         const currentStep = this.getStepFromUrl();
-        this.navigateToStep(currentStep, false);
+        this.navigateToStep(currentStep);
 
         return draft;
     }
