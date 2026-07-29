@@ -5,7 +5,6 @@ export type FormStateData = Record<string, FormPrimitiveValue>;
 
 export interface DraftData {
     last_modified: number;
-    current_step?: number;
     data: FormStateData;
 }
 
@@ -122,19 +121,7 @@ export class FormDraft {
         const key = `${this.draftPrefix}${draftId}`;
 
         if (!urlParams.has('step')) {
-            let defaultStep = 1;
-            try {
-                const itemStr = localStorage.getItem(key);
-                if (itemStr) {
-                    const item = JSON.parse(itemStr);
-                    if (item && typeof item.current_step === 'number' && item.current_step >= 0) {
-                        defaultStep = item.current_step + 1;
-                    }
-                }
-            } catch (e) {
-                // ignore
-            }
-            urlParams.set('step', String(defaultStep));
+            urlParams.set('step', '1');
             needsUpdate = true;
         }
 
