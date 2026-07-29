@@ -59,7 +59,7 @@ export class FormDraft {
         return 0;
     }
 
-    public updateStepInUrl(stepIndex?: number, push: boolean = true, force: boolean = false): void {
+    public updateStepInUrl(stepIndex?: number, force: boolean = false): void {
         if (typeof window === 'undefined') return;
         if (typeof stepIndex === 'undefined' && this.stepSelector) {
             const idx = $(this.stepSelector).index();
@@ -76,11 +76,7 @@ export class FormDraft {
         if (force || currentUrlStep !== newStepStr) {
             urlParams.set('step', newStepStr);
             const newUrl = window.location.pathname + '?' + urlParams.toString();
-            if (push) {
-                window.history.pushState({ draftId: urlParams.get('draft_id'), step: stepIndex }, '', newUrl);
-            } else {
-                window.history.replaceState({ draftId: urlParams.get('draft_id'), step: stepIndex }, '', newUrl);
-            }
+            window.history.pushState({ draftId: urlParams.get('draft_id'), step: stepIndex }, '', newUrl);
         }
     }
 
@@ -102,7 +98,7 @@ export class FormDraft {
 
         if (updateUrl) {
             this.poppedState = false;
-            this.updateStepInUrl(stepIndex, true);
+            this.updateStepInUrl(stepIndex);
         }
 
         const draft = this.getDraftData();
@@ -207,7 +203,7 @@ export class FormDraft {
         this.cleanupOldDrafts();
         const forcePush = this.poppedState;
         this.poppedState = false;
-        this.updateStepInUrl(undefined, true, forcePush);
+        this.updateStepInUrl(undefined, forcePush);
     }
 
     public getDraftData(): DraftData | null {
