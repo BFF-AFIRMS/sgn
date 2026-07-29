@@ -47,13 +47,15 @@ jQuery(document).ready(function ($) {
     var num_cols;
     var inherits_plot_treatments;
 
+    var isRestoringDesign = false;
+
     var formDraft = new FormDraft({
         formSelector: '#create_new_trial_form',
         draftPrefix: 'trial_create_form_state_',
         stepSelector: '#trial_design_workflow .workflow-content > li.workflow-focus',
         workflowSelector: '#trial_design_workflow',
         onRestoreStep: function(currentStep) {
-            if (currentStep === 6 && !jQuery('#trial_design_information').children().length) {
+            if (currentStep === 6 && !jQuery('#trial_design_information').children().length && !isRestoringDesign) {
                 generate_experimental_design();
             }
         }
@@ -560,6 +562,7 @@ jQuery(document).ready(function ($) {
     var num_subplots_per_plot = 0;
 
     function generate_experimental_design() {
+        isRestoringDesign = true;
         var name = $('#new_trial_name').val();
         var year = $('#add_project_year').val();
         var planting_date = $('#add_project_planting_date').val();
@@ -608,21 +611,27 @@ jQuery(document).ready(function ($) {
         var stock_list_array;
         if (stock_list_id) {
             stock_list_array = list.getList(stock_list_id);
-            stock_list = JSON.stringify(stock_list_array);
+            if (stock_list_array && stock_list_array.length) {
+                stock_list = JSON.stringify(stock_list_array);
+            }
         }
 
         var control_list;
         var control_list_array;
         if(control_stock_list_id) {
             control_list_array = list.getList(control_stock_list_id);
-            control_list = JSON.stringify(control_list_array);
+            if (control_list_array && control_list_array.length) {
+                control_list = JSON.stringify(control_list_array);
+            }
         }
 
         var control_list_crbd;
         var control_list_crbd_array;
         if (control_stock_list_id_crbd) {
             control_list_crbd_array = list.getList(control_stock_list_id_crbd);
-            control_list_crbd = JSON.stringify(control_list_crbd_array);
+            if (control_list_crbd_array && control_list_crbd_array.length) {
+                control_list_crbd = JSON.stringify(control_list_crbd_array);
+            }
         }
 
         var design_type = $('#select_design_method').val();
@@ -666,12 +675,32 @@ jQuery(document).ready(function ($) {
 
         var unreplicated_stock_list;
         if (unreplicated_stock_list_id) {
-            unreplicated_stock_list = JSON.stringify(list.getList(unreplicated_stock_list_id));
+            var unrep_array = list.getList(unreplicated_stock_list_id);
+            if (unrep_array && unrep_array.length) {
+                unreplicated_stock_list = JSON.stringify(unrep_array);
+            }
         }
 
         var replicated_stock_list;
         if (replicated_stock_list_id) {
-            replicated_stock_list = JSON.stringify(list.getList(replicated_stock_list_id));
+            var rep_array = list.getList(replicated_stock_list_id);
+            if (rep_array && rep_array.length) {
+                replicated_stock_list = JSON.stringify(rep_array);
+            }
+        }
+
+        if (design_type === 'p-rep') {
+            if (!unreplicated_stock_list || !replicated_stock_list) {
+                console.warn("Cannot generate p-rep design: Replicated or unreplicated stock list data not ready.");
+                isRestoringDesign = false;
+                return;
+            }
+        } else {
+            if (!stock_list_id || !stock_list) {
+                console.warn("Cannot generate design: Stock list data not ready.");
+                isRestoringDesign = false;
+                return;
+            }
         }
 
         var treatments = {};
@@ -797,6 +826,7 @@ jQuery(document).ready(function ($) {
             },
             success: function (response) {
                 $('#working_modal').modal("hide");
+                isRestoringDesign = false;
                 if (response.error) {
                     alert(response.error);
                 } else {
@@ -1009,6 +1039,7 @@ jQuery(document).ready(function ($) {
             },
             error: function () {
                 $('#working_modal').modal("hide");
+                isRestoringDesign = false;
                 alert('An error occurred. sorry.');
             }
        });
