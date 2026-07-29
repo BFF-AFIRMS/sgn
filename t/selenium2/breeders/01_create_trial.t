@@ -104,6 +104,7 @@ $t->while_logged_in_as("submitter", sub {
 
 	$t->get_ok($current_url, "Refresh page at review design step with draft_id");
 	$t->wait_for_network_idle();
+	$t->wait_for_working_dialog();
 
 	$t->find_element_ok('trial_design_information', 'id', "Verify review design section is restored after refresh");
 	my $design_info_text = $t->get_text('trial_design_information', 'id');
