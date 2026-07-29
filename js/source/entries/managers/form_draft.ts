@@ -75,15 +75,13 @@ export class FormDraft {
         this.formSelector = options.formSelector;
         this.draftPrefix = options.draftPrefix;
         this.workflow = options.workflow;
-        this.draftId = this.ensureUrlParams();
+        this.draftId = this.initUrlParams();
 
-        if (typeof window !== 'undefined') {
-            window.addEventListener('popstate', () => {
-                this.poppedState = true;
-                const stepIndex = this.getStepFromUrl();
-                this.navigateToStep(stepIndex);
-            });
-        }
+        window.addEventListener('popstate', () => {
+            this.poppedState = true;
+            const stepIndex = this.getStepFromUrl();
+            this.navigateToStep(stepIndex);
+        });
     }
 
     /**
@@ -91,8 +89,7 @@ export class FormDraft {
      *
      * @returns The resolved or newly generated draft ID string.
      */
-    private ensureUrlParams(): string {
-        if (typeof window === 'undefined') return 'default';
+    private initUrlParams(): string {
         const urlParams = new URLSearchParams(window.location.search);
         let draftId = urlParams.get('draft_id');
         let needsUpdate = false;
@@ -122,7 +119,6 @@ export class FormDraft {
      * @returns The 0-indexed step index parsed from the URL, or 0 if missing or invalid.
      */
     public getStepFromUrl(): number {
-        if (typeof window === 'undefined') return 0;
         const urlParams = new URLSearchParams(window.location.search);
         const stepStr = urlParams.get('step');
         if (stepStr) {
@@ -141,9 +137,9 @@ export class FormDraft {
      * this sync, forces a `window.history.pushState()` call to truncate orphaned forward history.
      */
     public updateStepInUrl(): void {
-        if (typeof window === 'undefined') return;
         const force = this.poppedState;
         this.poppedState = false;
+
         let stepIndex: number | undefined;
         if (this.workflow?.stepSelector) {
             const idx = $(this.workflow.stepSelector).index();
@@ -151,7 +147,7 @@ export class FormDraft {
                 stepIndex = idx;
             }
         }
-        if (typeof stepIndex === 'undefined' || stepIndex < 0) return;
+        if (stepIndex === undefined) return;
 
         const urlParams = new URLSearchParams(window.location.search);
         const currentUrlStep = urlParams.get('step');
@@ -172,14 +168,16 @@ export class FormDraft {
     public navigateToStep(stepIndex: number): void {
         if (stepIndex < 0 || !this.workflow) return;
 
-        const Workflow = (window as any).Workflow;
         const $workflow = $(this.workflow.workflowSelector);
         if ($workflow.length) {
             const $progItems = $workflow.find('.workflow-prog > li');
+            // Workflow.focus does not update the progress bar completed steps, so we add/remove the 'workflow-complete' class here.
             $progItems.removeClass('workflow-complete');
             for (let i = 0; i < stepIndex; i++) {
                 $progItems.eq(i).addClass('workflow-complete');
             }
+
+            const Workflow = (window as any).Workflow;
             if (Workflow && typeof Workflow.focus === 'function') {
                 Workflow.focus(this.workflow.workflowSelector, stepIndex);
             }
@@ -234,9 +232,9 @@ export class FormDraft {
     /**
      * Serializes input values from the target form and saves them to localStorage under the current draft key.
      *
-     * Also prunes old drafts and invokes `updateStepInUrl()` to:
-     * 1. Infer the active step index from the DOM and push a history state if the step changed.
-     * 2. Clear forward history by forcing a history state push if an edit occurred after back navigation (`poppedState`).
+     * Also prunes old drafts and invokes `updateStepInUrl()`.
+     * 
+     * This function should be called whenever the form state changes (e.g., on input change events) to persist the latest draft.
      */
     public saveFormState(): void {
         const $form = $(this.formSelector);
@@ -275,9 +273,9 @@ export class FormDraft {
      * @returns The parsed DraftData object if present, or null if unreadable/absent.
      */
     public getDraftData(): DraftData | null {
-        if (typeof localStorage === 'undefined') return null;
         const stateStr = localStorage.getItem(this.getDraftKey());
         if (!stateStr) return null;
+
         try {
             return JSON.parse(stateStr) as DraftData;
         } catch (e) {
@@ -331,6 +329,4 @@ export class FormDraft {
     }
 }
 
-if (typeof window !== 'undefined') {
-    (window as any).FormDraft = FormDraft;
-}
+(window as any).FormDraft = FormDraft;
