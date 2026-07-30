@@ -64,7 +64,7 @@ jQuery(document).ready(function ($) {
         }
     });
 
-    window.validate_trial_info = function() {
+    const validate_trial_info = function() {
         var trial_name = $("#new_trial_name").val();
         var breeding_program = $("#select_breeding_program").val();
         var location = $("#add_project_location").val();
@@ -98,7 +98,7 @@ jQuery(document).ready(function ($) {
         });
     };
 
-    window.validate_design_info = function() {
+    const validate_design_info = function() {
         var design_type = $("#select_design_method").val();
         var stock_type = $("#select_stock_type").val();
 
@@ -165,9 +165,18 @@ jQuery(document).ready(function ($) {
         }
     };
 
-    window.validate_trial_linkage = function() { return true; };
-    window.validate_field_map_info = function() { return true; };
-    window.validate_plot_naming = function() { return true; };
+    const validate_trial_linkage = function() { return true; };
+    const validate_field_map_info = function() { return true; };
+    const validate_plot_naming = function() { return true; };
+
+    const accordion = $('#trial_design_accordion').data('accordionWorkflow');
+    if (accordion) {
+        accordion.registerValidation('step_trial_info', validate_trial_info);
+        accordion.registerValidation('step_design_info', validate_design_info);
+        accordion.registerValidation('step_trial_linkage', validate_trial_linkage);
+        accordion.registerValidation('step_field_map', validate_field_map_info);
+        accordion.registerValidation('step_plot_naming', validate_plot_naming);
+    }
 
     if (window.location.pathname === '/breeders/trial/create') {
         get_select_box('years', 'add_project_year', {'auto_generate': 1, 'after_load': () => formDraft.restoreFormState() } );

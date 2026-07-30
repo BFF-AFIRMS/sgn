@@ -60,7 +60,7 @@ Or:
 <%perl>
   $m->content; # Execute body to collect method calls
   my $json = JSON::XS->new();
-  my $validations_json = $json->encode(\@validations);
+  my $step_ids_json = $json->encode(\@step_ids);
   my $id_json = $json->encode($id);
 </%perl>
 
@@ -96,7 +96,7 @@ Or:
 <script type="text/javascript">
 jQuery(document).ready(($) => {
     const containerId = <% $id_json %>;
-    const validations = <% $validations_json %>;
+    const stepIds = <% $step_ids_json %>;
     const $container = $('#' + containerId);
     if (!$container.length) return;
 
@@ -104,24 +104,21 @@ jQuery(document).ready(($) => {
     const numPanels = panels.length;
     let unlockedUpTo = 0;
     let updateTimeout = null;
+    const registeredValidations = {};
 
     /**
-    * Resolves a validation function from a global function name.
-    * If no matching function is found on window, returns a default function that passes validation.
+    * Resolves a validation function from the locally registered validations.
     * 
-    * @param {string} v - The global validation function name.
+    * @param {number} i - The index of the step to resolve validation for.
     * @returns {function} The resolved validation function.
     */
-    const getValidationFn = (v) => {
-        if (typeof v === 'string' && v.trim() !== '') {
-            if (typeof window[v] === 'function') {
-                return window[v];
-            }
+    const getValidationFn = (i) => {
+        const stepId = stepIds[i];
+        if (stepId && registeredValidations[stepId]) {
+            return registeredValidations[stepId];
         }
         return () => true;
-    }
-
-    const validationFns = validations.map(getValidationFn);
+    };
 
     /**
     * Normalizes any validation return value (boolean, string, or object)
@@ -154,9 +151,9 @@ jQuery(document).ready(($) => {
     * @returns {Promise<{valid: boolean, message?: string}>} A promise resolving to the normalized validation status.
     */
     const validateStep = async (i) => {
-        const fn = validationFns[i];
+        const fn = getValidationFn(i);
         if (!fn) return { valid: true };
-        
+
         try {
             return normalizeResult(await fn());
         } catch(e) {
@@ -269,7 +266,18 @@ jQuery(document).ready(($) => {
     // Use when caller already has the container reference (no global lookup needed).
     $container.data('accordionWorkflow', {
         updateState: () => updateAccordionState(),
-        validateAll: () => getFirstFailingStep()
+        validateAll: () => getFirstFailingStep(),
+        registerValidation: (stepIdOrIndex, fn) => {
+            if (typeof stepIdOrIndex === 'number') {
+                const stepId = stepIds[stepIdOrIndex];
+                if (stepId) {
+                    registeredValidations[stepId] = fn;
+                }
+            } else if (typeof stepIdOrIndex === 'string') {
+                registeredValidations[stepIdOrIndex] = fn;
+            }
+            updateAccordionState();
+        }
     });
 
     // Global update hook: expose update by a unique window key for callers that do not
