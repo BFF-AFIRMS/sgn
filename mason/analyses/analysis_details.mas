@@ -112,3 +112,5 @@ $analysis_metadata
         </div>
     </div>
 </div>
+
+<& /page/project_overview_accordion.mas, project_id => $trial_id, prefix => "analysis" &>

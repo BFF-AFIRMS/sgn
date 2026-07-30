@@ -1,0 +1,10 @@
+<%args>
+$project_id
+$prefix
+</%args>
+
+<div class="row overview-info-section">
+    <&| /page/info_section.mas, title=>'Overview', collapsible=>1, collapsed=>0, subtitle=> ""  &>
+        <& /page/project_overview.mas, project_id => $project_id, prefix => $prefix &>
+    </&>
+</div>

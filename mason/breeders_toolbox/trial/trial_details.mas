@@ -273,3 +273,5 @@ $latest_trial_activity => undef
         </table>
     </div>
 </div>
+
+<& /page/project_overview_accordion.mas, project_id => $trial_id, prefix => "trial" &>
