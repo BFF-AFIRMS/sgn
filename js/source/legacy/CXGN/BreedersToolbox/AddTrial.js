@@ -165,17 +165,13 @@ jQuery(document).ready(function ($) {
         }
     };
 
-    const validate_trial_linkage = function() { return true; };
-    const validate_field_map_info = function() { return true; };
-    const validate_plot_naming = function() { return true; };
-
     const accordion = $('#trial_design_accordion').data('accordionWorkflow');
     if (accordion) {
         accordion.registerValidation('step_trial_info', validate_trial_info);
         accordion.registerValidation('step_design_info', validate_design_info);
-        accordion.registerValidation('step_trial_linkage', validate_trial_linkage);
-        accordion.registerValidation('step_field_map', validate_field_map_info);
-        accordion.registerValidation('step_plot_naming', validate_plot_naming);
+        accordion.registerValidation('step_trial_linkage', () => true);
+        accordion.registerValidation('step_field_map', () => true);
+        accordion.registerValidation('step_plot_naming', () => true);
     }
 
     if (window.location.pathname === '/breeders/trial/create') {

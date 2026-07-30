@@ -265,8 +265,21 @@ jQuery(document).ready(($) => {
     // Instance-scoped API: attach helper methods to this accordion's container data.
     // Use when caller already has the container reference (no global lookup needed).
     $container.data('accordionWorkflow', {
+        /**
+        * Triggers a state update for the accordion workflow.
+        * Re-evaluates all steps and updates UI accordingly.
+        */
         updateState: () => updateAccordionState(),
+        /**
+        * Validates all steps and returns the first failing step index and message.
+        * @returns {Promise<{index: number, message: string|null}>} A promise resolving to the first failing step index and error message.
+        */
         validateAll: () => getFirstFailingStep(),
+        /**
+        * Registers a validation function for a specific step by index or ID.
+        * @param {number|string} stepIdOrIndex - The index (0-based) or ID of the step to register validation for.
+        * @param {function} fn - The validation function to register. Should return true (valid), false (invalid), or a string/error message.
+        */
         registerValidation: (stepIdOrIndex, fn) => {
             if (typeof stepIdOrIndex === 'number') {
                 const stepId = stepIds[stepIdOrIndex];
