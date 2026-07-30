@@ -32,16 +32,16 @@ $design_types => ()
                         <label class="col-sm-3 control-label">Breeding Program: </label>
                         <div class="col-sm-9">
                             <select class="form-control" id="select_breeding_program" name="select_breeding_program">
-                            <%perl>
-                            foreach my $program (@$breeding_programs) {
-                                if (@$program[3]) {
-                                    print STDERR "Selected Program is ".@$program[1]."\n";
-                                    print "<option selected=\"selected\" value='".@$program[1]."'>".@$program[1]."</option>";
-                                } else {
-                                    print "<option value='".@$program[1]."'>".@$program[1]."</option>";
+                                <%perl>
+                                foreach my $program (@$breeding_programs) {
+                                    if (@$program[3]) {
+                                        print STDERR "Selected Program is ".@$program[1]."\n";
+                                        print "<option selected=\"selected\" value='".@$program[1]."'>".@$program[1]."</option>";
+                                    } else {
+                                        print "<option value='".@$program[1]."'>".@$program[1]."</option>";
+                                    }
                                 }
-                            }
-                            </%perl>
+                                </%perl>
                             </select>
                         </div>
                     </div>
@@ -49,14 +49,14 @@ $design_types => ()
                         <label class="col-sm-3 control-label">Locations: (One or More)</label>
                         <div class="col-sm-9">
                             <select multiple class="form-control" id="add_project_location" name="add_project_location">
-                            <%perl>
-                            foreach my $location_hashref (@$locations) {
-                                my $properties = $location_hashref->{'properties'};
-                                my $program = $properties->{'Program'};
-                                my $name = $properties->{'Name'};
-                                print "<option value=\"$name\" data-program=\"$program\">".$name."</option>";
-                            }
-                            </%perl>
+                                <%perl>
+                                foreach my $location_hashref (@$locations) {
+                                    my $properties = $location_hashref->{'properties'};
+                                    my $program = $properties->{'Program'};
+                                    my $name = $properties->{'Name'};
+                                    print "<option value=\"$name\" data-program=\"$program\">".$name."</option>";
+                                }
+                                </%perl>
                             </select>
                             <div class="well well-sm"><div id="locations_count" >No Locations Selected</div></div>
                         </div>
@@ -165,33 +165,35 @@ $design_types => ()
                         <label class="col-sm-3 control-label">Design Type: </label>
                         <div class="col-sm-9">
                             <select class="form-control" id="select_design_method" name="select_design_method">
-% foreach my $type (@$design_types) {
-%    my $method;
-%    if ($type eq 'Completely Randomized'){
-%        $method = 'CRD';
-%    } elsif ($type eq 'Complete Block'){
-%        $method = 'RCBD';
-%    } elsif ($type eq 'Resolvable Row-Column'){
-%        $method = 'RRC';
-%    } elsif ($type eq 'Doubly-Resolvable Row-Column'){
-%        $method = 'DRRC';
-%    } elsif ($type eq 'Un-Replicated Diagonal Design'){
-%        $method = 'URDD';
-%    } elsif ($type eq 'Alpha Lattice'){
-%        $method = 'Alpha';
-%    } elsif ($type eq 'Modified Augmented Design'){
-%        $method = 'MAD';
-%    } elsif ($type eq 'Nursery/Greenhouse'){
-%        $method = 'greenhouse';
-%    } elsif ($type eq 'Split Plot'){
-%        $method = 'splitplot';
-%    } elsif ($type eq 'Partially Replicated'){
-%        $method = 'p-rep';
-%    } else {
-%        $method = $type;
-%    }
-    <option value="<%$method%>"><%$type%></option>
-%}
+                                <%perl>
+                                foreach my $type (@$design_types) {
+                                    my $method;
+                                    if ($type eq 'Completely Randomized'){
+                                        $method = 'CRD';
+                                    } elsif ($type eq 'Complete Block'){
+                                        $method = 'RCBD';
+                                    } elsif ($type eq 'Resolvable Row-Column'){
+                                        $method = 'RRC';
+                                    } elsif ($type eq 'Doubly-Resolvable Row-Column'){
+                                        $method = 'DRRC';
+                                    } elsif ($type eq 'Un-Replicated Diagonal Design'){
+                                        $method = 'URDD';
+                                    } elsif ($type eq 'Alpha Lattice'){
+                                        $method = 'Alpha';
+                                    } elsif ($type eq 'Modified Augmented Design'){
+                                        $method = 'MAD';
+                                    } elsif ($type eq 'Nursery/Greenhouse'){
+                                        $method = 'greenhouse';
+                                    } elsif ($type eq 'Split Plot'){
+                                        $method = 'splitplot';
+                                    } elsif ($type eq 'Partially Replicated'){
+                                        $method = 'p-rep';
+                                    } else {
+                                        $method = $type;
+                                    }
+                                    print "<option value=\"$method\">$type</option>";
+                                }
+                                </%perl>
                             </select>
                             <div id="create_trial_design_description_div">
                             </div>
@@ -603,17 +605,17 @@ $design_types => ()
                         <div class="form-group form-group-sm" id="field_map_row_aug">
                             <label class="col-sm-7 control-label">Number of rows (required): </label>
                             <div class="col-sm-5" >
-                            <input type="text" class="form-control" id="fieldMap_row_number" name="fieldMap_row_number" placeholder="Will use number of blocks by default"/>
+                                <input type="text" class="form-control" id="fieldMap_row_number" name="fieldMap_row_number" placeholder="Will use number of blocks by default"/>
                             </div>
                         </div>
                         <div class="form-group form-group-sm" >
                             <label class="col-sm-7 control-label">Plot layout format: </label>
                             <div class="col-sm-5" >
-                            <select class="form-control" id="plot_layout_format" name="plot_layout_format">
-                                <option value="">select plot layout format</option>
-                                <option value=zigzag>Zigzag(unserpentine)</option>
-                                <option value=serpentine selected="selected">Serpentine</option>
-                            </select>
+                                <select class="form-control" id="plot_layout_format" name="plot_layout_format">
+                                    <option value="">select plot layout format</option>
+                                    <option value=zigzag>Zigzag(unserpentine)</option>
+                                    <option value=serpentine selected="selected">Serpentine</option>
+                                </select>
                             </div>
                         </div>
                     </div>
@@ -631,24 +633,20 @@ $design_types => ()
 
                     <div id="plot_naming_options">
                     <div class="form-group form-group-sm">
-                        <div class="col-sm-5">
-                        &nbsp;
-                        </div>
+                        <div class="col-sm-5">&nbsp;</div>
                         <span class="col-sm-1 text-right">
-                        <input type="radio" name="plot_numbering_scheme"  id="block_based" value="block_based" checked="checked" />
+                            <input type="radio" name="plot_numbering_scheme"  id="block_based" value="block_based" checked="checked" />
                         </span>
 
                         <span class="col-sm-6 text-left">block based plot numbers (increment leading digit for every block)</span>
                     </div>
                     <div class="form-group form-group-sm">
-                        <span class="col-sm-5">
-                        &nbsp;
-                        </span>
+                        <span class="col-sm-5">&nbsp;</span>
                         <span class="col-sm-1 text-right">
-                        <input type="radio" name="plot_numbering_scheme" id="consecutive" value="consecutive" />
+                            <input type="radio" name="plot_numbering_scheme" id="consecutive" value="consecutive" />
                         </span>
                         <span class="col-sm-6 text-left">
-                        consecutive plot numbers throughout the blocks
+                            consecutive plot numbers throughout the blocks
                         </span>
                     </div>
 

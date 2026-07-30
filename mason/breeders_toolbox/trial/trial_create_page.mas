@@ -8,47 +8,43 @@ $design_types => ()
 <& /util/import_javascript.mas, entries => ['managers/form_draft'], classes => [ 'CXGN.TrialTreeFolders', 'd3.d3v4Min.js', 'moment_min', 'daterangepicker', 'CXGN.BreedersToolbox.AddTrial', 'CXGN.BreedersToolbox.Trial' ] &>
 
 <style>
-#container_field_map_view {display: none; }
-#d3legend {display: none}
-#no_map_view_MSG {display: none; }
+    #container_field_map_view,
+    #d3legend,
+    #no_map_view_MSG {
+        display: none;
+    }
 
-#container_fm {
-    height: 390px;
-    width: 700px;
-    overflow: auto;
-    display: none;
-    margin: 10px;
-}
+    #container_fm {
+        height: 390px;
+        width: 700px;
+        overflow: auto;
+        display: none;
+        margin: 10px;
+    }
 
-rect.bordered {
-    stroke: #E6E6E6;
-    stroke-width:2px;
-  }
+    rect.bordered {
+        stroke: #E6E6E6;
+        stroke-width:2px;
+    }
 
-  text.mono {
-    font-size: 9pt;
-    font-family: Consolas, courier;
-    fill: #aaa;
-  }
+    text.mono {
+        font-size: 9pt;
+        font-family: Consolas, courier;
+        fill: #aaa;
+    }
 
-  text.axis-workweek {
-    fill: #000;
-  }
+    text.axis-workweek { fill: #000; }
+    text.axis-worktime { fill: #000; }
 
-  text.axis-worktime {
-    fill: #000;
-  }
+    .legend { list-style: none; }
+    .legend li { float: left; margin-right: 10px; }
+    .legend span { border: 1px solid #ccc; float: left; width: 12px; height: 12px; margin: 2px; }
 
-  .legend { list-style: none; }
-  .legend li { float: left; margin-right: 10px; }
-  .legend span { border: 1px solid #ccc; float: left; width: 12px; height: 12px; margin: 2px; }
-
-  .legend .d3_block_even_number { background-color: #c7e9b4; }
-  .legend .d3_block_odd_number { background-color: #41b6c4; }
-  .legend .d3_checks { background-color: #081d58; }
-  .legend .d3_rep_even_number { background-color: red; height: 8px; width: 18px;}
-  .legend .d3_rep_odd_number { background-color: green; height: 8px; width: 18px;}
-
+    .legend .d3_block_even_number { background-color: #c7e9b4; }
+    .legend .d3_block_odd_number { background-color: #41b6c4; }
+    .legend .d3_checks { background-color: #081d58; }
+    .legend .d3_rep_even_number { background-color: red; height: 8px; width: 18px; }
+    .legend .d3_rep_odd_number { background-color: green; height: 8px; width: 18px; }
 </style>
 
 <div class="container-fluid">
