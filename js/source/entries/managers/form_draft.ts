@@ -32,6 +32,8 @@ export interface FormWorkflowOptions {
     stepSelector: string;
     /** Optional callback invoked when restoring or navigating to a workflow step. */
     onRestoreStep?: (step: number, draft: DraftData | null) => void;
+    /** Optional step index or array of step indices where editing locks/resets forward progress. */
+    lockForwardOnEdit?: number | number[];
 }
 
 /**
@@ -269,8 +271,14 @@ export class FormDraft {
         const currentStep = this.updateStepInUrl();
         const existingDraft = this.getDraftData();
         let maxStep = Math.max(existingDraft?.max_step ?? 0, currentStep ?? 0);
-        if (currentStep === 1) {
-            maxStep = 1;
+
+        if (this.workflow && this.workflow.lockForwardOnEdit !== undefined && currentStep !== undefined) {
+            const lockSteps = Array.isArray(this.workflow.lockForwardOnEdit)
+                ? this.workflow.lockForwardOnEdit
+                : [this.workflow.lockForwardOnEdit];
+            if (lockSteps.includes(currentStep)) {
+                maxStep = currentStep;
+            }
         }
 
         const draft: DraftData = {

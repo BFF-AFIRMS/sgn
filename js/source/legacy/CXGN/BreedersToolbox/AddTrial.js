@@ -55,6 +55,7 @@ jQuery(document).ready(function ($) {
         workflow: {
             stepSelector: '#trial_design_workflow .workflow-content > li.workflow-focus',
             workflowSelector: '#trial_design_workflow',
+            lockForwardOnEdit: 1,
             onRestoreStep: function(currentStep) {
                 if (currentStep === 2 && !jQuery('#trial_design_information').children().length && !isRestoringDesign) {
                     generate_experimental_design();
