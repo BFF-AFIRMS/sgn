@@ -184,7 +184,7 @@ The trait names will be post-composed with the analysis_statistical_ontology_ter
                             <p>An analysis is stored independently; however, it maintains associations to the results for the accessions and traits involved. In the case where a model is being trained for predictions e.g. genomic selection or CNN image predictions, those trained model weights can be saved.</p>
                             <br/><br/>
                             <center>
-                            <button class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
+                            <button id="store_analysis_intro_button" class="btn btn-primary" onclick="Workflow.complete(this); return false;">Go to Next Step</button>
                             </center>
                         </&>
                         <&| /util/workflow.mas:step, title=> "Analysis Info" &>
