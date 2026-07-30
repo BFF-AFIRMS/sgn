@@ -587,8 +587,7 @@ jQuery(document).ready(function ($) {
     function apply_treatment_autocomplete() {
         jQuery('.treatment-name-input-box').each( function() {
             jQuery(this).autocomplete({
-                source : '/ajax/cvterm/autocompleteslim' + "?db_name=_TREATMENT",
-                appendTo : '#add_project_dialog'
+                source : '/ajax/cvterm/autocompleteslim' + "?db_name=_TREATMENT"
             });
         });
     }
@@ -2256,12 +2255,10 @@ jQuery(document).ready(function ($) {
     });
 
     jQuery("#westcott_check_1").autocomplete({
-        appendTo: "#add_project_dialog",
         source: '/ajax/stock/accession_autocomplete',
     });
 
     jQuery("#westcott_check_2").autocomplete({
-        appendTo: "#add_project_dialog",
         source: '/ajax/stock/accession_autocomplete',
     });
 
