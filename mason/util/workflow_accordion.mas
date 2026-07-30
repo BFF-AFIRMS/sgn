@@ -3,14 +3,14 @@ Generic Accordion Component
 Encapsulates accordion workflow behavior.
 Accepts a list of steps with content and validation functions.
 Usage:
-  <&| /util/accordion.mas, id => "my_accordion" &>
-      <&| /util/accordion.mas:step, id => "step1", title => "Step 1", validate => "validate_step1" &>
+  <&| /util/workflow_accordion.mas, id => "my_accordion" &>
+      <&| /util/workflow_accordion.mas:step, id => "step1", title => "Step 1", validate => "validate_step1" &>
           Content for Step 1
       </&>
       ...
   </&>
 Or:
-  <& /util/accordion.mas, id => "my_accordion", steps => [
+  <& /util/workflow_accordion.mas, id => "my_accordion", steps => [
       { id => "step1", title => "Step 1", content => "...", validate => "validate_step1" },
       ...
   ] &>
