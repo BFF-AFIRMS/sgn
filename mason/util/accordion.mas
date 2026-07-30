@@ -38,7 +38,7 @@ Or:
           push @step_ids, $s->{id} || '';
           push @titles, $s->{title} || '';
           push @contents, $s->{content} || '';
-          push @validations, $s->{validate} || $s->{validation} || '';
+          push @validations, $s->{validate} || '';
       }
   }
 </%init>
@@ -48,13 +48,12 @@ Or:
     $id => ""
     $title => ""
     $validate => ""
-    $validation => ""
   </%args>
   <%init>
     push @step_ids, $id;
     push @titles, $title;
     push @contents, $m->content;
-    push @validations, $validate || $validation;
+    push @validations, $validate;
   </%init>
 </%method>
 
