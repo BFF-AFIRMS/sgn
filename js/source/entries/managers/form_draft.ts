@@ -268,7 +268,10 @@ export class FormDraft {
 
         const currentStep = this.updateStepInUrl();
         const existingDraft = this.getDraftData();
-        const maxStep = Math.max(existingDraft?.max_step ?? 0, currentStep ?? 0);
+        let maxStep = Math.max(existingDraft?.max_step ?? 0, currentStep ?? 0);
+        if (currentStep === 1) {
+            maxStep = 1;
+        }
 
         const draft: DraftData = {
             last_modified: Date.now(),
@@ -278,6 +281,17 @@ export class FormDraft {
 
         localStorage.setItem(this.getDraftKey(), JSON.stringify(draft));
         this.cleanupOldDrafts();
+
+        if (this.workflow) {
+            const $workflow = $(this.workflow.workflowSelector);
+            if ($workflow.length) {
+                const $progItems = $workflow.find('.workflow-prog > li');
+                $progItems.removeClass('workflow-complete');
+                for (let i = 0; i < maxStep; i++) {
+                    $progItems.eq(i).addClass('workflow-complete');
+                }
+            }
+        }
     }
 
     /**
