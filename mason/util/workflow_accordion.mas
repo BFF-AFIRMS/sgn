@@ -94,7 +94,7 @@ Or:
 </div>
 
 <script type="text/javascript">
-jQuery(document).ready($ => {
+jQuery(document).ready(($) => {
     const containerId = <% $id_json %>;
     const validations = <% $validations_json %>;
     const $container = $('#' + containerId);
@@ -112,7 +112,7 @@ jQuery(document).ready($ => {
         * @param {string} v - The global validation function name.
         * @returns {function} The resolved validation function.
         */
-    function getValidationFn(v) {
+    const getValidationFn = (v) => {
         if (typeof v === 'string' && v.trim() !== '') {
             if (typeof window[v] === 'function') {
                 return window[v];
@@ -130,7 +130,7 @@ jQuery(document).ready($ => {
         * @param {*} res - The raw value returned by a validation function.
         * @returns {{valid: boolean, message?: string}} Normalized validation status object.
         */
-    function normalizeResult(res) {
+    const normalizeResult = (res) => {
         if (res === true || res === null || res === undefined || res === '') {
             return { valid: true };
         }
@@ -153,7 +153,7 @@ jQuery(document).ready($ => {
         * @param {number} i - The 0-based index of the step to validate.
         * @returns {Promise<{valid: boolean, message?: string}>} A promise resolving to the normalized validation status.
         */
-    async function validateStep(i) {
+    const validateStep = async (i) => {
         const fn = validationFns[i];
         if (!fn) return { valid: true };
         
@@ -170,7 +170,7 @@ jQuery(document).ready($ => {
         * 
         * @returns {Promise<{index: number, message: string|null}>} A promise resolving to the first failing step index and error message.
         */
-    async function getFirstFailingStep() {
+    const getFirstFailingStep = async () => {
         for (let i = 0; i < numPanels; i++) {
             const res = await validateStep(i);
             if (!res.valid) {
@@ -186,7 +186,7 @@ jQuery(document).ready($ => {
         * 
         * @returns {void}
         */
-    function updateAccordionState() {
+    const updateAccordionState = () => {
         if (updateTimeout) {
             clearTimeout(updateTimeout);
         }
@@ -195,8 +195,8 @@ jQuery(document).ready($ => {
             const failing = await getFirstFailingStep();
             const maxUnlocked = failing.index;
 
-            panels.each(function(idx) {
-                var $trigger = $(this).find('.info-section-trigger');
+            panels.each((idx, el) => {
+                var $trigger = $(el).find('.info-section-trigger');
                 if (idx > maxUnlocked) {
                     $trigger.addClass('accordion-locked');
                 } else {
@@ -231,12 +231,12 @@ jQuery(document).ready($ => {
     }
 
     // Attach click handlers to each panel's trigger to manage accordion behavior
-    panels.each(idx => {
+    panels.each((idx) => {
         const $panel = $(panels[idx]);
         const $trigger = $panel.find('.info-section-trigger');
         const $collapse = $('#' + containerId + '_collapse_' + idx);
 
-        $trigger.on('click', async e => {
+        $trigger.on('click', async (e) => {
             e.preventDefault();
             e.stopPropagation();
 
