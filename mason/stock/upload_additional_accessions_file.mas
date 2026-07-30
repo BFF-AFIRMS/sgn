@@ -141,7 +141,9 @@ $stock_id
                     }
                     html = html + "</tbody></table>";
                     jQuery('#stock_additional_uploaded_files_div').html(html);
-                    jQuery('#stock_additional_uploaded_files_table').DataTable();
+                    jQuery('#stock_additional_uploaded_files_table').DataTable({
+                        scrollX: true,
+                    });
                 },
                 error: function(response){
                     alert("Error retrieving additional uploaded files.");

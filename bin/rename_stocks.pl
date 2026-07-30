@@ -132,17 +132,27 @@ my $coderef = sub {
 	}
 	
         my $new_stock = $old_stock->update({ name => $new_uniquename, uniquename => $new_uniquename});
-	if (! $opt_n) {
-	    print STDERR "Storing old name ($db_uniquename) as synonym or stock with id ".$new_stock->stock_id()." and type_id $synonym_id...\n";
-	    my $synonym = { value => $db_uniquename,
-			    type_id => $synonym_id,
-			    stock_id => $new_stock->stock_id(),
-	    };
+        if (! $opt_n) {
+            # Get next rank for a new synonym
+            my $synonym_rs = $schema->resultset('Stock::Stockprop')->search({type_id => $synonym_id, stock_id => $new_stock->stock_id()});
+            my $rank = 0;
+            while (my $r = $synonym_rs->next()){
+                if ($r->rank  >= $rank){
+                    $rank = $r->rank + 1;
+                }
+            }
 
-	    print STDERR "find_or_create...\n";
-	    $schema->resultset('Stock::Stockprop')->find_or_create($synonym);
-	    print STDERR "Done.\n";
-	}
+            print STDERR "Storing old name ($db_uniquename) as synonym or stock with id ".$new_stock->stock_id()." and type_id $synonym_id and rank $rank...\n";
+            my $synonym = { value => $db_uniquename,
+                    type_id => $synonym_id,
+                    stock_id => $new_stock->stock_id(),
+                    rank => $rank,
+            };
+
+            print STDERR "find_or_create...\n";
+            $schema->resultset('Stock::Stockprop')->find_or_create($synonym);
+            print STDERR "Done.\n";
+        }
     }
 };
 

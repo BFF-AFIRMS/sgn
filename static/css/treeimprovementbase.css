@@ -165,7 +165,7 @@
     /* Wells */
     --well-box-shadow: var(--button-box-shadow);
     --well-background-color: var(--gray-100);
-    --well-border-color: var(--gray-500);
+    --well-border-color: var(--gray-300);
     --well-border: 1px solid var(--well-border-color);
 
 }
@@ -275,7 +275,7 @@ Bootstrap
     flex-wrap: wrap;
 }
 
-.flex-wrap-row > [class*='col-'] {
+.flex-wrap-row > .flex-wrap-col {
     float: none;
     flex-grow: 1;
     min-width: fit-content;
@@ -296,6 +296,10 @@ Buttons
     border:           1px solid var(--button-border-color);
     box-shadow:       var(--button-box-shadow);
     margin-right:     var(--padding-sm);
+}
+
+.btn-group .btn {
+    margin-right: 0px;
 }
 
 a.btn {
@@ -579,7 +583,7 @@ td.infosectionsubtitle {
 .panel-default {
     margin-top: var(--padding-lg);
     margin-bottom: 0px;
-    border: 1px solid var(--gray-500);
+    border: 1px solid var(--gray-300);
     padding: var(--padding-xl);
 }
 
@@ -838,13 +842,6 @@ Table
     box-sizing: border-box;
 }
 
-.table-flow-scroll {
-    display: flow;
-    overflow: auto;
-    /* TBD: Investigate this */
-    /*width: 100%;*/
-}
-
 .borderless {
     border-width: 0px;
 }
@@ -853,10 +850,6 @@ Table
     white-space: normal;
     /* Limit the second column width in trial details, so that the QR code is beside it */
     max-width: 320px;
-}
-
-.dataTables_wrapper {
-    overflow: auto;
 }
 
 /* Left align numbers and dates (right aligned by default since datatables 2.0+) */

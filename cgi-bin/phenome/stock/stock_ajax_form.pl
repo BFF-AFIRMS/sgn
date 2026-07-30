@@ -86,9 +86,10 @@ sub store {
     if ($message) {
         $error = " Stock $args{uniquename}  already exists in the database ";
     }else {
-        try{
-            $self->SUPER::store(); #this sets $json_hash{validate} if the form validation failed.
-            $stock_id = $stock->stock_id() ;
+        try {
+            if (!$self->SUPER::store()) {
+                $stock_id = $stock->stock_id() ;
+            }
         } catch {
             $error = " An error occurred. Cannot store to the database\n An  email message has been sent to the SGN development team";
             CXGN::Contact::send_email('stock_ajax_form.pl died', $error . "\n" . $_ , 'sgn-bugs@sgn.cornell.edu');
@@ -114,8 +115,10 @@ sub store {
 sub delete {
     ##Delete the stock (actually set obsolete = 't')
     my $self = shift;
-    my $check = $self->check_modify_privileges();
-    $self->print_json() if $check ; #error or no user privileges
+    if ($self->check_modify_privileges()) {
+        $self->print_json();
+        return;
+    }
 
     my $stock      = $self->get_object();
     my $stock_name = $stock->uniquename();

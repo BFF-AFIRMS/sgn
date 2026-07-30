@@ -220,7 +220,7 @@ my $ontology_subtitle = $curator || $submitter || $sequencer  ?
 </script>
 
 
-<& /page/page_title.mas, title=> "$common_name locus ".$locus->get_locus_name &>
+<& /page/page_title.mas, title=> "Locus ".$locus->get_locus_name &>
 
 
 <&| /page/info_section.mas, title=>"Locus details" , subtitle => "$locus_xml | $editor_note | $guide_html" &>

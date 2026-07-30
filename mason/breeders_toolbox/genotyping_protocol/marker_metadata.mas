@@ -128,7 +128,8 @@
                         html += `<button class="btn btn-sm btn-danger" style="margin: 5px" onclick="deleteMetadata(${row.locus_id})" <% $curator ? '' : 'disabled' %>><span class="glyphicon glyphicon-trash"></span></button>`;
                         return html;
                     }}
-                ]
+                ],
+                scrollX: true,
             });
         }
 
