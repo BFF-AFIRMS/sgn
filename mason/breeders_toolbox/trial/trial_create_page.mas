@@ -75,16 +75,15 @@ rect.bordered {
                 <div class="container-fluid">
                     <p>
                         <h4>
-                        <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
-                          <b>Background:</b>
+                            <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+                            <b>Background:</b>
                         </h4>
-                          <div class="tw-flex tw-justify-center"><p>Partially replicated designs have some treatments that are unreplicated and rely on replicated treatments to make the trial analysable. The design were described in Cullis et al. (2006). It is recommended that at least 20% of the experimental units are occupied by replicated treatments. The aim of these experiments is usually to select promising treatments from a set of replicated and unreplicated test treatments, with check and quality standard treatments providing the necessary replication overall to give a valid experiment. DiGGer (Coombes, 2002) was used to implement this design. DiGGer is a flexible tool for creating experimental designs that are efficient for specified blocking and correlation patterns. DiGGer package (http://www.austatgen.org/files/software/downloads) is an add-on for the statistical computing language and environment R (R Development Core Team, 2009).</p></div>
+                        <div class="tw-flex tw-justify-center"><p>Partially replicated designs have some treatments that are unreplicated and rely on replicated treatments to make the trial analysable. The design were described in Cullis et al. (2006). It is recommended that at least 20% of the experimental units are occupied by replicated treatments. The aim of these experiments is usually to select promising treatments from a set of replicated and unreplicated test treatments, with check and quality standard treatments providing the necessary replication overall to give a valid experiment. DiGGer (Coombes, 2002) was used to implement this design. DiGGer is a flexible tool for creating experimental designs that are efficient for specified blocking and correlation patterns. DiGGer package (http://www.austatgen.org/files/software/downloads) is an add-on for the statistical computing language and environment R (R Development Core Team, 2009).</p></div>
                         <h4>
-                        <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
-                        <b>Design Parameters:</b>
+                            <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+                            <b>Design Parameters:</b>
                         </h4>
-                            <div class="tw-flex tw-justify-center"><p> The parameters will consider a sample partially replicated design trial with 200 unreplicated accessions, 119 accessions replicated 4 times, 26 rows in design, 26 columns in design, bock sequence of 13 by 2 (13, 2) i.e 2 blocks with each having 13 rows; sub-block sequence of block of 13 by 1 (13, 1) i.e 1 sub-block with each having 13 rows in each block. </p></div>
-
+                        <div class="tw-flex tw-justify-center"><p> The parameters will consider a sample partially replicated design trial with 200 unreplicated accessions, 119 accessions replicated 4 times, 26 rows in design, 26 columns in design, bock sequence of 13 by 2 (13, 2) i.e 2 blocks with each having 13 rows; sub-block sequence of block of 13 by 1 (13, 1) i.e 1 sub-block with each having 13 rows in each block. </p></div>
                         <dl>
                             <dt>List of Unreplicated Accession</dt>
                             <ul>
@@ -134,16 +133,15 @@ rect.bordered {
                             <b>NOTE:</b>
                         </h4>
                         <dl><dt>
-                        <ul>
-                            <li>
-                                <dd>The product of the number of rows and columns in the design should equal the total number of plots.</dd>
-                            </li>
-                            <li>
-                                <dd>The sum of the unreplicated accessions and the replicated accessions (given the number of times it was replicated) should equal the total number of plots. </dd>
-                            </li>
-                        </ul>
+                            <ul>
+                                <li>
+                                    <dd>The product of the number of rows and columns in the design should equal the total number of plots.</dd>
+                                </li>
+                                <li>
+                                    <dd>The sum of the unreplicated accessions and the replicated accessions (given the number of times it was replicated) should equal the total number of plots. </dd>
+                                </li>
+                            </ul>
                         </dt></dl>
-
                     </p>
                 </div>
             </div>
