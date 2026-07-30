@@ -94,176 +94,18 @@ Or:
 </div>
 
 <script type="text/javascript">
-jQuery(document).ready(($) => {
+(function($) {
     const containerId = <% $id_json %>;
     const stepIds = <% $step_ids_json %>;
     const $container = $('#' + containerId);
     if (!$container.length) return;
 
-    const panels = $container.find('.accordion-step-panel');
-    const numPanels = panels.length;
-    let unlockedUpTo = 0;
-    let updateTimeout = null;
     const registeredValidations = {};
+    let updateAccordionState = () => {};
+    let getFirstFailingStep = async () => ({ index: 0, message: null });
 
-    /**
-    * Resolves a validation function from the locally registered validations.
-    * 
-    * @param {number} i - The index of the step to resolve validation for.
-    * @returns {function} The resolved validation function.
-    */
-    const getValidationFn = (i) => {
-        const stepId = stepIds[i];
-        if (stepId && registeredValidations[stepId]) {
-            return registeredValidations[stepId];
-        }
-        return () => true;
-    };
-
-    /**
-    * Normalizes any validation return value (boolean, string, or object)
-    * into a consistent validation status object.
-    * 
-    * @param {*} res - The raw value returned by a validation function.
-    * @returns {{valid: boolean, message?: string}} Normalized validation status object.
-    */
-    const normalizeResult = (res) => {
-        if (res === true || res === null || res === undefined || res === '') {
-            return { valid: true };
-        }
-        if (typeof res === 'string') {
-            return { valid: false, message: res };
-        }
-        if (typeof res === 'object' && res.valid === false) {
-            return { valid: false, message: res.message || 'Validation failed' };
-        }
-        if (res === false) {
-            return { valid: false, message: 'Validation failed' };
-        }
-        return { valid: true };
-    }
-
-    /**
-    * Asynchronously validates a single step index.
-    * Handles both synchronous return values and Promise-based async returns.
-    * 
-    * @param {number} i - The 0-based index of the step to validate.
-    * @returns {Promise<{valid: boolean, message?: string}>} A promise resolving to the normalized validation status.
-    */
-    const validateStep = async (i) => {
-        const fn = getValidationFn(i);
-        if (!fn) return { valid: true };
-
-        try {
-            return normalizeResult(await fn());
-        } catch(e) {
-            return { valid: false, message: e.message || 'Error validating step' };
-        }
-    }
-
-    /**
-    * Evaluates all accordion steps sequentially.
-    * Chains validation checks to find the first step that fails.
-    * 
-    * @returns {Promise<{index: number, message: string|null}>} A promise resolving to the first failing step index and error message.
-    */
-    const getFirstFailingStep = async () => {
-        for (let i = 0; i < numPanels; i++) {
-            const res = await validateStep(i);
-            if (!res.valid) {
-                return { index: i, message: res.message };
-            }
-        }
-        return { index: numPanels, message: null };
-    }
-
-    /**
-    * Debounces and triggers UI state updates for all accordion panels.
-    * Locks/unlocks headers, collapses locked steps, and auto-opens the newly unlocked step.
-    * 
-    * @returns {void}
-    */
-    const updateAccordionState = () => {
-        if (updateTimeout) {
-            clearTimeout(updateTimeout);
-        }
-        updateTimeout = setTimeout(async () => {
-            updateTimeout = null;
-            const failing = await getFirstFailingStep();
-            const maxUnlocked = failing.index;
-
-            panels.each((idx, el) => {
-                var $trigger = $(el).find('.info-section-trigger');
-                if (idx > maxUnlocked) {
-                    $trigger.addClass('accordion-locked');
-                } else {
-                    $trigger.removeClass('accordion-locked');
-                }
-            });
-
-            for (let i = maxUnlocked + 1; i < numPanels; i++) {
-                const $collapse = $('#' + containerId + '_collapse_' + i);
-                if ($collapse.hasClass('in')) {
-                    $collapse.collapse('hide');
-                }
-            }
-
-            for (let j = unlockedUpTo + 1; j <= maxUnlocked; j++) {
-                if (j < numPanels) {
-                    const $collapseToOpen = $('#' + containerId + '_collapse_' + j);
-                    if (!$collapseToOpen.hasClass('in')) {
-                        $collapseToOpen.collapse('show');
-                    }
-                }
-            }
-
-            unlockedUpTo = maxUnlocked;
-        }, 150);
-    }
-
-    // Ensure the first step is open on initial load
-    const $firstCollapse = $('#' + containerId + '_collapse_0');
-    if (!$firstCollapse.hasClass('in')) {
-        $firstCollapse.collapse('show');
-    }
-
-    // Attach click handlers to each panel's trigger to manage accordion behavior
-    panels.each((idx) => {
-        const $panel = $(panels[idx]);
-        const $trigger = $panel.find('.info-section-trigger');
-        const $collapse = $('#' + containerId + '_collapse_' + idx);
-
-        $trigger.on('click', async (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-
-            const failing = await getFirstFailingStep();
-
-            if (idx > failing.index) {
-                alert(failing.message);
-                return;
-            }
-
-            if ($collapse.hasClass('in')) {
-                $collapse.collapse('hide');
-            } else {
-                $collapse.collapse('show');
-            }
-        });
-    });
-
-    // Listen for input changes to trigger validation and state updates
-    $container.on('change keyup input', 'input, select, textarea', () => {
-        updateAccordionState();
-    });
-
-    // Initial state update
-    setTimeout(() => {
-        updateAccordionState();
-    }, 150);
-
-    // Instance-scoped API: attach helper methods to this accordion's container data.
-    // Use when caller already has the container reference (no global lookup needed).
+    // Instance-scoped API: attach helper methods to this accordion's container data immediately.
+    // This ensures that external document.ready handlers can register validations without timing issues.
     $container.data('accordionWorkflow', {
         /**
         * Triggers a state update for the accordion workflow.
@@ -293,8 +135,169 @@ jQuery(document).ready(($) => {
         }
     });
 
-    // Global update hook: expose update by a unique window key for callers that do not
-    // have a container reference (e.g., legacy code or cross-component event handlers).
-    window[containerId + '_update'] = updateAccordionState;
-});
+    window[containerId + '_update'] = () => updateAccordionState();
+
+    $(document).ready(() => {
+        const panels = $container.find('.accordion-step-panel');
+        const numPanels = panels.length;
+        let unlockedUpTo = 0;
+        let updateTimeout = null;
+
+        /**
+        * Resolves a validation function from the locally registered validations.
+        * 
+        * @param {number} i - The index of the step to resolve validation for.
+        * @returns {function} The resolved validation function.
+        */
+        const getValidationFn = (i) => {
+            const stepId = stepIds[i];
+            if (stepId && registeredValidations[stepId]) {
+                return registeredValidations[stepId];
+            }
+            return () => true;
+        };
+
+        /**
+        * Normalizes any validation return value (boolean, string, or object)
+        * into a consistent validation status object.
+        * 
+        * @param {*} res - The raw value returned by a validation function.
+        * @returns {{valid: boolean, message?: string}} Normalized validation status object.
+        */
+        const normalizeResult = (res) => {
+            if (res === true || res === null || res === undefined || res === '') {
+                return { valid: true };
+            }
+            if (typeof res === 'string') {
+                return { valid: false, message: res };
+            }
+            if (typeof res === 'object' && res.valid === false) {
+                return { valid: false, message: res.message || 'Validation failed' };
+            }
+            if (res === false) {
+                return { valid: false, message: 'Validation failed' };
+            }
+            return { valid: true };
+        };
+
+        /**
+        * Asynchronously validates a single step index.
+        * Handles both synchronous return values and Promise-based async returns.
+        * 
+        * @param {number} i - The 0-based index of the step to validate.
+        * @returns {Promise<{valid: boolean, message?: string}>} A promise resolving to the normalized validation status.
+        */
+        const validateStep = async (i) => {
+            const fn = getValidationFn(i);
+            if (!fn) return { valid: true };
+
+            try {
+                return normalizeResult(await fn());
+            } catch(e) {
+                return { valid: false, message: e.message || 'Error validating step' };
+            }
+        };
+
+        /**
+        * Evaluates all accordion steps sequentially.
+        * Chains validation checks to find the first step that fails.
+        * 
+        * @returns {Promise<{index: number, message: string|null}>} A promise resolving to the first failing step index and error message.
+        */
+        getFirstFailingStep = async () => {
+            for (let i = 0; i < numPanels; i++) {
+                const res = await validateStep(i);
+                if (!res.valid) {
+                    return { index: i, message: res.message };
+                }
+            }
+            return { index: numPanels, message: null };
+        };
+
+        /**
+        * Debounces and triggers UI state updates for all accordion panels.
+        * Locks/unlocks headers, collapses locked steps, and auto-opens the newly unlocked step.
+        * 
+        * @returns {void}
+        */
+        updateAccordionState = () => {
+            if (updateTimeout) {
+                clearTimeout(updateTimeout);
+            }
+            updateTimeout = setTimeout(async () => {
+                updateTimeout = null;
+                const failing = await getFirstFailingStep();
+                const maxUnlocked = failing.index;
+
+                panels.each((idx, el) => {
+                    var $trigger = $(el).find('.info-section-trigger');
+                    if (idx > maxUnlocked) {
+                        $trigger.addClass('accordion-locked');
+                    } else {
+                        $trigger.removeClass('accordion-locked');
+                    }
+                });
+
+                for (let i = maxUnlocked + 1; i < numPanels; i++) {
+                    const $collapse = $('#' + containerId + '_collapse_' + i);
+                    if ($collapse.hasClass('in')) {
+                        $collapse.collapse('hide');
+                    }
+                }
+
+                for (let j = unlockedUpTo + 1; j <= maxUnlocked; j++) {
+                    if (j < numPanels) {
+                        const $collapseToOpen = $('#' + containerId + '_collapse_' + j);
+                        if (!$collapseToOpen.hasClass('in')) {
+                            $collapseToOpen.collapse('show');
+                        }
+                    }
+                }
+
+                unlockedUpTo = maxUnlocked;
+            }, 150);
+        };
+
+        // Ensure the first step is open on initial load
+        const $firstCollapse = $('#' + containerId + '_collapse_0');
+        if (!$firstCollapse.hasClass('in')) {
+            $firstCollapse.collapse('show');
+        }
+
+        // Attach click handlers to each panel to manage accordion behavior
+        panels.each((idx) => {
+            const $panel = $(panels[idx]);
+            const $trigger = $panel.find('.info-section-trigger');
+            const $collapse = $('#' + containerId + '_collapse_' + idx);
+
+            $trigger.on('click', async (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+
+                const failing = await getFirstFailingStep();
+
+                if (idx > failing.index) {
+                    alert(failing.message);
+                    return;
+                }
+
+                if ($collapse.hasClass('in')) {
+                    $collapse.collapse('hide');
+                } else {
+                    $collapse.collapse('show');
+                }
+            });
+        });
+
+        // Listen for input changes to trigger validation and state updates
+        $container.on('change keyup input', 'input, select, textarea', () => {
+            updateAccordionState();
+        });
+
+        // Initial state update
+        setTimeout(() => {
+            updateAccordionState();
+        }, 150);
+    });
+})(jQuery);
 </script>
