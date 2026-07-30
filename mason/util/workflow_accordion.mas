@@ -106,12 +106,12 @@ jQuery(document).ready(($) => {
     let updateTimeout = null;
 
     /**
-        * Resolves a validation function from a global function name.
-        * If no matching function is found on window, returns a default function that passes validation.
-        * 
-        * @param {string} v - The global validation function name.
-        * @returns {function} The resolved validation function.
-        */
+    * Resolves a validation function from a global function name.
+    * If no matching function is found on window, returns a default function that passes validation.
+    * 
+    * @param {string} v - The global validation function name.
+    * @returns {function} The resolved validation function.
+    */
     const getValidationFn = (v) => {
         if (typeof v === 'string' && v.trim() !== '') {
             if (typeof window[v] === 'function') {
@@ -124,12 +124,12 @@ jQuery(document).ready(($) => {
     const validationFns = validations.map(getValidationFn);
 
     /**
-        * Normalizes any validation return value (boolean, string, or object)
-        * into a consistent validation status object.
-        * 
-        * @param {*} res - The raw value returned by a validation function.
-        * @returns {{valid: boolean, message?: string}} Normalized validation status object.
-        */
+    * Normalizes any validation return value (boolean, string, or object)
+    * into a consistent validation status object.
+    * 
+    * @param {*} res - The raw value returned by a validation function.
+    * @returns {{valid: boolean, message?: string}} Normalized validation status object.
+    */
     const normalizeResult = (res) => {
         if (res === true || res === null || res === undefined || res === '') {
             return { valid: true };
@@ -147,12 +147,12 @@ jQuery(document).ready(($) => {
     }
 
     /**
-        * Asynchronously validates a single step index.
-        * Handles both synchronous return values and Promise-based async returns.
-        * 
-        * @param {number} i - The 0-based index of the step to validate.
-        * @returns {Promise<{valid: boolean, message?: string}>} A promise resolving to the normalized validation status.
-        */
+    * Asynchronously validates a single step index.
+    * Handles both synchronous return values and Promise-based async returns.
+    * 
+    * @param {number} i - The 0-based index of the step to validate.
+    * @returns {Promise<{valid: boolean, message?: string}>} A promise resolving to the normalized validation status.
+    */
     const validateStep = async (i) => {
         const fn = validationFns[i];
         if (!fn) return { valid: true };
@@ -165,11 +165,11 @@ jQuery(document).ready(($) => {
     }
 
     /**
-        * Evaluates all accordion steps sequentially.
-        * Chains validation checks to find the first step that fails.
-        * 
-        * @returns {Promise<{index: number, message: string|null}>} A promise resolving to the first failing step index and error message.
-        */
+    * Evaluates all accordion steps sequentially.
+    * Chains validation checks to find the first step that fails.
+    * 
+    * @returns {Promise<{index: number, message: string|null}>} A promise resolving to the first failing step index and error message.
+    */
     const getFirstFailingStep = async () => {
         for (let i = 0; i < numPanels; i++) {
             const res = await validateStep(i);
@@ -181,11 +181,11 @@ jQuery(document).ready(($) => {
     }
 
     /**
-        * Debounces and triggers UI state updates for all accordion panels.
-        * Locks/unlocks headers, collapses locked steps, and auto-opens the newly unlocked step.
-        * 
-        * @returns {void}
-        */
+    * Debounces and triggers UI state updates for all accordion panels.
+    * Locks/unlocks headers, collapses locked steps, and auto-opens the newly unlocked step.
+    * 
+    * @returns {void}
+    */
     const updateAccordionState = () => {
         if (updateTimeout) {
             clearTimeout(updateTimeout);
