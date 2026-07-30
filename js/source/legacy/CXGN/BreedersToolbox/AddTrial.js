@@ -201,7 +201,7 @@ jQuery(document).ready(function ($) {
         jQuery('#add_plant_entries').val(plants_per_plot);
         greenhouse_show_num_plants_section()
     });
-    function verify_create_trial_name(trial_name, btn_elem, callback){
+    function verify_create_trial_name(trial_name, callback){
         jQuery.ajax( {
             url: '/ajax/trial/verify_trial_name?trial_name='+trial_name,
             beforeSend: function() {
@@ -214,10 +214,6 @@ jQuery(document).ready(function ($) {
                     jQuery('[name="create_trial_submit"]').attr('disabled', true);
                 }
                 else {
-                    if (btn_elem) {
-                        Workflow.complete(btn_elem);
-                        formDraft.saveFormState();
-                    }
                     if (typeof callback === 'function') {
                         callback();
                     }
@@ -600,7 +596,7 @@ jQuery(document).ready(function ($) {
     var num_plants_per_plot = 0;
     var num_subplots_per_plot = 0;
 
-    function generate_experimental_design() {
+    function generate_experimental_design(btn_elem) {
         isRestoringDesign = true;
         var name = $('#new_trial_name').val();
         var year = $('#add_project_year').val();
@@ -869,8 +865,9 @@ jQuery(document).ready(function ($) {
                 if (response.error) {
                     alert(response.error);
                 } else {
-
-                    Workflow.focus("#trial_design_workflow", 2); //Go to review page
+                    if (btn_elem) {
+                        Workflow.complete(btn_elem, true);
+                    }
                     formDraft.saveFormState();
 
                     if(response.warning_message){
@@ -1097,8 +1094,8 @@ jQuery(document).ready(function ($) {
                     alert("Please resolve errors in the design steps first: " + failing.message);
                 } else {
                     var name = $('#new_trial_name').val();
-                    verify_create_trial_name(name, btn, function() {
-                        generate_experimental_design();
+                    verify_create_trial_name(name, function() {
+                        generate_experimental_design(btn);
                     });
                 }
             });
