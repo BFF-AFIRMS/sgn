@@ -56,7 +56,7 @@ $d->while_logged_in_as("curator", sub {
     delete_page("AnotherTestPageRename");
 
     # -------------------------------------------------------------------------
-    # Overview Sections
+    # Overview Section Setup
 
     # Create a genotyping project
     my $genotyping_project_name = "Test.Genotyping";
@@ -83,7 +83,66 @@ $d->while_logged_in_as("curator", sub {
     $d->click_ok("well_info_intro_button", "id", "click next step 4");
     $d->click_ok("trial_linkage_intro_button", "id", "click next step 5");
     $d->click_ok("add_geno_trial_submit", "id", "click submit plate");
+    $d->wait_for_working_dialog();
     my $genotyping_plate_id = $f->bcs_schema->resultset('Project::Project')->find({ name => $genotyping_plate_name })->project_id();
+
+    # Create small dataset using wizard for analysis
+    $d->get_ok("/breeders/search", "navigate to search wizard");
+    $d->click_ok('(//div[@class="panel-heading"]/select)[1]//option[@value="trials"]', 'xpath', 'select trials');
+    $d->click_ok('(//div[@class="panel-body"])[1]//a[contains(text(), "Kasese solgs trial")]//preceding-sibling::button' , 'xpath', 'add Kasese solgs trial');
+    $d->click_ok('(//div[@class="panel-heading"]/select)[2]//option[@value="traits"]', 'xpath', 'select traits');
+    $d->click_ok('(//div[@class="panel-body"])[2]//a[contains(text(), "fresh root weight")]//preceding-sibling::button' , 'xpath', 'add fresh root weight trait');
+    $d->click_ok('(//div[@class="panel-heading"]/select)[3]//option[@value="plots"]', 'xpath', 'select plots');
+    foreach my $suffix (1000 .. 1009) {
+        my $plot_name = "KASESE_TP2013_$suffix";
+        $d->click_ok("(//div[\@class='panel-body'])[3]//a[contains(text(), '$plot_name')]//preceding-sibling::button" , 'xpath', "add $plot_name");
+    }
+    $d->send_keys_ok("wizard-dataset-name", "class", "Test.Dataset", "enter dataset name");
+    $d->click_ok("wizard-dataset-create", "class", "click create dataset");
+    # TBD: Find better solution than sleep wrappers.
+    sleep(2);
+    $d->accept_alert_ok();
+    sleep(2);
+
+    # Create analysis and model
+    $d->get_ok("/tools/mixedmodels", "navigate to mixed models");
+    $d->click_ok('//input[@value=2]', "xpath", "select dataset");
+    $d->click_ok("mixed_model_analysis_prepare_button", "id", "click continue button");
+    $d->click_ok('//input[@value="fresh root weight|CO_334:0000012"]', 'xpath', 'click fresh root weight');
+    $d->click_ok('mixed_model_analysis_fishished_choose_variable', 'id', 'click next step');
+
+    # I'm not sure how to get drag and drop working with selenium driver,
+    # so execute with javascript instead
+    $d->find_element_ok('factor_1', 'id', 'locate germplasm factor');
+    $d->find_element_ok('random_factors', 'id', 'locate random factors');
+    my $script = q{
+        var germplasm = jQuery("#factor_1");
+        var randomFactors = jQuery("#random_factors");
+        randomFactors.append(germplasm[0]);
+    };
+    $d->driver->execute_script($script);
+    my $analysis_name = "Test.Analysis";
+    my $model_name = "Test.Model";
+    $d->click_ok("run_mixed_model_button", "id", "click run");
+
+    # Store analysis and model
+    $d->click_ok("open_store_adjusted_blups_dialog_button", "id", "click store adjusted means");
+    $d->click_ok("store_analysis_intro_button", "id", "click next step intro");
+    $d->click_ok('//select[@id="generic_save_analysis_analysis_to_save"]/option[@value="yes"]', "xpath", "click save results");
+    $d->send_keys("generic_save_analysis_analysis_name", "id", $analysis_name, "enter analysis name");
+    $d->send_keys("generic_save_analysis_analysis_description", "id", $analysis_name, "enter analysis description");
+    $d->click_ok("generic_save_analysis_next", "id", "click next analysis intro");
+    $d->send_keys("generic_save_analysis_model_name", "id", $model_name, "enter model name");
+    $d->send_keys("generic_save_analysis_model_description", "id", $model_name, "enter model description");
+    $d->click_ok("generic_save_analysis_submit_button", "id", "click save button");
+    # Wait for it to load
+    $d->wait_for_working_dialog();
+
+    my $analysis_id = $f->bcs_schema->resultset('Project::Project')->find({ name => $analysis_name })->project_id();
+    my $model_id = $f->bcs_schema->resultset('NaturalDiversity::NdProtocol')->find({ name => $model_name })->nd_protocol_id();
+
+    # -------------------------------------------------------------------------
+    # Overview Section Tests
 
     my @overviews = (
         # page_name                                 url
@@ -92,6 +151,8 @@ $d->while_logged_in_as("curator", sub {
         ["genotypingProtocol1",                     "/breeders_toolbox/protocol/1"],
         ["genotypingProject$genotyping_project_id", "/breeders/trial/$genotyping_project_id"],
         ["genotypingPlate$genotyping_plate_id",     "/breeders/trial/$genotyping_plate_id"],
+        ["analysis$analysis_id",                    "/analyses/$analysis_id"],
+        ["model$model_id",                          "/analyses_model/$model_id"],
     );
 
     foreach my $overview (@overviews){
