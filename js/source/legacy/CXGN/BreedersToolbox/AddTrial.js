@@ -182,8 +182,12 @@ jQuery(document).ready(function ($) {
         formDraft.saveFormState();
     });
 
-    jQuery(document).on('click', '#trial_design_workflow .workflow-prog li, #create_new_trial_form button', function() {
+    jQuery(document).on('click', '#create_new_trial_form button', function() {
         setTimeout(() => formDraft.saveFormState(), 200);
+    });
+
+    jQuery(document).on('click', '#trial_design_workflow .workflow-prog li', function() {
+        setTimeout(() => formDraft.updateStepInUrl(), 200);
     });
 
     jQuery('#add_plant_entries').on('change', function() {
