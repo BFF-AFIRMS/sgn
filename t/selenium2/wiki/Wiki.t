@@ -19,7 +19,7 @@ $d->while_logged_in_as("curator", sub {
     # Attempt to navigate to WikiHome, which is a page that doesn't exist yet,
     # so an alert will be raised. We do not use get_ok here, because it can't load
     $d->driver->get("/wiki/WikiHome");
-    $d->accept_alert_ok();
+    $d->accept_alert_ok("accept WikiHome alert");
 
     # Create the WikiHome page
     $d->send_keys_ok("wiki_page_content", "id", "#Big Title!\n##Smaller Title\nBla bla bla\n", "find wiki_page_content text area");
@@ -101,7 +101,7 @@ $d->while_logged_in_as("curator", sub {
     $d->click_ok("wizard-dataset-create", "class", "click create dataset");
     # TBD: Find better solution than sleep wrappers.
     sleep(2);
-    $d->accept_alert_ok();
+    $d->accept_alert_ok("accept create dataset alert");
     sleep(2);
 
     # Create analysis and model
@@ -190,7 +190,7 @@ $d->while_logged_in_as("curator", sub {
 
     # Delete homepage
     $d->click_ok("delete_wiki_page_button", "id", "find delete wiki page button");
-    $d->accept_alert_ok();
+    $d->accept_alert_ok("accept delete WikiHome");
 
 });
 
