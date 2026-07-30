@@ -70,6 +70,25 @@ sub new_page {
 
 }
 
+sub rename_page {
+    my $self = shift;
+    my $old_page_name = shift;
+    my $new_page_name = shift;
+
+    my $old_page_rs = $self->people_schema()->resultset("SpWiki")->find( { page_name => $old_page_name } );
+    my $new_page_rs = $self->people_schema()->resultset("SpWiki")->find( { page_name => $new_page_name } );
+
+    if (! $old_page_rs) {
+	    die "Page named $old_page_name does not exist!\n";
+    }
+    if ($new_page_rs) {
+	    die "Page named $old_page_name already exists!\n";
+    }
+
+    $old_page_rs->update({page_name => $new_page_name});
+	return $old_page_rs->sp_wiki_id();
+}
+
 sub retrieve_page {
     my $self = shift;
     my $page_name = shift;
