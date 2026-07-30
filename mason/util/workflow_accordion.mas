@@ -239,7 +239,7 @@ Or:
                 });
 
                 for (let i = maxUnlocked + 1; i < numPanels; i++) {
-                    const $collapse = $('#' + containerId + '_collapse_' + i);
+                    const $collapse = $('#' + containerId + '_collapse_' + i + '_content');
                     if ($collapse.hasClass('in')) {
                         $collapse.collapse('hide');
                     }
@@ -247,7 +247,7 @@ Or:
 
                 for (let j = unlockedUpTo + 1; j <= maxUnlocked; j++) {
                     if (j < numPanels) {
-                        const $collapseToOpen = $('#' + containerId + '_collapse_' + j);
+                        const $collapseToOpen = $('#' + containerId + '_collapse_' + j + '_content');
                         if (!$collapseToOpen.hasClass('in')) {
                             $collapseToOpen.collapse('show');
                         }
@@ -259,7 +259,7 @@ Or:
         };
 
         // Ensure the first step is open on initial load
-        const $firstCollapse = $('#' + containerId + '_collapse_0');
+        const $firstCollapse = $('#' + containerId + '_collapse_0_content');
         if (!$firstCollapse.hasClass('in')) {
             $firstCollapse.collapse('show');
         }
@@ -268,7 +268,7 @@ Or:
         panels.each((idx) => {
             const $panel = $(panels[idx]);
             const $trigger = $panel.find('.info-section-trigger');
-            const $collapse = $('#' + containerId + '_collapse_' + idx);
+            const $collapse = $('#' + containerId + '_collapse_' + idx + '_content');
 
             $trigger.on('click', async (e) => {
                 e.preventDefault();
