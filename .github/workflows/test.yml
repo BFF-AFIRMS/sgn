@@ -27,6 +27,7 @@ jobs:
           - selenium2_search
           - selenium2_stock
           - selenium2_tools
+          - selenium2_wiki
     steps:
 
       # -----------------------------------------------------------------------
@@ -148,6 +149,12 @@ jobs:
         if: ${{ matrix.subtest_key == 'selenium2_tools' }}
         run: |
           ./run_test t/selenium2/tools
+          exit $(docker inspect testing-breedbase-1 --format='{{.State.ExitCode}}')
+
+      - name: Run selenium tests wiki
+        if: ${{ matrix.subtest_key == 'selenium2_wiki' }}
+        run: |
+          ./run_test t/selenium2/wiki
           exit $(docker inspect testing-breedbase-1 --format='{{.State.ExitCode}}')
 
       - name: Upload screenshots
