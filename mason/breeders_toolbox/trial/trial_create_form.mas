@@ -111,36 +111,43 @@ $design_types => ()
                             <input class="form-control" id="add_plant_entries" name="add_plant_entries" type="text" />
                             <p><i>Creates plant entries for each plot. Ignore if not adding plant entries.</i></p>
                         </div>
-                        <label style="font-size: 80%;" class="col-sm-3 control-label">Inherits Treatment(s) From Plots: </label>
-                            <div class="col-sm-8" >
-                                <input name="trial_create_plants_per_plot_inherit_treatments" id="trial_create_plants_per_plot_inherit_treatments" type="checkbox" checked disabled/>
+                    </div>
+                    <div class="form-group tw:flex tw:flex-row tw:gap-2">
+                        <label class="col-sm-3 control-label">Inherits Treatment(s) From Plots: </label>
+                        <div class="col-sm-9 tw:flex tw:items-center tw:pt-1.25" >
+                            <input name="trial_create_plants_per_plot_inherit_treatments" id="trial_create_plants_per_plot_inherit_treatments" type="checkbox" checked disabled/>
+                        </div>
+                    </div>
+                    <div class="form-group tw:flex tw:flex-row tw:gap-2">
+                        <label class="col-sm-3 control-label">Assign row and column data to plants within plots?</label>
+                            <div class="col-sm-9 tw:flex tw:items-center tw:pt-1.25" >
+                                <input name="trial_create_rows_and_columns_to_plants" id="trial_create_rows_and_columns_to_plants" type="checkbox"/>
                             </div>
                     </div>
                     <div class="form-group">
-                        <label class="col-sm-3 control-label">Assign row and column data to plants within plots?</label>
-                            <div class="col-sm-9" >
-                                <input name="trial_create_rows_and_columns_to_plants" id="trial_create_rows_and_columns_to_plants" type="checkbox"/>
-                                <div id="trial_create_plant_row_column_format_dialog" style="display:none">
-                                    <p><i>One plant per (row,column) coordinate. Rows and columns will be populated in a zigzag pattern. Row and column numbers start at 1 within each plot.</i></p>
-                                    <table style="width:60%">
-                                        <tr>
-                                            <td>
-                                                <label>Number of rows per plot</label>
-                                            </td>
-                                            <td>
-                                                <input name="trial_create_rows_per_plot" id="trial_create_rows_per_plot" type="number"/>
-                                            </td>
-                                        </tr><tr>
-                                            <td>
-                                                <label>Number of columns per plot</label>
-                                            </td>
-                                            <td>
-                                                <input name="trial_create_cols_per_plot" id="trial_create_cols_per_plot" type="number"/>
-                                            </td>
-                                        </tr>
-                                    </table>
-                                </div>
+                        <label class="col-sm-3 control-label"></label>
+                        <div class="col-sm-9">
+                            <div id="trial_create_plant_row_column_format_dialog" style="display:none">
+                                <p><i>One plant per (row,column) coordinate. Rows and columns will be populated in a zigzag pattern. Row and column numbers start at 1 within each plot.</i></p>
+                                <table style="width:60%">
+                                    <tr>
+                                        <td>
+                                            <label>Number of rows per plot</label>
+                                        </td>
+                                        <td>
+                                            <input name="trial_create_rows_per_plot" id="trial_create_rows_per_plot" type="number"/>
+                                        </td>
+                                    </tr><tr>
+                                        <td>
+                                            <label>Number of columns per plot</label>
+                                        </td>
+                                        <td>
+                                            <input name="trial_create_cols_per_plot" id="trial_create_cols_per_plot" type="number"/>
+                                        </td>
+                                    </tr>
+                                </table>
                             </div>
+                        </div>
                     </div>
                     <div class="form-group">
                         <label class="col-sm-3 control-label">Description: </label>
@@ -202,9 +209,9 @@ $design_types => ()
                             </div>
                         </div>
                     </div>
-                    <div class="form-group" id="randomization_div" style="display:none;">
-                        <label class="col-sm-4 control-label">Use same randomization for all locations: </label>
-                        <div class="col-sm-8" >
+                    <div class="form-group tw:flex tw:flex-row tw:gap-2" id="randomization_div" style="display:none;">
+                        <label class="col-sm-3 control-label">Use same randomization for all locations: </label>
+                        <div class="col-sm-9 tw:flex tw:items-center tw:pt-1.25" >
                             <input type="checkbox" id="use_same_layout" value="same_design" />
                         </div>
                     </div>
@@ -590,13 +597,15 @@ $design_types => ()
                     <hr>
                     <div class="form-group"  id="FieldMap_westcott" style="display: none">
                         <label class="col-sm-4 control-label">Field map display: </label>
-                        <div class="col-sm-8" > <label class="col-sm-8 control-label">
-                            <input type="checkbox" id="westcott_field_map" checked="checked" disabled/>  (comes with design)</label>
+                        <div class="col-sm-8" >
+                            <label class="control-label">
+                                <input type="checkbox" id="westcott_field_map" checked="checked" disabled/> (comes with design)
+                            </label>
                         </div>
                     </div>
-                    <div class="form-group"  id="FieldMap">
+                    <div class="form-group tw:flex tw:flex-row tw:gap-2"  id="FieldMap">
                         <label class="col-sm-4 control-label">Field map display: </label>
-                        <div class="col-sm-8" >
+                        <div class="col-sm-8 tw:flex tw:items-center tw:pt-1.25" >
                             <input type="checkbox" id="show_field_map_options" checked="checked"/>
                         </div>
                     </div>
@@ -624,9 +633,9 @@ $design_types => ()
                     <p>If you want to change the way in which plot names will be generated by the database</p>
                     <p>It is recommended to allow the database to create the plot prefixes, so leave the prefix blank unless necessary.</p>
 
-                    <div class="form-group" >
+                    <div class="form-group tw:flex tw:flex-row tw:gap-2" >
                         <label class="col-sm-4 control-label">Custom plot naming/numbering: </label>
-                        <div class="col-sm-8" >
+                        <div class="col-sm-8 tw:flex tw:items-center tw:pt-1.25" >
                             <input type="checkbox" id="show_plot_naming_options" checked/>
                         </div>
                     </div>
