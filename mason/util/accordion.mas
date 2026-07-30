@@ -71,7 +71,10 @@ Or:
   }
   .accordion-workflow .accordion-locked {
       opacity: 0.5 !important;
-      pointer-events: none !important;
+      cursor: not-allowed !important;
+  }
+  .accordion-workflow .accordion-locked * {
+      cursor: not-allowed !important;
   }
 </style>
 
