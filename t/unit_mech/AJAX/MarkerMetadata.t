@@ -118,6 +118,22 @@ $response = decode_json $mech->content;
 $expected = {'S1_21597' => {'alleles' => [{'allele_id' => 10,'allele_name' => '1_P'},{'allele_id' => 11,'allele_name' => '1_A'},{'allele_id' => 12,'allele_name' => '1_UNK'}],'locus_name' => 'S1_21597','nd_protocol_id' => 3,'locus_description' => 'Updated description of Marker 1','references' => [{'cvterm_id' => 76801,'db_name' => 'CO_334','cvterm_name' => 'Stem height','url' => '/cvterm/76801/view','dbxref_accession' => '0000478'}],'locus_id' => 7,'marker_name' => 'S1_21597'}};
 check_metadata_response($expected, $response, "S1_21597 - updated");
 
+# Check marker search pagination
+$mech->get_ok("http://localhost:3010/ajax/genotyping_protocol/markers_search?protocol_id=$protocol_id&length=10&start=0", 'marker search page 1');
+$response = decode_json $mech->content;
+my $num_records = scalar(@{$response->{'data'}});
+is($num_records, 10, 'Marker search page 1 has 10 markers');
+
+$mech->get_ok("http://localhost:3010/ajax/genotyping_protocol/markers_search?protocol_id=$protocol_id&length=10&start=10", 'marker search page 2');
+$response = decode_json $mech->content;
+$num_records = scalar(@{$response->{'data'}});
+is($num_records, 10, 'Marker search page 2 has 10 markers');
+
+$mech->get_ok("http://localhost:3010/ajax/genotyping_protocol/markers_search?protocol_id=$protocol_id&length=10&start=20", 'marker search page 3');
+$response = decode_json $mech->content;
+$num_records = scalar(@{$response->{'data'}});
+is($num_records, 5, 'Marker search page 3 has 5 markers');
+
 # Check Marker Metadata that links to composed trait (S2_26674)
 $mech->get_ok("http://localhost:3010/ajax/genotyping_protocol/get_marker_metadata/$protocol_id?marker_name=S2_26674", 'Get marker metadata - S2_26674');
 $response = decode_json $mech->content;
