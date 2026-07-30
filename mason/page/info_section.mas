@@ -128,14 +128,26 @@ Lukas Mueller, based on the Perl code from Rob Buels.
         if ( $collapsible ) {
             my $collapsed_class = $collapsed ? 'collapsed' : '';
             my $collapse_in = $collapsed ? '' : 'in';
+            my $trigger_id = $id . ($collapsed ? '_onswitch' : '_offswitch');
 
-            $title_html = qq|<a class="info-section-trigger $collapsed_class" data-toggle="collapse" data-target="#$id" style="text-decoration: none; color: inherit; display: block;" role="button">|
+            $title_html = qq|<a class="info-section-trigger $collapsed_class" id="$trigger_id" data-toggle="collapse" data-target="#$id" style="text-decoration: none; color: inherit; display: block;" role="button">|
                         . qq|<span class="glyphicon glyphicon-chevron-right info-section-chevron" style="margin-right: 8px; transition: transform 0.2s; display: inline-block;"></span>|
                         . qq|$title</a>|;
 
             $contents_html = qq|<div id="$id" class="collapse $collapse_in">|
                            . qq|<div class="${sub}infosectioncontent" $align>$contents_html</div>|
-                           . qq|</div>|;
+                           . qq|</div>|
+                           . qq|<script type="text/javascript">|
+                           . qq|jQuery(document).ready(function() {|
+                           . qq|    var \$trigger = jQuery('#${id}_onswitch, #${id}_offswitch');|
+                           . qq|    jQuery('#$id').on('show.bs.collapse', function() {|
+                           . qq|        \$trigger.attr('id', '${id}_offswitch');|
+                           . qq|    });|
+                           . qq|    jQuery('#$id').on('hide.bs.collapse', function() {|
+                           . qq|        \$trigger.attr('id', '${id}_onswitch');|
+                           . qq|    });|
+                           . qq|});|
+                           . qq|</script>|;
         } else {
             $contents_html = qq|<div class="${sub}infosectioncontent" $align>$contents_html</div>|;
         }
