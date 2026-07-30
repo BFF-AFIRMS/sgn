@@ -62,6 +62,7 @@ Or:
   $m->content; # Execute body to collect method calls
   my $json = JSON::XS->new();
   my $validations_json = $json->encode(\@validations);
+  my $id_json = $json->encode($id);
 </%perl>
 
 <style media="screen">
@@ -117,7 +118,7 @@ Or:
 <script type="text/javascript">
 jQuery(document).ready(function($) {
     (function() {
-        var containerId = <% $id | JSON %>;
+        var containerId = <% $id_json %>;
         var validations = <% $validations_json %>;
         var $container = $('#' + containerId);
         if (!$container.length) return;
