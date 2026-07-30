@@ -1081,6 +1081,7 @@ jQuery(document).ready(function ($) {
 
     //When the user submits the form, input validation happens here before proceeding to design generation
     $(document).on('click', '#new_trial_submit, button[name="create_trial_submit"]', function () {
+        var btn = this;
         d3.selectAll("#container_field_map_view > *").remove();
         jQuery("#container_field_map_view").css("display", "none");
 
@@ -1091,7 +1092,7 @@ jQuery(document).ready(function ($) {
                     alert("Please resolve errors in the design steps first: " + failing.message);
                 } else {
                     var name = $('#new_trial_name').val();
-                    verify_create_trial_name(name, this, function() {
+                    verify_create_trial_name(name, btn, function() {
                         generate_experimental_design();
                     });
                 }
