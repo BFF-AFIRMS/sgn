@@ -13,83 +13,116 @@ my $f = SGN::Test::Fixture->new();
 
 $d->while_logged_in_as("curator", sub {
 
-    $d->get_ok("/wiki/WikiHome", "get wiki home page");
-    sleep(2);
+    # -------------------------------------------------------------------------
+    # General Functionality
 
-    $d->driver()->accept_alert();
+    # Attemt to navigate to WikiHome, which is a page that doesn't exist yet,
+    # so an alert will be raised. We do not use get_ok here, because it can't load
+    $d->driver->get("/wiki/WikiHome");
+    $d->accept_alert_ok();
 
-    sleep(2);
+    # Create the WikiHome page
+    $d->send_keys_ok("wiki_page_content", "id", "#Big Title!\n##Smaller Title\nBla bla bla\n", "find wiki_page_content text area");
+    $d->click_ok("save_wiki_page_button", "id", "find wiki page save button");
 
-    my $wiki_page_content = $d->find_element_ok("wiki_page_content", "id", "find wiki_page_content text area");
-    $wiki_page_content->send_keys("#Big Title!\n##Smaller Title\nBla bla bla\n");
-
-    sleep(2);
-
-    my $save_wiki_page_button = $d->find_element_ok("save_wiki_page_button", "id", "find wiki page save button");
-    $save_wiki_page_button->click();
-
-    my $contents = $d->driver()->get_body();
+    # Check WikiHome page contents
+    my $contents = $d->get_attribute_ok("wiki_page_markdown", "id", "innerHTML", "find content of wiki page");
     like($contents, qr/Big Title\!/, "check page contents");
     like($contents, qr/Smaller Title/, "check more page contents");
     like($contents, qr/Bla bla bla/, "check even more page contents");
 
-    my $edit_wiki_page_button = $d->find_element_ok("edit_wiki_page_button", "id", "find wiki page edit button");
-    $edit_wiki_page_button->click();
+    # Create a second version of the page
+    $d->click_ok("edit_wiki_page_button", "id", "find wiki page edit button");
+    $d->send_keys_ok("wiki_page_content", "id", "This is the new content of version 2", "find wiki_page_content text area");
+    $d->click_ok("save_wiki_page_button", "id", "find save wiki page button");
 
-    # create a second version of the page
-    #
-    my $wiki_page_content = $d->find_element_ok("wiki_page_content", "id", "find wiki_page_content text area");
-    $wiki_page_content->send_keys("This is the new content of version 2");
-
-    $d->find_element_ok("save_wiki_page_button", "id", "find save wiki page button")->click();
-
-    $contents = $d->driver()->get_body();
-
+    # Check second version contents
+    $contents = $d->get_attribute_ok("wiki_page_markdown", "id", "innerHTML", "find content of wiki page");
     like($contents, qr/This is the new content of version 2/, "check page contents version 2");
 
-    sleep(2);
-
-    # create a new unrelated page
-    #
-    my $new_wiki_page_button = $d->find_element_ok("new_wiki_page_button", "id", "find new wiki page button");
-    $new_wiki_page_button->click();
-
-    sleep(2);
-
-    my $wiki_page_name_input = $d->find_element_ok("wiki_page_name", "id", "find wiki page name input field again");
-    $wiki_page_name_input->send_keys("AnotherTestPage");
-
-    my $create_wiki_page_button = $d->find_element_ok("create_wiki_page_button","id", "find create wiki page button again");
-    $create_wiki_page_button->click();
-
-    sleep(2);
-
-    $wiki_page_content = $d->find_element_ok("wiki_page_content", "id", "find wiki_page_content text area");
-    $wiki_page_content->send_keys("More Stuff");
-
-    $d->find_element_ok("save_wiki_page_button", "id", "find save wiki page button")->click();
-
-    sleep(2);
-
-    $contents = $d->driver()->get_body();
+    # Create a new unrelated page
+    create_page("AnotherTestPage", "More Stuff");
+    $contents = $d->get_attribute_ok("wiki_page_markdown", "id", "innerHTML", "find content of wiki page");
     like($contents, qr/More Stuff/, "check another test page contents");
 
-    sleep(2);
+    # Rename new page
+    $d->click_ok("rename_wiki_page_button", "id", "find rename wiki page button");
+    $d->send_keys_ok("wiki_page_name_new", "id", "Rename", "rename new page");
+    $d->click_ok("submit_rename_wiki_page_button","id", "submit page rename");
+    $d->accept_alert_ok("confirm rename");
+    $d->wait_for_network_idle();
 
-    # check if homepage still exists
-    #
+    # Delete new page
+    delete_page("AnotherTestPageRename");
+
+    # -------------------------------------------------------------------------
+    # Overview Sections
+
+    my @overviews = (
+        # page_name             url
+        ["breedingProgram134",  "/breeders/program/134"],
+        ["trial139",            "/breeders/trial/139"],
+        ["genotypingProtocol1", "/breeders_toolbox/protocol/1"],
+    );
+
+    foreach my $overview (@overviews){
+        my ($page_name, $url) = @$overview;
+
+        # Check empty overview
+        $d->get_ok($url);
+        $d->wait_for_network_idle();
+        my $contents = $d->get_attribute_ok("overview_$page_name", "id", "innerHTML", "get empty overview $page_name");
+        like($contents, qr/No overview has been created yet/, "confirm no overview $page_name");
+
+        # Create wiki page
+        my $overview = "This is a test overview for $page_name";
+        create_page("$page_name", $overview);
+        
+        # Confirm link to page
+        $d->get_ok($url);
+        $d->wait_for_network_idle();
+        $contents = $d->get_attribute_ok("overview_$page_name", "id", "innerHTML", "get filled overview $page_name");
+        like($contents, qr/$overview/, "confirm overview content $page_name");
+
+        # Cleanup
+        delete_page("$page_name");        
+    }
+
+    # -------------------------------------------------------------------------
+    # Cleanup
+
+    # Check if homepage still exists
     $d->get_ok("/wiki/WikiHome", "get wiki home page");
-    sleep(2);
-
-    $contents = $d->driver()->get_body();
+    $contents = $d->get_attribute_ok("wiki_page_markdown", "id", "innerHTML", "find content of wiki page");
     like($contents, qr/Big Title\!/, "check page contents");
     like($contents, qr/Smaller Title/, "check more page contents");
     like($contents, qr/Bla bla bla/, "check even more page contents");
 
-    $d->find_element_ok("delete_wiki_page_button", "id", "find delete wiki page button")->click();
-
-    $d->driver()->accept_alert();
+    # Delete homepage
+    $d->click_ok("delete_wiki_page_button", "id", "find delete wiki page button");
+    $d->accept_alert_ok();
 });
 
-
+$d->driver->quit();
+$f->clean_up_db();
 done_testing();
+
+sub delete_page {
+    my $page_name = shift;
+    $d->get_ok("/wiki/$page_name");
+    $d->click_ok("delete_wiki_page_button", "id", "find delete wiki page button");
+    $d->accept_alert_ok("confirm deletion");
+    $d->accept_alert_ok("accept successful deletion");
+}
+
+sub create_page {
+    my $page_name = shift;
+    my $content = shift;
+
+    $d->get_ok("/wiki/WikiHome");   
+    $d->click_ok("new_wiki_page_button", "id", "click new wiki page button");
+    $d->send_keys_ok("wiki_page_name", "id", $page_name, "enter new page name $page_name");
+    $d->click_ok("create_wiki_page_button","id", "click create page button");
+    $d->send_keys_ok("wiki_page_content", "id", "$content", "enter wiki page content");
+    $d->click_ok("save_wiki_page_button", "id", "save wiki page");
+}
