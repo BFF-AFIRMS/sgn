@@ -66,51 +66,27 @@ Or:
 </%perl>
 
 <style media="screen">
-  .accordion-workflow .panel-heading {
-      position: relative;
-      user-select: none;
+  .accordion-workflow .accordion-step-panel {
+      margin-bottom: 15px;
   }
-  .accordion-workflow .accordion-toggle {
-      display: block;
-      text-decoration: none;
-      font-weight: bold;
-      color: #333;
-  }
-  .accordion-workflow .accordion-toggle:hover,
-  .accordion-workflow .accordion-toggle:focus {
-      text-decoration: none;
-  }
-  .accordion-workflow .accordion-step-icon {
-      margin-right: 8px;
-      transition: transform 0.2s ease-in-out;
-  }
-  .accordion-workflow .panel-collapse.in + .panel-heading .accordion-step-icon,
-  .accordion-workflow .panel-heading.active .accordion-step-icon {
-      transform: rotate(90deg);
-  }
-  .accordion-workflow .panel-heading.accordion-locked {
-      opacity: 0.7;
-      background-color: #f9f9f9;
+  .accordion-workflow .accordion-locked {
+      opacity: 0.5 !important;
+      pointer-events: none !important;
   }
 </style>
 
 <div id="<% $id %>" class="panel-group accordion-workflow">
 % for (my $i = 0; $i < scalar(@titles); $i++) {
 %   my $step_id = $step_ids[$i] || ($id . "_step_" . $i);
-    <div class="panel panel-default accordion-step-panel" id="<% $id %>_panel_<% $i %>" data-step-index="<% $i %>">
-        <div class="panel-heading accordion-step-heading" id="<% $id %>_heading_<% $i %>">
-            <h4 class="panel-title">
-                <a class="accordion-toggle" href="#<% $id %>_collapse_<% $i %>">
-                    <span class="accordion-step-icon glyphicon glyphicon-chevron-right"></span>
-                    <% $titles[$i] %>
-                </a>
-            </h4>
-        </div>
-        <div id="<% $id %>_collapse_<% $i %>" class="panel-collapse collapse">
-            <div class="panel-body">
-                <% $contents[$i] %>
-            </div>
-        </div>
+    <div class="accordion-step-panel" id="<% $id %>_panel_<% $i %>" data-step-index="<% $i %>">
+        <& /page/info_section.mas,
+            title => $titles[$i],
+            collapsible => 1,
+            collapsed => ($i == 0 ? 0 : 1),
+            id => $id . "_collapse_" . $i,
+            is_subsection => 1,
+            contents => $contents[$i]
+        &>
     </div>
 % }
 </div>
@@ -207,11 +183,11 @@ jQuery(document).ready(function($) {
                     var maxUnlocked = failing.index;
 
                     panels.each(function(idx) {
-                        var $heading = $(this).find('.accordion-step-heading');
+                        var $trigger = $(this).find('.info-section-trigger');
                         if (idx > maxUnlocked) {
-                            $heading.addClass('accordion-locked');
+                            $trigger.addClass('accordion-locked');
                         } else {
-                            $heading.removeClass('accordion-locked');
+                            $trigger.removeClass('accordion-locked');
                         }
                     });
 
@@ -243,10 +219,10 @@ jQuery(document).ready(function($) {
 
         panels.each(function(idx) {
             var $panel = $(this);
-            var $heading = $panel.find('.accordion-step-heading');
-            var $collapse = $panel.find('.panel-collapse');
+            var $trigger = $panel.find('.info-section-trigger');
+            var $collapse = $('#' + containerId + '_collapse_' + idx);
 
-            $heading.on('click', function(e) {
+            $trigger.on('click', function(e) {
                 e.preventDefault();
                 e.stopPropagation();
 

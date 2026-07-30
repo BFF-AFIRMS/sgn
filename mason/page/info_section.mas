@@ -85,6 +85,15 @@ Lukas Mueller, based on the Perl code from Rob Buels.
 
 </%doc>
 
+<style>
+  .info-section-trigger .info-section-chevron {
+      transform: rotate(90deg);
+  }
+  .info-section-trigger.collapsed .info-section-chevron {
+      transform: rotate(0deg);
+  }
+</style>
+
 <%args>
     $title
     $subtitle      => ""
@@ -112,30 +121,31 @@ Lukas Mueller, based on the Perl code from Rob Buels.
     if ( $contents =~ /\S/ && !$is_empty ) {
         $align &&= qq| style="text-align: $align|;
         $id ||= "sgnc" . int( rand(10000) );
-        $contents = <<EOC;
-<div class="${sub}infosectioncontent" $align>
-$contents
-</div>
-EOC
+
+        my $title_html = $title;
+        my $contents_html = $contents;
 
         if ( $collapsible ) {
-            ( $title, $contents ) = collapser(
-                {
-                    linktext            => $title,
-                    hide_state_linktext => $title,
-                    content             => $contents,
-                    collapsed           => $collapsed,
-                    id                  => $id,
-                }
-            );
+            my $collapsed_class = $collapsed ? 'collapsed' : '';
+            my $collapse_in = $collapsed ? '' : 'in';
+
+            $title_html = qq|<a class="info-section-trigger $collapsed_class" data-toggle="collapse" data-target="#$id" style="text-decoration: none; color: inherit; display: block;" role="button">|
+                        . qq|<span class="glyphicon glyphicon-chevron-right info-section-chevron" style="margin-right: 8px; transition: transform 0.2s; display: inline-block;"></span>|
+                        . qq|$title</a>|;
+
+            $contents_html = qq|<div id="$id" class="collapse $collapse_in">|
+                           . qq|<div class="${sub}infosectioncontent" $align>$contents_html</div>|
+                           . qq|</div>|;
+        } else {
+            $contents_html = qq|<div class="${sub}infosectioncontent" $align>$contents_html</div>|;
         }
+
         $subtitle ||= '';
         my $title_bar = <<EOHTML;
-<table cellspacing="0" cellpadding="0" class="${sub}infosectionhead" summary=""><tr><td class="${sub}infosectiontitle">$title</td><td class="${sub}infosectionsubtitle" role="button" tabindex="0">$subtitle&nbsp;</td></tr></table>
+<table cellspacing="0" cellpadding="0" class="${sub}infosectionhead" summary=""><tr><td class="${sub}infosectiontitle">$title_html</td><td class="${sub}infosectionsubtitle" role="button" tabindex="0">$subtitle&nbsp;</td></tr></table>
 EOHTML
-        print "$title_bar\n$contents\n";
+        print "$title_bar\n$contents_html\n";
     }
-
     #otherwise, if it's actually empty, just print a collapsed section
     #with the empty message
     elsif( $hide_if_empty ) {
