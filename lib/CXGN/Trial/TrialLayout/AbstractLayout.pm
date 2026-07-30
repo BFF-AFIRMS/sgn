@@ -476,6 +476,8 @@ sub retrieve_plot_info {
     my $is_a_control_prop = $stockprop_hash{$self->cvterm_id('is a control')} ? join ',', @{$stockprop_hash{$self->cvterm_id('is a control')}} : undef;
     my $row_number_prop = $stockprop_hash{$self->cvterm_id('row_number')} ? join ',', @{$stockprop_hash{$self->cvterm_id('row_number')}} : undef;
     my $col_number_prop = $stockprop_hash{$self->cvterm_id('col_number')} ? join ',', @{$stockprop_hash{$self->cvterm_id('col_number')}} : undef;
+    my $stake_prop = $stockprop_hash{$self->cvterm_id('stake_number')} ? join ',', @{$stockprop_hash{$self->cvterm_id('stake_number')}} : undef;
+    my $set_prop = $stockprop_hash{$self->cvterm_id('set_number')} ? join ',', @{$stockprop_hash{$self->cvterm_id('set_number')}} : undef;
     my $is_blank_prop = $stockprop_hash{$self->cvterm_id('is_blank')} ? join ',', @{$stockprop_hash{$self->cvterm_id('is_blank')}} : undef;
     my $well_concentration_prop = $stockprop_hash{$self->cvterm_id('concentration')} ? join ',', @{$stockprop_hash{$self->cvterm_id('concentration')}} : undef;
     my $well_volume_prop = $stockprop_hash{$self->cvterm_id('volume')} ? join ',', @{$stockprop_hash{$self->cvterm_id('volume')}} : undef;
@@ -578,6 +580,12 @@ sub retrieve_plot_info {
     }
     if ($col_number_prop) {
 	$design_info{"col_number"}=$col_number_prop;
+    }
+    if ($stake_prop) {
+        $design_info{"stake_number"}=$stake_prop;
+    }
+    if ($set_prop) {
+        $design_info{"set_number"}=$set_prop;
     }
     if ($self->get_experiment_type eq 'genotyping_layout'){
 	if ($is_blank_prop) {

@@ -405,6 +405,8 @@ function show_available_columns_<% $download_type %>(level){
         'seed_transaction_operator': { label: 'Seed Transaction Operator', desc: 'The operator who created the seedlot_transaction between the seedlot and the plot. The seedlot_name indicates the source from which the plot was planted. Not all trials have this information saved.' },
         'num_seed_per_plot': { label: 'Num Seed Per Plot', desc: 'The number of seeds that were taken from the seedlot and planted in this plot. The seedlot_name indicates the source from which the plot was planted. Not all trials have this information saved.' },
         'range_number': { label: 'Range Number', desc: 'The range number for the plot. This is often synonymous with col_number. Not all trials have this information saved.' },
+        'stake_number': { label: 'Stake Number', desc: 'Stake identifier for the plot.' },
+        'set_number': { label: 'Set Number', desc: 'Set identifier for the plot.' },
         'plot_geo_json': { label: 'Plot Geo JSON', desc: 'GPS Coordinates for the plot. It will show as a GEO JSON string.' },
         'plant_name': { label: 'Plant Name', desc: 'Unique name identifier for each plant. This is a globally unique plant name in the database. If you have barcoded your plants for phenotyping, this is what is encoded in the barcode.' },
         'plant_id': { label: 'Plant ID', desc: 'Unique database identifier for each plant. This is a globally unique identifier in the database.' },
@@ -419,7 +421,7 @@ function show_available_columns_<% $download_type %>(level){
 
     var mandatory_cols = [];
     var optional_cols_checked = [];
-    var optional_cols_unchecked = ['synonyms', 'trial_name', 'location_name', 'year', 'pedigree', 'female_parent', 'male_parent', 'tier', 'seedlot_name', 'seed_transaction_operator', 'num_seed_per_plot', 'range_number', 'plot_geo_json'];
+    var optional_cols_unchecked = ['synonyms', 'trial_name', 'location_name', 'year', 'pedigree', 'female_parent', 'male_parent', 'tier', 'seedlot_name', 'seed_transaction_operator', 'num_seed_per_plot', 'range_number', 'stake_number', 'set_number', 'plot_geo_json'];
 
     if (level == 'plots') {
         mandatory_cols = ['plot_name', 'plot_id'];
