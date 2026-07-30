@@ -7,11 +7,13 @@ $prefix
 use Try::Tiny;
 </%init>
 
-% my $wiki = CXGN::People::Wiki->new( { people_schema => $c->dbic_schema("CXGN::People::Schema") } );
-% try {
-%   my $page_data = $wiki->retrieve_page($prefix . $project_id);
-%   $m->out($page_data->{page_content});
-% }
-% catch {
-    <p>No overview has been created yet.</p>
-% };
+<div id="overview_<% $prefix %><% $project_id %>">
+%     my $wiki = CXGN::People::Wiki->new( { people_schema => $c->dbic_schema("CXGN::People::Schema") } );
+%     try {
+%         my $page_data = $wiki->retrieve_page($prefix . $project_id);
+%         $m->out($page_data->{page_content});
+%     }
+%     catch {
+          <p>No overview has been created yet.</p>
+%     };
+</div>
