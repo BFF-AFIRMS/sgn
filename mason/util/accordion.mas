@@ -96,15 +96,15 @@ Or:
 <script type="text/javascript">
 jQuery(document).ready(function($) {
     (function() {
-        var containerId = <% $id_json %>;
-        var validations = <% $validations_json %>;
-        var $container = $('#' + containerId);
+        const containerId = <% $id_json %>;
+        const validations = <% $validations_json %>;
+        const $container = $('#' + containerId);
         if (!$container.length) return;
 
-        var panels = $container.find('.accordion-step-panel');
-        var numPanels = panels.length;
-        var unlockedUpTo = 0;
-        var updateTimeout = null;
+        const panels = $container.find('.accordion-step-panel');
+        const numPanels = panels.length;
+        let unlockedUpTo = 0;
+        let updateTimeout = null;
 
         /**
          * Resolves a validation function from a global function name.
@@ -119,10 +119,10 @@ jQuery(document).ready(function($) {
                     return window[v];
                 }
             }
-            return function() { return true; };
+            return () => true;
         }
 
-        var validationFns = validations.map(getValidationFn);
+        const validationFns = validations.map(getValidationFn);
 
         /**
          * Normalizes any validation return value (boolean, string, or object)
@@ -154,21 +154,14 @@ jQuery(document).ready(function($) {
          * @param {number} i - The 0-based index of the step to validate.
          * @returns {Promise<{valid: boolean, message?: string}>} A promise resolving to the normalized validation status.
          */
-        function validateStep(i) {
-            var fn = validationFns[i];
-            if (!fn) return Promise.resolve({ valid: true });
+        async function validateStep(i) {
+            const fn = validationFns[i];
+            if (!fn) return { valid: true };
+            
             try {
-                var res = fn();
-                if (res instanceof Promise) {
-                    return res.then(function(val) {
-                        return normalizeResult(val);
-                    }).catch(function(err) {
-                        return { valid: false, message: err.message || 'Error validating step' };
-                    });
-                }
-                return Promise.resolve(normalizeResult(res));
+                return normalizeResult(await fn());
             } catch(e) {
-                return Promise.resolve({ valid: false, message: e.message || 'Error validating step' });
+                return { valid: false, message: e.message || 'Error validating step' };
             }
         }
 
@@ -178,27 +171,14 @@ jQuery(document).ready(function($) {
          * 
          * @returns {Promise<{index: number, message: string|null}>} A promise resolving to the first failing step index and error message.
          */
-        function getFirstFailingStep() {
-            var chain = Promise.resolve({ index: numPanels, message: null });
-
-            function check(i) {
-                return function(currentResult) {
-                    if (currentResult.index < numPanels) {
-                        return currentResult;
-                    }
-                    return validateStep(i).then(function(res) {
-                        if (!res.valid) {
-                            return { index: i, message: res.message };
-                        }
-                        return { index: numPanels, message: null };
-                    });
-                };
+        async function getFirstFailingStep() {
+            for (let i = 0; i < numPanels; i++) {
+                const res = await validateStep(i);
+                if (!res.valid) {
+                    return { index: i, message: res.message };
+                }
             }
-
-            for (var i = 0; i < numPanels; i++) {
-                chain = chain.then(check(i));
-            }
-            return chain;
+            return { index: numPanels, message: null };
         }
 
         /**
@@ -211,81 +191,80 @@ jQuery(document).ready(function($) {
             if (updateTimeout) {
                 clearTimeout(updateTimeout);
             }
-            updateTimeout = setTimeout(function() {
+            updateTimeout = setTimeout(async () => {
                 updateTimeout = null;
-                getFirstFailingStep().then(function(failing) {
-                    var maxUnlocked = failing.index;
+                const failing = await getFirstFailingStep();
+                const maxUnlocked = failing.index;
 
-                    panels.each(function(idx) {
-                        var $trigger = $(this).find('.info-section-trigger');
-                        if (idx > maxUnlocked) {
-                            $trigger.addClass('accordion-locked');
-                        } else {
-                            $trigger.removeClass('accordion-locked');
-                        }
-                    });
-
-                    for (var i = maxUnlocked + 1; i < numPanels; i++) {
-                        var $collapse = $('#' + containerId + '_collapse_' + i);
-                        if ($collapse.hasClass('in')) {
-                            $collapse.collapse('hide');
-                        }
+                panels.each(function(idx) {
+                    var $trigger = $(this).find('.info-section-trigger');
+                    if (idx > maxUnlocked) {
+                        $trigger.addClass('accordion-locked');
+                    } else {
+                        $trigger.removeClass('accordion-locked');
                     }
-
-                    for (var j = unlockedUpTo + 1; j <= maxUnlocked; j++) {
-                        if (j < numPanels) {
-                            var $collapseToOpen = $('#' + containerId + '_collapse_' + j);
-                            if (!$collapseToOpen.hasClass('in')) {
-                                $collapseToOpen.collapse('show');
-                            }
-                        }
-                    }
-
-                    unlockedUpTo = maxUnlocked;
                 });
+
+                for (let i = maxUnlocked + 1; i < numPanels; i++) {
+                    const $collapse = $('#' + containerId + '_collapse_' + i);
+                    if ($collapse.hasClass('in')) {
+                        $collapse.collapse('hide');
+                    }
+                }
+
+                for (let j = unlockedUpTo + 1; j <= maxUnlocked; j++) {
+                    if (j < numPanels) {
+                        const $collapseToOpen = $('#' + containerId + '_collapse_' + j);
+                        if (!$collapseToOpen.hasClass('in')) {
+                            $collapseToOpen.collapse('show');
+                        }
+                    }
+                }
+
+                unlockedUpTo = maxUnlocked;
             }, 150);
         }
 
-        var $firstCollapse = $('#' + containerId + '_collapse_0');
+        const $firstCollapse = $('#' + containerId + '_collapse_0');
         if (!$firstCollapse.hasClass('in')) {
             $firstCollapse.collapse('show');
         }
 
-        panels.each(function(idx) {
-            var $panel = $(this);
-            var $trigger = $panel.find('.info-section-trigger');
-            var $collapse = $('#' + containerId + '_collapse_' + idx);
+        panels.each(idx => {
+            const $panel = $(panels[idx]);
+            const $trigger = $panel.find('.info-section-trigger');
+            const $collapse = $('#' + containerId + '_collapse_' + idx);
 
-            $trigger.on('click', function(e) {
+            $trigger.on('click', async e => {
                 e.preventDefault();
                 e.stopPropagation();
 
-                getFirstFailingStep().then(function(failing) {
-                    if (idx > failing.index) {
-                        alert(failing.message);
-                        return false;
-                    }
+                const failing = await getFirstFailingStep();
 
-                    if ($collapse.hasClass('in')) {
-                        $collapse.collapse('hide');
-                    } else {
-                        $collapse.collapse('show');
-                    }
-                });
+                if (idx > failing.index) {
+                    alert(failing.message);
+                    return;
+                }
+
+                if ($collapse.hasClass('in')) {
+                    $collapse.collapse('hide');
+                } else {
+                    $collapse.collapse('show');
+                }
             });
         });
 
-        $container.on('change keyup input', 'input, select, textarea', function() {
+        $container.on('change keyup input', 'input, select, textarea', () => {
             updateAccordionState();
         });
 
-        setTimeout(function() {
+        setTimeout(() => {
             updateAccordionState();
         }, 150);
 
         $container.data('accordionWorkflow', {
-            updateState: function() { updateAccordionState(); },
-            validateAll: function() { return getFirstFailingStep(); }
+            updateState: () => updateAccordionState(),
+            validateAll: () => getFirstFailingStep()
         });
 
         window[containerId + '_update'] = updateAccordionState;
