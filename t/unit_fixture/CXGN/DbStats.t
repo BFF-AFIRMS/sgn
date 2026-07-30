@@ -22,7 +22,7 @@ my $phenotype_count_by_breeding_program = $dbs->phenotype_count_by_breeding_prog
 
 my $traits = $dbs->traits();
 
-is($traits->[0]->[1], 999, "spot check trait result");
+is($traits->[0]->[1], 1011, "spot check trait result");
 
 print STDERR "Traits: ".Dumper($traits);
 
