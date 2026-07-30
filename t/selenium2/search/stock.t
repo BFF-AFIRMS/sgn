@@ -79,16 +79,19 @@ $d->while_logged_in_as("user", sub {
 
         # Dynamic Stockprops
         if (@$stockprops) {
-            my $adv_content = $d->find_element("advanced_search_panel_content", "id");
-            my $adv_content_onswitch = $d->find_element("advanced_search_panel_onswitch", "id");
-            if (!$adv_content->is_displayed() && $adv_content_onswitch->is_displayed()) {
-                $adv_content_onswitch->click();
-            }
-            my $prop_content = $d->find_element("stock_search_properties_panel_content", "id");
-            my $prop_content_onswitch = $d->find_element("stock_search_properties_panel_onswitch", "id");
-            if (!$prop_content->is_displayed() && $prop_content_onswitch->is_displayed()) {
-                $prop_content_onswitch->click();
-            }
+            my $expand = sub {
+                my ($content, $switch) = @_;
+                if ((!ref($content) || !$content->is_displayed()) && ref($switch) && $switch->is_displayed()) {
+                    $switch->click();
+                }
+            };
+
+            my $adv_content = $d->find_element("advanced_search_panel_content", "id", timeout => 1);
+            my $adv_content_onswitch = $d->find_element("advanced_search_panel_onswitch", "id", timeout => 1);
+            $expand->($adv_content, $adv_content_onswitch);
+            my $prop_content = $d->find_element("stock_search_properties_panel_content", "id", timeout => 1);
+            my $prop_content_onswitch = $d->find_element("stock_search_properties_panel_onswitch", "id", timeout => 1);
+            $expand->($prop_content, $prop_content_onswitch);
 
             foreach my $sp (@$stockprops) {
                 my $term = $sp->{term};

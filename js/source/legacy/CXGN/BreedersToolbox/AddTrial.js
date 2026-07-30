@@ -172,6 +172,8 @@ jQuery(document).ready(function ($) {
         accordion.registerValidation('step_trial_linkage', () => true);
         accordion.registerValidation('step_field_map', () => true);
         accordion.registerValidation('step_plot_naming', () => true);
+    } else {
+        console.warn("Accordion workflow not found. Validation will not be registered.");
     }
 
     if (window.location.pathname === '/breeders/trial/create') {
