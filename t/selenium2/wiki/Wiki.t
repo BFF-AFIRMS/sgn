@@ -16,7 +16,7 @@ $d->while_logged_in_as("curator", sub {
     # -------------------------------------------------------------------------
     # General Functionality
 
-    # Attemt to navigate to WikiHome, which is a page that doesn't exist yet,
+    # Attempt to navigate to WikiHome, which is a page that doesn't exist yet,
     # so an alert will be raised. We do not use get_ok here, because it can't load
     $d->driver->get("/wiki/WikiHome");
     $d->accept_alert_ok();
@@ -58,11 +58,40 @@ $d->while_logged_in_as("curator", sub {
     # -------------------------------------------------------------------------
     # Overview Sections
 
+    # Create a genotyping project
+    my $genotyping_project_name = "Test.Genotyping";
+    $d->get_ok("/breeders/genotyping_projects", "navigate to genotyping projects");
+    $d->click_ok("create_genotyping_project_link", "name", "click create genotyping project");
+    $d->click_ok("next_step_add_new_genotyping_project", "id", "click next step");
+    $d->send_keys_ok("new_genotyping_project_name", "id", $genotyping_project_name, "enter project name");
+    $d->send_keys_ok("genotyping_project_description", "id", $genotyping_project_name, "enter project description");
+    $d->click_ok('//select[@id="data_type"]/option[@value="snp"]', 'xpath', 'select snp data type');
+    $d->click_ok("add_new_genotyping_project_submit", "id", "submit new genotyping project");
+    $d->click_ok("add_new_genotyping_project_close_modal", "id", "close modal");
+    my $genotyping_project_id = $f->bcs_schema->resultset('Project::Project')->find({ name => $genotyping_project_name })->project_id();
+
+    # Create genotyping plate
+    my $genotyping_plate_name = "plate1";
+    $d->click_ok("create_genotyping_trial_link", "name", "click create genotyping plate");
+    $d->click_ok("next_step_intro_button", "id", "click next step 1");
+    $d->click_ok("next_step_creating_genotyping_plates", "id", "click next step 2");
+    $d->click_ok("//select[\@id='plate_genotyping_project_id']/option[\@title='$genotyping_project_name']", 'xpath', 'select genotyping project');
+    $d->send_keys_ok("genotyping_trial_name", "id", $genotyping_plate_name, "enter plate id");
+    $d->click_ok("plate_info_intro_button", "id", "click next step 3");
+    $d->click_ok('//select[@id="genotyping_trial_well_input_option"]/option[text()="I need to design a completely new plate"]', "xpath", "click design new plate");
+    $d->click_ok('//select[@id="accession_select_box_list_select"]/option[text()="test_stocks"]', "xpath", "select accessions");
+    $d->click_ok("well_info_intro_button", "id", "click next step 4");
+    $d->click_ok("trial_linkage_intro_button", "id", "click next step 5");
+    $d->click_ok("add_geno_trial_submit", "id", "click submit plate");
+    my $genotyping_plate_id = $f->bcs_schema->resultset('Project::Project')->find({ name => $genotyping_plate_name })->project_id();
+
     my @overviews = (
-        # page_name             url
-        ["breedingProgram134",  "/breeders/program/134"],
-        ["trial139",            "/breeders/trial/139"],
-        ["genotypingProtocol1", "/breeders_toolbox/protocol/1"],
+        # page_name                                 url
+        ["breedingProgram134",                      "/breeders/program/134"],
+        ["trial139",                                "/breeders/trial/139"],
+        ["genotypingProtocol1",                     "/breeders_toolbox/protocol/1"],
+        ["genotypingProject$genotyping_project_id", "/breeders/trial/$genotyping_project_id"],
+        ["genotypingPlate$genotyping_plate_id",     "/breeders/trial/$genotyping_plate_id"],
     );
 
     foreach my $overview (@overviews){
@@ -85,7 +114,7 @@ $d->while_logged_in_as("curator", sub {
         like($contents, qr/$overview/, "confirm overview content $page_name");
 
         # Cleanup
-        delete_page("$page_name");        
+        delete_page("$page_name");
     }
 
     # -------------------------------------------------------------------------
@@ -101,6 +130,7 @@ $d->while_logged_in_as("curator", sub {
     # Delete homepage
     $d->click_ok("delete_wiki_page_button", "id", "find delete wiki page button");
     $d->accept_alert_ok();
+
 });
 
 $d->driver->quit();
