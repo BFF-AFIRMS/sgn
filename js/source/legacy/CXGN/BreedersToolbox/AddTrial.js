@@ -49,20 +49,22 @@ jQuery(document).ready(function ($) {
 
     var isRestoringDesign = false;
 
-    var formDraft = new FormDraft({
-        formSelector: '#create_new_trial_form',
-        draftPrefix: 'trial_create_form_state_',
-        workflow: {
-            stepSelector: '#trial_design_workflow .workflow-content > li.workflow-focus',
-            workflowSelector: '#trial_design_workflow',
-            lockForwardOnEdit: 1,
-            onRestoreStep: function(currentStep) {
-                if (currentStep === 2 && !jQuery('#trial_design_information').children().length && !isRestoringDesign) {
-                    generate_experimental_design();
+    if (FormDraft) {
+        var formDraft = new FormDraft({
+            formSelector: '#create_new_trial_form',
+            draftPrefix: 'trial_create_form_state_',
+            workflow: {
+                stepSelector: '#trial_design_workflow .workflow-content > li.workflow-focus',
+                workflowSelector: '#trial_design_workflow',
+                lockForwardOnEdit: 1,
+                onRestoreStep: function(currentStep) {
+                    if (currentStep === 2 && !jQuery('#trial_design_information').children().length && !isRestoringDesign) {
+                        generate_experimental_design();
+                    }
                 }
             }
-        }
-    });
+        });
+    }
 
     const validate_trial_info = function() {
         var trial_name = $("#new_trial_name").val();
@@ -177,24 +179,24 @@ jQuery(document).ready(function ($) {
     }
 
     if (window.location.pathname === '/breeders/trial/create') {
-        get_select_box('years', 'add_project_year', {'auto_generate': 1, 'after_load': () => formDraft.restoreFormState() } );
-        get_select_box('trial_types', 'add_project_type', {'empty':1, 'after_load': () => formDraft.restoreFormState() } );
-        populate_trial_linkage_selects(() => formDraft.restoreFormState());
+        get_select_box('years', 'add_project_year', {'auto_generate': 1, 'after_load': () => formDraft?.restoreFormState() } );
+        get_select_box('trial_types', 'add_project_type', {'empty':1, 'after_load': () => formDraft?.restoreFormState() } );
+        populate_trial_linkage_selects(() => formDraft?.restoreFormState());
 
         // Restore state immediately for static inputs
-        formDraft.restoreFormState();
+        formDraft?.restoreFormState();
     }
 
     jQuery(document).on('change keyup', '#create_new_trial_form input, #create_new_trial_form select, #create_new_trial_form textarea', function() {
-        formDraft.saveFormState();
+        formDraft?.saveFormState();
     });
 
     jQuery(document).on('click', '#create_new_trial_form button', function() {
-        setTimeout(() => formDraft.saveFormState(), 200);
+        setTimeout(() => formDraft?.saveFormState(), 200);
     });
 
     jQuery(document).on('click', '#trial_design_workflow .workflow-prog li', function() {
-        setTimeout(() => formDraft.updateStepInUrl(), 200);
+        setTimeout(() => formDraft?.updateStepInUrl(), 200);
     });
 
     jQuery('#add_plant_entries').on('change', function() {
@@ -874,7 +876,7 @@ jQuery(document).ready(function ($) {
                     if (btn_elem) {
                         Workflow.complete(btn_elem, true);
                     }
-                    formDraft.saveFormState();
+                    formDraft?.saveFormState();
 
                     if(response.warning_message){
                         jQuery('#trial_design_warning_message').html("<center><div class='well'><h4 class='text-warning'>Warning: "+response.warning_message+"</h4></div></center>");
@@ -2485,7 +2487,7 @@ jQuery(document).ready(function ($) {
                 if (response.error) {
                     alert(response.error);
                 } else {
-                    formDraft.clearDraft();
+                    formDraft?.clearDraft();
                     refreshTrailJsTree(0);
                     var finishWorkflow = function() {
                         Workflow.complete('#new_trial_confirm_submit');
