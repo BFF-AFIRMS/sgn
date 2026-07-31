@@ -33,9 +33,10 @@ has "config_file" => (
 );
 
 
+
 sub run {
     my $self = shift;
-    my $secs = 30; #60 * 4;
+    my $secs = 1;
 
     my $pre_jobs = $self->run_prerequisite_jobs();
     sleep($secs);
@@ -92,7 +93,7 @@ sub run_prerequisite_jobs {
 sub wait_till_jobs_end {
     my ( $self, $jobs, $sleep_time ) = @_;
 
-    $sleep_time = 30 if !$sleep_time;
+    $sleep_time = 1 if !$sleep_time;
     while (@$jobs) {
         for ( my $i = 0 ; $i < scalar(@$jobs) ; $i++ ) {
             splice( @$jobs, $i, 1 ) if !$jobs->[$i]->alive();
