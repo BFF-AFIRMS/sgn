@@ -49,8 +49,8 @@ jQuery(document).ready(function ($) {
 
     var isRestoringDesign = false;
 
-    if (FormDraft) {
-        var formDraft = new FormDraft({
+    if (window.FormDraft) {
+        var formDraft = new window.FormDraft({
             formSelector: '#create_new_trial_form',
             draftPrefix: 'trial_create_form_state_',
             workflow: {
@@ -64,6 +64,8 @@ jQuery(document).ready(function ($) {
                 }
             }
         });
+    } else {
+        console.warn("FormDraft is not available. Form state will not be saved.");
     }
 
     const validate_trial_info = function() {
