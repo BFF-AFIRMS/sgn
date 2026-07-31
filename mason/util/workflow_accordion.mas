@@ -230,7 +230,7 @@ Or:
                 const maxUnlocked = failing.index;
 
                 panels.each((idx, el) => {
-                    var $trigger = $(el).find('.info-section-trigger');
+                    var $trigger = $(el).find('.collapser');
                     if (idx > maxUnlocked) {
                         $trigger.addClass('accordion-locked');
                     } else {
@@ -267,7 +267,7 @@ Or:
         // Attach click handlers to each panel to manage accordion behavior
         panels.each((idx) => {
             const $panel = $(panels[idx]);
-            const $trigger = $panel.find('.info-section-trigger');
+            const $trigger = $panel.find('.collapser');
             const $collapse = $('#' + containerId + '_collapse_' + idx + '_content');
 
             $trigger.on('click', async (e) => {
