@@ -101,10 +101,43 @@ sub _configure_driver_timeouts {
     $driver->set_timeout('page load', $self->implicit_wait);
 }
 
+has 'js_logs' => (
+    is      => 'rw',
+    isa     => 'ArrayRef',
+    default => sub { [] },
+);
+
+sub collect_js_logs {
+    my $self = shift;
+    return unless $self->{driver};
+    try {
+        my $logs = $self->driver->execute_script('return window.jsErrorsAndLogs || [];');
+        if (ref($logs) eq 'ARRAY' && @$logs) {
+            push @{$self->js_logs}, @$logs;
+            $self->driver->execute_script('window.jsErrorsAndLogs = [];');
+        }
+    } catch {
+        # Ignore if alert is present or page is currently unloading
+    };
+}
+
+sub DEMOLISH {
+    my $self = shift;
+    $self->collect_js_logs();
+    my $logs = $self->js_logs;
+    if (ref($logs) eq 'ARRAY' && @$logs) {
+        print STDERR "\n--- CLIENT-SIDE JS ERRORS AND LOGS ---\n";
+        foreach my $log (@$logs) {
+            print STDERR "  $log\n";
+        }
+        print STDERR "--------------------------------------\n\n";
+    }
+}
+
 has 'user_data' => ( is => 'rw',
 		     isa => 'Ref',
 		     default => sub { 
-			 { 
+			 {
 			     curator   => { username => 'janedoe',
 					    password => 'secretpw',
 			     },
@@ -172,7 +205,10 @@ sub base_url {
 
 sub click {
     my ($self, $name, $method, @args) = @_;
-    my $timeout = $self->_extract_timeout(@args); # in seconds
+    my ($timeout) = $self->_extract_basic_args(@args);
+
+    $self->collect_js_logs();
+
     return wait_until {
         $self->screenshot("click_$name");
         $self->driver->find_element($name, $method)->click();
@@ -190,7 +226,8 @@ sub click_ok {
 
 sub clear {
     my ($self, $name, $method, @args) = @_;
-    my $timeout = $self->_extract_timeout(@args); # in seconds
+    my ($timeout) = $self->_extract_basic_args(@args);
+
     return wait_until {
         $self->screenshot("clear_$name");
         $self->driver->find_element($name, $method)->clear();
@@ -255,7 +292,10 @@ sub click_until_ok {
 
 sub get { 
     my ($self, $url, @args) = @_;
-    my $timeout = $self->_extract_timeout(@args); # in seconds
+    my ($timeout) = $self->_extract_basic_args(@args);
+
+    $self->collect_js_logs();
+
     my $ok = wait_until {
         $self->driver->get($url);
     } timeout => $timeout;
@@ -273,7 +313,8 @@ sub get_ok {
     
 sub find_element { 
     my ($self, $name, $method, @args) = @_;
-    my $timeout = $self->_extract_timeout(@args); # in seconds
+    my ($timeout) = $self->_extract_basic_args(@args);
+
     return wait_until {
         $self->screenshot("find_element_$name");
         $self->driver->find_element($name, $method);
@@ -291,7 +332,8 @@ sub find_element_ok {
 
 sub get_attribute {
     my ($self, $name, $method, $attribute, @args) = @_;
-    my $timeout = $self->_extract_timeout(@args); # in seconds
+    my ($timeout) = $self->_extract_basic_args(@args);
+
     return wait_until {
         $self->screenshot("get_attribute_$attribute");
         $self->driver->find_element($name, $method)->get_attribute($attribute);
@@ -309,7 +351,8 @@ sub get_attribute_ok {
 
 sub get_text {
     my ($self, $name, $method, @args) = @_;
-    my $timeout = $self->_extract_timeout(@args); # in seconds
+    my ($timeout) = $self->_extract_basic_args(@args);
+
     return wait_until {
         $self->driver->find_element($name, $method)->get_text();
     } timeout => $timeout;
@@ -326,7 +369,8 @@ sub get_text_ok {
 
 sub send_keys {
     my ($self, $name, $method, $input, @args) = @_;
-    my $timeout = $self->_extract_timeout(@args); # in seconds
+    my ($timeout) = $self->_extract_basic_args(@args);
+
     return wait_until {
         $self->screenshot("send_keys_$name");
         $self->driver->find_element($name, $method)->send_keys(_maybe_unwrap($input));
@@ -344,7 +388,10 @@ sub send_keys_ok {
 
 sub accept_alert {
     my ($self, @args) = @_;
-    my $timeout = $self->_extract_timeout(@args); # in seconds
+    my ($timeout) = $self->_extract_basic_args(@args);
+
+    $self->collect_js_logs();
+
     return wait_until {
         $self->screenshot("accept_alert");
         $self->driver->accept_alert();
@@ -360,7 +407,7 @@ sub accept_alert_ok {
 
 sub get_alert_text {
     my ($self, @args) = @_;
-    my $timeout = $self->_extract_timeout(@args); # in seconds
+    my ($timeout) = $self->_extract_basic_args(@args);
     return wait_until {
         return $self->driver->get_alert_text();
     } timeout => $timeout;
@@ -550,13 +597,21 @@ sub _extract_timeout {
     return $default_timeout;
 }
 
+sub _extract_basic_args {
+    my ($self, @args) = @_;
+
+    my $timeout = $self->_extract_timeout(@args);
+
+    return ($timeout);
+}
+
 sub _extract_ok_args {
     my ($self, @args) = @_;
 
     my $test_name = @args % 2 ? shift @args : undef;
-    my $timeout = $self->_extract_timeout(@args);
+    my @basic_args = $self->_extract_basic_args(@args);
 
-    return ($test_name, $timeout);
+    return ($test_name, @basic_args);
 }
 
 

@@ -1,5 +1,48 @@
 <!-- INSERT_HEAD_PRE_HTML -->
 
+% if (!$c->config->{production_server}) {
+<script type="text/javascript">
+   window.jsErrorsAndLogs = window.jsErrorsAndLogs || [];
+   (function() {
+       const logToArr = (prefix, args) => {
+           try {
+               window.jsErrorsAndLogs.push(prefix + ": " + args.map(a => {
+                   if (a === null) return "null";
+                   if (a === undefined) return "undefined";
+                   if (typeof a === 'object') {
+                       try { return JSON.stringify(a); } catch(e) { return String(a); }
+                   }
+                   return String(a);
+               }).join(" "));
+           } catch(e) {
+               window.jsErrorsAndLogs.push(prefix + ": (unserializable arguments)");
+           }
+       };
+       const origLog = console.log;
+       console.log = function(...args) {
+           logToArr("LOG", args);
+           if (origLog) origLog.apply(console, args);
+       };
+       const origWarn = console.warn;
+       console.warn = function(...args) {
+           logToArr("WARN", args);
+           if (origWarn) origWarn.apply(console, args);
+       };
+       const origErr = console.error;
+       console.error = function(...args) {
+           logToArr("ERROR", args);
+           if (origErr) origErr.apply(console, args);
+       };
+       const origOnError = window.onerror;
+       window.onerror = function(msg, url, line, col, err) {
+           window.jsErrorsAndLogs.push("UNCAUGHT ERROR: " + msg + " at " + url + ":" + line + (col ? ":" + col : ""));
+           if (origOnError) return origOnError.apply(window, arguments);
+           return false;
+       };
+   })();
+</script>
+% }
+
 <meta http-equiv="content-type" content="text/html; charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 
