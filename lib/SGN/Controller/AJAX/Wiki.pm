@@ -6,6 +6,7 @@ use URI::FromHash 'uri';
 use Text::MultiMarkdown qw | markdown |;
 use CXGN::People::Wiki;
 use Try::Tiny;
+use HTML::Scrubber;
 
 use Moose;
 
@@ -228,6 +229,13 @@ sub view : Chained('ajax_wiki') PathPart('view') Args(0) {
 	$page_content = $page_data->{page_content};
 
         $page_version = $wiki->get_version();
+
+        my $scrubber = HTML::Scrubber->new;
+        # Allow tags by default
+        $scrubber->default(1);
+        # Remove script tags
+        $scrubber->deny(qw[script]);
+        $page_content = $scrubber->scrub($page_content);
 
     };
     if ($@) {

@@ -4,16 +4,24 @@ $prefix
 </%args>
 
 <%init>
-use Try::Tiny;
+my $page_name = "$prefix$project_id";
 </%init>
 
-<div id="overview_<% $prefix %><% $project_id %>">
-%     my $wiki = CXGN::People::Wiki->new( { people_schema => $c->dbic_schema("CXGN::People::Schema") } );
-%     try {
-%         my $page_data = $wiki->retrieve_page($prefix . $project_id);
-%         $m->out($page_data->{page_content});
-%     }
-%     catch {
-          <p>No overview has been created yet.</p>
-%     };
+<div id="overview_<% $page_name %>">
+    <p>No overview has been created yet.</p>
 </div>
+
+<script defer="defer">
+    jQuery(document).ready(function () {
+        const page_name = "<% $page_name %>";
+        jQuery.ajax({
+            url : '/ajax/wiki/'+page_name+'/view',
+        }).then(
+            function(r) {
+                if (! r.error) {
+                    jQuery(`#overview_${page_name}`).html(r.html);
+                }
+            }
+        );
+    });
+</script>
