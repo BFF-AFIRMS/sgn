@@ -476,7 +476,8 @@ jQuery(document).ready(function () {
         jQuery(`${canvas} .multi-spinner-container`).show();
         jQuery(corrMsgDiv).html("Running correlation... please wait...").show();
 
-        solGS.correlation.runPhenoCorrelation(corrArgs).done(function (res) {
+        const result = solGS.correlation.runPhenoCorrelation(corrArgs);
+        result.done(function (res) {
         if (res.status.match(/success/)) {
             corrArgs["corr_table_file"] = res.corre_table_file;    
             var corrDownload = solGS.correlation.createCorrDownloadLink(corrArgs);
@@ -499,7 +500,7 @@ jQuery(document).ready(function () {
             jQuery(corrMsgDiv).empty();
         });
 
-    solGS.correlation.runPhenoCorrelation(corrArgs).fail(function (res) {
+    result.fail(function (res) {
       jQuery(`${canvas} .multi-spinner-container`).hide();
       jQuery(corrMsgDiv).html("Error occured running the correlation analysis.").fadeOut(8400);
       jQuery(runCorrBtnId).show();
