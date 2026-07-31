@@ -1,4 +1,3 @@
-
 use strict;
 use warnings;
 
@@ -10,7 +9,6 @@ use SGN::Test::Fixture;
 use SGN::Model::Cvterm;
 
 my $d = SGN::Test::WWW::WebDriver->new();
-$d->driver->set_timeout('implicit', 5000);
 
 # Set up the DB connection
 my $f = SGN::Test::Fixture->new();

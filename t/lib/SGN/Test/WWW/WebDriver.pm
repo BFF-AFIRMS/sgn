@@ -69,10 +69,10 @@ has 'host' => ( is => 'rw',
 		default => sub { $ENV{SGN_TEST_SERVER} },
     );
 
-# The majority of the time, explicit waits are used. Thus, the implicit wait serves
-# as the lower bound when a custom timeout parameter is provided. Setting an explicit wait
-# shorter than the implicit wait has no effect.
-has 'implicit_wait' => ( is => 'rw', default => 1 * 1000 );
+# The majority of the time, explicit waits are used. Setting an explicit wait
+# shorter than the implicit wait has no effect. Thus, the implicit wait serves
+# as the lower bound when a custom timeout parameter is provided. 
+has 'implicit_wait' => ( is => 'rw', default => 2 * 1000 );
 has 'explicit_wait' => ( is => 'rw', default => 90 * 1000 );
 
 has 'driver' => ( is => 'rw',
