@@ -36,17 +36,14 @@ has "config_file" => (
 
 sub run {
     my $self = shift;
-    my $secs = 1;
 
     my $pre_jobs = $self->run_prerequisite_jobs();
-    sleep($secs);
     print STDERR
-"\nCompleted prerequisite jobs. After waiting $secs sec...Now running the set of dependent jobs...\n";
+"\nCompleted prerequisite jobs. Now running the set of dependent jobs...\n";
 
     my $dep_jobs = $self->run_dependent_jobs();
-    sleep($secs);
     print STDERR
-"\nCompleted dependent jobs. After waiting $secs sec...Now checking results and emailing the results...\n";
+"\nCompleted dependent jobs. Now checking results and emailing the results...\n";
 
     $self->send_analysis_report();
     print STDERR "\nGot done checking results and emailing the results...\n";
