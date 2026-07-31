@@ -80,7 +80,7 @@ sub collapser {
 		valid => ['linktext', 'hide_state_linktext', 'linkstyle', 'content', 'id', 'collapsed', 'save', 'alt_href', 'alt_target'],
 		required => ['linktext', 'content', 'id']
 	});
-	
+
 	my ($linktext, $hide_state_linktext, $content, $id, $alt_href, $alt_target) 
 		= ($args{'linktext'}, $args{'hide_state_linktext'}, $args{'content'}, $args{'id'}, $args{'alt_href'}, $args{'alt_target'});
 	_check_id($id) if $args{save};
@@ -92,10 +92,6 @@ sub collapser {
 			$state = "hid"
 		}
 	}
-	my ($on_display, $off_display) = ("", "");
-	if($state eq "hid") { $on_display = "display:none;"; }
-	else { $off_display = "display:none;" }
-
 	my $linkstyle = $args{'linkstyle'} || "";
 	$linkstyle =~ s/;\s*$//;
 	$linkstyle .= ";";
@@ -105,29 +101,63 @@ sub collapser {
 		$show_save_js = "UserPrefs.set(\"$id\", \"dsp\");UserPrefs.setCookie();";
 	}
 	$hide_state_linktext ||= $linktext;
-        no warnings 'uninitialized';
+
+	my $collapse_in = ($state eq "hid") ? "" : "in";
+	my $collapsed_state = ($state eq "hid") ? "collapsed" : "";
+	my $initial_id = ($state eq "hid") ? "${id}_onswitch" : "${id}_offswitch";
+	my $initial_text = ($state eq "hid") ? $hide_state_linktext : $linktext;
+	my $href_attr = $alt_href ? qq|href="$alt_href"| : qq|href="javascript:void(0);"|;
+
+	my $esc_linktext = $linktext;
+	$esc_linktext =~ s/"/\\"/g;
+	my $esc_hide_state_linktext = $hide_state_linktext;
+	$esc_hide_state_linktext =~ s/"/\\"/g;
+
+	no warnings 'uninitialized';
 	my $link = <<HTML;
-	<a class="collapser collapser_show" target="$alt_target" href="$alt_href" style="$linkstyle;$on_display" onclick=" 
-		Effects.swapElements('${id}_offswitch', '${id}_onswitch'); 
-		Effects.hideElement('${id}_content');
-		$hide_save_js	
-		return false;"
-		id="${id}_offswitch"><img class="collapser_img" src="/documents/img/collapser_minus.png" />$linktext</a>
-	<a class="collapser collapser_show" target="$alt_target" href="$alt_href" style="$linkstyle;$off_display" onclick="
-		Effects.swapElements('${id}_onswitch', '${id}_offswitch'); 
-		Effects.showElement('${id}_content');
-		$show_save_js	
-		return false;"
-		id="${id}_onswitch"><img class="collapser_img" src="/documents/img/collapser_plus.png" />$hide_state_linktext</a>
+	<style>
+	  .collapser-chevron {
+	      transition: transform 0.2s ease-in-out;
+	      margin-right: 8px;
+	      display: inline-block;
+	  }
+	  .collapsed .collapser-chevron {
+	      transform: rotate(-90deg);
+	  }
+	</style>
+	<a class="collapser collapser_show $collapsed_state" data-toggle="collapse" data-target="#${id}_content" target="$alt_target" $href_attr style="$linkstyle" id="$initial_id"><span class="glyphicon glyphicon-chevron-down collapser-chevron"></span><span class="collapser-label">$initial_text</span></a>
 HTML
-	
-	my $wrapped_content = qq|<span id="${id}_content" style="$on_display">$content</span>|;
-	
+
+	my $wrapped_content = <<HTML;
+<div id="${id}_content" class="collapse $collapse_in">
+    $content
+</div>
+<script type="text/javascript">
+jQuery(document).ready(function() {
+    var \$content = jQuery('#${id}_content');
+    var \$trigger = jQuery('a[data-target="#${id}_content"]');
+    var \$label = \$trigger.find('.collapser-label');
+
+    \$content.on('show.bs.collapse', function() {
+        \$trigger.attr('id', '${id}_offswitch');
+        \$label.html("$esc_linktext");
+        $show_save_js
+    });
+
+    \$content.on('hide.bs.collapse', function() {
+        \$trigger.attr('id', '${id}_onswitch');
+        \$label.html("$esc_hide_state_linktext");
+        $hide_save_js
+    });
+});
+</script>
+
+HTML
 	return ($link, $wrapped_content);
 }
 
 =head2 swapper
-	
+
 	Returns a link and target content, where use of the link by the user
 	will cause that content to switch to alternate content (back-and-forth), which will be displayed in a consecutively hidden fashion
 	

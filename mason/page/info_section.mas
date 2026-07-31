@@ -84,16 +84,6 @@ Lukas Mueller, based on the Perl code from Rob Buels.
 =cut
 
 </%doc>
-
-<style>
-  .info-section-trigger .info-section-chevron {
-      transform: rotate(90deg);
-  }
-  .info-section-trigger.collapsed .info-section-chevron {
-      transform: rotate(0deg);
-  }
-</style>
-
 <%args>
     $title
     $subtitle      => ""
@@ -123,33 +113,18 @@ Lukas Mueller, based on the Perl code from Rob Buels.
         $id ||= "sgnc" . int( rand(10000) );
 
         my $title_html = $title;
-        my $contents_html = $contents;
+        my $contents_html = qq|<div class="${sub}infosectioncontent" $align>$contents</div>|;
 
         if ( $collapsible ) {
-            my $collapsed_class = $collapsed ? 'collapsed' : '';
-            my $collapse_in = $collapsed ? '' : 'in';
-            my $trigger_id = $id . ($collapsed ? '_onswitch' : '_offswitch');
-
-            $title_html = qq|<a class="info-section-trigger $collapsed_class" id="$trigger_id" data-toggle="collapse" data-target="#${id}_content" style="text-decoration: none; color: inherit; display: block;" role="button">|
-                        . qq|<span class="glyphicon glyphicon-chevron-right info-section-chevron" style="margin-right: 8px; transition: transform 0.2s; display: inline-block;"></span>|
-                        . qq|$title</a>|;
-
-            $contents_html = qq|<div id="${id}_content" class="collapse $collapse_in">|
-                           . qq|<div class="${sub}infosectioncontent" $align>$contents_html</div>|
-                           . qq|</div>|
-                           . qq|<script type="text/javascript">|
-                           . qq|jQuery(document).ready(function() {|
-                           . qq|    var \$trigger = jQuery('#${id}_onswitch, #${id}_offswitch');|
-                           . qq|    jQuery('#${id}_content').on('show.bs.collapse', function() {|
-                           . qq|        \$trigger.attr('id', '${id}_offswitch');|
-                           . qq|    });|
-                           . qq|    jQuery('#${id}_content').on('hide.bs.collapse', function() {|
-                           . qq|        \$trigger.attr('id', '${id}_onswitch');|
-                           . qq|    });|
-                           . qq|});|
-                           . qq|</script>|;
-        } else {
-            $contents_html = qq|<div class="${sub}infosectioncontent" $align>$contents_html</div>|;
+            ( $title_html, $contents_html ) = collapser(
+                {
+                    linktext            => $title,
+                    hide_state_linktext => $title,
+                    content             => $contents_html,
+                    collapsed           => $collapsed,
+                    id                  => $id,
+                }
+            );
         }
 
         $subtitle ||= '';
