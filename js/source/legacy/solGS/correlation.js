@@ -476,7 +476,7 @@ jQuery(document).ready(function () {
         jQuery(`${canvas} .multi-spinner-container`).show();
         jQuery(corrMsgDiv).html("Running correlation... please wait...").show();
 
-        const result = solGS.correlation.runPhenoCorrelation(corrArgs);
+        var result = solGS.correlation.runPhenoCorrelation(corrArgs);
         result.done(function (res) {
         if (res.status.match(/success/)) {
             corrArgs["corr_table_file"] = res.corre_table_file;    
