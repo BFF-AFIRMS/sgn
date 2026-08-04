@@ -295,7 +295,7 @@ sub BUILD {
         $self->additional_args($job_args->{additional_args});
         $self->cxgn_tools_run_config($job_args->{cxgn_tools_run_config});
         $self->cmd($job_args->{cmd});
-        my $logfile = $job_args->{finish_logfile};
+        my $logfile = $args->{finish_logfile};
         $self->finish_logfile($logfile);
     }
 }
@@ -555,7 +555,7 @@ sub store {
             $row->args(JSON::Any->encode({
                 cxgn_tools_run_config => $self->cxgn_tools_run_config(),
                 name => $self->name(),
-                # finish_logfile => $self->finish_logfile(),
+                finish_logfile => $self->finish_logfile(),
                 cmd => $self->cmd(),
                 results_page => $self->results_page(),
                 submit_page => $self->submit_page(),
