@@ -114,7 +114,7 @@ $response = _fix_response_links($response);
 print STDERR Dumper $response;
 
 is_deeply($response, {
-  'recordsTotal' => 2940,
+  'recordsTotal' => 2952,
   'data' => [
     ['<a href="/stock/40326/view">BLANK</a>','accession',undef,'',''],
     ['<a href="/stock/41284/view">CASS_6Genotypes_103</a>','plot','Manihot esculenta','',''],
@@ -128,7 +128,7 @@ is_deeply($response, {
     ['<a href="/breeders/seedlot/41770">BLANK_001</a>','seedlot',undef,'','']
   ],
   'draw' => undef,
-  'recordsFiltered' => 2940
+  'recordsFiltered' => 2952
 }, 'test stock search 1');
 
 my $accession_type_id   = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();

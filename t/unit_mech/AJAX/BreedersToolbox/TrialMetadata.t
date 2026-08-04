@@ -68,7 +68,7 @@ print STDERR Dumper $response;
 is_deeply($response, {'traits_assayed' => [
     [
         [70741,'dry matter content percentage|CO_334:0000092', [], 464, undef, undef, ['"dm" EXACT []', '"DMCt_Comp_r" EXACT []']],
-        [70666,'fresh root weight|CO_334:0000012', [], 469, undef, undef, ['"rtwt" EXACT []', '"RtWt_Wgh_kg" EXACT []']],
+        [70666,'fresh root weight|CO_334:0000012', [], 481, undef, undef, ['"rtwt" EXACT []', '"RtWt_Wgh_kg" EXACT []']],
         [70773,'fresh shoot weight measurement in kg|CO_334:0000016', [], 494, undef, undef, ['"shtwt" EXACT []', '"ShWt_Meas_kg" EXACT []']]
     ]
 ]}, "check assayed trait uploaded" );
