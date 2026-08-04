@@ -359,6 +359,15 @@ export class SearchStateManager {
             }
         }
 
+        const resetSelectorList: string[] = [];
+        if (this.resetSelectors) {
+            if (Array.isArray(this.resetSelectors)) {
+                resetSelectorList.push(...this.resetSelectors);
+            } else {
+                resetSelectorList.push(...Object.keys(this.resetSelectors));
+            }
+        }
+
         // Collapse any parent panels for the reset elements
         for (const key of targetKeys) {
             const element = this.config.elements[key];
@@ -369,8 +378,27 @@ export class SearchStateManager {
                 const parentSelector = `[id$="${contentSuffix}"]`;
                 const parents = $el.parents(parentSelector);
                 if (parents.length) {
-                    parents.each(function() {
-                        const $parent = jQuery(this);
+                    parents.each((_idx, elem) => {
+                        const $parent = jQuery(elem);
+
+                        // Skip collapsing if this parent contains any of the reset or submit buttons
+                        let containsButton = false;
+                        for (const selector of resetSelectorList) {
+                            if ($parent.find(selector).length > 0) {
+                                containsButton = true;
+                                break;
+                            }
+                        }
+                        for (const selector of this.submitSelectors) {
+                            if ($parent.find(selector).length > 0) {
+                                containsButton = true;
+                                break;
+                            }
+                        }
+                        if (containsButton) {
+                            return;
+                        }
+
                         if ($parent.hasClass('collapse') && ($parent.hasClass('in') || $parent.hasClass('show'))) {
                             $parent.collapse('hide');
                         }
