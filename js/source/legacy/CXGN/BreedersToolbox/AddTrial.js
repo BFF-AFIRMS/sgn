@@ -109,7 +109,6 @@ jQuery(document).ready(function ($) {
 
         num_rows = jQuery('#trial_create_rows_per_plot').val();
         num_cols = jQuery('#trial_create_cols_per_plot').val();
-        include_plant_coordinates = 0;
         if (jQuery('#trial_create_rows_and_columns_to_plants').is(':checked')) {
             include_plant_coordinates = 1;
             if (!num_rows || !num_cols || num_rows * num_cols == 0) {
