@@ -12,7 +12,7 @@ use Data::Dumper;
 
 my @REQUIRED_COLUMNS = qw|stock_name plot_number block_number|;
 # stock_name can also be accession_name, cross_unique_id, or family_name
-my @OPTIONAL_COLUMNS = qw|intercrop_stock_name plot_name is_a_control rep_number range_number row_number col_number seedlot_name num_seed_per_plot weight_gram_seed_per_plot entry_number|;
+my @OPTIONAL_COLUMNS = qw|intercrop_stock_name plot_name is_a_control rep_number range_number row_number col_number stake_number set_number seedlot_name num_seed_per_plot weight_gram_seed_per_plot entry_number|;
 # Any additional columns that are not required or optional will be used as a treatment
 
 sub _validate_with_plugin {
@@ -36,7 +36,9 @@ sub _validate_with_plugin {
         optional_columns => \@OPTIONAL_COLUMNS,
         column_aliases => {
             'stock_name' => [ 'accession_name', 'cross_unique_id', 'family_name' ],
-            'intercrop_stock_name' => [ 'intercrop_accession_name', 'intercrop_cross_unique_id', 'intercrop_family_name' ]
+            'intercrop_stock_name' => [ 'intercrop_accession_name', 'intercrop_cross_unique_id', 'intercrop_family_name' ],
+            'stake_number' => [ 'stake' ],
+            'set_number' => [ 'set' ]
         },
         column_arrays => [ 'intercrop_stock_name' ]
     );
@@ -100,6 +102,8 @@ sub _validate_with_plugin {
         my $range_number = $data->{'range_number'};
         my $row_number = $data->{'row_number'};
         my $col_number = $data->{'col_number'};
+        my $stake_number = $data->{'stake_number'};
+        my $set_number = $data->{'set_number'};
         my $seedlot_name = $data->{'seedlot_name'};
         my $num_seed_per_plot = $data->{'num_seed_per_plot'};
         my $weight_gram_seed_per_plot = $data->{'weight_gram_seed_per_plot'};
@@ -180,6 +184,12 @@ sub _validate_with_plugin {
         }
         if ($col_number && !($col_number =~ /^\d+?$/)) {
             push @error_messages, "Row $row: col_number <strong>$col_number</strong> must be a positive integer.";
+        }
+        if ($stake_number && !($stake_number =~ /^\d+?$/)) {
+            push @error_messages, "Row $row: stake_number <strong>$stake_number</strong> must be a positive integer.";
+        }
+        if ($set_number && !($set_number =~ /^\d+?$/)) {
+            push @error_messages, "Row $row: set_number <strong>$set_number</strong> must be a positive integer.";
         }
 
         # Seedlots: add seedlot_name / accession_name to seedlot_pairs
@@ -442,6 +452,8 @@ sub _parse_with_plugin {
         my $range_number = $r->{'range_number'};
         my $row_number = $r->{'row_number'};
         my $col_number = $r->{'col_number'};
+        my $stake_number = $r->{'stake_number'};
+        my $set_number = $r->{'set_number'};
         my $seedlot_name = $r->{'seedlot_name'};
         my $num_seed_per_plot = $r->{'num_seed_per_plot'} || 0;
         my $weight_gram_seed_per_plot = $r->{'weight_gram_seed_per_plot'} || 0;
@@ -491,6 +503,12 @@ sub _parse_with_plugin {
         }
         if ($col_number) {
             $design{$row}->{col_number} = $col_number;
+        }
+        if ($stake_number) {
+            $design{$row}->{stake_number} = $stake_number;
+        }
+        if ($set_number) {
+            $design{$row}->{set_number} = $set_number;
         }
         if ($seedlot_name){
             $design{$row}->{seedlot_name} = $seedlot_name;

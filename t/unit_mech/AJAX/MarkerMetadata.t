@@ -86,7 +86,12 @@ is($upload_resp->{success}, 1, 'Upload marker metadata - success');
 # Get Marker Metadata (all)
 $mech->get_ok("http://localhost:3010/ajax/genotyping_protocol/get_marker_metadata/$protocol_id", 'Get marker metadata - all');
 $response = decode_json $mech->content;;
-my $expected = {'ML_2' => {'locus_id' => 4,'alleles' => [{'allele_name' => '2_P','allele_id' => 2},{'allele_name' => '2_A','allele_id' => 3}],'references' => [{'url' => '/cvterm/70691/view','db_name' => 'CO_334','cvterm_id' => 70691,'cvterm_name' => 'fresh root yield','dbxref_accession' => '0000013'}],'marker_name' => 'S1_26576','nd_protocol_id' => 3,'locus_name' => 'ML_2','locus_description' => 'Description of Marker 2'},'S1_21597' => {'locus_name' => 'S1_21597','locus_description' => 'Description of Marker 1','nd_protocol_id' => 3,'marker_name' => 'S1_21597','locus_id' => 6,'alleles' => [{'allele_name' => '1_P','allele_id' => 7},{'allele_id' => 8,'allele_name' => '1_A'},{'allele_id' => 9,'allele_name' => '1_H'}],'references' => [{'dbxref_accession' => '0000478','url' => '/cvterm/76801/view','db_name' => 'CO_334','cvterm_id' => 76801,'cvterm_name' => 'Stem height'}]},'S2_26659' => {'locus_description' => 'Description of Marker 3','locus_name' => 'S2_26659','nd_protocol_id' => 3,'marker_name' => 'S2_26659','references' => [],'alleles' => [{'allele_name' => '3_P','allele_id' => 4},{'allele_name' => '3_A','allele_id' => 5},{'allele_name' => '3_H','allele_id' => 6}],'locus_id' => 5}};
+my $expected = {
+    'ML_2' => {'locus_id' => 4, 'alleles' => [{'allele_name' => '2_P','allele_id' => 2},{'allele_name' => '2_A','allele_id' => 3}], 'references' => [{'url' => '/cvterm/70691/view','db_name' => 'CO_334','cvterm_id' => 70691,'cvterm_name' => 'fresh root yield','dbxref_accession' => '0000013'}], 'marker_name' => 'S1_26576','nd_protocol_id' => 3,'locus_name' => 'ML_2','locus_description' => 'Description of Marker 2'},
+    'S1_21597' => {'locus_name' => 'S1_21597','locus_description' => 'Description of Marker 1','nd_protocol_id' => 3,'marker_name' => 'S1_21597','locus_id' => 6,'alleles' => [{'allele_name' => '1_P','allele_id' => 7},{'allele_id' => 8,'allele_name' => '1_A'},{'allele_id' => 9,'allele_name' => '1_H'}],'references' => [{'dbxref_accession' => '0000478','url' => '/cvterm/76801/view','db_name' => 'CO_334','cvterm_id' => 76801,'cvterm_name' => 'Stem height'}]},
+    'S2_26659' => {'locus_description' => 'Description of Marker 3','locus_name' => 'S2_26659','nd_protocol_id' => 3,'marker_name' => 'S2_26659','references' => [],'alleles' => [{'allele_name' => '3_P','allele_id' => 4},{'allele_name' => '3_A','allele_id' => 5},{'allele_name' => '3_H','allele_id' => 6}],'locus_id' => 5},
+    "S2_26674" => {"locus_id" => 5, "locus_description" => "Marker 4 links to a composed trait", "locus_name" => "S2_26674", "references" => [{ "dbxref_accession" => "0000010", "db_name" => "COMP", "url" => "/cvterm/77556/view", "cvterm_name" => "cass sink leaf|ADP|ug/g|week 16", "cvterm_id" => 77556 }], "marker_name" => "S2_26674", "nd_protocol_id" => 3, "alleles" => [{"allele_name" => "A", "allele_id" => 5}]},
+};
 check_metadata_response($expected, $response, "all");
 
 
@@ -113,6 +118,27 @@ $response = decode_json $mech->content;
 $expected = {'S1_21597' => {'alleles' => [{'allele_id' => 10,'allele_name' => '1_P'},{'allele_id' => 11,'allele_name' => '1_A'},{'allele_id' => 12,'allele_name' => '1_UNK'}],'locus_name' => 'S1_21597','nd_protocol_id' => 3,'locus_description' => 'Updated description of Marker 1','references' => [{'cvterm_id' => 76801,'db_name' => 'CO_334','cvterm_name' => 'Stem height','url' => '/cvterm/76801/view','dbxref_accession' => '0000478'}],'locus_id' => 7,'marker_name' => 'S1_21597'}};
 check_metadata_response($expected, $response, "S1_21597 - updated");
 
+# Check marker search pagination
+$mech->get_ok("http://localhost:3010/ajax/genotyping_protocol/markers_search?protocol_id=$protocol_id&length=10&start=0", 'marker search page 1');
+$response = decode_json $mech->content;
+my $num_records = scalar(@{$response->{'data'}});
+is($num_records, 10, 'Marker search page 1 has 10 markers');
+
+$mech->get_ok("http://localhost:3010/ajax/genotyping_protocol/markers_search?protocol_id=$protocol_id&length=10&start=10", 'marker search page 2');
+$response = decode_json $mech->content;
+$num_records = scalar(@{$response->{'data'}});
+is($num_records, 10, 'Marker search page 2 has 10 markers');
+
+$mech->get_ok("http://localhost:3010/ajax/genotyping_protocol/markers_search?protocol_id=$protocol_id&length=10&start=20", 'marker search page 3');
+$response = decode_json $mech->content;
+$num_records = scalar(@{$response->{'data'}});
+is($num_records, 5, 'Marker search page 3 has 5 markers');
+
+# Check Marker Metadata that links to composed trait (S2_26674)
+$mech->get_ok("http://localhost:3010/ajax/genotyping_protocol/get_marker_metadata/$protocol_id?marker_name=S2_26674", 'Get marker metadata - S2_26674');
+$response = decode_json $mech->content;
+$expected = {'S2_26674' => {'references' => [{'db_name' => 'COMP','cvterm_name' => 'cass sink leaf|ADP|ug/g|week 16','url' => '/cvterm/77556/view','cvterm_id' => 77556,'dbxref_accession' => '0000010'}],'locus_name' => 'S2_26674','marker_name' => 'S2_26674','locus_id' => 7,'alleles' => [{'allele_name' => 'A','allele_id' => 10}],'locus_description' => 'Marker 4 links to a composed trait','nd_protocol_id' => 3}};
+check_metadata_response($expected, $response, "S2_26674 - composed trait");
 
 # Delete marker metadata
 $response = $ua->delete("http://localhost:3010/ajax/genotyping_protocol/delete_marker_metadata/$protocol_id", Cookie => "sgn_session_id=$sgn_session_id");
