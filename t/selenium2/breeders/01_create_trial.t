@@ -82,6 +82,9 @@ $t->while_logged_in_as("submitter", sub {
 	$t->click_ok('//select[@id="start_number"]//option[contains(@value, "101")]', "xpath", "find checks for list");
 	$t->send_keys_ok('increment', 'id', "2", "find plot number increment input");
 
+	# Lets the previous inputs settle before attempting to click the submit button
+	sleep(1);
+
 	$t->click_ok('new_trial_submit', 'id', 'go to next screen - Custom plot naming');
 	$t->wait_for_working_dialog();
 
@@ -109,9 +112,8 @@ $t->while_logged_in_as("submitter", sub {
 
 	$t->wait_for_network_idle();
 
-	# Very strange, but the only way to catch the complete trial button. Standard selectors without an extended XPath solution don't work.
-	$t->find_element_ok('create_trial_success_complete_button', 'id', "find success button after trial upload to database");
-	$t->click_ok('//div[@class="panel-body"]//div[@class="workflow-complete-message workflow-message-show"]//center//button[@id="create_trial_success_complete_button"]',
+	# This xpath is required because there are actually two buttons with the same id on the page, one of which is hidden.
+	$t->click_ok('//div[@class="panel-body"]//div[@class="workflow-complete-message workflow-message-show"]//button[@id="create_trial_success_complete_button"]',
 		'xpath', 'click complete button on last screen and finish a modal process');
 	$t->wait_for_network_idle();
 

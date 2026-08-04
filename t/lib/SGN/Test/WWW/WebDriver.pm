@@ -211,7 +211,7 @@ sub click {
 
     return wait_until {
         $self->screenshot("click_$name");
-        $self->driver->find_element($name, $method)->click();
+        $self->scroll_into_view($name, $method, @args)->click();
     } timeout => $timeout;
 }
 
@@ -241,53 +241,6 @@ sub clear_ok {
     $test_name = $test_name || print STDERR "You can provide a test name parameter for clear_ok\n";
     ok(my $element = $self->clear($name, $method, timeout => $timeout), $test_name);
     return $element;
-}
-
-=item click_until_ok($self, $name_btn, $method_btn, $name_sentinel, $method_sentinel, $test_name)
-Keeps clicking the button defined by $name_btn and $method_btn every second
-until the sentinel element defined by $name_sentinel and $method_sentinel appears.
-=cut
-sub click_until_ok {
-    my ($self, $name_btn, $method_btn, $name_sentinel, $method_sentinel, @args) = @_;
-    my ($test_name, $timeout) = $self->_extract_ok_args(@args);
-    $test_name ||= "Click button $name_btn until sentinel $name_sentinel appears";
-    my $sentinel;
-
-    my $success = try {
-        wait_until {
-            my $found = 0;
-            try {
-                $sentinel = $self->driver->find_element($name_sentinel, $method_sentinel);
-                if ($sentinel && $sentinel->is_displayed()) {
-                    $found = 1;
-                }
-            } catch {
-                # Sentinel not found
-            };
-
-            if ($found) {
-                print STDERR "click_until_ok: Sentinel found and displayed! ($name_sentinel, $method_sentinel)\n";
-                return 1;
-            }
-
-            print STDERR "click_until_ok: Sentinel not found or not displayed yet. Attempting click on $name_btn ($method_btn)\n";
-
-            try {
-                $self->screenshot("click_until_ok_attempt");
-                $self->driver->find_element($name_btn, $method_btn)->click();
-            } catch {
-                print STDERR "click_until_ok: Failed to click $name_btn: $_\n";
-            };
-
-            return 0;
-        } timeout => $timeout, interval => 1;
-    } catch {
-        print STDERR "click_until_ok: timed out or error: $_";
-        return 0;
-    };
-
-    ok($success, $test_name);
-    return $sentinel;
 }
 
 sub get { 
@@ -572,6 +525,13 @@ sub screenshot {
         # Otherwise, capture screenshot
         $self->driver->capture_screenshot("$dir/$filename.png", { 'full' => 1 });
     }
+}
+
+sub scroll_into_view {
+    my ($self, @args) = @_;
+    my $element = $self->find_element(@args);
+    $self->driver->execute_script("arguments[0].scrollIntoView({ block: 'center' });", $element);
+    return $element;
 }
 
 sub _maybe_unwrap {
