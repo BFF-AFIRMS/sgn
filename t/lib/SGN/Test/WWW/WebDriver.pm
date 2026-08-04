@@ -72,7 +72,7 @@ has 'host' => ( is => 'rw',
 # The majority of the time, explicit waits are used. Setting an explicit wait
 # shorter than the implicit wait has no effect. Thus, the implicit wait serves
 # as the lower bound when a custom timeout parameter is provided. 
-has 'implicit_wait' => ( is => 'rw', default => 2 * 1000 );
+has 'implicit_wait' => ( is => 'rw', default => 10 * 1000 );
 has 'explicit_wait' => ( is => 'rw', default => 90 * 1000 );
 
 has 'driver' => ( is => 'rw',
@@ -389,8 +389,6 @@ sub send_keys_ok {
 sub accept_alert {
     my ($self, @args) = @_;
     my ($timeout) = $self->_extract_basic_args(@args);
-
-    $self->collect_js_logs();
 
     return wait_until {
         $self->screenshot("accept_alert");
