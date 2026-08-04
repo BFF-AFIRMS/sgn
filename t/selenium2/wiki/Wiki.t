@@ -52,6 +52,25 @@ $d->while_logged_in_as("curator", sub {
     $d->accept_alert_ok("confirm rename");
     $d->wait_for_network_idle();
 
+    # Check that forbidden tags and attributes are being scrubbed
+    my $page_content = '
+    <br/>
+    <a id="click_me" href="javascript:alert(\'href should be scrubbed!\')">Click me</a>
+    <br/>
+    <a id="mouse_over_me" href="foo.jpg" onmouseover="alert(\'onmouseover should be scrubbed!\')">Mouse over me</a>
+    <script>alert("script should be scrubbed!")</script>
+    ';
+    $d->click_ok("edit_wiki_page_button", "id", "find wiki page edit button");
+    $d->send_keys_ok("wiki_page_content", "id", "$page_content", "find wiki_page_content text area");
+    $d->click_ok("save_wiki_page_button", "id", "find save wiki page button");
+
+    # If the javascript was not scrubbed correctly, these actions will raise alerts,
+    # causing test failures with unexpected dialog box errors
+    $d->click_ok('click_me', 'id', 'click scrubbed click_me');
+    $d->find_element_ok('mouse_over_me', 'id', 'wait for scrubbed click_me');
+    my $elem = $d->driver->find_element('click_me', 'id', 'find scrubbed click_me');
+    $d->driver->mouse_move_to_location(element => $elem);
+
     # Delete new page
     delete_page("AnotherTestPageRename");
 

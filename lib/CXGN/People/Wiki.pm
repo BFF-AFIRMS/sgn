@@ -324,7 +324,7 @@ sub scrub_page {
             }
     );
 
-    $scrubber = HTML::Scrubber->new(
+    my $scrubber = HTML::Scrubber->new(
         rules   => \@rules,
         default => \@default,
         comment => 1,
