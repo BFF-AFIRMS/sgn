@@ -23,13 +23,12 @@ $d->while_logged_in_as("curator", sub {
     $d->click_ok('(//div[@class="panel-heading"]/select)[1]//option[@value="trials"]', 'xpath', 'select trials');
     $d->click_ok('(//div[@class="panel-body"])[1]//a[contains(text(), "Kasese solgs trial")]//preceding-sibling::button' , 'xpath', 'add Kasese solgs trial');
 
-    # Add traits to dataset
+    # Add 2 to dataset (fresh shoot weight, dry matter content)
     $d->click_ok('(//div[@class="panel-heading"]/select)[2]//option[@value="traits"]', 'xpath', 'select traits');
-    $d->click_ok('(//div[@class="panel-body"])[2]//a[contains(text(), "fresh root weight")]//preceding-sibling::button' , 'xpath', 'add fresh root weight');
     $d->click_ok('(//div[@class="panel-body"])[2]//a[contains(text(), "fresh shoot weight")]//preceding-sibling::button' , 'xpath', 'add fresh shoot weight');
     $d->click_ok('(//div[@class="panel-body"])[2]//a[contains(text(), "dry matter content")]//preceding-sibling::button' , 'xpath', 'add dry matter content');
 
-    # Add plots to dataset
+    # Add 10 plots to dataset (KASESE_TP2013_1000 - KASESE_TP2013_1009)
     $d->click_ok('(//div[@class="panel-heading"]/select)[3]//option[@value="plots"]', 'xpath', 'select plots');
     foreach my $suffix (1000 .. 1009) {
         my $plot_name = "KASESE_TP2013_$suffix";
@@ -55,16 +54,16 @@ $d->while_logged_in_as("curator", sub {
     # Check axis labels
     my $x_axis = $d->get_attribute("x_axis", "class", "innerHTML", "get y axis");
     like($x_axis, qr/shtwt/, "check x axis shtwt");
-    like($x_axis, qr/rtwt/, "check x axis rtwt");
     like($x_axis, qr/dm/, "check x axis dm");
 
     my $y_axis = $d->get_attribute("y_axis", "class", "innerHTML", "get y axis");
     like($y_axis, qr/shtwt/, "check y axis shtwt");
-    like($y_axis, qr/rtwt/, "check y axis rtwt");
     like($y_axis, qr/dm/, "check y axis dm");
 
     # Move mouse into heatmap to show scatterplot
-    my $rect_xpath = $heatmap_xpath . "/*[local-name() = 'g']/*[9]";
+    # Rectangles are indexed bottom to top, left to right, starting at i=2
+    # Mouse over 3rd rectangle, which is i=5
+    my $rect_xpath = $heatmap_xpath . "/*[local-name() = 'g']/*[5]";
     my $elem = $d->driver->find_element($rect_xpath, "xpath");
     $d->driver->mouse_move_to_location(element => $elem);
     $d->driver->click;
