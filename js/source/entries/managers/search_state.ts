@@ -33,6 +33,8 @@ export interface ElementConfig {
     // Custom function to set the value.
     // Uses 'unknown' to accommodate heterogeneous inputs. Can return a Promise to allow async cascading lookups.
     setValue?: (val: unknown) => void | Promise<void>;
+    // Optional default value to prevent auto-expansion when matching this value on load
+    defaultValue?: unknown;
 }
 
 /**
@@ -73,6 +75,8 @@ export interface SearchStateConfig {
     onRestore?: (restoredKeys: string[]) => void;
     // Suffix rules for collapsing/expanding parent elements
     parentExpansionRules?: ParentExpansionRules;
+    // Blacklist of selectors for parent panels that should NOT be collapsed on reset
+    collapseBlacklist?: string[];
 }
 
 /**
@@ -258,7 +262,12 @@ export class SearchStateManager {
             }
 
             // Auto-expand any collapsed parent panels for this element
-            if ($el && $el.length) {
+            // ONLY if the value is not the default value
+            const isDefault = element.defaultValue !== undefined
+                ? String(val) === String(element.defaultValue)
+                : (val === '' || val === null || val === undefined);
+
+            if (!isDefault && $el && $el.length) {
                 const contentSuffix = this.config.parentExpansionRules?.contentSuffix ?? '_content';
                 const toggleSuffix = this.config.parentExpansionRules?.toggleSuffix ?? '_onswitch';
                 const parentSelector = `[id$="${contentSuffix}"]`;
@@ -380,6 +389,20 @@ export class SearchStateManager {
                 if (parents.length) {
                     parents.each((_idx, elem) => {
                         const $parent = jQuery(elem);
+
+                        // Skip collapsing if this parent matches any selector in the collapse blacklist
+                        if (this.config.collapseBlacklist) {
+                            let matchesBlacklist = false;
+                            for (const blacklistSelector of this.config.collapseBlacklist) {
+                                if ($parent.is(blacklistSelector)) {
+                                    matchesBlacklist = true;
+                                    break;
+                                }
+                            }
+                            if (matchesBlacklist) {
+                                return;
+                            }
+                        }
 
                         // Skip collapsing if this parent contains any of the reset or submit buttons
                         let containsButton = false;
