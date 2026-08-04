@@ -85,6 +85,42 @@ jQuery(document).ready(function ($) {
         if (!stock_type) return "Please select a stock type";
         if (!design_type) return "Please select a design type";
 
+        var plot_width = $("#add_project_plot_width").val();
+        var plot_length = $("#add_project_plot_length").val();
+        if (plot_width && (plot_width < 0 || plot_width > 13)) {
+            return "Please check the plot width (must be between 0 and 13)";
+        }
+        if (plot_length && (plot_length < 0 || plot_length > 13)) {
+            return "Please check the plot length (must be between 0 and 13)";
+        }
+
+        plants_per_plot = $("#add_plant_entries").val();
+        if (plants_per_plot) {
+            plants_per_plot = parseInt(plants_per_plot, 10);
+            if (isNaN(plants_per_plot) || plants_per_plot < 0) {
+                return "Please check the plants per plot value";
+            }
+            if (plants_per_plot > 500) {
+                return "Please no more than 500 plants per plot.";
+            }
+        } else {
+            plants_per_plot = 0;
+        }
+
+        num_rows = jQuery('#trial_create_rows_per_plot').val();
+        num_cols = jQuery('#trial_create_cols_per_plot').val();
+        include_plant_coordinates = 0;
+        if (jQuery('#trial_create_rows_and_columns_to_plants').is(':checked')) {
+            include_plant_coordinates = 1;
+            if (!num_rows || !num_cols || num_rows * num_cols == 0) {
+                return "You need to specify the number of rows and columns to give plant coordinates within plots.";
+            }
+            if (num_rows * num_cols < plants_per_plot) {
+                return "Only one plant per (row, column) coordinate is allowed. You must specify fewer plants per plot, or add rows and columns.";
+            }
+        }
+        inherits_plot_treatments = jQuery("#trial_create_plants_per_plot_inherit_treatments").is(':checked') ? 1 : 0;
+
         return new Promise(function(resolve) {
             jQuery.ajax({
                 url: '/ajax/trial/verify_trial_name?trial_name=' + encodeURIComponent(trial_name),
