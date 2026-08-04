@@ -208,16 +208,16 @@ Or:
             for (let i = 0; i < numPanels; i++) {
                 const res = await validateStep(i);
                 if (!res.valid) {
-                    return { index: i, message: res.message };
+                    return { valid: false, index: i, message: res.message };
                 }
             }
-            return { index: numPanels, message: null };
+            return { valid: true, index: numPanels, message: null };
         };
 
         /**
         * Debounces and triggers UI state updates for all accordion panels.
         * Locks/unlocks headers, collapses locked steps, and auto-opens the newly unlocked step.
-        * 
+        *
         * @returns {void}
         */
         updateAccordionState = () => {

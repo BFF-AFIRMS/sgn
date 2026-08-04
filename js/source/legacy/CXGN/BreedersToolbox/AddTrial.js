@@ -1135,7 +1135,7 @@ jQuery(document).ready(function ($) {
         var accordion = $('#trial_design_accordion').data('accordionWorkflow');
         if (accordion) {
             accordion.validateAll().then(function(failing) {
-                if (failing.index < 5) {
+                if (!failing.valid) {
                     alert("Please resolve errors in the design steps first: " + failing.message);
                 } else {
                     var name = $('#new_trial_name').val();
