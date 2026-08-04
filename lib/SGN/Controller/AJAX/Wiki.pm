@@ -229,14 +229,7 @@ sub view : Chained('ajax_wiki') PathPart('view') Args(0) {
 	$page_content = $page_data->{page_content};
 
         $page_version = $wiki->get_version();
-
-        my $scrubber = HTML::Scrubber->new;
-        # Allow tags by default
-        $scrubber->default(1);
-        # Remove script tags
-        $scrubber->deny(qw[script]);
-        $page_content = $scrubber->scrub($page_content);
-
+        $page_content = $wiki->scrub_page($page_content);
     };
     if ($@) {
 	$c->stash->{rest} = { error => "An error occurred retrieving the page. It may not exist $@" };
