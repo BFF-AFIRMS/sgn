@@ -1145,7 +1145,7 @@ jQuery(document).ready(function ($) {
                 }
             });
         } else {
-            generate_experimental_design();
+            alert("Internal error: accordion workflow not found. Cannot generate experimental design.");
         }
     });
 
