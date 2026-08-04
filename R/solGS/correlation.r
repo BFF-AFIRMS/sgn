@@ -149,9 +149,9 @@ corrInputDataJson <- convertDataFrameToJson(correInputData)
 rownames(correInputData) <- NULL
 
 # Filter on the minimum number of obervations per trait
-min_observations <- 2
+min_observations <- 3
 max_na <- nrow(correInputData) - min_observations
-filter <- unname(unlist(colSums(is.na(correInputData)) < max_na))
+filter <- unname(unlist(colSums(is.na(correInputData)) <= max_na))
 correInputData <- correInputData[, filter]
 
 # Filter on the minimum number of distinct observations per trait
