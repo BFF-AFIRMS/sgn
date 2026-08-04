@@ -7,6 +7,12 @@
  * auto-trigger logic across all search pages.
  */
 
+declare global {
+    interface JQuery {
+        collapse(action: string): JQuery;
+    }
+}
+
 /**
  * Configuration interface representing a single form element mapping.
  */
@@ -350,6 +356,26 @@ export class SearchStateManager {
                 $el.prop('selectedIndex', 0).trigger('change');
             } else {
                 $el.val('').trigger('change');
+            }
+        }
+
+        // Collapse any parent panels for the reset elements
+        for (const key of targetKeys) {
+            const element = this.config.elements[key];
+            if (!element) continue;
+            const $el = element.selector ? jQuery(element.selector) : null;
+            if ($el && $el.length) {
+                const contentSuffix = this.config.parentExpansionRules?.contentSuffix ?? '_content';
+                const parentSelector = `[id$="${contentSuffix}"]`;
+                const parents = $el.parents(parentSelector);
+                if (parents.length) {
+                    parents.each(function() {
+                        const $parent = jQuery(this);
+                        if ($parent.hasClass('collapse') && ($parent.hasClass('in') || $parent.hasClass('show'))) {
+                            $parent.collapse('hide');
+                        }
+                    });
+                }
             }
         }
 
