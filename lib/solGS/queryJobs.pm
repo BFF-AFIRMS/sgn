@@ -224,13 +224,14 @@ sub plots_list_phenotype_data {
 
     my $list_id = $args->{list_id};
     my $plots_ids   = $args->{plots_ids};
+    my $traits_ids   = $args->{traits_ids};
     my $traits_file = $args->{traits_file};
     #my $data_dir    = $args->{data_dir};
     my $pheno_file  = $args->{phenotype_file};
     my $metadata_file = $args->{metadata_file};
 
     my $model = $self->get_model();
-    my $pheno_data = $model->plots_list_phenotype_data($plots_ids);
+    my $pheno_data = $model->plots_list_phenotype_data($plots_ids, $traits_ids);
     my $metadata = $model->trial_metadata();
 
     my $synonyms_map;

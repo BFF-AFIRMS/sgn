@@ -1293,13 +1293,14 @@ sub prediction_pops {
 }
 
 sub plots_list_phenotype_data {
-    my ( $self, $plots_ids ) = @_;
+    my ( $self, $plots_ids, $trait_ids ) = @_;
 
     my $phenotypes_search = CXGN::Phenotypes::PhenotypeMatrix->new(
         bcs_schema  => $self->schema,
         data_level  => 'plot',
         search_type => 'MaterializedViewTable',
         plot_list   => $plots_ids,
+        trait_list  => $trait_ids,
     );
 
     my @data       = $phenotypes_search->get_phenotype_matrix();

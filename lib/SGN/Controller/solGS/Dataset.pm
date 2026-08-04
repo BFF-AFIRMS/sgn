@@ -184,6 +184,9 @@ sub create_dataset_pheno_data_query_jobs {
     if ($data->{categories}->{plots}->[0])
     {
     $c->stash->{plots_ids} = $data->{categories}->{plots};
+    if ($data->{categories}->{traits}->[0]){
+        $c->stash->{traits_ids} = $data->{categories}->{traits};
+    }
 
     $c->controller('solGS::List')->plots_list_phenotype_query_job($c);
     $c->stash->{dataset_pheno_data_query_jobs} = $c->stash->{plots_list_phenotype_query_job};
