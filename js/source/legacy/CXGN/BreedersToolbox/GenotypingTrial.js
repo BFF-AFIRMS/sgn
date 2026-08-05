@@ -240,7 +240,7 @@ jQuery(document).ready(function ($) {
                 'plate_data': JSON.stringify(plate_data)
             },
             success : function(response) {
-                jQuery("working_modal").modal('hide');
+                jQuery("#working_modal").modal('hide');
                 if (response.error) {
                     alert(response.error);
                 }
@@ -251,7 +251,7 @@ jQuery(document).ready(function ($) {
             },
             error: function(response) {
                 alert('An error occurred trying the create the layout.');
-                jQuery("working_modal").modal('hide');
+                jQuery("#working_modal").modal('hide');
             }
         });
     }
