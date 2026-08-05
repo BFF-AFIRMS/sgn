@@ -70,6 +70,25 @@ sub new_page {
 
 }
 
+sub rename_page {
+    my $self = shift;
+    my $old_page_name = shift;
+    my $new_page_name = shift;
+
+    my $old_page_rs = $self->people_schema()->resultset("SpWiki")->find( { page_name => $old_page_name } );
+    my $new_page_rs = $self->people_schema()->resultset("SpWiki")->find( { page_name => $new_page_name } );
+
+    if (! $old_page_rs) {
+	    die "Page named $old_page_name does not exist!\n";
+    }
+    if ($new_page_rs) {
+	    die "Page named $old_page_name already exists!\n";
+    }
+
+    $old_page_rs->update({page_name => $new_page_name});
+	return $old_page_rs->sp_wiki_id();
+}
+
 sub retrieve_page {
     my $self = shift;
     my $page_name = shift;
@@ -253,6 +272,66 @@ sub all_pages {
 
     print STDERR "PAGES ".Dumper(\@pages);
     return @pages;
+}
+
+
+sub scrub_page {
+    my $self = shift;
+    my $content = shift;
+
+    my @rules = (
+        script => 0,
+        img    => {
+            src => qr{^(?!http://)}i,    # only relative image links allowed
+            alt => 1,                    # alt attribute allowed
+            '*' => 0,                    # deny all other attributes
+        },
+    );
+
+    my @default = (
+        1 =>                                   # default rule, allow all tags
+            {
+            '*'    => 1,                       # default rule, allow all attributes
+            'href' => qr{^(?:http|https|ftp)://}i,
+            'src'  => qr{^(?:http|https|ftp)://}i,
+
+            #   If your perl doesn't have qr
+            #   just use a string with length greater than 1
+            'cite'        => '(?i-xsm:^(?:http|https|ftp):)',
+            'language'    => 0,
+            'name'        => 0,                # disable this one too
+            'onblur'      => 0,
+            'onchange'    => 0,
+            'onclick'     => 0,
+            'ondblclick'  => 0,
+            'onerror'     => 0,
+            'onfocus'     => 0,
+            'onkeydown'   => 0,
+            'onkeypress'  => 0,
+            'onkeyup'     => 0,
+            'onload'      => 0,
+            'onmousedown' => 0,
+            'onmousemove' => 0,
+            'onmouseout'  => 0,
+            'onmouseover' => 0,
+            'onmouseup'   => 0,
+            'onreset'     => 0,
+            'onselect'    => 0,
+            'onsubmit'    => 0,
+            'onunload'    => 0,
+            'src'         => 0,
+            'type'        => 0,
+            }
+    );
+
+    my $scrubber = HTML::Scrubber->new(
+        rules   => \@rules,
+        default => \@default,
+        comment => 1,
+        process => 0,
+    );
+
+    return $scrubber->scrub($content);
 }
 
 1;

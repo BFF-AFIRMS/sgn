@@ -1,0 +1,27 @@
+<%args>
+$project_id
+$prefix
+</%args>
+
+<%init>
+my $page_name = "$prefix$project_id";
+</%init>
+
+<div id="overview_<% $page_name %>">
+    <p>No overview has been created yet.</p>
+</div>
+
+<script defer="defer">
+    jQuery(document).ready(function () {
+        const page_name = "<% $page_name %>";
+        jQuery.ajax({
+            url : '/ajax/wiki/'+page_name+'/view',
+        }).then(
+            function(r) {
+                if (! r.error) {
+                    jQuery(`#overview_${page_name}`).html(r.html);
+                }
+            }
+        );
+    });
+</script>
