@@ -64,6 +64,25 @@ $dataset_contents => ''
         padding: 0px;
     }
 
+    .wizard-datasets {
+        border: 2px solid black;
+        overflow: auto;
+        height: 80vh;
+    }
+    #dataset_results>tbody>tr>td:nth-child(1) {
+        border-left-width: 0px;
+    }
+    #dataset_results>tbody>tr>td:nth-child(2) {
+        border-right-width: 0px;
+    }
+    #dataset_results>tbody>tr:first-child>td {
+        border-top-width: 0px;
+    }
+    #dataset_results>tbody>tr:last-child>td {
+        border-bottom-width: 0px;
+    }
+
+
 </style>
 
 <head>
@@ -108,7 +127,7 @@ Warning symbols indicate compatibility, but with low sample
 sizes. Hover for details."></span>
                     <br>
                     <td>
-                        <div id="predicted-tool-compatibility" style="width:85%;overflow-x:auto;overflow-y:auto">
+                        <div id="predicted-tool-compatibility">
                         </div>  
                         <div><br><button type="button" class="btn btn-sm btn-success" id="tool-compatibility-calc-button" >Check Tool Compatibility</button></div>
                     <tr><td>Analyses using this dataset<td id="dataset_analysis_usage"></td></td>
@@ -194,27 +213,17 @@ sizes. Hover for details."></span>
             <div id="trait_graph"></div>
         </div>
         <div class="col-md-12">
-            <div class="input-group-btn col-md-11 col-md-offset-1">
-                <span>
-                    <button class="btn btn-sm btn-success btn-dataset" id="store_outliers">Add selection to outliers</button>
-                </span>                
-                <span>
-                        <button class="btn btn-sm btn-danger btn-dataset" id="reset_trait">Reset outliers for current trait</button>
-                </span>
-                <span>
-                        <button class="btn btn-sm btn-danger btn-dataset" id="reset_outliers">Reset all outliers</button>
-                </span>
-                <span>
-                    <button class="btn btn-sm btn-primary btn-dataset" id="outliers_phenotype_download">Download Phenotype Table without outliers</button>
-                </span>
-                <span>
-                    <button class="btn btn-sm btn-primary btn-dataset" id="rosner_test">Make Rosner outlier test</button>
-                    <img id="loading-spinner" src="/img/wheel.gif" alt="loading" style="visibility: hidden;">
-                </span>
+            <div class="tw:flex tw:gap-2.5 tw:flex-wrap tw:mb-3.75 tw:mt-2.5">
+                <button class="btn btn-sm btn-success btn-dataset" id="store_outliers">Add selection to outliers</button>
+                <button class="btn btn-sm btn-danger btn-dataset" id="reset_trait">Reset outliers for current trait</button>
+                <button class="btn btn-sm btn-danger btn-dataset" id="reset_outliers">Reset all outliers</button>
+                <button class="btn btn-sm btn-primary btn-dataset" id="outliers_phenotype_download">Download Phenotype Table without outliers</button>
+                <button class="btn btn-sm btn-primary btn-dataset" id="rosner_test">Make Rosner outlier test</button>
+                <img id="loading-spinner" src="/img/wheel.gif" alt="loading" style="visibility: hidden;">
             </div>
         </div>
     </div>
-    <div class="row well" style="margin: 5px 10px;">
+    <div class="row well">
       Rosner's test is calculated by the R function rosnerTest{EnvStats} from package EnvStats.<br>
         <a href="https://cran.r-project.org/web/packages/EnvStats/index.html">https://cran.r-project.org/web/packages/EnvStats/index.html</a>
     </div>
@@ -246,8 +255,10 @@ sizes. Hover for details."></span>
         function populate_tool_compatibility(json) {
 
             var data_summary = {};
+            // Display tools in table sorted alphabetically by name
+            var ordered_keys = Object.keys(json).toSorted();
 
-            for (key in json) {
+            for (const key of ordered_keys) {
                if (key == "Data Summary"){
                    var newkey = '<b>' + key + '</b>';
                    data_summary[newkey] = json[key];
@@ -278,7 +289,7 @@ sizes. Hover for details."></span>
             
             function recursive_table_gen(obj) {
                 if (Object.prototype.toString.call(obj) == "[object Array]") {
-                    let table = '<table border="1"><tr><td><p>' + obj.join("</p><p>") + '</p></table>';
+                    let table = '<table class="well"><tr><td><p>' + obj.join("</p><p>") + '</p></table>';
                     return table;
                 }
                 var keys = [];
@@ -288,7 +299,7 @@ sizes. Hover for details."></span>
                 if (keys.length == 0) {
                     return "";
                 }
-                let table = '<table border="1"><tr><td>' + keys.join("<td>") + '</table>';
+                let table = '<table border="1" style="border-color: #ddd"><tr><td>' + keys.join("<td>") + '</table>';
                 return table;
             }
 
@@ -332,7 +343,7 @@ sizes. Hover for details."></span>
                          jQuery('#predicted-tool-compatibility').text(response.tool_compatibility);
                     } else {
                         //console.log(JSON.parse(response.tool_compatibility));
-                        jQuery('#predicted-tool-compatibility').css('height', '400px');
+                        // jQuery('#predicted-tool-compatibility').css('height', '400px');
                         jQuery('#predicted-tool-compatibility').html(populate_tool_compatibility(JSON.parse(response.tool_compatibility)));
                     }
                 }
