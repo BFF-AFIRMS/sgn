@@ -4,16 +4,15 @@ Encapsulates accordion workflow behavior.
 Accepts a list of steps with content and validation functions.
 Usage:
   <&| /util/workflow_accordion.mas, id => "my_accordion" &>
-      <&| /util/workflow_accordion.mas:step, id => "step1", title => "Step 1", validate => "validate_step1" &>
+      <&| /util/workflow_accordion.mas:step, id => "step1", title => "Step 1" &>
           Content for Step 1
       </&>
       ...
   </&>
-Or:
-  <& /util/workflow_accordion.mas, id => "my_accordion", steps => [
-      { id => "step1", title => "Step 1", content => "...", validate => "validate_step1" },
-      ...
-  ] &>
+
+Validators are registered after render through the accordion instance API:
+    const accordion = $('#my_accordion').data('accordionWorkflow');
+    accordion.registerValidation('step1', validate_step1);
 </%doc>
 <%args>
   $id
