@@ -112,15 +112,14 @@ Lukas Mueller, based on the Perl code from Rob Buels.
         $align &&= qq| style="text-align: $align|;
         $id ||= "sgnc" . int( rand(10000) );
 
-        my $title_html = $title;
-        my $contents_html = qq|<div class="${sub}infosectioncontent" $align>$contents</div>|;
+        $contents = qq|<div class="${sub}infosectioncontent" $align>$contents</div>|;
 
         if ( $collapsible ) {
-            ( $title_html, $contents_html ) = collapser(
+            ( $title, $contents ) = collapser(
                 {
                     linktext            => $title,
                     hide_state_linktext => $title,
-                    content             => $contents_html,
+                    content             => $contents,
                     collapsed           => $collapsed,
                     id                  => $id,
                 }
@@ -129,9 +128,9 @@ Lukas Mueller, based on the Perl code from Rob Buels.
 
         $subtitle ||= '';
         my $title_bar = <<EOHTML;
-<table cellspacing="0" cellpadding="0" class="${sub}infosectionhead" summary=""><tr><td class="${sub}infosectiontitle">$title_html</td><td class="${sub}infosectionsubtitle" role="button" tabindex="0">$subtitle&nbsp;</td></tr></table>
+<table cellspacing="0" cellpadding="0" class="${sub}infosectionhead" summary=""><tr><td class="${sub}infosectiontitle">$title</td><td class="${sub}infosectionsubtitle" role="button" tabindex="0">$subtitle&nbsp;</td></tr></table>
 EOHTML
-        print "$title_bar\n$contents_html\n";
+        print "$title_bar\n$contents\n";
     }
     #otherwise, if it's actually empty, just print a collapsed section
     #with the empty message
