@@ -1054,7 +1054,6 @@ sub init_genotype_iterator {
         $limit_clause
         $offset_clause;";
 
-    print STDERR "init_genotype_iterator query:\n$q\n";
     #print STDERR Dumper $q;
     my $h = $schema->storage->dbh()->prepare($q);
     $h->execute();
