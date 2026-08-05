@@ -19,7 +19,7 @@
 </div>
 -->
 
-<div class="modal fade" id="working_modal" name="working_modal" tabindex="-1" role="dialog" aria-labelledby="workingModalDialog" data-controls-modal="your_div_id" data-backdrop="static" data-keyboard="false" href="#">
+<div class="modal fade" id="working_modal" name="working_modal" style= "z-index: 9999" tabindex="-1" role="dialog" aria-labelledby="workingModalDialog" data-controls-modal="your_div_id" data-backdrop="static" data-keyboard="false" href="#">
   <div class="modal-dialog modal-sm" role="document">
     <div class="modal-content">
       <div class="modal-header">

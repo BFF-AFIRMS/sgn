@@ -9,10 +9,10 @@ $model_files => {}
 $identifier_prefix
 </%args>
 
-<div class="row">
-    <div class="col-sm-8">
+<div class="row flex-wrap-row">
+    <div class="flex-wrap-col">
 
-        <table class="table table-hover table-bordered" >
+        <table class="table table-hover table-bordered table-trial-details" >
 
             <tr>
                 <td><b>Model Name</b></td>
@@ -79,9 +79,11 @@ $identifier_prefix
         </table>
 
     </div>
-    <div class="col-sm-4">
+    <div class="flex-wrap-col">
         <div class="well well-sm">
             <& /util/barcode.mas, identifier => "$identifier_prefix"."$model_id", trial_id=> "$model_id", trial_name=> "$model_name", format=>"trial_qrcode"  &>
         </div>
     </div>
 </div>
+
+<& /page/project_overview_accordion.mas, project_id => $model_id, prefix => "model" &>

@@ -818,6 +818,18 @@ Navbar
 
 /*
 -------------------------------------------------------------------------------
+Overview Section
+-------------------------------------------------------------------------------
+*/
+
+.overview-info-section {
+    margin: 0px;
+    margin-top: 20px;
+}
+
+
+/*
+-------------------------------------------------------------------------------
 Table
 -------------------------------------------------------------------------------
 */
@@ -848,6 +860,7 @@ Table
 
 .table-trial-details td:nth-child(2) {
     white-space: normal;
+    word-break: break-word;
     /* Limit the second column width in trial details, so that the QR code is beside it */
     max-width: 320px;
 }

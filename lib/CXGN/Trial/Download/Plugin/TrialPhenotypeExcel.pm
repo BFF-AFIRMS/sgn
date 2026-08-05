@@ -87,7 +87,9 @@ sub download {
     }
     my $accession_list = $self->accession_list;
     my $plot_list = $self->plot_list;
+    my $subplot_list = $self->subplot_list;
     my $plant_list = $self->plant_list;
+    my $tissue_sample_list = $self->tissue_sample_list;
     my $location_list = $self->location_list;
     my $year_list = $self->year_list;
     my $phenotype_min_value = $self->phenotype_min_value();
@@ -127,7 +129,9 @@ sub download {
             location_list=>$location_list,
             accession_list=>$accession_list,
             plot_list=>$plot_list,
+            subplot_list=>$subplot_list,
             plant_list=>$plant_list,
+            tissue_sample_list=>$tissue_sample_list,
             include_timestamp=>$include_timestamp,
             exclude_phenotype_outlier=>$exclude_phenotype_outlier,
             trait_contains=>$trait_contains,
@@ -172,7 +176,9 @@ sub download {
         my $trial_list_text = $trial_list ? join ("," , @$trial_list) : '';
         my $accession_list_text = $accession_list ? join(",", @$accession_list) : '';
         my $plot_list_text = $plot_list ? join(",", @$plot_list) : '';
+        my $subplot_list_text = $subplot_list ? join(",", @$subplot_list) : '';
         my $plant_list_text = $plant_list ? join(",", @$plant_list) : '';
+        my $tissue_sample_list_text = $tissue_sample_list ? join(",", @$tissue_sample_list) : '';
         my $trait_contains_text = $trait_contains ? join(",", @$trait_contains) : '';
         my $min_value_text = $phenotype_min_value ? $phenotype_min_value : '';
         my $max_value_text = $phenotype_max_value ? $phenotype_max_value : '';
@@ -180,7 +186,7 @@ sub download {
         my $year_list_text = $year_list ? join(",", @$year_list) : '';
         if ($data_level eq 'metadata'){ $ws->write(1, 1, "metadata"); }
         else {
-            $ws->write(1, 1, "Data Level:$data_level  Trait List:$trait_list_text  Trial List:$trial_list_text  Accession List:$accession_list_text  Plot List:$plot_list_text  Plant List:$plant_list_text  Location List:$location_list_text  Year List:$year_list_text  Include Timestamp:$include_timestamp  Trait Contains:$trait_contains_text  Minimum Phenotype: $min_value_text  Maximum Phenotype: $max_value_text Exclude Phenotype Outliers: $exclude_phenotype_outlier");
+            $ws->write(1, 1, "Data Level:$data_level  Trait List:$trait_list_text  Trial List:$trial_list_text  Accession List:$accession_list_text  Subplot List:$subplot_list_text Plot List:$plot_list_text  Plant List:$plant_list_text  Tissue Sample List:$tissue_sample_list_text  Location List:$location_list_text  Year List:$year_list_text  Include Timestamp:$include_timestamp  Trait Contains:$trait_contains_text  Minimum Phenotype: $min_value_text  Maximum Phenotype: $max_value_text Exclude Phenotype Outliers: $exclude_phenotype_outlier");
         }
     }
 

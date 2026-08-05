@@ -338,7 +338,12 @@ sub _retrieve_trial {
     my $genotyping_experiment_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'genotyping_layout', 'experiment_type')->cvterm_id();
     my $field_experiment_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'field_layout', 'experiment_type')->cvterm_id();
     my $p_rs = $self->stock->search_related('nd_experiment_stocks')->search_related('nd_experiment', {'nd_experiment.type_id'=>[$field_experiment_cvterm_id, $genotyping_experiment_cvterm_id] })->search_related('nd_experiment_projects')->search_related('project');
-    if ($p_rs->count != 1){
+
+    # A tissue sample might not be linked to a field trial, if it is part of a genotyping plate
+    if ($p_rs->count == 0){
+        return undef;
+    }
+    elsif ($p_rs->count != 1){
         die "There is not one project linked to this stock!";
     }
     $self->get_trial([$p_rs->first->project_id, $p_rs->first->name]);
@@ -348,8 +353,13 @@ sub _retrieve_plate {
     my $self = shift;
     my $genotyping_experiment_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->schema, 'genotyping_layout', 'experiment_type')->cvterm_id();
     my $p_rs = $self->stock->search_related('nd_experiment_stocks')->search_related('nd_experiment', {'nd_experiment.type_id'=>$genotyping_experiment_cvterm_id})->search_related('nd_experiment_projects')->search_related('project');
-    if ($p_rs->count != 1){
-        die "There is not one project linked to this stock!";
+
+    # A tissue sample might not be linked to a genotyping plate, if it is part of a field trial
+    if ($p_rs->count == 0){
+        return undef;
+    }
+    elsif ($p_rs->count != 1){
+        die "There is not one plate linked to this stock!";
     }
     $self->get_plate([$p_rs->first->project_id, $p_rs->first->name]);
 }

@@ -125,3 +125,5 @@ $trial_owner
         </div>
     </div>
 </div>
+
+<& /page/project_overview_accordion.mas, project_id => $trial_id, prefix => "genotypingProject" &>
