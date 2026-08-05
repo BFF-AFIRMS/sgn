@@ -284,6 +284,8 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
     const [plotLayout, setPlotLayout] = useState<'serpentine' | 'zigzag'>('serpentine');
     const [northArrowAngle, setNorthArrowAngle] = useState<number>(0);
     const [invertRows, setInvertRows] = useState(false);
+    const [mapRotation, setMapRotation] = useState<number>(0);
+    const [isTransposed, setIsTransposed] = useState<boolean>(false);
     const [colorVar, setColorVar] = useState<'parity' | 'germplasm' | 'block' | 'family_name' | 'cross_name'>('parity');
     const [labelVar, setLabelVar] = useState<'plot_number' | 'germplasm' | 'block' | 'family_name' | 'cross_name'>('plot_number');
     const [labelSize, setLabelSize] = useState(10);
@@ -1262,6 +1264,7 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
     };
 
     const handleTranspose = () => {
+        setIsTransposed(t => !t);
         setPlotObject(current => {
             const transposed: Record<string, Plot> = {};
             for (const [id, plot] of Object.entries(current)) {
@@ -1280,6 +1283,7 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
     };
 
     const handleRotate = () => {
+        setMapRotation(r => (r + 90) % 360);
         const { minCol, maxCol } = bounds;
         setPlotObject(current => {
             const rotated: Record<string, Plot> = {};
@@ -1822,27 +1826,27 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
                             onMouseLeave={handleMouseUpOrLeave}
                         >
                             {/* North Arrow HUD overlay */}
-                            <div
-                                className="tw:absolute tw:top-4 tw:right-4 tw:z-50 tw:flex tw:flex-col tw:items-center tw:bg-white/80 tw:p-2.5 tw:rounded-md tw:border tw:border-[#ccc] tw:shadow-sm tw:pointer-events-none"
-                                style={{ minWidth: '60px' }}
-                            >
-                                <span className="tw:text-[10px] tw:font-bold tw:mb-1 tw:text-gray-700">NORTH</span>
-                                <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    viewBox="0 0 200 300"
-                                    width="32"
-                                    height="48"
-                                    style={{
-                                        transform: `rotate(${northArrowAngle}deg)`,
-                                        transition: 'transform 0.2s ease-out'
-                                    }}
+                            {!isTransposed && (
+                                <div
+                                    className="tw:absolute tw:top-4 tw:right-4 tw:z-50 tw:flex tw:flex-col tw:items-center tw:pointer-events-none"
+                                    style={{ minWidth: '60px' }}
                                 >
-                                    <path style={{ fill: 'none', stroke: 'rgb(0, 0, 0)', strokeLinecap: 'round', strokeLinejoin: 'round', strokeWidth: '7px' }} d="M 99.395 63.781 L 99.395 238.843 L 7.257 292.897 L 99.395 63.781 Z"/>
-                                    <path style={{ stroke: 'rgb(0, 0, 0)', strokeLinecap: 'round', strokeLinejoin: 'round', strokeWidth: '7px', transformBox: 'fill-box', transformOrigin: '50% 50%' }} d="M 191.623 292.345 L 191.623 117.283 L 99.485 63.229 L 191.623 292.345 Z" transform="matrix(-1, 0, 0, -1, -0.000015, 0.000014)"/>
-                                    <text style={{ fontFamily: 'Roboto, sans-serif', fontSize: '60px', fontWeight: 572, whiteSpace: 'pre' }} x="76.43" y="46.758">N</text>
-                                </svg>
-                                <span className="tw:text-[9px] tw:text-gray-500 tw:mt-1">{northArrowAngle}°</span>
-                            </div>
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        viewBox="0 0 200 300"
+                                        width="32"
+                                        height="48"
+                                        style={{
+                                            transform: `rotate(${northArrowAngle + mapRotation}deg) ${invertRows ? 'scaleY(-1)' : ''}`,
+                                            transition: 'transform 0.2s ease-out'
+                                        }}
+                                    >
+                                        <path style={{ fill: 'none', stroke: 'rgb(0, 0, 0)', strokeLinecap: 'round', strokeLinejoin: 'round', strokeWidth: '7px' }} d="M 99.395 63.781 L 99.395 238.843 L 7.257 292.897 L 99.395 63.781 Z" />
+                                        <path style={{ stroke: 'rgb(0, 0, 0)', strokeLinecap: 'round', strokeLinejoin: 'round', strokeWidth: '7px', transformBox: 'fill-box', transformOrigin: '50% 50%' }} d="M 191.623 292.345 L 191.623 117.283 L 99.485 63.229 L 191.623 292.345 Z" transform="matrix(-1, 0, 0, -1, -0.000015, 0.000014)" />
+                                        <text style={{ fontFamily: 'Roboto, sans-serif', fontSize: '60px', fontWeight: 572, whiteSpace: 'pre' }} x="76.43" y="46.758">N</text>
+                                    </svg>
+                                </div>
+                            )}
 
                             {/* Zoom controls HUD */}
                             <div className="tw:absolute tw:bottom-4 tw:right-4 tw:z-50 tw:flex tw:flex-col tw:gap-1 tw:bg-white/80 tw:p-1.5 tw:rounded-md tw:border tw:border-[#ccc] tw:shadow-sm">
