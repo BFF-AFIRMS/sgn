@@ -62,6 +62,8 @@ $d->while_logged_in_as("user", sub {
         if ($args{reset_first}) {
             $d->click_ok($reset_btn_id, "id", "Click reset button");
             $d->wait_for_network_idle();
+            # Wait for collapser transition
+            sleep(1);
         }
 
         # Base inputs
@@ -81,14 +83,16 @@ $d->while_logged_in_as("user", sub {
                 my ($content, $switch) = @_;
                 if ((!ref($content) || !$content->is_displayed()) && ref($switch) && $switch->is_displayed()) {
                     $switch->click();
+                    # Wait for collapser transition
+                    sleep(2);
                 }
             };
 
             my $adv_content = $d->find_element("advanced_search_panel_content", "id", timeout => 1);
-            my $adv_content_onswitch = $d->find_element("advanced_search_panel_onswitch", "id", timeout => 1);
+            my $adv_content_onswitch = $d->scroll_into_view("advanced_search_panel_onswitch", "id", timeout => 1);
             $expand->($adv_content, $adv_content_onswitch);
             my $prop_content = $d->find_element("stock_search_properties_panel_content", "id", timeout => 1);
-            my $prop_content_onswitch = $d->find_element("stock_search_properties_panel_onswitch", "id", timeout => 1);
+            my $prop_content_onswitch = $d->scroll_into_view("stock_search_properties_panel_onswitch", "id", timeout => 1);
             $expand->($prop_content, $prop_content_onswitch);
 
             foreach my $sp (@$stockprops) {
@@ -96,7 +100,7 @@ $d->while_logged_in_as("user", sub {
                 my $match = $sp->{matchtype}; # optional
                 my $val = $sp->{value};
 
-                $d->click_ok("//select[\@id='editable_stockprop_search_term']/option[text()='$term']", "xpath", "Select stockprop term '$term'");
+                $d->click_ok("//select[\@id='editable_stockprop_search_term']/option[text()='$term']", "xpath", "Select stockprop term '$term'", scrollto => 0);
                 $d->click_ok("editable_stockprop_search_add", "id", "Add stockprop '$term'");
                 if ($match) {
                      $d->click_ok("//select[\@data-property='$term' and \@name='editable_stockprop_matchtype']/option[\@value='$match']", "xpath", "Select matchtype '$match' for $term");

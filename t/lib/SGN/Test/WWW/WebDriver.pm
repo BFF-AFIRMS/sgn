@@ -205,22 +205,34 @@ sub base_url {
 
 sub click {
     my ($self, $name, $method, @args) = @_;
-    my ($timeout) = $self->_extract_basic_args(@args);
+    my ($timeout, $scrollto) = $self->_extract_basic_args(@args);
 
     $self->collect_js_logs();
 
     return wait_until {
         $self->screenshot("click_$name");
-        $self->scroll_into_view($name, $method, @args)->click();
+
+        my $element = $scrollto
+            ? $self->scroll_into_view($name, $method, timeout => $timeout)
+            : $self->driver->find_element($name, $method);
+        $element->click();
     } timeout => $timeout;
 }
 
 sub click_ok {
     my ($self, $name, $method, @args) = @_;
-    my ($test_name, $timeout) = $self->_extract_ok_args(@args);
+    my ($test_name, $timeout, $scrollto) = $self->_extract_ok_args(@args);
 
     $test_name = $test_name || print STDERR "You can provide a test name parameter for click_ok\n";
-    ok(my $element = $self->click($name, $method, timeout => $timeout), $test_name);
+    ok(
+        my $element = $self->click(
+            $name,
+            $method,
+            timeout  => $timeout,
+            scrollto => $scrollto,
+        ),
+        $test_name
+    );
     return $element;
 }
 
@@ -559,8 +571,16 @@ sub _extract_basic_args {
     my ($self, @args) = @_;
 
     my $timeout = $self->_extract_timeout(@args);
+    my $scrollto = 1;
 
-    return ($timeout);
+    if (@args >= 2 && @args % 2 == 0 && !ref($args[0])) {
+        my %named = @args;
+        if (exists $named{scrollto}) {
+            $scrollto = $named{scrollto} ? 1 : 0;
+        }
+    }
+
+    return ($timeout, $scrollto);
 }
 
 sub _extract_ok_args {
