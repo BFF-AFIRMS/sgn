@@ -61,6 +61,8 @@ sub create_tissue_sample_genotypes {
     my ($schema) = @_;
 
     my $accession = 'test_accession1';
+    my $plot_name_1 = 'test_trial25';
+    my $plot_name_2 = 'test_trial28';
     my $num_tissue_samples = 3;
     my $location = 'Cornell Biotech';
     my $breeding_program = 'test';
@@ -68,6 +70,11 @@ sub create_tissue_sample_genotypes {
 
     # Create Tissue Samples
     my $accession_id = $schema->resultset("Stock::Stock")->find({uniquename=>$accession})->stock_id();
+    my $plot_id_1 = $schema->resultset("Stock::Stock")->find({uniquename=>$plot_name_1})->stock_id();
+    my $plot_id_2 = $schema->resultset("Stock::Stock")->find({uniquename=>$plot_name_2})->stock_id();
+
+    my $plant_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant', 'stock_type')->cvterm_id();
+    my $plant_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant_of', 'stock_relationship')->cvterm_id();
 
     my $tissue_sample_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'tissue_sample', 'stock_type')->cvterm_id();
     my $tissue_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'tissue_type', 'stock_property')->cvterm_id();
@@ -90,18 +97,63 @@ sub create_tissue_sample_genotypes {
             type_id => $tissue_sample_cvterm_id,
             organism_id => $organism->organism_id,
         });
+        my $tissue_sample_id = $tissue_sample->stock_id();
         # Create tissue sample stock properties
         $schema->resultset("Stock::Stockprop")->find_or_create( {
-            stock_id => $tissue_sample->stock_id(),
+            stock_id => $tissue_sample_id,
             type_id => $tissue_type_cvterm_id,
             value => "leaf",
         });
-        # Create tissue sample stock relationships
+
+        # Link all 3 tissue samples to an accession
         $schema->resultset("Stock::StockRelationship")->find_or_create({
-            subject_id => $tissue_sample->stock_id(),
+            subject_id => $tissue_sample_id,
             object_id => $accession_id,
             type_id => $tissue_sample_of_cvterm_id,
         });
+        # Link only first two tissue samples to plot
+        if ($i <= 2){
+            $schema->resultset("Stock::StockRelationship")->find_or_create({
+                subject_id => $tissue_sample_id,
+                object_id => $plot_id_1,
+                type_id => $tissue_sample_of_cvterm_id,
+            });
+        }
+        # Link last tissue sample to a different plot + a plant
+        if ($i == 3){
+            # Create plant stock to harvest tissue sample from
+            my $plant_name = $accession . "_plant-" . ${i};
+            my $plant = $schema->resultset("Stock::Stock")->find_or_create({
+                uniquename => $plant_name,
+                name => $plant_name,
+                type_id => $plant_cvterm_id,
+                organism_id => $organism->organism_id,
+            });
+            my $plant_id = $plant->stock_id();
+            # Create plant stock relationships
+            $schema->resultset("Stock::StockRelationship")->find_or_create({
+                subject_id => $plant_id,
+                object_id => $accession_id,
+                type_id => $plant_of_cvterm_id,
+            });
+            # Reminder: plot and plant have backwards relationship
+            $schema->resultset("Stock::StockRelationship")->find_or_create({
+                subject_id => $plot_id_2,
+                object_id => $plant_id,
+                type_id => $plant_of_cvterm_id,
+            });
+            # Create tissue sample stock relationships
+            $schema->resultset("Stock::StockRelationship")->find_or_create({
+                subject_id => $tissue_sample_id,
+                object_id => $plot_id_2,
+                type_id => $tissue_sample_of_cvterm_id,
+            });
+            $schema->resultset("Stock::StockRelationship")->find_or_create({
+                subject_id => $tissue_sample_id,
+                object_id => $plant_id,
+                type_id => $tissue_sample_of_cvterm_id,
+            });
+        }
         push(@tissue_samples, $tissue_sample_name);
     }
 }
