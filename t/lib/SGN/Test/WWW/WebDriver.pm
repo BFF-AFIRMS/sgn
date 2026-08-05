@@ -542,6 +542,12 @@ sub screenshot {
 sub scroll_into_view {
     my ($self, @args) = @_;
     my $element = $self->find_element(@args);
+    $self->scroll_element_into_view($element);
+    return $element;
+}
+
+sub scroll_element_into_view {
+    my ($self, $element) = @_;
     $self->driver->execute_script("arguments[0].scrollIntoView({ block: 'center' });", $element);
     return $element;
 }
