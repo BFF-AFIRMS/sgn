@@ -29,7 +29,7 @@ jQuery(document).ready(function () {
             'processing': true,
             'serverSide': true,
             "scrollX": true,
-            'ajax': '/stock/<% $stock_id %>/datatables/genotype_data'
+            'ajax': '/stock/<% $stock_id %>/datatables/genotype_data?forbid_cache=1'
         });
     });
 
