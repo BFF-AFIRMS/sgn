@@ -130,11 +130,11 @@ const interpolate = (color1: string, color2: string, factor: number) => {
 
 const RenderPlantGrid: React.FC<{ node: PlotStructureNode }> = ({ node }) => {
     if (!node.has) return null;
-    
+
     let maxRow = 1;
     let maxCol = 1;
     const coordMap: Record<string, string> = {};
-    
+
     Object.entries(node.has).forEach(([plantName, plantNode]) => {
         const row = parseInt(plantNode.attributes?.row_number?.value) || 0;
         const col = parseInt(plantNode.attributes?.col_number?.value) || 0;
@@ -142,7 +142,7 @@ const RenderPlantGrid: React.FC<{ node: PlotStructureNode }> = ({ node }) => {
         if (col > maxCol) maxCol = col;
         coordMap[`${row},${col}`] = plantName;
     });
-    
+
     const rows = [];
     for (let r = maxRow; r >= 0; r--) {
         const cols = [];
@@ -169,7 +169,7 @@ const RenderPlantGrid: React.FC<{ node: PlotStructureNode }> = ({ node }) => {
         }
         rows.push(<tr key={`row-${r}`}>{cols}</tr>);
     }
-    
+
     return (
         <table className="tw:border-separate tw:border-spacing-1 tw:overflow-hidden tw:mx-auto tw:mt-2" style={{ aspectRatio: `${maxCol + 1} / ${maxRow + 1}` }}>
             <tbody>{rows}</tbody>
@@ -179,7 +179,7 @@ const RenderPlantGrid: React.FC<{ node: PlotStructureNode }> = ({ node }) => {
 
 const RenderSubplotGrid: React.FC<{ node: PlotStructureNode }> = ({ node }) => {
     if (!node.has) return null;
-    
+
     return (
         <div className="tw:flex tw:flex-col tw:gap-2.5 tw:items-center tw:mt-2">
             {Object.entries(node.has).sort(([a], [b]) => a.localeCompare(b)).map(([subplotName, subplotNode]) => (
@@ -226,7 +226,7 @@ const AccessionAutocomplete: React.FC<{
                         setSuggestions(list);
                     }
                 })
-                .catch(() => {});
+                .catch(() => { });
         }, 300);
         return () => clearTimeout(delayDebounce);
     }, [value]);
@@ -282,6 +282,7 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
     const [activeTrialIds, setActiveTrialIds] = useState<string[]>([trialId]);
 
     const [plotLayout, setPlotLayout] = useState<'serpentine' | 'zigzag'>('serpentine');
+    const [northArrowAngle, setNorthArrowAngle] = useState<number>(0);
     const [invertRows, setInvertRows] = useState(false);
     const [colorVar, setColorVar] = useState<'parity' | 'germplasm' | 'block' | 'family_name' | 'cross_name'>('parity');
     const [labelVar, setLabelVar] = useState<'plot_number' | 'germplasm' | 'block' | 'family_name' | 'cross_name'>('plot_number');
@@ -374,10 +375,22 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
         fetchObservationUnits();
         loadVariables();
         loadSpatialAdjustments();
+        loadNorthArrowAngle();
     }, [activeTrialIds]);
 
+    const loadNorthArrowAngle = () => {
+        fetch(`/ajax/breeders/trial/${trialId}/north_arrow_angle`)
+            .then(res => res.json())
+            .then(data => {
+                if (data?.north_arrow_angle !== undefined && data.north_arrow_angle !== null) {
+                    setNorthArrowAngle(Number(data.north_arrow_angle));
+                }
+            })
+            .catch(() => { });
+    };
+
     const updateZoomAndPan = (
-        nextZoom: number, 
+        nextZoom: number,
         targetPan?: { x: number; y: number }
     ) => {
         const clampedZoom = Math.max(0.1, Math.min(5, nextZoom));
@@ -469,7 +482,7 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
                     setControlAccessions(response.accessions.map((a: any) => a.accession_name));
                 }
             })
-            .catch(() => {});
+            .catch(() => { });
     }, [trialId]);
 
     // Handle Leaflet GeoMap rendering
@@ -482,7 +495,7 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
                 // Initialize custom Leaflet container mapping
                 const mapEl = geoMapRef.current;
                 mapEl.innerHTML = "<div id='geoflatmap_leaflet' style='width:100%; height:600px;'></div>";
-                
+
                 const fmInstance = new BrAPIFieldmap('#geoflatmap_leaflet', '/brapi/v2', {
                     viewOnly: false,
                     brapi_auth: authToken,
@@ -566,7 +579,7 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
                 });
                 setVariables(vars);
             })
-            .catch(() => {});
+            .catch(() => { });
     };
 
     const loadSpatialAdjustments = () => {
@@ -577,7 +590,7 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
                     setSpatialAdjustments(JSON.parse(response.data));
                 }
             })
-            .catch(() => {});
+            .catch(() => { });
     };
 
     const parsePlotData = (data: any[]) => {
@@ -861,7 +874,7 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
 
     const recalculateLayout = (currentPlots: Record<string, Plot>, rows: number, cols: number, layout: 'serpentine' | 'zigzag') => {
         const plotsArr = Object.values(currentPlots).filter(p => !!p.observationUnitDbId);
-        
+
         let minC = Infinity, minR = Infinity;
         plotsArr.forEach(p => {
             const x = Number(p.observationUnitPosition.positionCoordinateX);
@@ -1020,7 +1033,7 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
                             setPlotStructure(struct);
                         }
                     })
-                    .catch(() => {});
+                    .catch(() => { });
 
                 fetch(`/ajax/breeders/trial/${trialId}/retrieve_plot_images`, {
                     method: 'POST',
@@ -1037,7 +1050,7 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
                             setPlotImages(response.image_html);
                         }
                     })
-                    .catch(() => {});
+                    .catch(() => { });
             }, 250);
         }
     };
@@ -1163,11 +1176,20 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
             })
             : Promise.resolve();
 
-        Promise.all([putPromise, postPromise])
+        const northArrowPromise = fetch(`/ajax/breeders/trial/${trialId}/north_arrow_angle`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({
+                north_arrow_angle: String(northArrowAngle)
+            })
+        });
+
+        Promise.all([putPromise, postPromise, northArrowPromise])
             .then(() => fetch(`/ajax/breeders/trial/${trialId}/refresh_cache`, { method: 'POST' }))
             .then(() => {
                 alert('Field Plot layout submitted successfully!');
                 fetchObservationUnits();
+                loadNorthArrowAngle();
             })
             .catch(() => {
                 setLoading(false);
@@ -1287,7 +1309,7 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
         const printWindow = window.open('', '', 'width=800,height=600');
         if (printWindow) {
             printWindow.document.write('<html><head><title>Print Field Map</title>');
-            
+
             // Copy styles from the main window to ensure Tailwind classes work in the print window
             document.querySelectorAll('style, link[rel="stylesheet"]').forEach(style => {
                 printWindow.document.write(style.outerHTML);
@@ -1356,7 +1378,7 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
             </body></html>
             `);
             printWindow.document.close();
-            
+
             setTimeout(() => {
                 if (printWindow) printWindow.print();
             }, 500);
@@ -1366,7 +1388,7 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
     const downloadHeatmapImage = () => {
         const svgEl = document.getElementById('fieldmap_chart_svg');
         if (!svgEl) return;
-        
+
         const svgString = new XMLSerializer().serializeToString(svgEl);
         const svgBlob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
         const blobURL = URL.createObjectURL(svgBlob);
@@ -1381,7 +1403,7 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
                 context.fillStyle = '#ffffff';
                 context.fillRect(0, 0, canvas.width, canvas.height);
                 context.drawImage(image, 0, 0);
-                
+
                 const pngData = canvas.toDataURL('image/png');
                 const downloadLink = document.createElement('a');
                 downloadLink.download = `${selectedViewLabel || 'fieldmap'}_heatmap.png`;
@@ -1706,14 +1728,14 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
                         <div className="tw:flex tw:gap-5 tw:flex-wrap tw:mb-3.75">
                             <div className="form-inline">
                                 <label className="tw:mr-1.25">Plot Layout:</label>
-                                <select 
-                                    className="form-control" 
-                                    value={plotLayout} 
+                                <select
+                                    className="form-control"
+                                    value={plotLayout}
                                     onChange={e => {
                                         const nextLayout = e.target.value as 'serpentine' | 'zigzag';
                                         setPlotLayout(nextLayout);
                                         setPlotObject(prev => recalculateLayout(prev, dimensions.rows || bounds.numRows, dimensions.cols || bounds.numCols, nextLayout));
-                                    }} 
+                                    }}
                                     disabled={displayLinkedTrials}
                                 >
                                     <option value="serpentine">Serpentine</option>
@@ -1756,6 +1778,18 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
                                 <label className="tw:mr-1.25">Label Size:</label>
                                 <input type="number" className="form-control tw:w-15" value={labelSize} onChange={e => setLabelSize(parseInt(e.target.value) || 10)} />
                             </div>
+                            <div className="form-inline">
+                                <label className="tw:mr-1.25">North Angle (°):</label>
+                                <input
+                                    type="number"
+                                    className="form-control tw:w-20"
+                                    value={northArrowAngle}
+                                    onChange={e => {
+                                        const val = e.target.value;
+                                        setNorthArrowAngle(val === '' ? 0 : parseFloat(val) || 0);
+                                    }}
+                                />
+                            </div>
                             <div className="tw:flex tw:gap-2.5 tw:items-center">
                                 <label className="tw:m-0">Include Borders:</label>
                                 <label className="tw:font-normal tw:m-0"><input type="checkbox" checked={topBorder} onChange={e => setTopBorder(e.target.checked)} disabled={displayLinkedTrials} /> Top</label>
@@ -1779,7 +1813,7 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
                             )}
                         </div>
 
-                        <div 
+                        <div
                             ref={containerRef}
                             className={`tw:relative tw:border tw:border-[#ddd] tw:bg-[#fcfcfc] tw:h-300 tw:flex tw:overflow-hidden tw:select-none ${isDragging ? 'tw:cursor-grabbing' : 'tw:cursor-grab'}`}
                             onMouseDown={handleMouseDown}
@@ -1787,20 +1821,43 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
                             onMouseUp={handleMouseUpOrLeave}
                             onMouseLeave={handleMouseUpOrLeave}
                         >
+                            {/* North Arrow HUD overlay */}
+                            <div
+                                className="tw:absolute tw:top-4 tw:right-4 tw:z-50 tw:flex tw:flex-col tw:items-center tw:bg-white/80 tw:p-2.5 tw:rounded-md tw:border tw:border-[#ccc] tw:shadow-sm tw:pointer-events-none"
+                                style={{ minWidth: '60px' }}
+                            >
+                                <span className="tw:text-[10px] tw:font-bold tw:mb-1 tw:text-gray-700">NORTH</span>
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    viewBox="0 0 200 300"
+                                    width="32"
+                                    height="48"
+                                    style={{
+                                        transform: `rotate(${northArrowAngle}deg)`,
+                                        transition: 'transform 0.2s ease-out'
+                                    }}
+                                >
+                                    <path style={{ fill: 'none', stroke: 'rgb(0, 0, 0)', strokeLinecap: 'round', strokeLinejoin: 'round', strokeWidth: '7px' }} d="M 99.395 63.781 L 99.395 238.843 L 7.257 292.897 L 99.395 63.781 Z"/>
+                                    <path style={{ stroke: 'rgb(0, 0, 0)', strokeLinecap: 'round', strokeLinejoin: 'round', strokeWidth: '7px', transformBox: 'fill-box', transformOrigin: '50% 50%' }} d="M 191.623 292.345 L 191.623 117.283 L 99.485 63.229 L 191.623 292.345 Z" transform="matrix(-1, 0, 0, -1, -0.000015, 0.000014)"/>
+                                    <text style={{ fontFamily: 'Roboto, sans-serif', fontSize: '60px', fontWeight: 572, whiteSpace: 'pre' }} x="76.43" y="46.758">N</text>
+                                </svg>
+                                <span className="tw:text-[9px] tw:text-gray-500 tw:mt-1">{northArrowAngle}°</span>
+                            </div>
+
                             {/* Zoom controls HUD */}
                             <div className="tw:absolute tw:bottom-4 tw:right-4 tw:z-50 tw:flex tw:flex-col tw:gap-1 tw:bg-white/80 tw:p-1.5 tw:rounded-md tw:border tw:border-[#ccc] tw:shadow-sm">
-                                <button 
-                                    className="btn btn-default btn-xs tw:font-bold" 
+                                <button
+                                    className="btn btn-default btn-xs tw:font-bold"
                                     onClick={() => updateZoomAndPan(zoom * 1.2)}
                                     title="Zoom In"
                                 >+</button>
-                                <button 
-                                    className="btn btn-default btn-xs tw:font-bold" 
+                                <button
+                                    className="btn btn-default btn-xs tw:font-bold"
                                     onClick={() => updateZoomAndPan(zoom / 1.2)}
                                     title="Zoom Out"
                                 >-</button>
                                 <button
-                                    className="btn btn-default btn-xs tw:text-[10px]" 
+                                    className="btn btn-default btn-xs tw:text-[10px]"
                                     onClick={handleResetZoomPan}
                                     title="Reset View"
                                 >Reset</button>
@@ -1929,9 +1986,9 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
                                                         </g>
                                                     );
                                                 })}
-											</g>
+                                            </g>
                                         );
-									})}
+                                    })}
 
                                     {/* Pass 2: Render Label Layer (Always on top) */}
                                     <g style={{ pointerEvents: 'none' }}>
