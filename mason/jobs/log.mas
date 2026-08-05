@@ -47,6 +47,7 @@ jQuery(document).ready(function (){
                 alert("Error fetching submitted jobs, check console.");
                 console.error(response.error);
             } else {
+                response.data.scrollX = true;
                 jQuery('#job_log_div').removeAttr('style');
                 jQuery('#user_job_log_table').DataTable(response.data);
                 console.log(response.data);
