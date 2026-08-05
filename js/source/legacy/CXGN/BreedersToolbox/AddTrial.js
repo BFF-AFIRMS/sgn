@@ -646,6 +646,7 @@ jQuery(document).ready(function ($) {
             return;
         }
         isGeneratingDesign = true;
+        $('#working_modal').modal("show");
         try {
             var name = $('#new_trial_name').val();
             var year = $('#add_project_year').val();
@@ -855,9 +856,6 @@ jQuery(document).ready(function ($) {
                 timeout: 3000000,
                 url: '/ajax/trial/generate_experimental_design',
                 dataType: "json",
-                beforeSend: function() {
-                    $('#working_modal').modal("show");
-                },
                 data: {
                     'project_name': name,
                     'project_description': desc,
@@ -936,7 +934,6 @@ jQuery(document).ready(function ($) {
                 }
                 $('#trial_design_view_layout_return').html(layout_html);
 
-                $('#working_modal').modal("hide");
                 design_json = response.design_json;
 
                 var col_length = response.design_map_view.coord_col[0];
