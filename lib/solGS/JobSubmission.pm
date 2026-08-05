@@ -33,19 +33,17 @@ has "config_file" => (
 );
 
 
+
 sub run {
     my $self = shift;
-    my $secs = 30; #60 * 4;
 
     my $pre_jobs = $self->run_prerequisite_jobs();
-    sleep($secs);
     print STDERR
-"\nCompleted prerequisite jobs. After waiting $secs sec...Now running the set of dependent jobs...\n";
+"\nCompleted prerequisite jobs. Now running the set of dependent jobs...\n";
 
     my $dep_jobs = $self->run_dependent_jobs();
-    sleep($secs);
     print STDERR
-"\nCompleted dependent jobs. After waiting $secs sec...Now checking results and emailing the results...\n";
+"\nCompleted dependent jobs. Now checking results and emailing the results...\n";
 
     $self->send_analysis_report();
     print STDERR "\nGot done checking results and emailing the results...\n";
@@ -92,7 +90,7 @@ sub run_prerequisite_jobs {
 sub wait_till_jobs_end {
     my ( $self, $jobs, $sleep_time ) = @_;
 
-    $sleep_time = 30 if !$sleep_time;
+    $sleep_time = 1 if !$sleep_time;
     while (@$jobs) {
         for ( my $i = 0 ; $i < scalar(@$jobs) ; $i++ ) {
             splice( @$jobs, $i, 1 ) if !$jobs->[$i]->alive();
