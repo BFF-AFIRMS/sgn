@@ -641,492 +641,492 @@ jQuery(document).ready(function ($) {
     var num_plants_per_plot = 0;
     var num_subplots_per_plot = 0;
 
-    function generate_experimental_design(btn_elem) {
+    async function generate_experimental_design(btn_elem) {
         if (isGeneratingDesign) {
             return;
         }
         isGeneratingDesign = true;
-        var name = $('#new_trial_name').val();
-        var year = $('#add_project_year').val();
-        var planting_date = $('#add_project_planting_date').val();
-        // date formatting here from js to breedbase format
-        if (planting_date) {
-            planting_date = new Date(planting_date).toLocaleDateString("en-CA");
-        }
-        var desc = $('#add_project_description').val();
-        var locations = jQuery('#add_project_location').val();
-        var trial_location =  JSON.stringify(locations);
-        var trial_stock_type = jQuery('#select_stock_type').val();
-        var block_number = $('#block_number').val();
-        var row_number= $('#row_number').val();
-        var row_number_per_block=$('#row_number_per_block').val();
-        var col_number_per_block=$('#col_number_per_block').val();
-        var col_number=$('#col_number').val();
-	    var plot_numbering_scheme = jQuery('input[name="plot_numbering_scheme"]:checked').val();
-
-        var stock_list_id;
-        var control_stock_list_id;
-        var control_stock_list_id_crbd;
-        var replicated_stock_list_id;
-        var unreplicated_stock_list_id;
-
-        if (trial_stock_type == "accession"){
-            stock_list_id = $('#select_list_list_select').val();
-            control_stock_list_id = $('#list_of_checks_section_list_select').val();
-            control_stock_list_id_crbd = $('#crbd_list_of_checks_section_list_select').val();
-            replicated_stock_list_id = $('#list_of_rep_accession_list_select').val();
-            unreplicated_stock_list_id = $('#list_of_unrep_accession_list_select').val();
-        } else if (trial_stock_type == "cross") {
-            stock_list_id = $('#select_cross_list_list_select').val();
-            control_stock_list_id = $('#list_of_cross_checks_section_list_select').val();
-            control_stock_list_id_crbd = $('#crbd_list_of_cross_checks_section_list_select').val();
-            replicated_stock_list_id = $('#list_of_rep_cross_list_select').val();
-            unreplicated_stock_list_id = $('#list_of_unrep_cross_list_select').val();
-        } else if (trial_stock_type == "family_name") {
-            stock_list_id = $('#select_family_name_list_list_select').val();
-            control_stock_list_id = $('#list_of_family_name_checks_section_list_select').val();
-            control_stock_list_id_crbd = $('#crbd_list_of_family_name_checks_section_list_select').val();
-            replicated_stock_list_id = $('#list_of_rep_family_name_list_select').val();
-            unreplicated_stock_list_id = $('#list_of_unrep_family_name_list_select').val();
-        }
-
-        var stock_list;
-        var stock_list_array;
-        if (stock_list_id) {
-            stock_list_array = list.getList(stock_list_id);
-            if (stock_list_array && stock_list_array.length) {
-                stock_list = JSON.stringify(stock_list_array);
+        try {
+            var name = $('#new_trial_name').val();
+            var year = $('#add_project_year').val();
+            var planting_date = $('#add_project_planting_date').val();
+            // date formatting here from js to breedbase format
+            if (planting_date) {
+                planting_date = new Date(planting_date).toLocaleDateString("en-CA");
             }
-        }
+            var desc = $('#add_project_description').val();
+            var locations = jQuery('#add_project_location').val();
+            var trial_location =  JSON.stringify(locations);
+            var trial_stock_type = jQuery('#select_stock_type').val();
+            var block_number = $('#block_number').val();
+            var row_number= $('#row_number').val();
+            var row_number_per_block=$('#row_number_per_block').val();
+            var col_number_per_block=$('#col_number_per_block').val();
+            var col_number=$('#col_number').val();
+            var plot_numbering_scheme = jQuery('input[name="plot_numbering_scheme"]:checked').val();
 
-        var control_list;
-        var control_list_array;
-        if(control_stock_list_id) {
-            control_list_array = list.getList(control_stock_list_id);
-            if (control_list_array && control_list_array.length) {
-                control_list = JSON.stringify(control_list_array);
-            }
-        }
+            var stock_list_id;
+            var control_stock_list_id;
+            var control_stock_list_id_crbd;
+            var replicated_stock_list_id;
+            var unreplicated_stock_list_id;
 
-        var control_list_crbd;
-        var control_list_crbd_array;
-        if (control_stock_list_id_crbd) {
-            control_list_crbd_array = list.getList(control_stock_list_id_crbd);
-            if (control_list_crbd_array && control_list_crbd_array.length) {
-                control_list_crbd = JSON.stringify(control_list_crbd_array);
+            if (trial_stock_type == "accession"){
+                stock_list_id = $('#select_list_list_select').val();
+                control_stock_list_id = $('#list_of_checks_section_list_select').val();
+                control_stock_list_id_crbd = $('#crbd_list_of_checks_section_list_select').val();
+                replicated_stock_list_id = $('#list_of_rep_accession_list_select').val();
+                unreplicated_stock_list_id = $('#list_of_unrep_accession_list_select').val();
+            } else if (trial_stock_type == "cross") {
+                stock_list_id = $('#select_cross_list_list_select').val();
+                control_stock_list_id = $('#list_of_cross_checks_section_list_select').val();
+                control_stock_list_id_crbd = $('#crbd_list_of_cross_checks_section_list_select').val();
+                replicated_stock_list_id = $('#list_of_rep_cross_list_select').val();
+                unreplicated_stock_list_id = $('#list_of_unrep_cross_list_select').val();
+            } else if (trial_stock_type == "family_name") {
+                stock_list_id = $('#select_family_name_list_list_select').val();
+                control_stock_list_id = $('#list_of_family_name_checks_section_list_select').val();
+                control_stock_list_id_crbd = $('#crbd_list_of_family_name_checks_section_list_select').val();
+                replicated_stock_list_id = $('#list_of_rep_family_name_list_select').val();
+                unreplicated_stock_list_id = $('#list_of_unrep_family_name_list_select').val();
             }
-        }
 
-        var design_type = $('#select_design_method').val();
-        if (design_type == "") {
-            var design_type = $('#select_multi-design_method').val();
-        }
-
-        var rep_count = $('#rep_count').val();
-        var block_size = $('#block_size').val();
-        var max_block_size = $('#max_block_size').val();
-        var plot_prefix = $('#plot_prefix').val();
-        var start_number = $('#start_number').val();
-        var increment = $('#increment').val();
-        var fieldmap_col_number = $('#fieldMap_col_number').val();
-        var fieldmap_row_number = $('#fieldMap_row_number').val();
-        var plot_layout_format = $('#plot_layout_format').val();
-        var row_in_design_number = $('#no_of_row_in_design').val();
-        var col_in_design_number = $('#no_of_col_in_design').val();
-        var no_of_rep_times = $('#no_of_rep_times').val();
-        var no_of_block_sequence = $('#no_of_block_sequence').val();
-        var no_of_sub_block_sequence = $('#no_of_sub_block_sequence').val();
-        var num_seed_per_plot = $('#num_seed_per_plot').val();
-        var westcott_check_1 = $('#westcott_check_1').val();
-        var westcott_check_2 = $('#westcott_check_2').val();
-        var westcott_col = $('#westcott_col').val();
-        var westcott_col_between_check = $('#westcott_col_between_check').val();
-        var plot_width = $('#add_project_plot_width').val();
-        var plot_length = $('#add_project_plot_length').val();
-        var field_size = $('#new_trial_field_size').val();
-        var seedlot_hash_combined = {};
-        seedlot_hash_combined = extend_obj(accession_list_seedlot_hash, checks_list_seedlot_hash);
-        seedlot_hash_combined = extend_obj(seedlot_hash_combined, crbd_checks_list_seedlot_hash);
-        seedlot_hash_combined = extend_obj(seedlot_hash_combined, unrep_list_seedlot_hash);
-        seedlot_hash_combined = extend_obj(seedlot_hash_combined, rep_list_seedlot_hash);
-        if (!jQuery.isEmptyObject(seedlot_hash_combined)){
-            if (num_seed_per_plot == ''){
-                alert('Number of seeds per plot is required if you have selected a seedlot list!');
-                return;
-            }
-        }
-
-        var unreplicated_stock_list;
-        if (unreplicated_stock_list_id) {
-            var unrep_array = list.getList(unreplicated_stock_list_id);
-            if (unrep_array && unrep_array.length) {
-                unreplicated_stock_list = JSON.stringify(unrep_array);
-            }
-        }
-
-        var replicated_stock_list;
-        if (replicated_stock_list_id) {
-            var rep_array = list.getList(replicated_stock_list_id);
-            if (rep_array && rep_array.length) {
-                replicated_stock_list = JSON.stringify(rep_array);
-            }
-        }
-
-        if (design_type === 'p-rep') {
-            if (!unreplicated_stock_list || !replicated_stock_list) {
-                console.warn("Cannot generate p-rep design: Replicated or unreplicated stock list data not ready.");
-                isGeneratingDesign = false;
-                return;
-            }
-        } else {
-            if (!stock_list_id || !stock_list) {
-                console.warn("Cannot generate design: Stock list data not ready.");
-                isGeneratingDesign = false;
-                return;
-            }
-        }
-
-        var treatments = {};
-        if (design_type == 'splitplot'){
-            var count = jQuery('#create_trial_with_treatment_additional_count').val();
-            if (count == 0) {
-                count = 4; //Interface starts with 4 inputs and user can add additional ones..
-            }
-            var int_count = parseInt(count);
-            for(var i=1; i<=int_count; i++){
-                var treatment_name = jQuery('#create_trial_with_treatment_name_input'+i).val();
-                var treatment_value = jQuery('#create_trial_with_treatment_value_input'+i).val();
-                if(treatment_name != '' && treatment_value != ''){
-                    if (treatment_name in treatments) {
-                        treatments[treatment_name].push(treatment_value);
-                    } else {
-                        treatments[treatment_name] = [];
-                        treatments[treatment_name].push(treatment_value);
-                    }
+            var stock_list;
+            var stock_list_array;
+            if (stock_list_id) {
+                stock_list_array = list.getList(stock_list_id);
+                if (stock_list_array && stock_list_array.length) {
+                    stock_list = JSON.stringify(stock_list_array);
                 }
             }
-            var num_plants_per_treatment = $('#num_plants_per_treatment').val();
-            num_plants_per_plot = 0;
-            var aggregator = 1;
-            for (treatment in treatments) {
-                var num_levels = Object.keys(treatments[treatment]).length
-                aggregator = aggregator * num_levels;
+
+            var control_list;
+            var control_list_array;
+            if(control_stock_list_id) {
+                control_list_array = list.getList(control_stock_list_id);
+                if (control_list_array && control_list_array.length) {
+                    control_list = JSON.stringify(control_list_array);
+                }
             }
-            num_subplots_per_plot = aggregator;
-            if (num_plants_per_treatment){
-                num_plants_per_plot = num_plants_per_treatment*num_subplots_per_plot;
+
+            var control_list_crbd;
+            var control_list_crbd_array;
+            if (control_stock_list_id_crbd) {
+                control_list_crbd_array = list.getList(control_stock_list_id_crbd);
+                if (control_list_crbd_array && control_list_crbd_array.length) {
+                    control_list_crbd = JSON.stringify(control_list_crbd_array);
+                }
+            }
+
+            var design_type = $('#select_design_method').val();
+            if (design_type == "") {
+                var design_type = $('#select_multi-design_method').val();
+            }
+
+            var rep_count = $('#rep_count').val();
+            var block_size = $('#block_size').val();
+            var max_block_size = $('#max_block_size').val();
+            var plot_prefix = $('#plot_prefix').val();
+            var start_number = $('#start_number').val();
+            var increment = $('#increment').val();
+            var fieldmap_col_number = $('#fieldMap_col_number').val();
+            var fieldmap_row_number = $('#fieldMap_row_number').val();
+            var plot_layout_format = $('#plot_layout_format').val();
+            var row_in_design_number = $('#no_of_row_in_design').val();
+            var col_in_design_number = $('#no_of_col_in_design').val();
+            var no_of_rep_times = $('#no_of_rep_times').val();
+            var no_of_block_sequence = $('#no_of_block_sequence').val();
+            var no_of_sub_block_sequence = $('#no_of_sub_block_sequence').val();
+            var num_seed_per_plot = $('#num_seed_per_plot').val();
+            var westcott_check_1 = $('#westcott_check_1').val();
+            var westcott_check_2 = $('#westcott_check_2').val();
+            var westcott_col = $('#westcott_col').val();
+            var westcott_col_between_check = $('#westcott_col_between_check').val();
+            var plot_width = $('#add_project_plot_width').val();
+            var plot_length = $('#add_project_plot_length').val();
+            var field_size = $('#new_trial_field_size').val();
+            var seedlot_hash_combined = {};
+            seedlot_hash_combined = extend_obj(accession_list_seedlot_hash, checks_list_seedlot_hash);
+            seedlot_hash_combined = extend_obj(seedlot_hash_combined, crbd_checks_list_seedlot_hash);
+            seedlot_hash_combined = extend_obj(seedlot_hash_combined, unrep_list_seedlot_hash);
+            seedlot_hash_combined = extend_obj(seedlot_hash_combined, rep_list_seedlot_hash);
+            if (!jQuery.isEmptyObject(seedlot_hash_combined)){
+                if (num_seed_per_plot == ''){
+                    const err = 'Number of seeds per plot is required if you have selected a seedlot list!';
+                    alert(err);
+                    throw err;
+                }
+            }
+
+            var unreplicated_stock_list;
+            if (unreplicated_stock_list_id) {
+                var unrep_array = list.getList(unreplicated_stock_list_id);
+                if (unrep_array && unrep_array.length) {
+                    unreplicated_stock_list = JSON.stringify(unrep_array);
+                }
+            }
+
+            var replicated_stock_list;
+            if (replicated_stock_list_id) {
+                var rep_array = list.getList(replicated_stock_list_id);
+                if (rep_array && rep_array.length) {
+                    replicated_stock_list = JSON.stringify(rep_array);
+                }
+            }
+
+            if (design_type === 'p-rep') {
+                if (!unreplicated_stock_list || !replicated_stock_list) {
+                    throw "Cannot generate p-rep design: Replicated or unreplicated stock list data not ready.";
+                }
             } else {
-                alert("You must supply the number of plants per treatment.");
-                return;
-            }
-        }
-
-        var greenhouse_num_plants = [];
-        if (stock_list_id && design_type == 'greenhouse') {
-            for (var i=0; i<stock_list_array.length; i++) {
-                var value = jQuery("input#greenhouse_num_plants_input_" + i).val();
-                if (value == '') {
-                    value = 1;
+                if (!stock_list_id || !stock_list) {
+                    throw "Cannot generate design: Stock list data not ready.";
                 }
-                greenhouse_num_plants.push(value);
             }
-            //console.log(greenhouse_num_plants);
-        }
 
-        var num_rows_per_plot = $('#trial_create_rows_per_plot').val();
-        var num_cols_per_plot = $('#trial_create_cols_per_plot').val();
-        if ($('#trial_create_rows_and_columns_to_plants').prop('checked') && ($('#add_plant_entries').val() > num_rows_per_plot * num_cols_per_plot || num_rows_per_plot * num_cols_per_plot < Math.max(... greenhouse_num_plants.map(Number))) || num_rows_per_plot * num_cols_per_plot < num_plants_per_treatment) {
-            alert("You specified in-plot coordinates, but the number of plants per plot is greater than the number of positions available in each plot. Please decrease the number of plants per plot or increase the number of available positions. If this is a greenhouse trial, make sure no accession is specified to have more plants than the number of allowed spaces. If this is a splitplot design, please make sure that the number of plants per plot specified in section (2) matches the number of plants per treatment.");
-            return;
-        }
-
-        var use_same_layout;
-        if ($('#use_same_layout').is(':checked')) {
-           use_same_layout = $('#use_same_layout').val();
-        }
-        else {
-           use_same_layout = "";
-        }
-
-	    var plot_numbering_scheme = $('input[name="plot_numbering_scheme"]:checked').val();
-
-        $.ajax({
-            type: 'POST',
-            timeout: 3000000,
-            url: '/ajax/trial/generate_experimental_design',
-            dataType: "json",
-            beforeSend: function() {
-                $('#working_modal').modal("show");
-            },
-            data: {
-                'project_name': name,
-                'project_description': desc,
-                'year': year,
-                'planting date' : planting_date,
-                'trial_location': trial_location,
-                'trial_stock_type': trial_stock_type,
-                'stock_list': stock_list,
-                'control_list': control_list,
-                'control_list_crbd': control_list_crbd,
-                'design_type': design_type,
-                'rep_count': rep_count,
-                'block_number': block_number,
-                'row_number': row_number,
-                'row_number_per_block': row_number_per_block,
-                'col_number_per_block': col_number_per_block,
-                'col_number': col_number,
-                'block_size': block_size,
-                'max_block_size': max_block_size,
-                'plot_prefix': plot_prefix,
-                'start_number': start_number,
-                'increment': increment,
-                'greenhouse_num_plants': JSON.stringify(greenhouse_num_plants),
-                'fieldmap_col_number': fieldmap_col_number,
-                'fieldmap_row_number': fieldmap_row_number,
-                'plot_layout_format': plot_layout_format,
-                'treatments': JSON.stringify(treatments),
-                'num_plants_per_plot':num_plants_per_plot,
-                'row_in_design_number': row_in_design_number,
-                'col_in_design_number': col_in_design_number,
-                'no_of_rep_times': no_of_rep_times,
-                'no_of_block_sequence': no_of_block_sequence,
-                'unreplicated_stock_list': unreplicated_stock_list,
-                'replicated_stock_list': replicated_stock_list,
-                'no_of_sub_block_sequence': no_of_sub_block_sequence,
-                'seedlot_hash': JSON.stringify(seedlot_hash_combined),
-                'num_seed_per_plot': num_seed_per_plot,
-                'westcott_check_1': westcott_check_1,
-                'westcott_check_2': westcott_check_2,
-                'westcott_col': westcott_col,
-                'westcott_col_between_check': westcott_col_between_check,
-                'field_size': field_size,
-                'plot_width': plot_width,
-                'plot_length': plot_length,
-                'use_same_layout' : use_same_layout,
-		        'plot_numbering_scheme' : plot_numbering_scheme,
-                'num_cols_per_plot' : num_cols_per_plot,
-                'num_rows_per_plot' : num_rows_per_plot
-            },
-            success: function (response) {
-                $('#working_modal').modal("hide");
-                isGeneratingDesign = false;
-                if (response.error) {
-                    alert(response.error);
+            var treatments = {};
+            if (design_type == 'splitplot'){
+                var count = jQuery('#create_trial_with_treatment_additional_count').val();
+                if (count == 0) {
+                    count = 4; //Interface starts with 4 inputs and user can add additional ones..
+                }
+                var int_count = parseInt(count);
+                for(var i=1; i<=int_count; i++){
+                    var treatment_name = jQuery('#create_trial_with_treatment_name_input'+i).val();
+                    var treatment_value = jQuery('#create_trial_with_treatment_value_input'+i).val();
+                    if(treatment_name != '' && treatment_value != ''){
+                        if (treatment_name in treatments) {
+                            treatments[treatment_name].push(treatment_value);
+                        } else {
+                            treatments[treatment_name] = [];
+                            treatments[treatment_name].push(treatment_value);
+                        }
+                    }
+                }
+                var num_plants_per_treatment = $('#num_plants_per_treatment').val();
+                num_plants_per_plot = 0;
+                var aggregator = 1;
+                for (treatment in treatments) {
+                    var num_levels = Object.keys(treatments[treatment]).length
+                    aggregator = aggregator * num_levels;
+                }
+                num_subplots_per_plot = aggregator;
+                if (num_plants_per_treatment){
+                    num_plants_per_plot = num_plants_per_treatment*num_subplots_per_plot;
                 } else {
-                    if (btn_elem) {
-                        Workflow.complete(btn_elem, true);
+                    const err = "You must supply the number of plants per treatment.";
+                    alert(err);
+                    throw err;
+                }
+            }
+
+            var greenhouse_num_plants = [];
+            if (stock_list_id && design_type == 'greenhouse') {
+                for (var i=0; i<stock_list_array.length; i++) {
+                    var value = jQuery("input#greenhouse_num_plants_input_" + i).val();
+                    if (value == '') {
+                        value = 1;
                     }
-                    formDraft?.saveFormState();
+                    greenhouse_num_plants.push(value);
+                }
+                //console.log(greenhouse_num_plants);
+            }
 
-                    if(response.warning_message){
-                        jQuery('#trial_design_warning_message').html("<center><div class='well'><h4 class='text-warning'>Warning: "+response.warning_message+"</h4></div></center>");
-                    } else {
-                        jQuery('#trial_design_warning_message').html('');
-                    }
+            var num_rows_per_plot = $('#trial_create_rows_per_plot').val();
+            var num_cols_per_plot = $('#trial_create_cols_per_plot').val();
+            if ($('#trial_create_rows_and_columns_to_plants').prop('checked') && ($('#add_plant_entries').val() > num_rows_per_plot * num_cols_per_plot || num_rows_per_plot * num_cols_per_plot < Math.max(... greenhouse_num_plants.map(Number))) || num_rows_per_plot * num_cols_per_plot < num_plants_per_treatment) {
+                const err = "You specified in-plot coordinates, but the number of plants per plot is greater than the number of positions available in each plot. Please decrease the number of plants per plot or increase the number of available positions. If this is a greenhouse trial, make sure no accession is specified to have more plants than the number of allowed spaces. If this is a splitplot design, please make sure that the number of plants per plot specified in section (2) matches the number of plants per treatment.";
+                alert(err);
+                throw err;
+            }
 
-                    $('#trial_design_information').html(response.design_info_view_html);
-                    var layout_view = JSON.parse(response.design_layout_view_html);
-                    //console.log(layout_view);
-                    var layout_html = '';
-                    for (var i=0; i<layout_view.length; i++) {
-                        //console.log(layout_view[i]);
-                        layout_html += layout_view[i] + '<br>';
-                    }
-                    $('#trial_design_view_layout_return').html(layout_html);
+            var use_same_layout;
+            if ($('#use_same_layout').is(':checked')) {
+                use_same_layout = $('#use_same_layout').val();
+            }
+            else {
+                use_same_layout = "";
+            }
 
-                    $('#working_modal').modal("hide");
-                    design_json = response.design_json;
+            var plot_numbering_scheme = $('input[name="plot_numbering_scheme"]:checked').val();
 
-                    var col_length = response.design_map_view.coord_col[0];
-                    var row_length = response.design_map_view.coord_row[0];
-                    var block_max = response.design_map_view.max_block;
-                    var rep_max = response.design_map_view.max_rep;
-                    var col_max =  response.design_map_view.max_col;
-                    var row_max =  response.design_map_view.max_row;
-                    var controls = response.design_map_view.controls;
-                    var false_coord = response.design_map_view.false_coord;
+            const response = await $.ajax({
+                type: 'POST',
+                timeout: 3000000,
+                url: '/ajax/trial/generate_experimental_design',
+                dataType: "json",
+                beforeSend: function() {
+                    $('#working_modal').modal("show");
+                },
+                data: {
+                    'project_name': name,
+                    'project_description': desc,
+                    'year': year,
+                    'planting date' : planting_date,
+                    'trial_location': trial_location,
+                    'trial_stock_type': trial_stock_type,
+                    'stock_list': stock_list,
+                    'control_list': control_list,
+                    'control_list_crbd': control_list_crbd,
+                    'design_type': design_type,
+                    'rep_count': rep_count,
+                    'block_number': block_number,
+                    'row_number': row_number,
+                    'row_number_per_block': row_number_per_block,
+                    'col_number_per_block': col_number_per_block,
+                    'col_number': col_number,
+                    'block_size': block_size,
+                    'max_block_size': max_block_size,
+                    'plot_prefix': plot_prefix,
+                    'start_number': start_number,
+                    'increment': increment,
+                    'greenhouse_num_plants': JSON.stringify(greenhouse_num_plants),
+                    'fieldmap_col_number': fieldmap_col_number,
+                    'fieldmap_row_number': fieldmap_row_number,
+                    'plot_layout_format': plot_layout_format,
+                    'treatments': JSON.stringify(treatments),
+                    'num_plants_per_plot':num_plants_per_plot,
+                    'row_in_design_number': row_in_design_number,
+                    'col_in_design_number': col_in_design_number,
+                    'no_of_rep_times': no_of_rep_times,
+                    'no_of_block_sequence': no_of_block_sequence,
+                    'unreplicated_stock_list': unreplicated_stock_list,
+                    'replicated_stock_list': replicated_stock_list,
+                    'no_of_sub_block_sequence': no_of_sub_block_sequence,
+                    'seedlot_hash': JSON.stringify(seedlot_hash_combined),
+                    'num_seed_per_plot': num_seed_per_plot,
+                    'westcott_check_1': westcott_check_1,
+                    'westcott_check_2': westcott_check_2,
+                    'westcott_col': westcott_col,
+                    'westcott_col_between_check': westcott_col_between_check,
+                    'field_size': field_size,
+                    'plot_width': plot_width,
+                    'plot_length': plot_length,
+                    'use_same_layout' : use_same_layout,
+                    'plot_numbering_scheme' : plot_numbering_scheme,
+                    'num_cols_per_plot' : num_cols_per_plot,
+                    'num_rows_per_plot' : num_rows_per_plot
+                },
+                error: function () {
+                    alert('An error occurred. sorry.');
+                }
+            });
 
-                    var dataset = [];
-                    if (design_type == 'splitplot'){
-                        row_length = response.design_map_view.coord_row[1];
-                        dataset = response.design_map_view.result;
-                        dataset.shift();
-                    }else {
-                        dataset = response.design_map_view.result;
-                    }
+            if (response.error) {
+                alert(response.error);
+            } else {
+                if (btn_elem) {
+                    Workflow.complete(btn_elem, true);
+                }
+                formDraft?.saveFormState();
 
-                    if (col_length && row_length) {
-                        jQuery("#container_field_map_view").css({"display": "inline-block", "overflow": "auto"});
-                        jQuery("#d3_legend").css("display", "inline-block");
+                if (response.warning_message) {
+                    jQuery('#trial_design_warning_message').html("<center><div class='well'><h4 class='text-warning'>Warning: " + response.warning_message + "</h4></div></center>");
+                } else {
+                    jQuery('#trial_design_warning_message').html('');
+                }
 
-                      var margin = { top: 50, right: 0, bottom: 100, left: 30 },
-                          width = 50 * col_max + 30 - margin.left - margin.right,
-                          height = 50 * row_max + 100 - margin.top - margin.bottom,
-                          gridSize = 50,
-                          legendElementWidth = gridSize*2,
-                          rows = response.design_map_view.unique_row,
-                          columns = response.design_map_view.unique_col;
-                          //datasets = response.design_map_view.result;
-                          datasets = dataset;
+                $('#trial_design_information').html(response.design_info_view_html);
+                var layout_view = JSON.parse(response.design_layout_view_html);
+                //console.log(layout_view);
+                var layout_html = '';
+                for (var i = 0; i < layout_view.length; i++) {
+                    //console.log(layout_view[i]);
+                    layout_html += layout_view[i] + '<br>';
+                }
+                $('#trial_design_view_layout_return').html(layout_html);
 
-                      var svg = d3.select("#container_field_map_view").append("svg")
-                          .attr("width", width + margin.left + margin.right)
-                          .attr("height", height + margin.top + margin.bottom)
-                          .append("g")
-                          .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+                $('#working_modal').modal("hide");
+                design_json = response.design_json;
 
-                      var rowLabels = svg.selectAll(".rowLabel")
-                          .data(rows)
-                          .enter().append("text")
-                            .text(function (d) { return d; })
-                            .attr("x", 0 )
-                            .attr("y", function (d, i) { return i * gridSize; })
-                            .style("text-anchor", "end")
-                            .attr("transform", "translate(-6," + gridSize / 1.5 + ")")
-                            .attr("class", function (d, i) { return ((i >= 0 && i <= 4) ? "rowLabel mono axis axis-workweek" : "rowLabel mono axis"); });
+                var col_length = response.design_map_view.coord_col[0];
+                var row_length = response.design_map_view.coord_row[0];
+                var block_max = response.design_map_view.max_block;
+                var rep_max = response.design_map_view.max_rep;
+                var col_max = response.design_map_view.max_col;
+                var row_max = response.design_map_view.max_row;
+                var controls = response.design_map_view.controls;
+                var false_coord = response.design_map_view.false_coord;
 
-                      var columnLabels = svg.selectAll(".columnLabel")
-                          .data(columns)
-                          .enter().append("text")
-                            .text(function(d) { return d; })
-                            .attr("x", function(d, i) { return i * gridSize; })
-                            .attr("y", 0 )
-                            .style("text-anchor", "middle")
-                            .attr("transform", "translate(" + gridSize / 2 + ", -6)")
-                            .attr("class", function(d, i) { return ((i >= 7 && i <= 16) ? "columnLabel mono axis axis-worktime" : "columnLabel mono axis"); });
+                var dataset = [];
+                if (design_type == 'splitplot') {
+                    row_length = response.design_map_view.coord_row[1];
+                    dataset = response.design_map_view.result;
+                    dataset.shift();
+                } else {
+                    dataset = response.design_map_view.result;
+                }
 
-                      var heatmapChart = function(datasets) {
+                if (col_length && row_length) {
+                    jQuery("#container_field_map_view").css({ "display": "inline-block", "overflow": "auto" });
+                    jQuery("#d3_legend").css("display", "inline-block");
 
-                        datasets.forEach(function(d) {
+                    var margin = { top: 50, right: 0, bottom: 100, left: 30 },
+                        width = 50 * col_max + 30 - margin.left - margin.right,
+                        height = 50 * row_max + 100 - margin.top - margin.bottom,
+                        gridSize = 50,
+                        legendElementWidth = gridSize * 2,
+                        rows = response.design_map_view.unique_row,
+                        columns = response.design_map_view.unique_col;
+                    //datasets = response.design_map_view.result;
+                    datasets = dataset;
+
+                    var svg = d3.select("#container_field_map_view").append("svg")
+                        .attr("width", width + margin.left + margin.right)
+                        .attr("height", height + margin.top + margin.bottom)
+                        .append("g")
+                        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+                    var rowLabels = svg.selectAll(".rowLabel")
+                        .data(rows)
+                        .enter().append("text")
+                        .text(function (d) { return d; })
+                        .attr("x", 0)
+                        .attr("y", function (d, i) { return i * gridSize; })
+                        .style("text-anchor", "end")
+                        .attr("transform", "translate(-6," + gridSize / 1.5 + ")")
+                        .attr("class", function (d, i) { return ((i >= 0 && i <= 4) ? "rowLabel mono axis axis-workweek" : "rowLabel mono axis"); });
+
+                    var columnLabels = svg.selectAll(".columnLabel")
+                        .data(columns)
+                        .enter().append("text")
+                        .text(function (d) { return d; })
+                        .attr("x", function (d, i) { return i * gridSize; })
+                        .attr("y", 0)
+                        .style("text-anchor", "middle")
+                        .attr("transform", "translate(" + gridSize / 2 + ", -6)")
+                        .attr("class", function (d, i) { return ((i >= 7 && i <= 16) ? "columnLabel mono axis axis-worktime" : "columnLabel mono axis"); });
+
+                    var heatmapChart = function (datasets) {
+
+                        datasets.forEach(function (d) {
 
                             d.row = +d.row;
                             d.col = +d.col;
                             d.blkn = +d.blkn;
                         });
 
-                          var cards = svg.selectAll(".col")
-                              .data(datasets, function(d) {return d.row+':'+d.col;});
+                        var cards = svg.selectAll(".col")
+                            .data(datasets, function (d) { return d.row + ':' + d.col; });
 
-                          cards.append("title");
+                        cards.append("title");
 
-                          var colors = function (d, i){
-                              if (block_max == 1){
+                        var colors = function (d, i) {
+                            if (block_max == 1) {
                                 color = '#41b6c4';
-                              }
-                              else if (block_max > 1){
-                                if (d.blkn % 2 == 0){
+                            }
+                            else if (block_max > 1) {
+                                if (d.blkn % 2 == 0) {
                                     color = '#c7e9b4';
                                 }
-                                else{
+                                else {
                                     color = '#41b6c4'
                                 }
-                              }
-                              else{
-                                color = '#c7e9b4';
-                              }
-                              if (controls) {
-                                for (var i = 0; i < controls.length; i++) {
-                                  if ( controls[i] == d.stock) {
-                                    color = '#081d58';
-                                  }
-                                }
-                              }
-                              return color;
                             }
-
-                            var strokes = function (d, i){
-                                var stroke;
-                                if (rep_max == 1){
-                                  stroke = 'green';
+                            else {
+                                color = '#c7e9b4';
+                            }
+                            if (controls) {
+                                for (var i = 0; i < controls.length; i++) {
+                                    if (controls[i] == d.stock) {
+                                        color = '#081d58';
+                                    }
                                 }
-                                else if (rep_max > 1){
-                                  if (d.rep % 2 == 0){
-                                      stroke = 'red';
-                                  }
-                                  else{
-                                      stroke = 'green'
-                                  }
+                            }
+                            return color;
+                        }
+
+                        var strokes = function (d, i) {
+                            var stroke;
+                            if (rep_max == 1) {
+                                stroke = 'green';
+                            }
+                            else if (rep_max > 1) {
+                                if (d.rep % 2 == 0) {
+                                    stroke = 'red';
                                 }
-                                else{
-                                  stroke = 'red';
+                                else {
+                                    stroke = 'green'
                                 }
-                                return stroke;
-                              }
+                            }
+                            else {
+                                stroke = 'red';
+                            }
+                            return stroke;
+                        }
 
-                          cards.enter().append("rect")
-                              .attr("x", function(d) { return (d.col - 1) * gridSize; })
-                              .attr("y", function(d) { return (d.row - 1) * gridSize; })
-                              .attr("rx", 4)
-                              .attr("ry", 4)
-                              .attr("class", "col bordered")
-                              .attr("width", gridSize)
-                              .attr("height", gridSize)
-                              .style("stroke-width", 2)
-                              .style("stroke", strokes)
-                              .style("fill", colors)
-                              .on("mouseover", function(d) { d3.select(this).style('fill', 'green'); })
-                              .on("mouseout", function(d) {
-                                                              var cards = svg.selectAll(".col")
-                                                                  .data(datasets, function(d) {return d.row+':'+d.col;});
+                        cards.enter().append("rect")
+                            .attr("x", function (d) { return (d.col - 1) * gridSize; })
+                            .attr("y", function (d) { return (d.row - 1) * gridSize; })
+                            .attr("rx", 4)
+                            .attr("ry", 4)
+                            .attr("class", "col bordered")
+                            .attr("width", gridSize)
+                            .attr("height", gridSize)
+                            .style("stroke-width", 2)
+                            .style("stroke", strokes)
+                            .style("fill", colors)
+                            .on("mouseover", function (d) { d3.select(this).style('fill', 'green'); })
+                            .on("mouseout", function (d) {
+                                var cards = svg.selectAll(".col")
+                                    .data(datasets, function (d) { return d.row + ':' + d.col; });
 
-                                                              cards.append("title");
+                                cards.append("title");
 
-                                                              cards.enter().append("rect")
-                                                                .attr("x", function(d) { return (d.col - 1) * gridSize; })
-                                                                .attr("y", function(d) { return (d.row - 1) * gridSize; })
-                                                                .attr("rx", 4)
-                                                                .attr("ry", 4)
-                                                                .attr("class", "col bordered")
-                                                                .attr("width", gridSize)
-                                                                .attr("height", gridSize)
-                                                                .style("stroke-width", 2)
-                                                                .style("stroke", strokes)
-                                                                .style("fill", colors);
+                                cards.enter().append("rect")
+                                    .attr("x", function (d) { return (d.col - 1) * gridSize; })
+                                    .attr("y", function (d) { return (d.row - 1) * gridSize; })
+                                    .attr("rx", 4)
+                                    .attr("ry", 4)
+                                    .attr("class", "col bordered")
+                                    .attr("width", gridSize)
+                                    .attr("height", gridSize)
+                                    .style("stroke-width", 2)
+                                    .style("stroke", strokes)
+                                    .style("fill", colors);
 
-                                                                cards.style("fill", colors) ;
+                                cards.style("fill", colors);
 
-                                                                cards.select("title").text(function(d) { return d.plot_msg; }) ;
+                                cards.select("title").text(function (d) { return d.plot_msg; });
 
-                                                                cards.exit().remove();
-                                                                //console.log('out');
-                                                            });
+                                cards.exit().remove();
+                                //console.log('out');
+                            });
 
 
-                          cards.style("fill", colors) ;
+                        cards.style("fill", colors);
 
-                          cards.select("title").text(function(d) { return d.plot_msg; }) ;
+                        cards.select("title").text(function (d) { return d.plot_msg; });
 
-                          cards.append("text");
-                          cards.enter().append("text")
-                            .attr("x", function(d) { return (d.col - 1) * gridSize + 10; })
-                            .attr("y", function(d) { return (d.row - 1) * gridSize + 20 ; })
-                            .text(function(d) { return d.plotn; });
+                        cards.append("text");
+                        cards.enter().append("text")
+                            .attr("x", function (d) { return (d.col - 1) * gridSize + 10; })
+                            .attr("y", function (d) { return (d.row - 1) * gridSize + 20; })
+                            .text(function (d) { return d.plotn; });
 
-                          cards.select("text").text(function(d) { return d.plotn; }) ;
+                        cards.select("text").text(function (d) { return d.plotn; });
 
-                          cards.exit().remove();
+                        cards.exit().remove();
 
                         // });
-                        } ;
+                    };
 
-                      heatmapChart(datasets);
-                      if (false_coord){
-                          alert("Row and column numbers were generated on the fly for displaying the physical layout or map. The plots are displayed in zigzag format. These row and column numbers will not be saved in the database. Click 'ok' to continue...");
-                      }
-                  }else {
-                      jQuery("#d3_legend").css("display", "none");
-                      jQuery("#container_field_map_view").css("display", "none");
-                      jQuery("#no_map_view_MSG").css("display", "inline-block");
-                  }
-
+                    heatmapChart(datasets);
+                    if (false_coord) {
+                        alert("Row and column numbers were generated on the fly for displaying the physical layout or map. The plots are displayed in zigzag format. These row and column numbers will not be saved in the database. Click 'ok' to continue...");
+                    }
+                } else {
+                    jQuery("#d3_legend").css("display", "none");
+                    jQuery("#container_field_map_view").css("display", "none");
+                    jQuery("#no_map_view_MSG").css("display", "inline-block");
                 }
-            },
-            error: function () {
-                $('#working_modal').modal("hide");
-                isGeneratingDesign = false;
-                alert('An error occurred. sorry.');
             }
-       });
+        } catch (error) {
+            console.error(error);
+        } finally {
+            isGeneratingDesign = false;
+            $('#working_modal').modal("hide");
+        }
     }
 
     //When the user submits the form, input validation happens here before proceeding to design generation
