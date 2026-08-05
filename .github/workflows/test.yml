@@ -13,6 +13,7 @@ jobs:
   test_breedbase:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         subtest_key:
           - unit
@@ -28,6 +29,7 @@ jobs:
           - selenium2_stock
           - selenium2_tools
           - selenium2_analysis
+          - selenium2_wiki
     steps:
 
       # -----------------------------------------------------------------------
@@ -155,6 +157,11 @@ jobs:
         if: ${{ matrix.subtest_key == 'selenium2_analysis' }}
         run: |
           ./run_test t/selenium2/analysis
+
+      - name: Run selenium tests wiki
+        if: ${{ matrix.subtest_key == 'selenium2_wiki' }}
+        run: |
+          ./run_test t/selenium2/wiki
           exit $(docker inspect testing-breedbase-1 --format='{{.State.ExitCode}}')
 
       - name: Upload screenshots

@@ -17,7 +17,7 @@ $page_name => 'WikiHome'
 </style>
 
 <h3><a href="/wiki"><b>Wiki</b></a>&nbsp;&nbsp;&nbsp;
-  <button id="new_wiki_page_button" class="btn" >New</button>  <button id="edit_wiki_page_button" class="btn">Edit</button> <button id="delete_wiki_page_button" class="btn">Delete</button>  &nbsp;&nbsp;&nbsp;<a style="font-size:10pt" href="/wiki/all_pages">All Pages</a> &nbsp;&nbsp;&nbsp;<a style="font-size:10pt" href="/breeders/file_share_dump">Upload</a>&nbsp;&nbsp;&nbsp; <a target="_new" href="https://daringfireball.net/projects/markdown/syntax#list" style="font-size:10pt">Syntax</a></h3>
+  <button id="new_wiki_page_button" class="btn" >New</button>  <button id="edit_wiki_page_button" class="btn">Edit</button> <button id="rename_wiki_page_button" class="btn">Rename</button> <button id="delete_wiki_page_button" class="btn">Delete</button>  &nbsp;&nbsp;&nbsp;<a style="font-size:10pt" href="/wiki/all_pages">All Pages</a> &nbsp;&nbsp;&nbsp;<a style="font-size:10pt" href="/breeders/file_share_dump">Upload</a>&nbsp;&nbsp;&nbsp; <a target="_new" href="https://daringfireball.net/projects/markdown/syntax#list" style="font-size:10pt">Syntax</a></h3>
 <hr>
 <b><span id="page_name" title="page name">?</span> (v<span id="page_version">?</span></b>)
 <hr>
@@ -36,6 +36,27 @@ $page_name => 'WikiHome'
       </div>
       <div class="modal-footer">
         <button type="button" id="create_wiki_page_button" class="btn btn-primary">Create Page</button>
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="rename_wiki_page_modal" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+	<h5 class="modal-title">Rename Wiki Page</h5>
+	<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+	  <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+    <div class="modal-body">
+    <p>Please enter a new page name in camelCase (for example: myFavoritePage). Spaces and special characters will be converted.</p>
+	<p>New Page Name <input type="text" id="wiki_page_name_new" alt="enter new page name" length="20" /></p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" id="submit_rename_wiki_page_button" class="btn btn-primary">Rename Page</button>
         <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
       </div>
     </div>
@@ -77,11 +98,13 @@ jQuery(window).ready( function() {
 	if (getUserRoles().includes("curator")) {
 	    jQuery('#new_wiki_page_button').prop('disabled', false);
 	    jQuery('#edit_wiki_page_button').prop('disabled', false);
+	    jQuery('#rename_wiki_page_button').prop('disabled', false);
 	    jQuery('#delete_wiki_page_button').prop('disabled', false);
 	}
 	else {
 	    jQuery('#new_wiki_page_button').prop('disabled', true);
 	    jQuery('#edit_wiki_page_button').prop('disabled', true);
+	    jQuery('#rename_wiki_page_button').prop('disabled', false);
 	    jQuery('#delete_wiki_page_button').prop('disabled', true);
 	}
     }
@@ -91,12 +114,26 @@ jQuery(window).ready( function() {
 	jQuery('#new_wiki_page_modal').modal("show");
     });
 
+	jQuery('#rename_wiki_page_button').click( function() {
+		var page_name = jQuery('#page_name').text();
+		jQuery("#wiki_page_name_new").val(page_name);
+		jQuery('#rename_wiki_page_modal').modal("show");
+	});
+
     jQuery('#create_wiki_page_button').click( function() {
 	var page_name = jQuery('#wiki_page_name').val();
 	jQuery('#page_name').html(page_name);
 	create_page(page_name);
 	jQuery('#new_wiki_page_modal').modal("hide");
     });
+
+	jQuery('#submit_rename_wiki_page_button').click( function() {
+		var old_page_name = jQuery('#page_name').text();
+		var new_page_name = jQuery('#wiki_page_name_new').val();
+		console.log(old_page_name, "->", new_page_name);
+		rename_page(old_page_name, new_page_name);
+		jQuery('#rename_wiki_page_modal').modal("hide");
+	});
 
     jQuery('#save_wiki_page_button').click( function() {
 	var page_name = jQuery('#page_name').html();
@@ -216,6 +253,40 @@ function create_page(new_page_name) {
 	function(r) {
 	    alert('An error occurred!');
 	    window.location.href="/wiki";
+	}
+    );
+}
+
+function rename_page(old_page_name, new_page_name) {
+	jQuery.ajax( {
+		url : '/ajax/wiki/rename?old_page_name='+old_page_name+'&new_page_name='+new_page_name,
+	}).then(
+	function(r) {
+		if (r.error) {
+			alert(r.error);
+			window.location.href="/wiki";
+		}
+		else {
+			if (r.error) {
+				alert('An error occurred. '+r.error);
+				window.location.href="/wiki";
+			}
+			else {
+				if (r.success) {
+					page_name = r.page_name;
+					alert('The page rename was successful.');
+					window.location.href="/wiki/" + r.page_name;
+				}
+				else {
+					alert('The page creation was not successful for unknown reasons.');
+					window.location.href="/wiki";
+				}
+			}
+		}
+	},
+	function(r) {
+		alert('An error occurred!');
+		window.location.href="/wiki";
 	}
     );
 }

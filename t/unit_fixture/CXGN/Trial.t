@@ -1018,9 +1018,9 @@ my $accession_row = $f->bcs_schema->resultset('Stock::Stock')->find( { stock_id 
 $accession_row->create_date($now->iso8601());
 $accession_row->update();
 
-my $new_accessions = CXGN::Project::get_recently_added_accessions($f->bcs_schema(), 'week');
+my $new_accessions = CXGN::Project::get_recently_added_accessions($f->bcs_schema(), 'week', 20);
 print STDERR "RECENTLY ADDED ACCESSIONS: ".Dumper($new_accessions);
-is(scalar(@$new_accessions), 1, "check that there is one new accession");
+is(scalar(@$new_accessions), 13, "check that there are 13 new stocks");
 
 print STDERR "DELETING PROJECT ENTRY... ";
 $trial->delete_project_entry();
