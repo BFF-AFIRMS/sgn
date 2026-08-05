@@ -84,6 +84,7 @@ Lukas Mueller, based on the Perl code from Rob Buels.
 =cut
 
 </%doc>
+
 <%args>
     $title
     $subtitle      => ""
@@ -111,8 +112,11 @@ Lukas Mueller, based on the Perl code from Rob Buels.
     if ( $contents =~ /\S/ && !$is_empty ) {
         $align &&= qq| style="text-align: $align|;
         $id ||= "sgnc" . int( rand(10000) );
-
-        $contents = qq|<div class="${sub}infosectioncontent" $align>$contents</div>|;
+        $contents = <<EOC;
+<div class="${sub}infosectioncontent" $align>
+$contents
+</div>
+EOC
 
         if ( $collapsible ) {
             ( $title, $contents ) = collapser(
@@ -125,13 +129,13 @@ Lukas Mueller, based on the Perl code from Rob Buels.
                 }
             );
         }
-
         $subtitle ||= '';
         my $title_bar = <<EOHTML;
 <table cellspacing="0" cellpadding="0" class="${sub}infosectionhead" summary=""><tr><td class="${sub}infosectiontitle">$title</td><td class="${sub}infosectionsubtitle" role="button" tabindex="0">$subtitle&nbsp;</td></tr></table>
 EOHTML
         print "$title_bar\n$contents\n";
     }
+
     #otherwise, if it's actually empty, just print a collapsed section
     #with the empty message
     elsif( $hide_if_empty ) {
