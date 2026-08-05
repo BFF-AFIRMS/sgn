@@ -47,7 +47,7 @@ jQuery(document).ready(function ($) {
     var num_cols;
     var inherits_plot_treatments;
 
-    var isRestoringDesign = false;
+    var isGeneratingDesign = false;
 
     if (window.FormDraft) {
         var formDraft = new window.FormDraft({
@@ -58,7 +58,7 @@ jQuery(document).ready(function ($) {
                 workflowSelector: '#trial_design_workflow',
                 lockForwardOnEdit: 1,
                 onRestoreStep: function(currentStep) {
-                    if (currentStep === 2 && !jQuery('#trial_design_information').children().length && !isRestoringDesign) {
+                    if (currentStep === 2 && !jQuery('#trial_design_information').children().length) {
                         generate_experimental_design();
                     }
                 }
@@ -642,7 +642,10 @@ jQuery(document).ready(function ($) {
     var num_subplots_per_plot = 0;
 
     function generate_experimental_design(btn_elem) {
-        isRestoringDesign = true;
+        if (isGeneratingDesign) {
+            return;
+        }
+        isGeneratingDesign = true;
         var name = $('#new_trial_name').val();
         var year = $('#add_project_year').val();
         var planting_date = $('#add_project_planting_date').val();
@@ -772,13 +775,13 @@ jQuery(document).ready(function ($) {
         if (design_type === 'p-rep') {
             if (!unreplicated_stock_list || !replicated_stock_list) {
                 console.warn("Cannot generate p-rep design: Replicated or unreplicated stock list data not ready.");
-                isRestoringDesign = false;
+                isGeneratingDesign = false;
                 return;
             }
         } else {
             if (!stock_list_id || !stock_list) {
                 console.warn("Cannot generate design: Stock list data not ready.");
-                isRestoringDesign = false;
+                isGeneratingDesign = false;
                 return;
             }
         }
@@ -906,7 +909,7 @@ jQuery(document).ready(function ($) {
             },
             success: function (response) {
                 $('#working_modal').modal("hide");
-                isRestoringDesign = false;
+                isGeneratingDesign = false;
                 if (response.error) {
                     alert(response.error);
                 } else {
@@ -1120,7 +1123,7 @@ jQuery(document).ready(function ($) {
             },
             error: function () {
                 $('#working_modal').modal("hide");
-                isRestoringDesign = false;
+                isGeneratingDesign = false;
                 alert('An error occurred. sorry.');
             }
        });
