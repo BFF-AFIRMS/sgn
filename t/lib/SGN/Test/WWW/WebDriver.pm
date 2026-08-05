@@ -110,9 +110,13 @@ has 'js_logs' => (
 sub collect_js_logs {
     my $self = shift;
     return unless $self->{driver};
+
+    my $header = _sanitize_action(shift);
+
     try {
         my $logs = $self->driver->execute_script('return window.jsErrorsAndLogs || [];');
         if (ref($logs) eq 'ARRAY' && @$logs) {
+            push @{$self->js_logs}, "--- $header ---" if $header;
             push @{$self->js_logs}, @$logs;
             $self->driver->execute_script('window.jsErrorsAndLogs = [];');
         }
@@ -207,10 +211,11 @@ sub click {
     my ($self, $name, $method, @args) = @_;
     my ($timeout, $scrollto) = $self->_extract_basic_args(@args);
 
-    $self->collect_js_logs();
+    my $action = "click_$name";
+    $self->collect_js_logs($action);
 
     return wait_until {
-        $self->screenshot("click_$name");
+        $self->screenshot($action);
 
         my $element = $scrollto
             ? $self->scroll_into_view($name, $method, timeout => $timeout)
@@ -259,7 +264,7 @@ sub get {
     my ($self, $url, @args) = @_;
     my ($timeout) = $self->_extract_basic_args(@args);
 
-    $self->collect_js_logs();
+    $self->collect_js_logs("get_$url");
 
     my $ok = wait_until {
         $self->driver->get($url);
@@ -514,11 +519,7 @@ sub wait_for_network_idle {
 
 sub screenshot {
     my $self = shift;
-    my $action = shift;
-
-    # Replace non-alphanumeric characters with underscores
-    $action =~ s/[^a-zA-Z0-9]+/_/g;
-    $action =~ s/^_|_$//g;
+    my $action = _sanitize_action(shift);
 
     my $dir = '/screenshots';
     mkdir $dir unless -d $dir;
@@ -558,6 +559,14 @@ sub _maybe_unwrap {
         return @$param;
     }
     return $param;
+}
+
+sub _sanitize_action {
+    my $action = shift;
+    # Replace non-alphanumeric characters with underscores
+    $action =~ s/[^a-zA-Z0-9]+/_/g;
+    $action =~ s/^_|_$//g;
+    return $action;
 }
 
 sub _extract_timeout {
