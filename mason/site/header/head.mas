@@ -1,5 +1,6 @@
 <!-- INSERT_HEAD_PRE_HTML -->
 
+<!-- This captures console logs so they can be extracted by the selenium tests. -->
 % if (!$c->config->{production_server}) {
 <script type="text/javascript">
    window.jsErrorsAndLogs = window.jsErrorsAndLogs || [];
