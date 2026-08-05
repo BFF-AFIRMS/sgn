@@ -246,7 +246,7 @@ sizes. Hover for details."></span>
 
             var data_summary = {};
             // Display tools in table sorted alphabetically by name
-            var ordered_keys = Object.keys(json).toSorted();
+            var ordered_keys = Array.from(Object.keys(json)).sort();
 
             for (const key of ordered_keys) {
                if (key == "Data Summary"){
