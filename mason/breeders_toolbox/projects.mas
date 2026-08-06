@@ -36,5 +36,4 @@ $design_types => ()
   </%perl>
 </div>
 
-<& /breeders_toolbox/trial/trial_create_dialogs.mas, locations => \@locations, breeding_programs => $breeding_programs, management_factor_types => $management_factor_types, design_types => $design_types &>
 <& /breeders_toolbox/trial/trial_upload_dialogs.mas, locations => \@locations, breeding_programs => $breeding_programs, design_types => $design_types &>

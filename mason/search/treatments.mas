@@ -2,7 +2,7 @@
 <%args>
 </%args>
 
-<& /util/import_javascript.mas, classes => [ ], entries => [ 'search_state' ] &>
+<& /util/import_javascript.mas, classes => [ ], entries => [ 'managers/search_state' ] &>
 <& /util/import_css.mas, paths => ['/documents/inc/datatables/custom_datatable_select_styles.css'] &>
 
 <& /page/page_title.mas, title => "Treatment Search" &>
@@ -119,7 +119,7 @@ jQuery(document).ready(function () {
 
     var treatment_table;
 
-    const searchManager = window.jsMod['search_state'].create({
+    const searchManager = window.jsMod['managers/search_state'].create({
         submitButtonSelector: '#submit_treatment_search',
         resetButtonSelector: '#reset_treatment_search',
         elements: {

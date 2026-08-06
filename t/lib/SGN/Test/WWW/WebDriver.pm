@@ -69,8 +69,11 @@ has 'host' => ( is => 'rw',
 		default => sub { $ENV{SGN_TEST_SERVER} },
     );
 
-# Configurable implicit wait
-has 'implicit_wait' => ( is => 'rw', default => 90 * 1000 );
+# The majority of the time, explicit waits are used. Setting an explicit wait
+# shorter than the implicit wait has no effect. Thus, the implicit wait serves
+# as the lower bound when a custom timeout parameter is provided. 
+has 'implicit_wait' => ( is => 'rw', default => 10 * 1000 );
+has 'explicit_wait' => ( is => 'rw', default => 90 * 1000 );
 
 has 'driver' => ( is => 'rw',
           isa => 'Selenium::Remote::Driver',
@@ -85,7 +88,7 @@ has 'driver' => ( is => 'rw',
 sub _build_driver {
     my $self = shift;
     my $driver = Selenium::Remote::Driver->new(
-        'base_url' => $ENV{SGN_TEST_SERVER},
+        'base_url' => $self->host(),
         'remote_server_addr' => $ENV{SGN_REMOTE_SERVER_ADDR} || 'localhost'
     );
     $self->_configure_driver_timeouts($driver);
@@ -98,10 +101,47 @@ sub _configure_driver_timeouts {
     $driver->set_timeout('page load', $self->implicit_wait);
 }
 
+has 'js_logs' => (
+    is      => 'rw',
+    isa     => 'ArrayRef',
+    default => sub { [] },
+);
+
+sub collect_js_logs {
+    my $self = shift;
+    return unless $self->{driver};
+
+    my $header = _sanitize_action(shift);
+
+    try {
+        my $logs = $self->driver->execute_script('return window.jsErrorsAndLogs || [];');
+        if (ref($logs) eq 'ARRAY' && @$logs) {
+            push @{$self->js_logs}, "--- $header ---" if $header;
+            push @{$self->js_logs}, @$logs;
+            $self->driver->execute_script('window.jsErrorsAndLogs = [];');
+        }
+    } catch {
+        # Ignore if alert is present or page is currently unloading
+    };
+}
+
+sub DEMOLISH {
+    my $self = shift;
+    $self->collect_js_logs();
+    my $logs = $self->js_logs;
+    if (ref($logs) eq 'ARRAY' && @$logs) {
+        print STDERR "\n--- CLIENT-SIDE JS ERRORS AND LOGS ---\n";
+        foreach my $log (@$logs) {
+            print STDERR "  $log\n";
+        }
+        print STDERR "--------------------------------------\n\n";
+    }
+}
+
 has 'user_data' => ( is => 'rw',
 		     isa => 'Ref',
 		     default => sub { 
-			 { 
+			 {
 			     curator   => { username => 'janedoe',
 					    password => 'secretpw',
 			     },
@@ -168,32 +208,43 @@ sub base_url {
 }
 
 sub click {
-    my $self = shift;
-    my $name = shift;
-    my $method = shift;
+    my ($self, $name, $method, @args) = @_;
+    my ($timeout, $scrollto) = $self->_extract_basic_args(@args);
 
-    my $timeout = $self->driver->get_timeouts()->{"implicit"} / 1000; # in seconds
+    my $action = "click_$name";
+    $self->collect_js_logs($action);
+
     return wait_until {
-        $self->screenshot("click_$name");
-        $self->driver->find_element($name, $method)->click();
+        $self->screenshot($action);
+
+        my $element = $scrollto
+            ? $self->scroll_into_view($name, $method, timeout => $timeout)
+            : $self->driver->find_element($name, $method);
+        $element->click();
     } timeout => $timeout;
 }
 
 sub click_ok {
-    my $self = shift;
-    my $name = shift;
-    my $method = shift;
-    my $test_name = shift || print STDERR "You can provide a test name parameter for click_ok\n";
-    ok(my $element = $self->click($name, $method), $test_name);
+    my ($self, $name, $method, @args) = @_;
+    my ($test_name, $timeout, $scrollto) = $self->_extract_ok_args(@args);
+
+    $test_name = $test_name || print STDERR "You can provide a test name parameter for click_ok\n";
+    ok(
+        my $element = $self->click(
+            $name,
+            $method,
+            timeout  => $timeout,
+            scrollto => $scrollto,
+        ),
+        $test_name
+    );
     return $element;
 }
 
 sub clear {
-    my $self = shift;
-    my $name = shift;
-    my $method = shift;
+    my ($self, $name, $method, @args) = @_;
+    my ($timeout) = $self->_extract_basic_args(@args);
 
-    my $timeout = $self->driver->get_timeouts()->{"implicit"} / 1000; # in seconds
     return wait_until {
         $self->screenshot("clear_$name");
         $self->driver->find_element($name, $method)->clear();
@@ -201,66 +252,20 @@ sub clear {
 }
 
 sub clear_ok {
-    my $self = shift;
-    my $name = shift;
-    my $method = shift;
-    my $test_name = shift || print STDERR "You can provide a test name parameter for clear_ok\n";
-    ok(my $element = $self->clear($name, $method), $test_name);
+    my ($self, $name, $method, @args) = @_;
+    my ($test_name, $timeout) = $self->_extract_ok_args(@args);
+
+    $test_name = $test_name || print STDERR "You can provide a test name parameter for clear_ok\n";
+    ok(my $element = $self->clear($name, $method, timeout => $timeout), $test_name);
     return $element;
 }
 
-=item click_until_ok($self, $name_btn, $method_btn, $name_sentinel, $method_sentinel, $test_name)
-Keeps clicking the button defined by $name_btn and $method_btn every second
-until the sentinel element defined by $name_sentinel and $method_sentinel appears.
-=cut
-sub click_until_ok {
-    my ($self, $name_btn, $method_btn, $name_sentinel, $method_sentinel, $test_name) = @_;
-    $test_name ||= "Click button $name_btn until sentinel $name_sentinel appears";
-
-    my $timeout = $self->driver->get_timeouts()->{"implicit"} / 1000; # in seconds
-    my $sentinel;
-
-    my $success = try {
-        wait_until {
-            my $found = 0;
-            try {
-                $sentinel = $self->driver->find_element($name_sentinel, $method_sentinel);
-                if ($sentinel && $sentinel->is_displayed()) {
-                    $found = 1;
-                }
-            } catch {
-                # Sentinel not found
-            };
-
-            if ($found) {
-                print STDERR "click_until_ok: Sentinel found and displayed! ($name_sentinel, $method_sentinel)\n";
-                return 1;
-            }
-
-            print STDERR "click_until_ok: Sentinel not found or not displayed yet. Attempting click on $name_btn ($method_btn)\n";
-
-            try {
-                $self->screenshot("click_until_ok_attempt");
-                $self->driver->find_element($name_btn, $method_btn)->click();
-            } catch {
-                print STDERR "click_until_ok: Failed to click $name_btn: $_\n";
-            };
-
-            return 0;
-        } timeout => $timeout, interval => 1;
-    } catch {
-        print STDERR "click_until_ok: timed out or error: $_";
-        return 0;
-    };
-
-    ok($success, $test_name);
-    return $sentinel;
-}
-
 sub get { 
-    my $self = shift;
-    my $url = shift;
-    my $timeout = $self->driver->get_timeouts()->{"implicit"} / 1000; # in seconds
+    my ($self, $url, @args) = @_;
+    my ($timeout) = $self->_extract_basic_args(@args);
+
+    $self->collect_js_logs("get_$url");
+
     my $ok = wait_until {
         $self->driver->get($url);
     } timeout => $timeout;
@@ -269,18 +274,17 @@ sub get {
 }
 
 sub get_ok { 
-    my $self = shift;
-    my $url = shift;
-    my $test_name = shift || "get $url test";
-    ok($self->get($url), $test_name);
+    my ($self, $url, @args) = @_;
+    my ($test_name, $timeout) = $self->_extract_ok_args(@args);
+
+    $test_name ||= "get $url test";
+    ok($self->get($url, timeout => $timeout), $test_name);
 }
     
 sub find_element { 
-    my $self = shift;
-    my $name = shift;
-    my $method = shift;
+    my ($self, $name, $method, @args) = @_;
+    my ($timeout) = $self->_extract_basic_args(@args);
 
-    my $timeout = $self->driver->get_timeouts()->{"implicit"} / 1000; # in seconds
     return wait_until {
         $self->screenshot("find_element_$name");
         $self->driver->find_element($name, $method);
@@ -288,21 +292,18 @@ sub find_element {
 }
 
 sub find_element_ok { 
-    my $self = shift;
-    my $name = shift;
-    my $method = shift;
-    my $test_name = shift || print STDERR "You can provide a test name parameter for find_element_ok\n";
-    ok(my $element = $self->find_element($name, $method), $test_name);
+    my ($self, $name, $method, @args) = @_;
+    my ($test_name, $timeout) = $self->_extract_ok_args(@args);
+
+    $test_name = $test_name || print STDERR "You can provide a test name parameter for find_element_ok\n";
+    ok(my $element = $self->find_element($name, $method, timeout => $timeout), $test_name);
     return $element;
 }
 
 sub get_attribute {
-    my $self = shift;
-    my $name = shift;
-    my $method = shift;
-    my $attribute = shift;
+    my ($self, $name, $method, $attribute, @args) = @_;
+    my ($timeout) = $self->_extract_basic_args(@args);
 
-    my $timeout = $self->driver->get_timeouts()->{"implicit"} / 1000; # in seconds
     return wait_until {
         $self->screenshot("get_attribute_$attribute");
         $self->driver->find_element($name, $method)->get_attribute($attribute);
@@ -310,41 +311,36 @@ sub get_attribute {
 }
 
 sub get_attribute_ok {
-    my $self = shift;
-    my $name = shift;
-    my $method = shift;
-    my $attribute = shift;
-    my $test_name = shift || print STDERR "You can provide a test name parameter for get_attribute_ok\n";
-    ok( my $element = $self->get_attribute($name, $method, $attribute), $test_name);
+    my ($self, $name, $method, $attribute, @args) = @_;
+    my ($test_name, $timeout) = $self->_extract_ok_args(@args);
+
+    $test_name = $test_name || print STDERR "You can provide a test name parameter for get_attribute_ok\n";
+    ok( my $element = $self->get_attribute($name, $method, $attribute, timeout => $timeout), $test_name);
     return $element;
 }
 
 sub get_text {
-    my $self = shift;
-    my $name = shift;
-    my $method = shift;
-    my $timeout = $self->driver->get_timeouts()->{"implicit"} / 1000; # in seconds
+    my ($self, $name, $method, @args) = @_;
+    my ($timeout) = $self->_extract_basic_args(@args);
+
     return wait_until {
         $self->driver->find_element($name, $method)->get_text();
     } timeout => $timeout;
 }
 
 sub get_text_ok {
-    my $self = shift;
-    my $name = shift;
-    my $method = shift;
-    my $test_name = shift || print STDERR "You can provide a test name parameter for get_text_ok\n";
-    ok( my $element = $self->get_text($name, $method), $test_name);
+    my ($self, $name, $method, @args) = @_;
+    my ($test_name, $timeout) = $self->_extract_ok_args(@args);
+
+    $test_name = $test_name || print STDERR "You can provide a test name parameter for get_text_ok\n";
+    ok( my $element = $self->get_text($name, $method, timeout => $timeout), $test_name);
     return $element;
 }
 
 sub send_keys {
-    my $self = shift;
-    my $name = shift;
-    my $method = shift;
-    my $input = shift;
+    my ($self, $name, $method, $input, @args) = @_;
+    my ($timeout) = $self->_extract_basic_args(@args);
 
-    my $timeout = $self->driver->get_timeouts()->{"implicit"} / 1000; # in seconds
     return wait_until {
         $self->screenshot("send_keys_$name");
         $self->driver->find_element($name, $method)->send_keys(_maybe_unwrap($input));
@@ -352,19 +348,18 @@ sub send_keys {
 }
 
 sub send_keys_ok {
-    my $self = shift;
-    my $name = shift;
-    my $method = shift;
-    my $input = shift;
-    my $test_name = shift || print STDERR "You can provide a test name parameter for send_keys_ok\n";
-    ok( my $element = $self->send_keys($name, $method, $input), $test_name);
+    my ($self, $name, $method, $input, @args) = @_;
+    my ($test_name, $timeout) = $self->_extract_ok_args(@args);
+
+    $test_name = $test_name || print STDERR "You can provide a test name parameter for send_keys_ok\n";
+    ok( my $element = $self->send_keys($name, $method, $input, timeout => $timeout), $test_name);
     return $element;
 }
 
 sub accept_alert {
-    my $self = shift;
+    my ($self, @args) = @_;
+    my ($timeout) = $self->_extract_basic_args(@args);
 
-    my $timeout = $self->driver->get_timeouts()->{"implicit"} / 1000; # in seconds
     return wait_until {
         $self->screenshot("accept_alert");
         $self->driver->accept_alert();
@@ -372,14 +367,15 @@ sub accept_alert {
 }
 
 sub accept_alert_ok { 
-    my $self = shift;
-    my $test_name = shift;
-    ok($self->accept_alert(), $test_name);
+    my ($self, @args) = @_;
+    my ($test_name, $timeout) = $self->_extract_ok_args(@args);
+
+    ok($self->accept_alert(timeout => $timeout), $test_name);
 }
 
 sub get_alert_text {
-    my $self = shift;
-    my $timeout = $self->driver->get_timeouts()->{"implicit"} / 1000; # in seconds
+    my ($self, @args) = @_;
+    my ($timeout) = $self->_extract_basic_args(@args);
     return wait_until {
         return $self->driver->get_alert_text();
     } timeout => $timeout;
@@ -483,9 +479,8 @@ sub wait_for_alert_dismissed {
 }
 
 sub wait_for_network_idle {
-    my $self = shift;
-
-    my $timeout = $self->driver->get_timeouts()->{"implicit"} / 1000; # in seconds
+    my ($self, @args) = @_;
+    my $timeout = $self->_extract_timeout(@args); # in seconds
 
     my $last_active_requests = -1;
     my $unchanged_count = 0;
@@ -524,11 +519,7 @@ sub wait_for_network_idle {
 
 sub screenshot {
     my $self = shift;
-    my $action = shift;
-
-    # Replace non-alphanumeric characters with underscores
-    $action =~ s/[^a-zA-Z0-9]+/_/g;
-    $action =~ s/^_|_$//g;
+    my $action = _sanitize_action(shift);
 
     my $dir = '/screenshots';
     mkdir $dir unless -d $dir;
@@ -549,6 +540,19 @@ sub screenshot {
     }
 }
 
+sub scroll_into_view {
+    my ($self, @args) = @_;
+    my $element = $self->find_element(@args);
+    $self->scroll_element_into_view($element);
+    return $element;
+}
+
+sub scroll_element_into_view {
+    my ($self, $element) = @_;
+    $self->driver->execute_script("arguments[0].scrollIntoView({ block: 'center' });", $element);
+    return $element;
+}
+
 sub _maybe_unwrap {
     my $param = shift;
     if (ref($param) eq 'ARRAY') {
@@ -556,6 +560,53 @@ sub _maybe_unwrap {
     }
     return $param;
 }
+
+sub _sanitize_action {
+    my $action = shift;
+    # Replace non-alphanumeric characters with underscores
+    $action =~ s/[^a-zA-Z0-9]+/_/g;
+    $action =~ s/^_|_$//g;
+    return $action;
+}
+
+sub _extract_timeout {
+    my ($self, @args) = @_;
+    my $default_timeout = $self->explicit_wait / 1000;
+
+    # Named form: (timeout => $seconds)
+    if (@args >= 2 && @args % 2 == 0 && !ref($args[0])) {
+        my %named = @args;
+        return defined $named{timeout} ? $named{timeout} : $default_timeout;
+    }
+
+    return $default_timeout;
+}
+
+sub _extract_basic_args {
+    my ($self, @args) = @_;
+
+    my $timeout = $self->_extract_timeout(@args);
+    my $scrollto = 1;
+
+    if (@args >= 2 && @args % 2 == 0 && !ref($args[0])) {
+        my %named = @args;
+        if (exists $named{scrollto}) {
+            $scrollto = $named{scrollto} ? 1 : 0;
+        }
+    }
+
+    return ($timeout, $scrollto);
+}
+
+sub _extract_ok_args {
+    my ($self, @args) = @_;
+
+    my $test_name = @args % 2 ? shift @args : undef;
+    my @basic_args = $self->_extract_basic_args(@args);
+
+    return ($test_name, @basic_args);
+}
+
 
 1;
    

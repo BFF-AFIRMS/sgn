@@ -1,0 +1,149 @@
+<%args>
+$locations
+$breeding_programs
+$management_factor_types => ()
+$design_types => ()
+</%args>
+
+<& /util/import_javascript.mas, entries => ['managers/form_draft'], classes => [ 'CXGN.TrialTreeFolders', 'd3.d3v4Min.js', 'moment_min', 'daterangepicker', 'CXGN.BreedersToolbox.AddTrial', 'CXGN.BreedersToolbox.Trial' ] &>
+
+<style>
+    #container_field_map_view,
+    #d3legend,
+    #no_map_view_MSG {
+        display: none;
+    }
+
+    #container_fm {
+        height: 390px;
+        width: 700px;
+        overflow: auto;
+        display: none;
+        margin: 10px;
+    }
+
+    rect.bordered {
+        stroke: #E6E6E6;
+        stroke-width:2px;
+    }
+
+    text.mono {
+        font-size: 9pt;
+        font-family: Consolas, courier;
+        fill: #aaa;
+    }
+
+    text.axis-workweek { fill: #000; }
+    text.axis-worktime { fill: #000; }
+
+    .legend { list-style: none; }
+    .legend li { float: left; margin-right: 10px; }
+    .legend span { border: 1px solid #ccc; float: left; width: 12px; height: 12px; margin: 2px; }
+
+    .legend .d3_block_even_number { background-color: #c7e9b4; }
+    .legend .d3_block_odd_number { background-color: #41b6c4; }
+    .legend .d3_checks { background-color: #081d58; }
+    .legend .d3_rep_even_number { background-color: red; height: 8px; width: 18px; }
+    .legend .d3_rep_odd_number { background-color: green; height: 8px; width: 18px; }
+</style>
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-sm-12">
+            <& /page/page_title.mas, title=>"Design New Trial" &>
+            <div class="well">
+                 <& /breeders_toolbox/trial/trial_create_form.mas, locations => $locations, breeding_programs => $breeding_programs, management_factor_types => $management_factor_types, design_types => $design_types &>
+            </div>
+        </div>
+    </div>
+</div>
+
+<& /breeders_toolbox/trial/add_trial_treatment_dialogs.mas, management_factor_types => $management_factor_types &>
+
+<div class="modal fade" id="partial_rep_help_dialog" name="partial_rep_help_dialog" tabindex="-1" role="dialog" aria-labelledby="partialRepHelpDialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="text-align: center">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="partialRepHelpDialog">Partially Replicated Design Usage Help</h4>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <p>
+                        <h4>
+                            <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+                            <b>Background:</b>
+                        </h4>
+                        <div class="tw-flex tw-justify-center"><p>Partially replicated designs have some treatments that are unreplicated and rely on replicated treatments to make the trial analysable. The design were described in Cullis et al. (2006). It is recommended that at least 20% of the experimental units are occupied by replicated treatments. The aim of these experiments is usually to select promising treatments from a set of replicated and unreplicated test treatments, with check and quality standard treatments providing the necessary replication overall to give a valid experiment. DiGGer (Coombes, 2002) was used to implement this design. DiGGer is a flexible tool for creating experimental designs that are efficient for specified blocking and correlation patterns. DiGGer package (http://www.austatgen.org/files/software/downloads) is an add-on for the statistical computing language and environment R (R Development Core Team, 2009).</p></div>
+                        <h4>
+                            <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+                            <b>Design Parameters:</b>
+                        </h4>
+                        <div class="tw-flex tw-justify-center"><p> The parameters will consider a sample partially replicated design trial with 200 unreplicated accessions, 119 accessions replicated 4 times, 26 rows in design, 26 columns in design, bock sequence of 13 by 2 (13, 2) i.e 2 blocks with each having 13 rows; sub-block sequence of block of 13 by 1 (13, 1) i.e 1 sub-block with each having 13 rows in each block. </p></div>
+                        <dl>
+                            <dt>List of Unreplicated Accession</dt>
+                            <ul>
+                                <li>
+                                    <dd> You're expected to provide the list of unreplicated accessions in this selectbox. E.g. is a list of 200 accessions.</dd>
+                                </li>
+                            </ul>
+                            <dt>List of Replicated Accession</dt>
+                            <ul>
+                                <li>
+                                    <dd>List of replicated accessions should be provided in this selectbox. E.g. is a list of 119 accessions.</dd>
+                                </li>
+                            </ul>
+                            <dt>Number of rows in design</dt>
+                            <ul>
+                                <li>
+                                    <dd> Provide the number of rows you want to have in the design. E.g. 26 number of rows. </dd>
+                                </li>
+                            </ul>
+                            <dt>Number of Columns in Design</dt>
+                            <ul>
+                                <li>
+                                    <dd> Provide the number of columns you want to have in the design. E.g. 26 number of columns. </dd>
+                                </li>
+                            </ul>
+                            <dt>Number of Times Replicated Accessions are Replicated</dt>
+                            <ul>
+                                <li>
+                                    <dd>Provide the number of times you want the replicated accessions to be replicated. E.g. 4</dd>
+                                </li>
+                            </ul>
+                            <dt>Block Sequence</dt>
+                            <ul>
+                                <li>
+                                    <dd>The block sequence should reflect the blocking structure of your design. E.g. (13, 2), meaning the design has 2 blocks and each block has 13 rows.</dd>
+                                </li>
+                            </ul>
+                            <dt>Sub-block Sequence</dt>
+                            <ul>
+                                <li>
+                                    <dd>The sub-block sequence should reflect the sub-blocking structure of your design. E.g. (13, 1), meaning the design has 1 sub-block (column) and each sub-block has 13 rows.</dd>
+                                </li>
+                            </ul>
+                        </dl>
+                        <h4>
+                            <span class="ui-icon ui-icon-circle-check" style="float: left; margin: 0 7px 50px 0;"></span>
+                            <b>NOTE:</b>
+                        </h4>
+                        <dl><dt>
+                            <ul>
+                                <li>
+                                    <dd>The product of the number of rows and columns in the design should equal the total number of plots.</dd>
+                                </li>
+                                <li>
+                                    <dd>The sum of the unreplicated accessions and the replicated accessions (given the number of times it was replicated) should equal the total number of plots. </dd>
+                                </li>
+                            </ul>
+                        </dt></dl>
+                    </p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="partial_rep_usage_dialog_ok_button" type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>

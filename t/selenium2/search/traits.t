@@ -9,16 +9,15 @@ my $d = SGN::Test::WWW::WebDriver->new();
 
 # Helper to set the checked state of an ontology database checkbox
 sub set_checkbox_state {
-    my ($driver_obj, $label_text, $should_be_checked) = @_;
+    my ($label_text, $should_be_checked) = @_;
     my $xpath = "//div[\@id='trait_search_ontology_select']//text()[contains(., '$label_text')]/preceding-sibling::input[1]";
-    my $elem = $driver_obj->find_element($xpath, 'xpath');
+    my $elem = $d->find_element($xpath, 'xpath');
     
-    # Determine current checked state using is_selected() or the 'checked' attribute
-    my $is_checked = $elem->is_selected() || ($elem->get_attribute('checked') ? 1 : 0);
-    
-    if ($should_be_checked && !$is_checked) {
-        $elem->click();
-    } elsif (!$should_be_checked && $is_checked) {
+    # Click only if desired and current states differ
+    my $is_checked = $elem->is_selected() || $elem->get_attribute('checked');
+
+    if ((!!$should_be_checked) != (!!$is_checked)) {
+        $d->scroll_element_into_view($elem);
         $elem->click();
     }
 }
@@ -37,7 +36,7 @@ sub run_trait_search_test {
 
     if ($args{checkboxes}) {
         while (my ($label_text, $state) = each %{$args{checkboxes}}) {
-            set_checkbox_state($d, $label_text, $state);
+            set_checkbox_state($label_text, $state);
         }
     }
 
