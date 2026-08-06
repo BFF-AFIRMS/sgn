@@ -1234,7 +1234,7 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
     my $sample_unit_level = $c->req->param("sample_unit_level") || "accession";
 
     my (@accession_ids, @accession_list, @accession_genotypes, @unsorted_markers, @trial_ids);
-    my (@tissue_sample_ids);
+    my (@plot_ids, @subplot_ids, @plant_ids, @tissue_sample_ids);
     my ($id_string, $protocol_id, $project_id, $trial_id_string);
     my $associated_protocol;
     my $accession_data = [];
@@ -1244,10 +1244,17 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
         @trial_ids = split(',', $trial_id_string);
     }
 
-    if ($format eq 'accession_ids' || $format eq 'tissue_sample_ids') {       #use protocol id and ids supplied directly
+    # use protocol id and ids supplied directly
+    if ( $format ~~ ['accession_ids', 'plot_ids', 'subplot_ids', 'plant_ids', 'tissue_sample_ids'] ) {
         $id_string = $c->req->param("ids");
         if ($format eq 'accession_ids'){
             @accession_ids = split(',',$id_string);
+        } elsif ($format eq 'plot_ids'){
+            @plot_ids = split(',',$id_string);
+        } elsif ($format eq 'subplot_ids'){
+            @subplot_ids = split(',',$id_string);
+        } elsif ($format eq 'plant_ids'){
+            @plant_ids = split(',',$id_string);
         } elsif ($format eq 'tissue_sample_ids'){
             @tissue_sample_ids = split(',',$id_string);
         }
@@ -1330,6 +1337,9 @@ sub download_gbs_action : Path('/breeders/download_gbs_action') {
             people_schema=>$people_schema,
             cache_root_dir=>$c->config->{cache_file_path},
             accession_list=>\@accession_ids,
+            plot_list=>\@plot_ids,
+            subplot_list=>\@subplot_ids,
+            plant_list=>\@plant_ids,
             tissue_sample_list=>\@tissue_sample_ids,
             trial_list=>\@trial_ids,
             protocol_id_list=>\@protocol_list,

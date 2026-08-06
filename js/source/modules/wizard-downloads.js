@@ -47,6 +47,15 @@ export function WizardDownloads(main_id,wizard){
     var accessions = categories.indexOf("accessions")!=-1?
       selections["accessions"]:
       [];
+    var plots = categories.indexOf("plots")!=-1?
+      selections["plots"]:
+      [];
+    var subplots = categories.indexOf("subplots")!=-1?
+      selections["subplots"]:
+      [];
+    var plants = categories.indexOf("plants")!=-1?
+      selections["plants"]:
+      [];
     // Use singular/non-pluralized form for compatibility
     var tissue_samples = categories.indexOf("tissue_sample")!=-1?
       selections["tissue_sample"]:
@@ -63,15 +72,28 @@ export function WizardDownloads(main_id,wizard){
     if (tissue_samples.length > 0){
       main.select(".wizard-download-genotypes-info")
       .attr("value",`${tissue_samples.length||"Too few"} tissue samples`);
+    } else if (plants.length > 0){
+      main.select(".wizard-download-genotypes-info")
+      .attr("value",`${tissue_samples.length||"Too few"} plants`);
+    } else if (subplots.length > 0){
+      main.select(".wizard-download-genotypes-info")
+      .attr("value",`${tissue_samples.length||"Too few"} subplots`);
+    } else if (plots.length > 0){
+      main.select(".wizard-download-genotypes-info")
+      .attr("value",`${tissue_samples.length||"Too few"} plots`);
     } else {
       main.select(".wizard-download-genotypes-info")
       .attr("value",`${accessions.length||"Too few"} accessions`);
     }
     main.selectAll(".wizard-download-genotypes")
-      .attr("disabled",accessions.length<1 && tissue_samples.length<1 ? true:null)
+      .attr("disabled",accessions.length<1 && tissue_samples.length<1
+        && plants.length<1 && subplots.length<1 && plots.length<1 ? true : null)
       .on("click",()=>{
         event.preventDefault();
         var accession_ids = accessions.map(d=>d.id);
+        var plot_ids = plots.map(d=>d.id);
+        var subplot_ids = subplots.map(d=>d.id);
+        var plant_ids = plants.map(d=>d.id);
         var tissue_sample_ids = tissue_samples.map(d=>d.id);
         var trial_ids = (selections["trials"]||[]).map(d=>d.id);
         var protocol_id = protocols.length==1?protocols[0].id:'';
@@ -89,8 +111,25 @@ export function WizardDownloads(main_id,wizard){
             return;
         }
         var url = document.location.origin+'/breeders/download_gbs_action';
-        var format = tissue_samples.length > 0 ? 'tissue_sample_ids' : 'accession_ids';
-        var ids = tissue_samples.length > 0 ? tissue_sample_ids : accession_ids;
+        var format = "accession_ids";
+        tissue_samples.length > 0 ? 'tissue_sample_ids' : 'accession_ids';
+        var ids = accession_ids;
+        if (tissue_samples.length > 0) {
+          ids = tissue_sample_ids;
+          format = 'tissue_sample_ids';
+        }
+        else if (plants.length > 0) {
+          ids = plant_ids;
+          format = "plant_ids";
+        }
+        else if (subplots.length > 0) {
+          ids = subplot_ids;
+          format = "subplot_ids";
+        }
+        else if (plots.length > 0) {
+          ids = plot_ids;
+          format = "plot_ids";
+        }
         openWindowWithPost(url, {
             ids: ids.join(","),
             protocol_id: protocol_id,

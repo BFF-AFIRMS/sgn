@@ -14,6 +14,9 @@ my $genotypes_search = CXGN::Genotype::Download::VCF->new({
     bcs_schema=>$schema,
     people_schema=>$people_schema,
     accession_list=>$accession_list,
+    plot_list=>$plot_list,
+    subplot_list=>$subplot_list,
+    plant_list=>$plant_list,
     tissue_sample_list=>$tissue_sample_list,
     trial_list=>$trial_list,
     protocol_id_list=>$protocol_id_list,
@@ -81,6 +84,21 @@ has 'markerprofile_id_list' => (
 );
 
 has 'accession_list' => (
+    isa => 'ArrayRef[Int]|Undef',
+    is => 'ro',
+);
+
+has 'plot_list' => (
+    isa => 'ArrayRef[Int]|Undef',
+    is => 'ro',
+);
+
+has 'subplot_list' => (
+    isa => 'ArrayRef[Int]|Undef',
+    is => 'ro',
+);
+
+has 'plant_list' => (
     isa => 'ArrayRef[Int]|Undef',
     is => 'ro',
 );
@@ -195,6 +213,9 @@ sub download {
     my $protocol_id_list = $self->protocol_id_list;
     my $markerprofile_id_list = $self->markerprofile_id_list;
     my $accession_list = $self->accession_list;
+    my $plot_list = $self->plot_list;
+    my $subplot_list = $self->subplot_list;
+    my $plant_list = $self->plant_list;
     my $tissue_sample_list = $self->tissue_sample_list;
     my $marker_name_list = $self->marker_name_list;
     my $genotypeprop_hash_select = $self->genotypeprop_hash_select;
@@ -215,6 +236,9 @@ sub download {
         people_schema=>$people_schema,
         cache_root=>$cache_root_dir,
         accession_list=>$accession_list,
+        plot_list=>$plot_list,
+        subplot_list=>$subplot_list,
+        plant_list=>$plant_list,
         tissue_sample_list=>$tissue_sample_list,
         trial_list=>$trial_list,
         protocol_id_list=>$protocol_id_list,
