@@ -931,6 +931,7 @@ sub init_genotype_iterator {
         my $stock_sql = join ("," , @$tissue_sample_list);
         push @where_clause, "stock.stock_id in ($stock_sql)";
         push @where_clause, "stock.type_id = $tissue_sample_cvterm_id";
+        push @where_clause, "accession_of_tissue_sample.stock_id IS NOT NULL";
     }
     if ($markerprofile_id_list && scalar(@$markerprofile_id_list)>0) {
         my $markerprofile_sql = join ("," , @$markerprofile_id_list);
@@ -1038,7 +1039,7 @@ sub init_genotype_iterator {
         FROM stock
         JOIN cvterm AS stock_cvterm ON(stock.type_id = stock_cvterm.cvterm_id)
         LEFT JOIN stock_relationship ON(stock_relationship.subject_id=stock.stock_id AND stock_relationship.type_id = $tissue_sample_of_cvterm_id)
-        JOIN stock AS accession_of_tissue_sample ON(stock_relationship.object_id=accession_of_tissue_sample.stock_id and accession_of_tissue_sample.type_id = $accession_cvterm_id)
+        LEFT JOIN stock AS accession_of_tissue_sample ON(stock_relationship.object_id=accession_of_tissue_sample.stock_id and accession_of_tissue_sample.type_id = $accession_cvterm_id)
         JOIN nd_experiment_stock ON(stock.stock_id=nd_experiment_stock.stock_id)
         JOIN nd_experiment USING(nd_experiment_id)
         JOIN nd_experiment_protocol USING(nd_experiment_id)
