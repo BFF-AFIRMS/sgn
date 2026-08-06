@@ -10,6 +10,7 @@ use warnings;
 use Exporter qw(import);
 use LWP::UserAgent;
 use JSON;
+use SGN::Model::Cvterm;
 
 # Default exports
 our @EXPORT = qw/
