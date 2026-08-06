@@ -535,9 +535,9 @@ sub get_genotype_info {
         }
     }
 
-    # prevent partial duplicate records from LEFT JOIN
-    push @where_clause, "accession_of_tissue_sample.stock_id IS NOT NULL";
-
+    # Prevent partial duplicate records from LEFT JOIN
+    # final records can either be accessions, or they can be a tissue sample that must be linked to an accession
+    push @where_clause, "(accession_of_tissue_sample.stock_id IS NOT NULL OR stock.type_id = $accession_cvterm_id)";
     my $where_clause = scalar(@where_clause)>0 ? " WHERE " . (join (" AND " , @where_clause)) : '';
 
     my $offset_clause = '';
@@ -961,9 +961,9 @@ sub init_genotype_iterator {
         }
     }
 
-    # prevent partial duplicate records from LEFT JOIN
-    push @where_clause, "accession_of_tissue_sample.stock_id IS NOT NULL";
-
+    # Prevent partial duplicate records from LEFT JOIN
+    # final records can either be accessions, or they can be a tissue sample that must be linked to an accession
+    push @where_clause, "(accession_of_tissue_sample.stock_id IS NOT NULL OR stock.type_id = $accession_cvterm_id)";
     my $where_clause = scalar(@where_clause)>0 ? " WHERE " . (join (" AND " , @where_clause)) : '';
 
     my $offset_clause = '';
