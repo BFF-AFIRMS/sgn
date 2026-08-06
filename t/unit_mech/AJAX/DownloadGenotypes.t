@@ -2,13 +2,19 @@
 use strict;
 use warnings;
 
+use lib 't/lib';
+
 use Test::More;
 use Test::WWW::Mechanize;
 use Data::Dumper;
 use JSON;
+use Shared::Genotypes qw |create_tissue_sample_genotypes upload_tissue_sample_genotypes|;
+use SGN::Test::Fixture;
 local $Data::Dumper::Indent = 0;
 
 my $mech = Test::WWW::Mechanize->new;
+my $f = SGN::Test::Fixture->new();
+my $schema = $f->bcs_schema;
 
 $mech->get_ok('http://localhost:3010/breeders/download_gbs_action?format=accession_ids&ids=39973&download_format=VCF&forbid_cache=1');
 my $response = $mech->content;
@@ -1544,4 +1550,59 @@ S12946_101555	0	1
 print STDERR Dumper $response;
 is($response, $expected_response, "test multiple genotype download dosage matrix");
 
+# Create tissue samples and upload genotypes
+create_tissue_sample_genotypes($schema);
+my $response = upload_tissue_sample_genotypes($schema, $mech);
+ok($response->is_success, 'upload response is success');
+my $message_hash = decode_json $response->decoded_content;
+my $protocol_id = $message_hash->{nd_protocol_id};
+
+# Check that the accession test_accession1 has 3 genotype records downloaded
+my $stock_name = 'test_accession1';
+my $stock_id = $schema->resultset('Stock::Stock')->find( { uniquename => $stock_name })->stock_id();
+$mech->get_ok("http://localhost:3010/breeders/download_gbs_action?format=accession_ids&ids=$stock_id&download_format=VCF&forbid_cache=1&protocol_id=$protocol_id");
+my @expected = split "\n", '#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	test_accession1_leaf-1	test_accession1_leaf-2	test_accession1_leaf-3
+1	10	S1_10	G	A	.	PASS	.	GT:AD:DP:GQ:PL:NT:DS	./.:0,0:0:.:1::NA	0/0:10,10:20:99:0,255,255:G,G:0	1/1:10,10:20:99:0,255,255:A,A:2';
+# Convert response to array of lines and remove header lines that start with '##'
+my @observed = grep(!/^\#\#/, split("\n", $mech->content));
+is_deeply(\@observed, \@expected, "accession test_accession1 has expected genotypes");
+
+# Check that the plot test_trial25 has 2 genotype records downloaded
+my $stock_name = 'test_trial25';
+my $stock_id = $schema->resultset('Stock::Stock')->find( { uniquename => $stock_name })->stock_id();
+$mech->get_ok("http://localhost:3010/breeders/download_gbs_action?format=plot_ids&ids=$stock_id&download_format=VCF&forbid_cache=1&protocol_id=$protocol_id");
+my @expected = split "\n", '#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	test_accession1_leaf-1	test_accession1_leaf-2
+1	10	S1_10	G	A	.	PASS	.	GT:AD:DP:GQ:PL:NT:DS	./.:0,0:0:.:1::NA	0/0:10,10:20:99:0,255,255:G,G:0';
+# Convert response to array of lines and remove header lines that start with '##'
+my @observed = grep(!/^\#\#/, split("\n", $mech->content));
+is_deeply(\@observed, \@expected, "plot test_trial25 has expected genotypes");
+
+# Check that the plot test_trial28 has 1 genotype records downloaded
+my $stock_name = 'test_trial28';
+my $stock_id = $schema->resultset('Stock::Stock')->find( { uniquename => $stock_name })->stock_id();
+$mech->get_ok("http://localhost:3010/breeders/download_gbs_action?format=plant_ids&ids=$stock_id&download_format=VCF&forbid_cache=1&protocol_id=$protocol_id");
+my @expected = split "\n", '#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	test_accession1_leaf-3
+1	10	S1_10	G	A	.	PASS	.	GT:AD:DP:GQ:PL:NT:DS	1/1:10,10:20:99:0,255,255:A,A:2';
+my @observed = grep(!/^\#\#/, split("\n", $mech->content));
+is_deeply(\@observed, \@expected, "plot test_trial28 has expected genotypes");
+
+# Check that the plant test_accession1_plant-3 has 1 genotype records downloaded
+my $stock_name = 'test_accession1_plant-3';
+my $stock_id = $schema->resultset('Stock::Stock')->find( { uniquename => $stock_name })->stock_id();
+$mech->get_ok("http://localhost:3010/breeders/download_gbs_action?format=plant_ids&ids=$stock_id&download_format=VCF&forbid_cache=1&protocol_id=$protocol_id");
+my @expected = split "\n", '#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	test_accession1_leaf-3
+1	10	S1_10	G	A	.	PASS	.	GT:AD:DP:GQ:PL:NT:DS	1/1:10,10:20:99:0,255,255:A,A:2';
+my @observed = grep(!/^\#\#/, split("\n", $mech->content));
+is_deeply(\@observed, \@expected, "plant test_accession1_plant-3 has expected genotypes");
+
+# Check that the plant test_accession1_leaf-3 has 1 genotype records downloaded
+my $stock_name = 'test_accession1_leaf-3';
+my $stock_id = $schema->resultset('Stock::Stock')->find( { uniquename => $stock_name })->stock_id();
+$mech->get_ok("http://localhost:3010/breeders/download_gbs_action?format=tissue_sample_ids&ids=$stock_id&download_format=VCF&forbid_cache=1&protocol_id=$protocol_id");
+my @expected = split "\n", '#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	test_accession1_leaf-3
+1	10	S1_10	G	A	.	PASS	.	GT:AD:DP:GQ:PL:NT:DS	1/1:10,10:20:99:0,255,255:A,A:2';
+my @observed = grep(!/^\#\#/, split("\n", $mech->content));
+is_deeply(\@observed, \@expected, "tissue_sample test_accession1_leaf-3 has expected genotypes");
+
+$f->clean_up_db();
 done_testing();
