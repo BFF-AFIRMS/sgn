@@ -1841,7 +1841,7 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
                             {!isTransposed && (
                                 <div
                                     className="tw:absolute tw:top-4 tw:right-4 tw:z-50 tw:flex tw:items-center tw:justify-center tw:pointer-events-none tw:bg-white/85 tw:rounded-full tw:border tw:border-[#ccc] tw:shadow-sm"
-                                    style={{ width: '64px', height: '64px' }}
+                                    style={{ width: '70px', height: '70px' }}
                                 >
                                     <svg
                                         xmlns="http://www.w3.org/2000/svg"
