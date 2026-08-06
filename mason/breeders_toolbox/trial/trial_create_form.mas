@@ -25,11 +25,14 @@ $design_types => ()
 
         <&| /util/workflow.mas:step, title=> "Trial Design Details" &>
             <& /page/page_title.mas, title=>"Enter trial details and design options" &>
+            <div class="tw:text-red-500 tw:text-center">
+                * Required fields
+            </div>
 
             <&| /util/workflow_accordion.mas, id => "trial_design_accordion" &>
                 <&| /util/workflow_accordion.mas:step, id => "step_trial_info", title => "Trial Information", validate => "validate_trial_info" &>
                     <div class="form-group">
-                        <label class="col-sm-3 control-label">Breeding Program: </label>
+                        <label class="col-sm-3 control-label"><span class="tw:text-red-500 tw:mr-1">*</span>Breeding Program: </label>
                         <div class="col-sm-9">
                             <select class="form-control" id="select_breeding_program" name="select_breeding_program">
                                 <%perl>
@@ -46,7 +49,7 @@ $design_types => ()
                         </div>
                     </div>
                     <div class="form-group">
-                        <label class="col-sm-3 control-label">Locations: (One or More)</label>
+                        <label class="col-sm-3 control-label"><span class="tw:text-red-500 tw:mr-1">*</span>Locations: (One or More)</label>
                         <div class="col-sm-9">
                             <select multiple class="form-control" id="add_project_location" name="add_project_location">
                                 <%perl>
@@ -62,7 +65,7 @@ $design_types => ()
                         </div>
                     </div>
                     <div class="form-group">
-                        <label class="col-sm-3 control-label">Trial Name: </label>
+                        <label class="col-sm-3 control-label"><span class="tw:text-red-500 tw:mr-1">*</span>Trial Name: </label>
                         <div class="col-sm-9">
                             <input class="form-control" id="new_trial_name" name="new_trial_name" type="text" />
                             <p><i>Location abbreviation will automatically be added as a prefix if multiple locations are selected.</i></p>
@@ -150,14 +153,14 @@ $design_types => ()
                         </div>
                     </div>
                     <div class="form-group">
-                        <label class="col-sm-3 control-label">Description: </label>
+                        <label class="col-sm-3 control-label"><span class="tw:text-red-500 tw:mr-1">*</span>Description: </label>
                         <div class="col-sm-9">
                             <textarea class="form-control" id="add_project_description" name="add_project_description"></textarea>
                         </div>
                     </div>
                     <hr>
                     <div class="form-group">
-                        <label class="col-sm-3 control-label">Stock Type Being Evaluated in Trial: </label>
+                        <label class="col-sm-3 control-label"><span class="tw:text-red-500 tw:mr-1">*</span>Stock Type Being Evaluated in Trial: </label>
                         <div class="col-sm-9">
                             <select class="form-control" id="select_stock_type">
                                 <option value="">Select a stock type</option>
@@ -169,7 +172,7 @@ $design_types => ()
                     </div>
                     <hr>
                     <div class="form-group">
-                        <label class="col-sm-3 control-label">Design Type: </label>
+                        <label class="col-sm-3 control-label"><span class="tw:text-red-500 tw:mr-1">*</span>Design Type: </label>
                         <div class="col-sm-9">
                             <select class="form-control" id="select_design_method" name="select_design_method">
                                 <%perl>
@@ -221,21 +224,21 @@ $design_types => ()
                         <div class="form-group form-group-sm" id="show_list_of_accession_section" >
                             <div class="tw:flex tw:justify-center"><h4>Which accessions will be in the field?</h4></div>
                             <hr>
-                            <label class="col-sm-7 control-label">List of accessions to include (required):</label>
+                            <label class="col-sm-7 control-label"><span class="tw:text-red-500 tw:mr-1">*</span>List of accessions to include:</label>
                             <div class="col-sm-5" id="select_list" name="select_list">
                             </div>
                         </div>
                         <div class="form-group form-group-sm" id="show_list_of_cross_section" >
                             <div class="tw:flex tw:justify-center"><h4>Which crosses will be in the field?</h4></div>
                             <hr>
-                            <label class="col-sm-7 control-label">List of crosses to include (required):</label>
+                            <label class="col-sm-7 control-label"><span class="tw:text-red-500 tw:mr-1">*</span>List of crosses to include:</label>
                             <div class="col-sm-5" id="select_cross_list" name="select_cross_list">
                             </div>
                         </div>
                         <div class="form-group form-group-sm" id="show_list_of_family_name_section" >
                             <div class="tw:flex tw:justify-center"><h4>Which family names will be in the field?</h4></div>
                             <hr>
-                            <label class="col-sm-7 control-label">List of family names to include (required):</label>
+                            <label class="col-sm-7 control-label"><span class="tw:text-red-500 tw:mr-1">*</span>List of family names to include:</label>
                             <div class="col-sm-5" id="select_family_name_list" name="select_family_name_list">
                             </div>
                         </div>
@@ -252,17 +255,17 @@ $design_types => ()
                         </div>
                         </div>
                         <div class="form-group form-group-sm" id="show_list_of_checks_section" style="display: none" >
-                            <label class="col-sm-7 control-label">List of checks to include (required): </label>
+                            <label class="col-sm-7 control-label"><span class="tw:text-red-500 tw:mr-1">*</span>List of checks to include:</label>
                             <div class="col-sm-5" id="list_of_checks_section" >
                             </div>
                         </div>
                         <div class="form-group form-group-sm" id="show_list_of_cross_checks_section" style="display: none" >
-                            <label class="col-sm-7 control-label">List of checks to include (required): </label>
+                            <label class="col-sm-7 control-label"><span class="tw:text-red-500 tw:mr-1">*</span>List of checks to include:</label>
                             <div class="col-sm-5" id="list_of_cross_checks_section" >
                             </div>
                         </div>
                         <div class="form-group form-group-sm" id="show_list_of_family_name_checks_section" style="display: none" >
-                            <label class="col-sm-7 control-label">List of checks to include (required): </label>
+                            <label class="col-sm-7 control-label"><span class="tw:text-red-500 tw:mr-1">*</span>List of checks to include:</label>
                             <div class="col-sm-5" id="list_of_family_name_checks_section" >
                             </div>
                         </div>
@@ -282,32 +285,32 @@ $design_types => ()
                             </div>
                         </div>
                         <div class="form-group form-group-sm" id="show_list_of_unrep_accession" style="display: none" >
-                            <label class="col-sm-7 control-label">List of unreplicated accession (required):</label>
+                            <label class="col-sm-7 control-label"><span class="tw:text-red-500 tw:mr-1">*</span>List of unreplicated accession:</label>
                             <div class="col-sm-5" id="list_of_unrep_accession"  >
                             </div>
                         </div>
                         <div class="form-group form-group-sm" id="show_list_of_unrep_cross" style="display: none" >
-                            <label class="col-sm-7 control-label">List of unreplicated cross (required):</label>
+                            <label class="col-sm-7 control-label"><span class="tw:text-red-500 tw:mr-1">*</span>List of unreplicated cross:</label>
                             <div class="col-sm-5" id="list_of_unrep_cross"  >
                             </div>
                         </div>
                         <div class="form-group form-group-sm" id="show_list_of_unrep_family_name" style="display: none" >
-                            <label class="col-sm-7 control-label">List of unreplicated family_name (required):</label>
+                            <label class="col-sm-7 control-label"><span class="tw:text-red-500 tw:mr-1">*</span>List of unreplicated family_name:</label>
                             <div class="col-sm-5" id="list_of_unrep_family_name"  >
                             </div>
                         </div>
                         <div class="form-group form-group-sm" id="show_list_of_rep_accession" style="display: none" >
-                            <label class="col-sm-7 control-label">List of replicated accession (required): </label>
+                            <label class="col-sm-7 control-label"><span class="tw:text-red-500 tw:mr-1">*</span>List of replicated accession:</label>
                             <div class="col-sm-5" id="list_of_rep_accession" >
                             </div>
                         </div>
                         <div class="form-group form-group-sm" id="show_list_of_rep_cross" style="display: none" >
-                            <label class="col-sm-7 control-label">List of replicated cross (required): </label>
+                            <label class="col-sm-7 control-label"><span class="tw:text-red-500 tw:mr-1">*</span>List of replicated cross:</label>
                             <div class="col-sm-5" id="list_of_rep_cross" >
                             </div>
                         </div>
                         <div class="form-group form-group-sm" id="show_list_of_rep_family_name" style="display: none" >
-                            <label class="col-sm-7 control-label">List of replicated family_name (required): </label>
+                            <label class="col-sm-7 control-label"><span class="tw:text-red-500 tw:mr-1">*</span>List of replicated family_name:</label>
                             <div class="col-sm-5" id="list_of_rep_family_name" >
                             </div>
                         </div>
@@ -376,7 +379,7 @@ $design_types => ()
 
                     <div class="form-group form-group-sm" id="westcott_num_col_section" style="display: none" >
                         <hr>
-                        <div class="tw:flex tw:justify-center"><h4>Number of Columns (required):</h4></div>
+                        <div class="tw:flex tw:justify-center"><h4><span class="tw:text-red-500 tw:mr-1">*</span>Number of Columns:</h4></div>
                         <div id="westcott_num_col" >
                             <input class="form-control" id="westcott_col" name="westcott_col" placeholder="Required"/>
                         </div>
@@ -391,7 +394,7 @@ $design_types => ()
 
                     <div id="design_info" name="design_info">
                         <div class="form-group form-group-sm" id="rep_count_section" style="display: none">
-                            <label class="col-sm-7 control-label">Number of replicates (required): </label>
+                            <label class="col-sm-7 control-label"><span class="tw:text-red-500 tw:mr-1">*</span>Number of replicates: </label>
                             <div class="col-sm-5" >
                                 <input class="form-control" id="rep_count" name="rep_count" />
                             </div>
@@ -403,13 +406,13 @@ $design_types => ()
                             </div>
                         </div>
                         <div class="form-group form-group-sm" id="row_number_section" style="display: none">
-                            <label class="col-sm-7 control-label">Number of field rows (Required): </label>
+                            <label class="col-sm-7 control-label"><span class="tw:text-red-500 tw:mr-1">*</span>Number of field rows: </label>
                             <div class="col-sm-5" >
                                 <input class="form-control" id="row_number" name="row_number" />
                             </div>
                         </div>
                         <div class="form-group form-group-sm" id="col_number_section" style="display: none">
-                            <label class="col-sm-7 control-label">Number of Columns (Required): </label>
+                            <label class="col-sm-7 control-label"><span class="tw:text-red-500 tw:mr-1">*</span>Number of Columns: </label>
                             <div class="col-sm-5" >
                                 <input class="form-control" id="col_number" name="col_number" />
                             </div>
@@ -468,7 +471,7 @@ $design_types => ()
                         </div>
 
                         <div class="form-group form-group-sm" id="num_plants_per_plot_section" style="display: none">
-                            <label class="col-sm-7 control-label">Number of Plants Per Treatment (required): </label>
+                            <label class="col-sm-7 control-label"><span class="tw:text-red-500 tw:mr-1">*</span>Number of Plants Per Treatment: </label>
                             <div class="col-sm-5" >
                                 <input class="form-control" id="num_plants_per_treatment" name="num_plants_per_treatment" />
                             </div>
@@ -500,13 +503,13 @@ $design_types => ()
                         </div>
 
                         <div class="form-group form-group-sm" id="block_size_section" style="display: none">
-                            <label class="col-sm-7 control-label">Block size (required): </label>
+                            <label class="col-sm-7 control-label"><span class="tw:text-red-500 tw:mr-1">*</span>Block size: </label>
                             <div class="col-sm-5" >
                                 <input type="text" class="form-control" id="block_size" name="block_size" />
                             </div>
                         </div>
                         <div class="form-group form-group-sm" id="max_block_size_section" style="display: none">
-                            <label class="col-sm-7 control-label">Maximum block size (required): </label>
+                            <label class="col-sm-7 control-label"><span class="tw:text-red-500 tw:mr-1">*</span>Maximum block size: </label>
                             <div class="col-sm-5" >
                                 <input type="text" class="form-control" id="max_block_size" name="block_size" />
                             </div>
@@ -612,7 +615,7 @@ $design_types => ()
 
                     <div id="field_map_options" >
                         <div class="form-group form-group-sm" id="field_map_row_aug">
-                            <label class="col-sm-7 control-label">Number of rows (required): </label>
+                            <label class="col-sm-7 control-label"><span class="tw:text-red-500 tw:mr-1">*</span>Number of rows: </label>
                             <div class="col-sm-5" >
                                 <input type="text" class="form-control" id="fieldMap_row_number" name="fieldMap_row_number" placeholder="Will use number of blocks by default"/>
                             </div>
