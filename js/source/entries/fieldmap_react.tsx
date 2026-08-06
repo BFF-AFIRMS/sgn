@@ -380,6 +380,18 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
         loadNorthArrowAngle();
     }, [activeTrialIds]);
 
+    const northArrowRotation = useMemo(() => {
+        let angle = northArrowAngle + mapRotation;
+        if (invertCols && invertRows) {
+            return angle + 180;
+        } else if (invertCols) {
+            return -angle;
+        } else if (invertRows) {
+            return 180 - angle;
+        }
+        return angle;
+    }, [northArrowAngle, mapRotation, invertCols, invertRows]);
+
     const loadNorthArrowAngle = () => {
         fetch(`/ajax/breeders/trial/${trialId}/north_arrow_angle`)
             .then(res => res.json())
@@ -1837,7 +1849,7 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
                                         width="32"
                                         height="48"
                                         style={{
-                                            transform: `rotate(${northArrowAngle + mapRotation}deg) ${invertRows ? 'scaleY(-1)' : ''}`,
+                                            transform: `rotate(${northArrowRotation}deg)`,
                                             transition: 'transform 0.2s ease-out'
                                         }}
                                     >
