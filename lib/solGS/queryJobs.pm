@@ -198,17 +198,18 @@ sub trial_phenotype_data {
 
 sub genotypes_list_genotype_data {
     my $self = shift;
-	my $genotypes_ids = shift;
+	my $stock_ids = shift;
 
     my $args =  $self->get_args();
-    $genotypes_ids  = $args->{genotypes_ids} if !$genotypes_ids->[0];
+    $stock_ids  = $args->{genotypes_ids} if !$stock_ids->[0];
 
     my $data_dir      = $args->{data_dir};
     my $geno_file    = $args->{genotype_file};
     my $protocol_id = $args->{genotyping_protocol_id};
+    my $stock_type  = $args->{stock_type};
 
     my $model = $self->get_model();
-    my $search_obj = $model->genotypes_list_genotype_data($genotypes_ids, $protocol_id);
+    my $search_obj = $model->genotypes_list_genotype_data($stock_ids, $protocol_id, $stock_type);
 
     ###empty cached geno file first
     write_file($geno_file);
@@ -258,12 +259,14 @@ sub dataset_genotype_data {
     my $args =  $self->get_args();
     my $dataset_id = $args->{dataset_id};
 	my $model = $self->get_model();
+    my $stock_type = $args->{stock_type};
 
-	my $genotypes_ids = $model->get_genotypes_from_dataset ($dataset_id);
+	my $stock_ids = $model->get_genotypes_from_dataset($dataset_id, $stock_type);
+    print STDERR "dataset_genotype_data stock_ids: " . Dumper($stock_ids);
     # my $cnt = @$genotypes_ids;
-	if (@{$genotypes_ids})
+	if (@{$stock_ids})
 	{
-		$self->genotypes_list_genotype_data($genotypes_ids);
+		$self->genotypes_list_genotype_data($stock_ids);
 	}
 	else
 	{

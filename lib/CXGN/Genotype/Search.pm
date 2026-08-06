@@ -921,6 +921,7 @@ sub init_genotype_iterator {
         push @parent_stock_list, @$plant_list;
     }
     if (scalar(@parent_stock_list)>0){
+        print STDERR "parent_stock_list: " . Dumper(\@parent_stock_list);
         my $tissue_samples_rs = $schema->resultset('Stock::StockRelationship')->search({
             object_id => {-in => @parent_stock_list},
             type_id => $tissue_sample_of_cvterm_id
@@ -1060,7 +1061,7 @@ sub init_genotype_iterator {
         $limit_clause
         $offset_clause;";
 
-    #print STDERR Dumper $q;
+    print STDERR Dumper $q;
     my $h = $schema->storage->dbh()->prepare($q);
     $h->execute();
     my @genotypeprop_infos;
