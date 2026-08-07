@@ -22,6 +22,9 @@ import { PlotLayer } from '../include/fieldmap/components/PlotLayer';
 import { LabelLayer } from '../include/fieldmap/components/LabelLayer';
 import { DownloadPlotOrderPanel } from '../include/fieldmap/components/DownloadPlotOrderPanel';
 import { PlotDetailsModal } from '../include/fieldmap/modals/PlotDetailsModal';
+import { FieldMapHeaderPanel } from '../include/fieldmap/components/FieldMapHeaderPanel';
+import { FieldMapControlPanel } from '../include/fieldmap/components/FieldMapControlPanel';
+import { FieldMapSettingsPanel } from '../include/fieldmap/components/FieldMapSettingsPanel';
 import { 
     DimensionsModal, 
     DownloadCSVModal, 
@@ -1016,111 +1019,28 @@ const FieldMapContainerInner: React.FC<FieldMapContainerProps> = ({
 
     return (
         <div className="tw:p-3.75">
-            <div className="panel panel-default">
-                <div className="panel-body">
-                    <div className="tw:flex tw:gap-6.25 tw:flex-wrap tw:items-center">
-                        <div className="form-group tw:m-0 tw:min-w-50">
-                            <label className="tw:mr-2.5">Select Layout View:</label>
-                            <select
-                                className="form-control"
-                                value={selectedView}
-                                onChange={e => {
-                                    setSelectedViewLabel(e.target.options[e.target.selectedIndex]?.text || '');
-                                    handleViewChange(e.target.value);
-                                }}
-                            >
-                                <optgroup label="Field Map">
-                                    <option value="fieldmap">View Field Layout</option>
-                                    <option value="geofieldmap">View Geo Field Layout</option>
-                                </optgroup>
-                                <optgroup label="Assayed Traits">
-                                    {Object.keys(variables).sort().map(name => (
-                                        <option key={variables[name]} value={variables[name]}>{name}</option>
-                                    ))}
-                                </optgroup>
-                                {Object.keys(spatialAdjustments).length > 0 && (
-                                    <optgroup label="Spatial Corrections">
-                                        {Object.keys(variables).sort().map(name => {
-                                            const id = variables[name];
-                                            return (
-                                                <React.Fragment key={id}>
-                                                    <option value={`${id} (corrected)`}>{name} (corrected)</option>
-                                                    <option value={`${id} (adjustment)`}>{name} (adjustment)</option>
-                                                </React.Fragment>
-                                            );
-                                        })}
-                                    </optgroup>
-                                )}
-                            </select>
-                        </div>
+            <FieldMapHeaderPanel
+                selectedView={selectedView}
+                setSelectedViewLabel={setSelectedViewLabel}
+                handleViewChange={handleViewChange}
+                variables={variables}
+                spatialAdjustments={spatialAdjustments}
+                displayLinkedTrials={displayLinkedTrials}
+                toggleLinkedTrials={toggleLinkedTrials}
+                linkedTrialsList={linkedTrialsList}
+            />
 
-                        <div className="form-check tw:m-0">
-                            <label className="form-check-label">
-                                <input
-                                    type="checkbox"
-                                    className="form-check-input tw:mr-1.25"
-                                    checked={displayLinkedTrials}
-                                    onChange={e => toggleLinkedTrials(e.target.checked)}
-                                />
-                                Display Trials in Same Field
-                            </label>
-                        </div>
-                    </div>
-
-                    {displayLinkedTrials && linkedTrialsList.length > 0 && (
-                        <div className="tw:mt-2.5 tw:p-2.5 tw:bg-[#f9f9f9] tw:rounded-lg">
-                            <strong>Trials in Same Field:</strong>
-                            <div className="tw:flex tw:gap-2.5 tw:flex-wrap tw:mt-1.25">
-                                {linkedTrialsList.map(t => (
-                                    <span key={t.id} style={{ background: t.bg, color: t.fg }} className="tw:px-2 tw:py-0.75 tw:rounded-lg tw:text-[12px]">
-                                        {t.name}
-                                    </span>
-                                ))}
-                            </div>
-                        </div>
-                    )}
-                </div>
-            </div>
-
-            {selectedView !== 'fieldmap' && selectedView !== 'geofieldmap' && (
-                <div className="panel panel-default">
-                    <div className="panel-body tw:flex tw:gap-3.75 tw:items-center tw:flex-wrap">
-                        {!showControlsSection ? (
-                            <button className="btn btn-primary btn-sm" onClick={() => setShowControlsSection(true)}>View Controls</button>
-                        ) : (
-                            <div className="tw:flex tw:gap-2.5 tw:items-center tw:flex-wrap">
-                                <select
-                                    className="form-control"
-                                    value={selectedControlPlot}
-                                    onChange={e => {
-                                        const val = e.target.value;
-                                        setSelectedControlPlot(val);
-                                        if (val) {
-                                            const p = plotList.find(plot => plot.observationUnitDbId === val);
-                                            if (p) {
-                                                setControlRelationshipText(`Plot: ${p.observationUnitName} contains Check: ${p.germplasmName || ''}`);
-                                            }
-                                        } else {
-                                            setControlRelationshipText('');
-                                        }
-                                    }}
-                                >
-                                    <option value="">checks and plot numbers</option>
-                                    {controlPlots.map(cp => (
-                                        <option key={cp.observationUnitDbId} value={cp.observationUnitDbId}>
-                                            Plot:{cp.observationUnitName} [{cp.germplasmName}]
-                                        </option>
-                                    ))}
-                                </select>
-                                {controlRelationshipText && (
-                                    <span className="text-sm font-semibold bg-[#fcf8e3] p-1 border rounded">{controlRelationshipText}</span>
-                                )}
-                                <button className="btn btn-default btn-xs" onClick={() => { setShowControlsSection(false); setSelectedControlPlot(''); setControlRelationshipText(''); }}>Hide</button>
-                            </div>
-                        )}
-                    </div>
-                </div>
-            )}
+            <FieldMapControlPanel
+                selectedView={selectedView}
+                showControlsSection={showControlsSection}
+                setShowControlsSection={setShowControlsSection}
+                selectedControlPlot={selectedControlPlot}
+                setSelectedControlPlot={setSelectedControlPlot}
+                controlRelationshipText={controlRelationshipText}
+                setControlRelationshipText={setControlRelationshipText}
+                controlPlots={controlPlots}
+                plotList={plotList}
+            />
 
             {selectedView === 'geofieldmap' ? (
                 <div key="geofieldmap-panel" className="panel panel-default">
@@ -1132,83 +1052,23 @@ const FieldMapContainerInner: React.FC<FieldMapContainerProps> = ({
             ) : (
                 <div key="standard-fieldmap-panel" className="panel panel-default">
                     <div className="panel-body tw:grid">
-                        <div className="tw:flex tw:gap-5 tw:flex-wrap tw:mb-3.75">
-                            <div className="form-inline">
-                                <label className="tw:mr-1.25">Plot Layout:</label>
-                                <select 
-                                    className="form-control" 
-                                    value={plotLayout} 
-                                    onChange={e => {
-                                        const nextLayout = e.target.value as 'serpentine' | 'zigzag';
-                                        setPlotLayout(nextLayout);
-                                        setPlotObject(prev => recalculateLayout(prev, dimensions.rows || bounds.numRows, dimensions.cols || bounds.numCols, nextLayout));
-                                    }} 
-                                    disabled={displayLinkedTrials}
-                                >
-                                    <option value="serpentine">Serpentine</option>
-                                    <option value="zigzag">Zigzag</option>
-                                </select>
-                            </div>
-                            <div className="form-check tw:flex tw:items-center">
-                                <label className="form-check-label">
-                                    <input type="checkbox" className="form-check-input tw:mr-1.25" checked={invertRows} onChange={e => setInvertRows(e.target.checked)} />
-                                    Invert Rows
-                                </label>
-                            </div>
-                            <div className="form-check tw:flex tw:items-center">
-                                <label className="form-check-label">
-                                    <input type="checkbox" className="form-check-input tw:mr-1.25" checked={invertCols} onChange={e => setInvertCols(e.target.checked)} />
-                                    Invert Columns
-                                </label>
-                            </div>
-                            <div className="form-inline">
-                                <label className="tw:mr-1.25">Color By:</label>
-                                <select className="form-control" value={colorVar} onChange={e => setColorVar(e.target.value as any)}>
-                                    <option value="parity">Default (Parity)</option>
-                                    <option value="germplasm">{stockLabel}</option>
-                                    <option value="block">Block Number</option>
-                                    <option value="family_name">Family</option>
-                                    <option value="cross_name">Cross</option>
-                                </select>
-                            </div>
-                            <div className="form-inline">
-                                <label className="tw:mr-1.25">Label By:</label>
-                                <select className="form-control" value={labelVar} onChange={e => setLabelVar(e.target.value as any)}>
-                                    <option value="plot_number">Plot Number</option>
-                                    <option value="germplasm">{stockLabel} Name</option>
-                                    <option value="block">Block Number</option>
-                                    <option value="family_name">Family</option>
-                                    <option value="cross_name">Cross</option>
-                                </select>
-                            </div>
-                            <div className="form-inline">
-                                <label className="tw:mr-1.25">Label Size:</label>
-                                <input type="number" className="form-control tw:w-15" value={labelSize} onChange={e => setLabelSize(parseInt(e.target.value) || 10)} />
-                            </div>
-                            <div className="tw:flex tw:gap-2.5 tw:items-center">
-                                <label className="tw:m-0">Include Borders:</label>
-                                <label className="tw:font-normal tw:m-0"><input type="checkbox" checked={topBorder} onChange={e => setTopBorder(e.target.checked)} disabled={displayLinkedTrials} /> Top</label>
-                                <label className="tw:font-normal tw:m-0"><input type="checkbox" checked={bottomBorder} onChange={e => setBottomBorder(e.target.checked)} disabled={displayLinkedTrials} /> Bottom</label>
-                                <label className="tw:font-normal tw:m-0"><input type="checkbox" checked={leftBorder} onChange={e => setLeftBorder(e.target.checked)} disabled={displayLinkedTrials} /> Left</label>
-                                <label className="tw:font-normal tw:m-0"><input type="checkbox" checked={rightBorder} onChange={e => setRightBorder(e.target.checked)} disabled={displayLinkedTrials} /> Right</label>
-                            </div>
-                        </div>
-                        <div className="tw:flex tw:gap-2.5 tw:flex-wrap tw:mb-3.75">
-                            <button className="btn btn-default" onClick={handleTranspose} disabled={displayLinkedTrials}>Transpose Display</button>
-                            <button className="btn btn-default" onClick={handleRotate} disabled={displayLinkedTrials}>Rotate</button>
-                            <button className="btn btn-default" onClick={() => setShowDimDialog(true)} disabled={displayLinkedTrials}>Change Dimensions</button>
-                            <button className="btn btn-default" onClick={() => setShowDownloadCSVModal(true)}>Download Spatial Layout (CSV)</button>
-                            <button className="btn btn-default" onClick={() => printFieldMap(selectedView, selectedViewLabel)}>Print Fieldmap</button>
-                            {selectedView !== 'fieldmap' && selectedView !== 'geofieldmap' && (
-                                <button className="btn btn-default" onClick={downloadHeatmapImage}>Download Heatmap Image</button>
-                            )}
-                            <button className="btn btn-success" onClick={submitFieldLayout} disabled={displayLinkedTrials}>Submit Layout Changes</button>
-                            {selectedView !== 'fieldmap' && selectedView !== 'geofieldmap' && (
-                                <button className="btn btn-danger" onClick={() => setShowDeleteTraitModal(true)}>Delete Selected Trait</button>
-                            )}
-                        </div>
+                        <FieldMapSettingsPanel
+                            displayLinkedTrials={displayLinkedTrials}
+                            selectedView={selectedView}
+                            selectedViewLabel={selectedViewLabel}
+                            stockLabel={stockLabel}
+                            recalculateLayout={recalculateLayout}
+                            handleTranspose={handleTranspose}
+                            handleRotate={handleRotate}
+                            setShowDimDialog={setShowDimDialog}
+                            setShowDownloadCSVModal={setShowDownloadCSVModal}
+                            printFieldMap={printFieldMap}
+                            downloadHeatmapImage={downloadHeatmapImage}
+                            submitFieldLayout={submitFieldLayout}
+                            setShowDeleteTraitModal={setShowDeleteTraitModal}
+                        />
 
-                        <div 
+                        <div
                             ref={containerRef}
                             className={`tw:relative tw:border tw:border-[#ddd] tw:bg-[#fcfcfc] tw:h-300 tw:flex tw:overflow-hidden tw:select-none ${isDragging ? 'tw:cursor-grabbing' : 'tw:cursor-grab'}`}
                             onMouseDown={handleMouseDown}
