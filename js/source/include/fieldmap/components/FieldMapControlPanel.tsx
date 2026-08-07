@@ -1,29 +1,23 @@
 import React from 'react';
-import { Plot } from '../types';
+import { useControl } from '../contexts/ControlContext';
+import { useBounds } from '../contexts/BoundsContext';
 
 interface FieldMapControlPanelProps {
     selectedView: string;
-    showControlsSection: boolean;
-    setShowControlsSection: (val: boolean) => void;
-    selectedControlPlot: string;
-    setSelectedControlPlot: (val: string) => void;
-    controlRelationshipText: string;
-    setControlRelationshipText: (val: string) => void;
-    controlPlots: Plot[];
-    plotList: Plot[];
 }
 
 export const FieldMapControlPanel: React.FC<FieldMapControlPanelProps> = ({
     selectedView,
-    showControlsSection,
-    setShowControlsSection,
-    selectedControlPlot,
-    setSelectedControlPlot,
-    controlRelationshipText,
-    setControlRelationshipText,
-    controlPlots,
-    plotList
 }) => {
+    const {
+        showControlsSection, setShowControlsSection,
+        selectedControlPlot, setSelectedControlPlot,
+        controlRelationshipText, setControlRelationshipText,
+        controlPlots
+    } = useControl();
+
+    const { plotList } = useBounds();
+
     if (selectedView === 'fieldmap' || selectedView === 'geofieldmap') {
         return null;
     }

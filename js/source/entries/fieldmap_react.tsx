@@ -34,6 +34,7 @@ import {
 } from '../include/fieldmap/modals/FieldmapModals';
 import { BorderProvider, useBorder } from '../include/fieldmap/contexts/BorderContext';
 import { BoundsProvider, useBounds } from '../include/fieldmap/contexts/BoundsContext';
+import { ControlProvider } from '../include/fieldmap/contexts/ControlContext';
 import { LayoutConfigProvider, useLayoutConfig } from '../include/fieldmap/contexts/LayoutConfigContext';
 
 // Declare external legacy global libraries
@@ -100,10 +101,6 @@ const FieldMapContainerInner: React.FC<FieldMapContainerProps> = ({
 
     const [heatmapData, setHeatmapData] = useState<Record<string, HeatmapValue>>({});
     const [spatialAdjustments, setSpatialAdjustments] = useState<Record<string, Record<string, number>>>({});
-    const [controlAccessions, setControlAccessions] = useState<string[]>([]);
-    const [selectedControlPlot, setSelectedControlPlot] = useState<string>('');
-    const [controlRelationshipText, setControlRelationshipText] = useState<string>('');
-    const [showControlsSection, setShowControlsSection] = useState(false);
 
     const [hoveredPlot, setHoveredPlot] = useState<{ plot: Plot; x: number; y: number } | null>(null);
     const [selectedPlot, setSelectedPlot] = useState<Plot | null>(null);
@@ -188,17 +185,6 @@ const FieldMapContainerInner: React.FC<FieldMapContainerProps> = ({
             document.removeEventListener('click', handleExternalClick);
         };
     }, []);
-
-    useEffect(() => {
-        fetch(`/ajax/breeders/trial/${trialId}/controls`)
-            .then(res => res.json())
-            .then(response => {
-                if (response?.accessions) {
-                    setControlAccessions(response.accessions.map((a: any) => a.accession_name));
-                }
-            })
-            .catch(() => {});
-    }, [trialId]);
 
     // Handle Leaflet GeoMap rendering
     useEffect(() => {
@@ -405,12 +391,6 @@ const FieldMapContainerInner: React.FC<FieldMapContainerProps> = ({
             setActiveTrialIds([trialId]);
         }
     };
-
-    const controlPlots = useMemo(() => {
-        return plotList.filter(p => {
-            return p.type === 'data' && (p.additionalInfo?.is_a_control || (p.germplasmName && controlAccessions.includes(p.germplasmName)));
-        });
-    }, [plotList, controlAccessions]);
 
     const maxLevelCode = useMemo(() => {
         let maxVal = 0;
@@ -1032,14 +1012,6 @@ const FieldMapContainerInner: React.FC<FieldMapContainerProps> = ({
 
             <FieldMapControlPanel
                 selectedView={selectedView}
-                showControlsSection={showControlsSection}
-                setShowControlsSection={setShowControlsSection}
-                selectedControlPlot={selectedControlPlot}
-                setSelectedControlPlot={setSelectedControlPlot}
-                controlRelationshipText={controlRelationshipText}
-                setControlRelationshipText={setControlRelationshipText}
-                controlPlots={controlPlots}
-                plotList={plotList}
             />
 
             {selectedView === 'geofieldmap' ? (
@@ -1223,9 +1195,11 @@ export const FieldMapContainer: React.FC<FieldMapContainerProps> = (props) => {
     return (
         <BorderProvider>
             <BoundsProvider>
-                <LayoutConfigProvider>
-                    <FieldMapContainerInner {...props} />
-                </LayoutConfigProvider>
+                <ControlProvider trialId={props.trialId}>
+                    <LayoutConfigProvider>
+                        <FieldMapContainerInner {...props} />
+                    </LayoutConfigProvider>
+                </ControlProvider>
             </BoundsProvider>
         </BorderProvider>
     );
