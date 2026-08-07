@@ -9,9 +9,6 @@ interface FieldMapSettingsPanelProps {
     selectedView: string;
     selectedViewLabel: string;
     stockLabel: string;
-    recalculateLayout: (currentPlots: Record<string, Plot>, rows: number, cols: number, layout: 'serpentine' | 'zigzag') => Record<string, Plot>;
-    handleTranspose: () => void;
-    handleRotate: () => void;
     setShowDimDialog: (val: boolean) => void;
     setShowDownloadCSVModal: (val: boolean) => void;
     printFieldMap: (selectedView: string, selectedViewLabel: string) => void;
@@ -25,9 +22,6 @@ export const FieldMapSettingsPanel: React.FC<FieldMapSettingsPanelProps> = ({
     selectedView,
     selectedViewLabel,
     stockLabel,
-    recalculateLayout,
-    handleTranspose,
-    handleRotate,
     setShowDimDialog,
     setShowDownloadCSVModal,
     printFieldMap,
@@ -45,7 +39,10 @@ export const FieldMapSettingsPanel: React.FC<FieldMapSettingsPanelProps> = ({
     const {
         setPlotObject,
         dimensions,
-        bounds
+        bounds,
+        transposeLayout,
+        rotateLayout,
+        recalculateLayout
     } = usePlotGrid();
 
     const {
@@ -120,8 +117,8 @@ export const FieldMapSettingsPanel: React.FC<FieldMapSettingsPanelProps> = ({
             </div>
 
             <div className="tw:flex tw:gap-2.5 tw:flex-wrap tw:mb-3.75 tw:w-full">
-                <button className="btn btn-default" onClick={handleTranspose} disabled={displayLinkedTrials}>Transpose Display</button>
-                <button className="btn btn-default" onClick={handleRotate} disabled={displayLinkedTrials}>Rotate</button>
+                <button className="btn btn-default" onClick={transposeLayout} disabled={displayLinkedTrials}>Transpose Display</button>
+                <button className="btn btn-default" onClick={rotateLayout} disabled={displayLinkedTrials}>Rotate</button>
                 <button className="btn btn-default" onClick={() => setShowDimDialog(true)} disabled={displayLinkedTrials}>Change Dimensions</button>
                 <button className="btn btn-default" onClick={() => setShowDownloadCSVModal(true)}>Download Spatial Layout (CSV)</button>
                 <button className="btn btn-default" onClick={() => printFieldMap(selectedView, selectedViewLabel)}>Print Fieldmap</button>

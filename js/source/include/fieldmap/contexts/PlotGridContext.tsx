@@ -16,10 +16,16 @@ interface PlotGridContextType {
     setPlotObject: React.Dispatch<React.SetStateAction<Record<string, Plot>>>;
     plotList: Plot[];
     dimensions: { rows: number; cols: number };
-    setDimensions: React.Dispatch<React.SetStateAction<{ rows: number; cols: number }>>;
     bounds: GridBounds;
     renderBounds: GridBounds;
     parsePlotData: (data: any[]) => void;
+    fillerAccessionId: string | undefined;
+    setFillerAccessionId: React.Dispatch<React.SetStateAction<string | undefined>>;
+    gridMatrix: Plot[][];
+    transposeLayout: () => void;
+    rotateLayout: () => void;
+    applyDimensions: (rows: number, cols: number, layout: 'serpentine' | 'zigzag', fillerAccessionId?: string) => void;
+    recalculateLayout: (currentPlots: Record<string, Plot>, rows: number, cols: number, layout: 'serpentine' | 'zigzag') => Record<string, Plot>;
 }
 
 const PlotGridContext = createContext<PlotGridContextType | undefined>(undefined);
@@ -28,76 +34,11 @@ export const PlotGridProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const { topBorder, bottomBorder, leftBorder, rightBorder } = useBorder();
     const [plotObject, setPlotObject] = useState<Record<string, Plot>>({});
     const [dimensions, setDimensions] = useState({ rows: 0, cols: 0 });
+    const [fillerAccessionId, setFillerAccessionId] = useState<string | undefined>(undefined);
 
     const plotList = useMemo(() => {
         return Object.values(plotObject);
     }, [plotObject]);
-
-    const parsePlotData = (data: any[]) => {
-        const mapped: Record<string, Plot> = {};
-        const pseudo_layout: Record<string, number> = {};
-
-        let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
-
-        data.forEach(plot => {
-            let x = parseInt(plot.observationUnitPosition?.positionCoordinateX);
-            let y = parseInt(plot.observationUnitPosition?.positionCoordinateY);
-
-            if (isNaN(y)) {
-                const rel = plot.observationUnitPosition?.observationLevelRelationships || [];
-                const blockRel = rel.find((r: any) => r.levelName === 'block');
-                const repRel = rel.find((r: any) => r.levelName === 'rep');
-                const plotRel = rel.find((r: any) => r.levelName === 'plot');
-                const code = blockRel?.levelCode || repRel?.levelCode || plotRel?.levelCode || '1';
-                y = parseInt(code);
-                if (isNaN(y)) y = 1;
-            }
-
-            if (isNaN(x)) {
-                if (pseudo_layout[y] !== undefined) {
-                    pseudo_layout[y] += 1;
-                    x = pseudo_layout[y];
-                } else {
-                    pseudo_layout[y] = 1;
-                    x = 1;
-                }
-            }
-
-            if (!isNaN(x)) { minX = Math.min(minX, x); maxX = Math.max(maxX, x); }
-            if (!isNaN(y)) { minY = Math.min(minY, y); maxY = Math.max(maxY, y); }
-
-            if (plot.observationUnitPosition?.observationLevel?.levelName === 'plot') {
-                let type: Plot['type'] = 'data';
-                if (plot.observationUnitPosition.entryType === 'filler' || plot.germplasmName === 'Filler') type = 'filler';
-                else if (plot.observationUnitPosition.entryType === 'border') type = 'border';
-
-                mapped[plot.observationUnitDbId] = {
-                    type,
-                    observationUnitDbId: plot.observationUnitDbId,
-                    observationUnitName: plot.observationUnitName,
-                    observationUnitPosition: {
-                        positionCoordinateX: x,
-                        positionCoordinateY: y,
-                        observationLevel: plot.observationUnitPosition.observationLevel,
-                        observationLevelRelationships: plot.observationUnitPosition.observationLevelRelationships,
-                        entryType: plot.observationUnitPosition.entryType
-                    },
-                    germplasmDbId: plot.germplasmDbId,
-                    germplasmName: plot.germplasmName,
-                    crossName: plot.crossName,
-                    locationName: plot.locationName,
-                    studyName: plot.studyName,
-                    plotImageDbIds: plot.plotImageDbIds || [],
-                    additionalInfo: plot.additionalInfo || {}
-                };
-            }
-        });
-        setPlotObject(mapped);
-        setDimensions({
-            rows: isFinite(maxY) ? maxY - minY + 1 : 0,
-            cols: isFinite(maxX) ? maxX - minX + 1 : 0
-        });
-    };
 
     const bounds = useMemo(() => {
         if (plotList.length === 0) {
@@ -170,16 +111,222 @@ export const PlotGridProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         };
     }, [bounds, topBorder, bottomBorder, leftBorder, rightBorder]);
 
+    const parsePlotData = (data: any[]) => {
+        const mapped: Record<string, Plot> = {};
+        const pseudo_layout: Record<string, number> = {};
+
+        let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+
+        data.forEach(plot => {
+            let x = parseInt(plot.observationUnitPosition?.positionCoordinateX);
+            let y = parseInt(plot.observationUnitPosition?.positionCoordinateY);
+
+            if (isNaN(y)) {
+                const rel = plot.observationUnitPosition?.observationLevelRelationships || [];
+                const blockRel = rel.find((r: any) => r.levelName === 'block');
+                const repRel = rel.find((r: any) => r.levelName === 'rep');
+                const plotRel = rel.find((r: any) => r.levelName === 'plot');
+                const code = blockRel?.levelCode || repRel?.levelCode || plotRel?.levelCode || '1';
+                y = parseInt(code);
+                if (isNaN(y)) y = 1;
+            }
+
+            if (isNaN(x)) {
+                if (pseudo_layout[y] !== undefined) {
+                    pseudo_layout[y] += 1;
+                    x = pseudo_layout[y];
+                } else {
+                    pseudo_layout[y] = 1;
+                    x = 1;
+                }
+            }
+
+            if (!isNaN(x)) { minX = Math.min(minX, x); maxX = Math.max(maxX, x); }
+            if (!isNaN(y)) { minY = Math.min(minY, y); maxY = Math.max(maxY, y); }
+
+            if (plot.observationUnitPosition?.observationLevel?.levelName === 'plot') {
+                let type: Plot['type'] = 'data';
+                if (plot.observationUnitPosition.entryType === 'filler' || plot.germplasmName === 'Filler') type = 'filler';
+                else if (plot.observationUnitPosition.entryType === 'border') type = 'border';
+
+                mapped[plot.observationUnitDbId] = {
+                    type,
+                    observationUnitDbId: plot.observationUnitDbId,
+                    observationUnitName: plot.observationUnitName,
+                    observationUnitPosition: {
+                        positionCoordinateX: x,
+                        positionCoordinateY: y,
+                        observationLevel: plot.observationUnitPosition.observationLevel,
+                        observationLevelRelationships: plot.observationUnitPosition.observationLevelRelationships,
+                        entryType: plot.observationUnitPosition.entryType
+                    },
+                    germplasmDbId: plot.germplasmDbId,
+                    germplasmName: plot.germplasmName,
+                    crossName: plot.crossName,
+                    locationName: plot.locationName,
+                    studyName: plot.studyName,
+                    plotImageDbIds: plot.plotImageDbIds || [],
+                    additionalInfo: plot.additionalInfo || {}
+                };
+            }
+        });
+        setPlotObject(mapped);
+        setDimensions({
+            rows: isFinite(maxY) ? maxY - minY + 1 : 0,
+            cols: isFinite(maxX) ? maxX - minX + 1 : 0
+        });
+    };
+
+    const gridMatrix = useMemo(() => {
+        const { minCol, maxCol, minRow, maxRow } = renderBounds;
+        const matrix: Plot[][] = [];
+        const indexed: Record<string, Plot[]> = {};
+
+        plotList.forEach(p => {
+            const x = Number(p.observationUnitPosition.positionCoordinateX);
+            const y = Number(p.observationUnitPosition.positionCoordinateY);
+            const key = `${x}-${y}`;
+            if (!indexed[key]) indexed[key] = [];
+            indexed[key].push(p);
+        });
+
+        for (let r = minRow; r <= maxRow; r++) {
+            const rowArr: Plot[] = [];
+            for (let c = minCol; c <= maxCol; c++) {
+                const key = `${c}-${r}`;
+                const found = indexed[key];
+                if (found && found.length > 0) {
+                    rowArr.push(found[0]);
+                } else {
+                    const isBorder = (r < bounds.minRow || r > bounds.maxRow || c < bounds.minCol || c > bounds.maxCol);
+                    rowArr.push({
+                        type: isBorder ? 'border' : (fillerAccessionId ? 'filler' : 'empty_space'),
+                        observationUnitName: isBorder ? `Border (${c}_${r})` : (fillerAccessionId ? `Filler (${c}_${r})` : `Space (${c}_${r})`),
+                        observationUnitPosition: {
+                            positionCoordinateX: c,
+                            positionCoordinateY: r,
+                            observationLevel: { levelCode: '', levelName: 'plot' },
+                            entryType: isBorder ? 'border' : (fillerAccessionId ? 'filler' : undefined)
+                        }
+                    });
+                }
+            }
+            matrix.push(rowArr);
+        }
+
+        return matrix;
+    }, [bounds, renderBounds, plotList, fillerAccessionId]);
+
+    const recalculateLayout = (currentPlots: Record<string, Plot>, rows: number, cols: number, layout: 'serpentine' | 'zigzag') => {
+        const plotsArr = Object.values(currentPlots).filter(p => !!p.observationUnitDbId);
+        
+        let minC = Infinity, minR = Infinity;
+        plotsArr.forEach(p => {
+            const x = Number(p.observationUnitPosition.positionCoordinateX);
+            const y = Number(p.observationUnitPosition.positionCoordinateY);
+            if (x < minC) minC = x;
+            if (y < minR) minR = y;
+        });
+        if (minC === Infinity) minC = 1;
+        if (minR === Infinity) minR = 1;
+
+        const sortedPlots = [...plotsArr];
+        sortedPlots.sort((a, b) => {
+            const codeA = parseFloat(String(a.observationUnitPosition?.observationLevel?.levelCode)) || 0;
+            const codeB = parseFloat(String(b.observationUnitPosition?.observationLevel?.levelCode)) || 0;
+            return codeA - codeB;
+        });
+
+        const newPlotObject: Record<string, Plot> = {};
+        let plotIdx = 0;
+        for (let r = 0; r < rows; r++) {
+            const currentRow = minR + r;
+            const swap_columns = layout === 'serpentine' && (currentRow % 2 === 0);
+
+            for (let c = 0; c < cols; c++) {
+                if (plotIdx < sortedPlots.length) {
+                    const plot = sortedPlots[plotIdx];
+                    const currentCol = swap_columns ? (minC + cols - 1 - c) : (minC + c);
+
+                    newPlotObject[plot.observationUnitDbId!] = {
+                        ...plot,
+                        observationUnitPosition: {
+                            ...plot.observationUnitPosition,
+                            positionCoordinateX: currentCol,
+                            positionCoordinateY: currentRow,
+                        }
+                    };
+                    plotIdx++;
+                }
+            }
+        }
+        return newPlotObject;
+    };
+
+    const transposeLayout = () => {
+        setPlotObject(current => {
+            const transposed: Record<string, Plot> = {};
+            for (const [id, plot] of Object.entries(current)) {
+                transposed[id] = {
+                    ...plot,
+                    observationUnitPosition: {
+                        ...plot.observationUnitPosition,
+                        positionCoordinateX: plot.observationUnitPosition.positionCoordinateY,
+                        positionCoordinateY: plot.observationUnitPosition.positionCoordinateX
+                    }
+                };
+            }
+            return transposed;
+        });
+        setDimensions(d => ({ rows: d.cols, cols: d.rows }));
+    };
+
+    const rotateLayout = () => {
+        const { minCol, maxCol } = bounds;
+        setPlotObject(current => {
+            const rotated: Record<string, Plot> = {};
+            for (const [id, plot] of Object.entries(current)) {
+                const oldX = Number(plot.observationUnitPosition.positionCoordinateX);
+                const oldY = Number(plot.observationUnitPosition.positionCoordinateY);
+
+                rotated[id] = {
+                    ...plot,
+                    observationUnitPosition: {
+                        ...plot.observationUnitPosition,
+                        positionCoordinateX: oldY,
+                        positionCoordinateY: maxCol - oldX + minCol
+                    }
+                };
+            }
+            return rotated;
+        });
+        setDimensions(d => ({ rows: d.cols, cols: d.rows }));
+    };
+
+    const applyDimensions = (rows: number, cols: number, layout: 'serpentine' | 'zigzag', nextFillerId?: string) => {
+        if (nextFillerId) {
+            setFillerAccessionId(nextFillerId);
+        }
+        setDimensions({ rows, cols });
+        setPlotObject(prev => recalculateLayout(prev, rows, cols, layout));
+    };
+
     return (
         <PlotGridContext.Provider value={{
             plotObject,
             setPlotObject,
             plotList,
             dimensions,
-            setDimensions,
             bounds,
             renderBounds,
-            parsePlotData
+            parsePlotData,
+            fillerAccessionId,
+            setFillerAccessionId,
+            gridMatrix,
+            transposeLayout,
+            rotateLayout,
+            applyDimensions,
+            recalculateLayout
         }}>
             {children}
         </PlotGridContext.Provider>

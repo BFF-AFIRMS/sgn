@@ -72,9 +72,13 @@ const FieldMapContainerInner: React.FC<FieldMapContainerProps> = ({
     const {
         setPlotObject,
         plotList,
-        dimensions, setDimensions,
         bounds, renderBounds,
-        parsePlotData
+        parsePlotData,
+        fillerAccessionId, setFillerAccessionId,
+        gridMatrix,
+        transposeLayout,
+        rotateLayout,
+        applyDimensions
     } = usePlotGrid();
 
     const {
@@ -98,7 +102,6 @@ const FieldMapContainerInner: React.FC<FieldMapContainerProps> = ({
     const [dimRowsInput, setDimRowsInput] = useState('');
     const [dimColsInput, setDimColsInput] = useState('');
     const [fillerAccessionInput, setFillerAccessionInput] = useState('');
-    const [fillerAccessionId, setFillerAccessionId] = useState<string | undefined>(undefined);
 
     const [heatmapData, setHeatmapData] = useState<Record<string, HeatmapValue>>({});
     const [spatialAdjustments, setSpatialAdjustments] = useState<Record<string, Record<string, number>>>({});
@@ -338,46 +341,6 @@ const FieldMapContainerInner: React.FC<FieldMapContainerProps> = ({
         return maxVal;
     }, [plotList]);
 
-    const gridMatrix = useMemo(() => {
-        const { minCol, maxCol, minRow, maxRow } = renderBounds;
-        const matrix: Plot[][] = [];
-        const indexed: Record<string, Plot[]> = {};
-
-        plotList.forEach(p => {
-            const x = Number(p.observationUnitPosition.positionCoordinateX);
-            const y = Number(p.observationUnitPosition.positionCoordinateY);
-            const key = `${x}-${y}`;
-            if (!indexed[key]) indexed[key] = [];
-            indexed[key].push(p);
-        });
-
-        for (let r = minRow; r <= maxRow; r++) {
-            const rowArr: Plot[] = [];
-            for (let c = minCol; c <= maxCol; c++) {
-                const key = `${c}-${r}`;
-                const found = indexed[key];
-                if (found && found.length > 0) {
-                    rowArr.push(found[0]);
-                } else {
-                    const isBorder = (r < bounds.minRow || r > bounds.maxRow || c < bounds.minCol || c > bounds.maxCol);
-                    rowArr.push({
-                        type: isBorder ? 'border' : (fillerAccessionId ? 'filler' : 'empty_space'),
-                        observationUnitName: isBorder ? `Border (${c}_${r})` : (fillerAccessionId ? `Filler (${c}_${r})` : `Space (${c}_${r})`),
-                        observationUnitPosition: {
-                            positionCoordinateX: c,
-                            positionCoordinateY: r,
-                            observationLevel: { levelCode: '', levelName: 'plot' },
-                            entryType: isBorder ? 'border' : (fillerAccessionId ? 'filler' : undefined)
-                        }
-                    });
-                }
-            }
-            matrix.push(rowArr);
-        }
-
-        return matrix;
-    }, [bounds, renderBounds, plotList, fillerAccessionId]);
-
     const overlappingPlots = useMemo(() => {
         const positions: Record<string, Plot[]> = {};
         plotList.forEach(p => {
@@ -395,52 +358,6 @@ const FieldMapContainerInner: React.FC<FieldMapContainerProps> = ({
         });
         return overlaps;
     }, [plotList]);
-
-    const recalculateLayout = (currentPlots: Record<string, Plot>, rows: number, cols: number, layout: 'serpentine' | 'zigzag') => {
-        const plotsArr = Object.values(currentPlots).filter(p => !!p.observationUnitDbId);
-        
-        let minC = Infinity, minR = Infinity;
-        plotsArr.forEach(p => {
-            const x = Number(p.observationUnitPosition.positionCoordinateX);
-            const y = Number(p.observationUnitPosition.positionCoordinateY);
-            if (x < minC) minC = x;
-            if (y < minR) minR = y;
-        });
-        if (minC === Infinity) minC = 1;
-        if (minR === Infinity) minR = 1;
-
-        const sortedPlots = [...plotsArr];
-        sortedPlots.sort((a, b) => {
-            const codeA = parseFloat(String(a.observationUnitPosition?.observationLevel?.levelCode)) || 0;
-            const codeB = parseFloat(String(b.observationUnitPosition?.observationLevel?.levelCode)) || 0;
-            return codeA - codeB;
-        });
-
-        const newPlotObject: Record<string, Plot> = {};
-        let plotIdx = 0;
-        for (let r = 0; r < rows; r++) {
-            const currentRow = minR + r;
-            const swap_columns = layout === 'serpentine' && (currentRow % 2 === 0);
-
-            for (let c = 0; c < cols; c++) {
-                if (plotIdx < sortedPlots.length) {
-                    const plot = sortedPlots[plotIdx];
-                    const currentCol = swap_columns ? (minC + cols - 1 - c) : (minC + c);
-
-                    newPlotObject[plot.observationUnitDbId!] = {
-                        ...plot,
-                        observationUnitPosition: {
-                            ...plot.observationUnitPosition,
-                            positionCoordinateX: currentCol,
-                            positionCoordinateY: currentRow,
-                        }
-                    };
-                    plotIdx++;
-                }
-            }
-        }
-        return newPlotObject;
-    };
 
     const fetchHeatmapObservations = (variableId: string) => {
         setLoading(true);
@@ -759,9 +676,7 @@ const FieldMapContainerInner: React.FC<FieldMapContainerProps> = ({
         }
 
         const proceed = (accessionId?: string) => {
-            if (accessionId) setFillerAccessionId(accessionId);
-            setDimensions({ rows, cols });
-            setPlotObject(prev => recalculateLayout(prev, rows, cols, plotLayout));
+            applyDimensions(rows, cols, plotLayout, accessionId);
             setShowDimDialog(false);
         };
 
@@ -774,47 +689,6 @@ const FieldMapContainerInner: React.FC<FieldMapContainerProps> = ({
         } else {
             proceed();
         }
-    };
-
-    const handleTranspose = () => {
-        setPlotObject(current => {
-            const transposed: Record<string, Plot> = {};
-            for (const [id, plot] of Object.entries(current)) {
-                transposed[id] = {
-                    ...plot,
-                    observationUnitPosition: {
-                        ...plot.observationUnitPosition,
-                        positionCoordinateX: plot.observationUnitPosition.positionCoordinateY,
-                        positionCoordinateY: plot.observationUnitPosition.positionCoordinateX
-                    }
-                };
-            }
-            return transposed;
-        });
-        setDimensions(d => ({ rows: d.cols, cols: d.rows }));
-    };
-
-    const handleRotate = () => {
-        const { minCol, maxCol } = bounds;
-        setPlotObject(current => {
-            const rotated: Record<string, Plot> = {};
-            for (const [id, plot] of Object.entries(current)) {
-                const oldX = Number(plot.observationUnitPosition.positionCoordinateX);
-                const oldY = Number(plot.observationUnitPosition.positionCoordinateY);
-
-                rotated[id] = {
-                    ...plot,
-                    observationUnitPosition: {
-                        ...plot.observationUnitPosition,
-                        // CW 90deg: newX = oldY, newY = maxCol - oldX + minCol
-                        positionCoordinateX: oldY,
-                        positionCoordinateY: maxCol - oldX + minCol
-                    }
-                };
-            }
-            return rotated;
-        });
-        setDimensions(d => ({ rows: d.cols, cols: d.rows }));
     };
 
     const downloadHeatmapImage = () => {
@@ -964,9 +838,6 @@ const FieldMapContainerInner: React.FC<FieldMapContainerProps> = ({
                             selectedView={selectedView}
                             selectedViewLabel={selectedViewLabel}
                             stockLabel={stockLabel}
-                            recalculateLayout={recalculateLayout}
-                            handleTranspose={handleTranspose}
-                            handleRotate={handleRotate}
                             setShowDimDialog={setShowDimDialog}
                             setShowDownloadCSVModal={setShowDownloadCSVModal}
                             printFieldMap={printFieldMap}
