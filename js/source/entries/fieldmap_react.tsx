@@ -1,5 +1,28 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { createRoot } from 'react-dom/client';
+import { useZoomPan } from '../components/fieldmap/hooks/useZoomPan';
+import { 
+    Plot, 
+    HeatmapValue, 
+    TrialDetails, 
+    PlotStructureNode 
+} from '../components/fieldmap/types';
+import { 
+    palette, 
+    trial_colors, 
+    trial_colors_text, 
+    interpolate, 
+    pearsonSkewness 
+} from '../components/fieldmap/utils';
+import { FieldMapLegend } from '../components/fieldmap/subcomponents/FieldMapLegend';
+import { PlotDetailsModal } from '../components/fieldmap/modals/PlotDetailsModal';
+import { 
+    DimensionsModal, 
+    DownloadCSVModal, 
+    SuppressPhenotypeModal,
+    DeleteTraitModal, 
+    CuratorWarningModal 
+} from '../components/fieldmap/modals/FieldmapModals';
 
 // Declare external legacy global libraries
 // We must use 'any' here as Leaflet (L) and Turf are loaded globally as script includes 
@@ -9,251 +32,6 @@ declare const turf: any;
 declare const BrAPIFieldmap: any;
 declare const jQuery: any;
 
-interface ObservationLevel {
-    levelCode: string | number;
-    levelName: string;
-    levelOrder?: number;
-}
-
-interface ObservationLevelRelationship {
-    levelCode: string;
-    levelName: string;
-}
-
-interface ObservationUnitPosition {
-    positionCoordinateX: string | number;
-    positionCoordinateY: string | number;
-    observationLevel: ObservationLevel;
-    observationLevelRelationships?: ObservationLevelRelationship[];
-    entryType?: string;
-}
-
-interface Plot {
-    type: 'data' | 'filler' | 'border' | 'empty_space';
-    observationUnitDbId?: string;
-    observationUnitName: string;
-    observationUnitPosition: ObservationUnitPosition;
-    germplasmDbId?: string;
-    germplasmName?: string;
-    crossName?: string;
-    locationName?: string;
-    studyName?: string;
-    plotImageDbIds?: string[];
-    additionalInfo?: {
-        intercropGermplasm?: { germplasmName: string }[];
-        familyName?: string;
-        [key: string]: any;
-    };
-}
-
-interface HeatmapValue {
-    val: number;
-    plot_name: string;
-    id: string;
-}
-
-interface TrialDetails {
-    id: string;
-    name: string;
-    bg: string;
-    fg: string;
-}
-
-interface PlotStructureNode {
-    type: string;
-    stock_id?: number;
-    name?: string;
-    attributes?: Record<string, { value: any }>;
-    has?: Record<string, PlotStructureNode>;
-}
-
-/**
- * Minimum pixel distance threshold to distinguish between a click and a drag operation.
- * If the mouse moves more than this many pixels during a mousedown event, it's considered a drag.
- */
-const CLICK_DRAG_THRESHOLD = 1;
-
-/**
- * Maximum pixels of empty space allowed around the map edges
- */
-const PAN_MAX_EMPTY_SPACE = 200;
-
-const palette = [
-    "#8dd3c7", "#ffffb3", "#bebada", "#fb8072", "#80b1d3",
-    "#fdb462", "#b3de69", "#fccde5", "#d9d9d9", "#bc80bd",
-    "#ccebc5", "#ffed6f"
-];
-const trial_colors = [
-    "#2f4f4f", "#ff8c00", "#ffff00", "#00ff00", "#9400d3",
-    "#00ffff", "#1e90ff", "#ff1493", "#ffdab9", "#228b22",
-];
-const trial_colors_text = [
-    "#ffffff", "#000000", "#000000", "#000000", "#ffffff",
-    "#000000", "#ffffff", "#ffffff", "#000000", "#ffffff",
-];
-
-const colorNameToHex = (color: string): string => {
-    const colors: Record<string, string> = {
-        white: "#ffffff",
-        darkred: "#8b0000",
-        darkblue: "#00008b",
-        red: "#ff0000",
-        blue: "#0000ff",
-        green: "#008000"
-    };
-    return colors[color.toLowerCase()] || color;
-};
-
-const hexToRgb = (hex: string) => {
-    const shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
-    const fullHex = hex.replace(shorthandRegex, (_, r, g, b) => r + r + g + g + b + b);
-    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(fullHex);
-    return result ? {
-        r: parseInt(result[1], 16),
-        g: parseInt(result[2], 16),
-        b: parseInt(result[3], 16)
-    } : { r: 255, g: 255, b: 255 };
-};
-
-const rgbToHex = (r: number, g: number, b: number) => {
-    return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
-};
-
-const interpolate = (color1: string, color2: string, factor: number) => {
-    const rgb1 = hexToRgb(colorNameToHex(color1));
-    const rgb2 = hexToRgb(colorNameToHex(color2));
-    const r = Math.round(rgb1.r + (rgb2.r - rgb1.r) * factor);
-    const g = Math.round(rgb1.g + (rgb2.g - rgb1.g) * factor);
-    const b = Math.round(rgb1.b + (rgb2.b - rgb1.b) * factor);
-    return rgbToHex(r, g, b);
-};
-
-const RenderPlantGrid: React.FC<{ node: PlotStructureNode }> = ({ node }) => {
-    if (!node.has) return null;
-    
-    let maxRow = 1;
-    let maxCol = 1;
-    const coordMap: Record<string, string> = {};
-    
-    Object.entries(node.has).forEach(([plantName, plantNode]) => {
-        const row = parseInt(plantNode.attributes?.row_number?.value) || 0;
-        const col = parseInt(plantNode.attributes?.col_number?.value) || 0;
-        if (row > maxRow) maxRow = row;
-        if (col > maxCol) maxCol = col;
-        coordMap[`${row},${col}`] = plantName;
-    });
-    
-    const rows = [];
-    for (let r = maxRow; r >= 0; r--) {
-        const cols = [];
-        for (let c = 0; c <= maxCol; c++) {
-            if (r === 0) {
-                if (c === 0) {
-                    cols.push(<th key="empty" className="tw:border-0"></th>);
-                } else {
-                    cols.push(<th key={`col-header-${c}`} className="tw:border-0 tw:text-center tw:align-middle tw:p-1 tw:text-xs">{c}</th>);
-                }
-            } else {
-                if (c === 0) {
-                    cols.push(<th key={`row-header-${r}`} className="tw:border-0 tw:text-left tw:align-middle tw:pr-2 tw:text-xs">{r}</th>);
-                } else {
-                    const key = `${r},${c}`;
-                    const plantName = coordMap[key];
-                    cols.push(
-                        <td key={key} className="tw:border tw:border-black tw:p-1 tw:rounded tw:text-center tw:align-middle tw:text-[11px] tw:min-w-15 tw:h-8">
-                            {plantName || <span className="tw:text-gray-300">empty</span>}
-                        </td>
-                    );
-                }
-            }
-        }
-        rows.push(<tr key={`row-${r}`}>{cols}</tr>);
-    }
-    
-    return (
-        <table className="tw:border-separate tw:border-spacing-1 tw:overflow-hidden tw:mx-auto tw:mt-2" style={{ aspectRatio: `${maxCol + 1} / ${maxRow + 1}` }}>
-            <tbody>{rows}</tbody>
-        </table>
-    );
-};
-
-const RenderSubplotGrid: React.FC<{ node: PlotStructureNode }> = ({ node }) => {
-    if (!node.has) return null;
-    
-    return (
-        <div className="tw:flex tw:flex-col tw:gap-2.5 tw:items-center tw:mt-2">
-            {Object.entries(node.has).sort(([a], [b]) => a.localeCompare(b)).map(([subplotName, subplotNode]) => (
-                <div key={subplotName} className="tw:border tw:border-gray-400 tw:p-2.5 tw:rounded-lg tw:text-center tw:align-middle tw:w-full">
-                    <div className="tw:font-bold tw:mb-1 tw:text-sm">{subplotName}</div>
-                    <RenderPlantGrid node={subplotNode} />
-                </div>
-            ))}
-        </div>
-    );
-};
-
-const pearsonSkewness = (arr: number[]): number => {
-    if (arr.length === 0) return 0;
-    const sorted = [...arr].sort((a, b) => a - b);
-    const median = sorted[Math.floor(sorted.length / 2)];
-    const mean = arr.reduce((sum, val) => sum + val, 0) / arr.length;
-    const variance = arr.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / arr.length;
-    const stdDev = Math.sqrt(variance);
-    return stdDev === 0 ? 0 : (3 * (mean - median)) / stdDev;
-};
-
-const AccessionAutocomplete: React.FC<{
-    value: string;
-    onChange: (val: string) => void;
-    placeholder?: string;
-    className?: string;
-    appendToId?: string;
-}> = ({ value, onChange, placeholder, className }) => {
-    const [suggestions, setSuggestions] = useState<string[]>([]);
-    const [show, setShow] = useState(false);
-
-    useEffect(() => {
-        if (value.length < 2) {
-            setSuggestions([]);
-            return;
-        }
-        const delayDebounce = setTimeout(() => {
-            fetch(`/ajax/stock/accession_autocomplete?term=${encodeURIComponent(value)}`)
-                .then(res => res.json())
-                .then((data: any) => {
-                    if (Array.isArray(data)) {
-                        const list = data.map(item => typeof item === 'string' ? item : item.label || item.value);
-                        setSuggestions(list);
-                    }
-                })
-                .catch(() => {});
-        }, 300);
-        return () => clearTimeout(delayDebounce);
-    }, [value]);
-
-    return (
-        <div className="tw:relative">
-            <input
-                type="text"
-                value={value}
-                onChange={e => { onChange(e.target.value); setShow(true); }}
-                onBlur={() => setTimeout(() => setShow(false), 200)}
-                placeholder={placeholder}
-                className={className}
-            />
-            {show && suggestions.length > 0 && (
-                <ul className="dropdown-menu tw:block! tw:w-full tw:max-h-50 tw:overflow-y-auto tw:z-1000">
-                    {suggestions.map((s, idx) => (
-                        <li key={idx} onMouseDown={() => { onChange(s); setShow(false); }} className="tw:cursor-pointer">
-                            <a>{s}</a>
-                        </li>
-                    ))}
-                </ul>
-            )}
-        </div>
-    );
-};
-
 interface FieldMapContainerProps {
     trialId: string;
     trialStockType: string;
@@ -262,7 +40,6 @@ interface FieldMapContainerProps {
     hasPlantEntries: boolean;
     authToken?: string;
 }
-
 
 const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
     trialId,
@@ -299,13 +76,6 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
     const [dimColsInput, setDimColsInput] = useState('');
     const [fillerAccessionInput, setFillerAccessionInput] = useState('');
     const [fillerAccessionId, setFillerAccessionId] = useState<string | undefined>(undefined);
-
-    const [zoom, setZoom] = useState<number>(1);
-    const [pan, setPan] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
-    const [isDragging, setIsDragging] = useState<boolean>(false);
-    const containerRef = useRef<HTMLDivElement | null>(null);
-    const hasDragged = useRef<boolean>(false);
-    const dragStart = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
 
     const [heatmapData, setHeatmapData] = useState<Record<string, HeatmapValue>>({});
     const [spatialAdjustments, setSpatialAdjustments] = useState<Record<string, Record<string, number>>>({});
@@ -376,77 +146,77 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
         loadSpatialAdjustments();
     }, [activeTrialIds]);
 
-    const updateZoomAndPan = (
-        nextZoom: number, 
-        targetPan?: { x: number; y: number }
-    ) => {
-        const clampedZoom = Math.max(0.1, Math.min(5, nextZoom));
-        if (!containerRef.current) {
-            setZoom(clampedZoom);
-            if (targetPan) setPan(targetPan);
-            return;
-        }
-        const rect = containerRef.current.getBoundingClientRect();
+    const plotList = useMemo(() => {
+        return Object.values(plotObject);
+    }, [plotObject]);
 
-        // Zoom around the center of the viewport if no target pan is provided
-        if (!targetPan) {
-            const centerX = rect.width / 2;
-            const centerY = rect.height / 2;
-            const mapX = (centerX - pan.x) / zoom;
-            const mapY = (centerY - pan.y) / zoom;
-            targetPan = {
-                x: centerX - mapX * clampedZoom,
-                y: centerY - mapY * clampedZoom
-            };
-        }
+    const bounds = useMemo(() => {
+        if (plotList.length === 0) return { minCol: 1, maxCol: dimensions.cols || 1, minRow: 1, maxRow: dimensions.rows || 1, numRows: dimensions.rows || 1, numCols: dimensions.cols || 1 };
+        let minCol = Infinity;
+        let minRow = Infinity;
+        let maxCol = -Infinity;
+        let maxRow = -Infinity;
 
-        const maxPanX = PAN_MAX_EMPTY_SPACE;
-        const minPanX = rect.width - (svgWidth * clampedZoom) - PAN_MAX_EMPTY_SPACE;
-        const maxPanY = PAN_MAX_EMPTY_SPACE;
-        const minPanY = rect.height - (svgHeight * clampedZoom) - PAN_MAX_EMPTY_SPACE;
-
-        setZoom(clampedZoom);
-        setPan({
-            x: Math.max(minPanX, Math.min(maxPanX, targetPan.x)),
-            y: Math.max(minPanY, Math.min(maxPanY, targetPan.y))
-        });
-    };
-
-    // Bind native non-passive wheel listener to allow e.preventDefault() and prevent window scroll
-    useEffect(() => {
-        const handleNativeWheel = (e: WheelEvent) => {
-            e.preventDefault();
-            if (!containerRef.current) return;
-
-            // Get dimensions of the viewport container
-            const rect = containerRef.current.getBoundingClientRect();
-            const cursorX = e.clientX - rect.left;
-            const cursorY = e.clientY - rect.top;
-
-            // Determine target coordinates on the unscaled map corresponding to the cursor position
-            const mapX = (cursorX - pan.x) / zoom;
-            const mapY = (cursorY - pan.y) / zoom;
-
-            const scaleFactor = 1.1;
-            let nextZoom = e.deltaY < 0 ? zoom * scaleFactor : zoom / scaleFactor;
-            nextZoom = Math.max(0.1, Math.min(5, nextZoom));
-
-            // Recalculate pan to keep the point under the cursor stable
-            const nextPanX = cursorX - mapX * nextZoom;
-            const nextPanY = cursorY - mapY * nextZoom;
-
-            updateZoomAndPan(nextZoom, { x: nextPanX, y: nextPanY });
-        };
-        const element = containerRef.current;
-        if (element) {
-            element.addEventListener('wheel', handleNativeWheel, { passive: false });
-        }
-        return () => {
-            if (element) {
-                element.removeEventListener('wheel', handleNativeWheel);
+        plotList.forEach(p => {
+            const x = Number(p.observationUnitPosition.positionCoordinateX);
+            const y = Number(p.observationUnitPosition.positionCoordinateY);
+            if (!isNaN(x)) {
+                if (x < minCol) minCol = x;
+                if (x > maxCol) maxCol = x;
             }
+            if (!isNaN(y)) {
+                if (y < minRow) minRow = y;
+                if (y > maxRow) maxRow = y;
+            }
+        });
+
+        if (minCol === Infinity) minCol = 1;
+        if (maxCol === -Infinity) maxCol = 1;
+        if (minRow === Infinity) minRow = 1;
+        if (maxRow === -Infinity) maxRow = 1;
+
+        if (dimensions.cols > (maxCol - minCol + 1)) {
+            maxCol = minCol + dimensions.cols - 1;
+        }
+        if (dimensions.rows > (maxRow - minRow + 1)) {
+            maxRow = minRow + dimensions.rows - 1;
+        }
+
+        return {
+            minCol,
+            maxCol,
+            minRow,
+            maxRow,
+            numRows: maxRow - minRow + 1,
+            numCols: maxCol - minCol + 1
         };
-    }, [zoom, pan]);
+    }, [plotList, dimensions]);
+
+    const renderBounds = useMemo(() => {
+        const { minCol, maxCol, minRow, maxRow } = bounds;
+        const rMinCol = leftBorder ? minCol - 1 : minCol;
+        const rMaxCol = rightBorder ? maxCol + 1 : maxCol;
+        const rMinRow = bottomBorder ? minRow - 1 : minRow;
+        const rMaxRow = topBorder ? maxRow + 1 : maxRow;
+
+        return {
+            minCol: rMinCol,
+            maxCol: rMaxCol,
+            minRow: rMinRow,
+            maxRow: rMaxRow,
+            numRows: rMaxRow - rMinRow + 1,
+            numCols: rMaxCol - rMinCol + 1
+        };
+    }, [bounds, topBorder, bottomBorder, leftBorder, rightBorder]);
+
+    const svgWidth = (renderBounds.numCols + 1) * 55 + 50;
+    const svgHeight = (renderBounds.numRows + 1) * 55 + 50;
+
+    // Navigation Engine Hooks
+    const { 
+        zoom, pan, isDragging, containerRef, hasDragged, 
+        handleMouseDown, handleMouseMove, handleMouseUpOrLeave, handleResetZoomPan, updateZoomAndPan 
+    } = useZoomPan(svgWidth, svgHeight);
 
     useEffect(() => {
         const handleExternalClick = (e: MouseEvent) => {
@@ -678,10 +448,6 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
         }
     };
 
-    const plotList = useMemo(() => {
-        return Object.values(plotObject);
-    }, [plotObject]);
-
     const germplasmPalette = useMemo(() => {
         const names = Array.from(new Set(plotList.map(p => p.germplasmName || p.crossName || p.additionalInfo?.familyName || '')))
             .filter(n => n && n !== 'Filler');
@@ -741,65 +507,6 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
         });
         return maxVal;
     }, [plotList]);
-
-    const bounds = useMemo(() => {
-        if (plotList.length === 0) return { minCol: 1, maxCol: dimensions.cols || 1, minRow: 1, maxRow: dimensions.rows || 1, numRows: dimensions.rows || 1, numCols: dimensions.cols || 1 };
-        let minCol = Infinity;
-        let minRow = Infinity;
-        let maxCol = -Infinity;
-        let maxRow = -Infinity;
-
-        plotList.forEach(p => {
-            const x = Number(p.observationUnitPosition.positionCoordinateX);
-            const y = Number(p.observationUnitPosition.positionCoordinateY);
-            if (!isNaN(x)) {
-                if (x < minCol) minCol = x;
-                if (x > maxCol) maxCol = x;
-            }
-            if (!isNaN(y)) {
-                if (y < minRow) minRow = y;
-                if (y > maxRow) maxRow = y;
-            }
-        });
-
-        if (minCol === Infinity) minCol = 1;
-        if (maxCol === -Infinity) maxCol = 1;
-        if (minRow === Infinity) minRow = 1;
-        if (maxRow === -Infinity) maxRow = 1;
-
-        if (dimensions.cols > (maxCol - minCol + 1)) {
-            maxCol = minCol + dimensions.cols - 1;
-        }
-        if (dimensions.rows > (maxRow - minRow + 1)) {
-            maxRow = minRow + dimensions.rows - 1;
-        }
-
-        return {
-            minCol,
-            maxCol,
-            minRow,
-            maxRow,
-            numRows: maxRow - minRow + 1,
-            numCols: maxCol - minCol + 1
-        };
-    }, [plotList, dimensions]);
-
-    const renderBounds = useMemo(() => {
-        const { minCol, maxCol, minRow, maxRow } = bounds;
-        const rMinCol = leftBorder ? minCol - 1 : minCol;
-        const rMaxCol = rightBorder ? maxCol + 1 : maxCol;
-        const rMinRow = bottomBorder ? minRow - 1 : minRow;
-        const rMaxRow = topBorder ? maxRow + 1 : maxRow;
-
-        return {
-            minCol: rMinCol,
-            maxCol: rMaxCol,
-            minRow: rMinRow,
-            maxRow: rMaxRow,
-            numRows: rMaxRow - rMinRow + 1,
-            numCols: rMaxCol - rMinCol + 1
-        };
-    }, [bounds, topBorder, bottomBorder, leftBorder, rightBorder]);
 
     const gridMatrix = useMemo(() => {
         const { minCol, maxCol, minRow, maxRow } = renderBounds;
@@ -1280,7 +987,6 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
         setDimensions(d => ({ rows: d.cols, cols: d.rows }));
     };
 
-
     const handlePrint = () => {
         alert("You may need to change print settings - such as page size, margins, and scaling - to get the fieldmap to display properly in the print preview. Select \"Background graphics\" to ensure the legend includes colors.");
         const title = selectedView === 'fieldmap' ? 'Field Map View' : selectedViewLabel;
@@ -1546,44 +1252,6 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
         return 'tree';
     }, [plotStructure]);
 
-    const svgWidth = (renderBounds.numCols + 1) * 55 + 50;
-    const svgHeight = (renderBounds.numRows + 1) * 55 + 50;
-
-    // Mouse Drag/Pan Handlers
-    const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
-        // Only drag with primary mouse button
-        if (e.button !== 0) return;
-        setIsDragging(true);
-        hasDragged.current = false;
-        dragStart.current = { x: e.clientX - pan.x, y: e.clientY - pan.y };
-    };
-
-    const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-        if (!isDragging) return;
-        if (!containerRef.current) return;
-
-        // Calculate the raw next pan coordinates
-        const nextX = e.clientX - dragStart.current.x;
-        const nextY = e.clientY - dragStart.current.y;
-
-        updateZoomAndPan(zoom, { x: nextX, y: nextY });
-
-        const deltaX = Math.abs(e.clientX - (dragStart.current.x + pan.x));
-        const deltaY = Math.abs(e.clientY - (dragStart.current.y + pan.y));
-        if (deltaX > CLICK_DRAG_THRESHOLD || deltaY > CLICK_DRAG_THRESHOLD) {
-            hasDragged.current = true;
-        }
-    };
-
-    const handleMouseUpOrLeave = () => {
-        setIsDragging(false);
-    };
-
-    const handleResetZoomPan = () => {
-        setZoom(1);
-        setPan({ x: 0, y: 0 });
-    };
-
     return (
         <div className="tw:p-3.75">
             <div className="panel panel-default">
@@ -1692,7 +1360,6 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
                 </div>
             )}
 
-            {/* Render view panel for Geo Field Map or Standard SVG Map */}
             {selectedView === 'geofieldmap' ? (
                 <div key="geofieldmap-panel" className="panel panel-default">
                     <div className="panel-body tw:flex tw:flex-col tw:gap-2.5">
@@ -1929,9 +1596,9 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
                                                         </g>
                                                     );
                                                 })}
-											</g>
+                                            </g>
                                         );
-									})}
+                                    })}
 
                                     {/* Pass 2: Render Label Layer (Always on top) */}
                                     <g style={{ pointerEvents: 'none' }}>
@@ -2100,282 +1767,71 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
                 </div>
             )}
 
-            {/* Legend Container */}
-            <div id="legend_list" className="panel panel-default">
-                <div className="panel-body">
-                    <div className="tw:flex tw:gap-3.75 tw:flex-wrap tw:items-center">
-                        <span className="tw:inline-flex tw:items-center tw:gap-1.25 tw:whitespace-nowrap">
-                            <span className="tw:inline-block tw:w-3.75 tw:h-3.75 tw:bg-[#d3d3d3] tw:border tw:border-[#ddd]"></span> Border Plots and Filler Plots
-                        </span>
-                        <span className="tw:inline-flex tw:items-center tw:gap-1.25 tw:whitespace-nowrap">
-                            <span className="tw:inline-block tw:w-3.75 tw:h-3.75 tw:bg-[#c7e9b4] tw:border tw:border-[#ddd]"></span> Even Block Numbers (e.g. 2,4,...)
-                        </span>
-                        <span className="tw:inline-flex tw:items-center tw:gap-1.25 tw:whitespace-nowrap">
-                            <span className="tw:inline-block tw:w-3.75 tw:h-3.75 tw:bg-[#41b6c4] tw:border tw:border-[#ddd]"></span> Odd Block Numbers (e.g. 1,3,...)
-                        </span>
-                        <span className="tw:inline-flex tw:items-center tw:gap-1.25 tw:whitespace-nowrap">
-                            <span className="tw:inline-block tw:w-3.75 tw:h-3.75 tw:bg-[#6a5acd] tw:border tw:border-[#ddd]"></span> Checks
-                        </span>
-                        <span className="tw:inline-flex tw:items-center tw:gap-1.25 tw:whitespace-nowrap">
-                            <span className="tw:inline-block tw:w-3.75 tw:h-1 tw:bg-[#008000] tw:self-center"></span> Odd Rep Numbers (e.g. 1,3,...)
-                        </span>
-                        <span className="tw:inline-flex tw:items-center tw:gap-1.25 tw:whitespace-nowrap">
-                            <span className="tw:inline-block tw:w-3.75 tw:h-1 tw:bg-[#ff0000] tw:self-center"></span> Even Rep Numbers (e.g. 2,4,...)
-                        </span>
-                        <span className="tw:inline-flex tw:items-center tw:gap-1.25 tw:whitespace-nowrap">
-                            <span className="tw:inline-block tw:w-3.75 tw:h-3.75 tw:bg-[#000000] tw:border-2 tw:border-[#ff0000]"></span> Overlapping Plots
-                        </span>
-                        <span className="tw:inline-flex tw:items-center tw:gap-1.25 tw:whitespace-nowrap">
-                            <img src="/static/css/images/plot_images.png" alt="Camera" width="20" height="20" className="tw:align-middle" /> Plot Has Image
-                        </span>
-                        <span className="tw:inline-flex tw:items-center tw:gap-1.25 tw:whitespace-nowrap">
-                            <span className="tw:inline-block tw:w-3.75 tw:h-3.75 tw:bg-[#a9afaf] tw:border tw:border-[#ddd]"></span> No measurement
-                        </span>
-                        <div className="tw:flex tw:items-center tw:gap-2.5">
-                            <span>Low trait value</span>
-                            <div className="tw:w-30 tw:h-3.75" style={{ background: `linear-gradient(to right, ${valueColorScale.colors?.join(', ') || 'white, darkred'})` }} />
-                            <span>High trait value</span>
-                        </div>
-                        <span className="tw:inline-flex tw:items-center tw:gap-1.25 tw:whitespace-nowrap">
-                            <span className="tw:inline-block tw:w-3.75 tw:h-3.75 tw:bg-[#ffffff] tw:border tw:border-[#eee]"></span> Empty Coordinate
-                        </span>
-                    </div>
-                </div>
-            </div>
+            <FieldMapLegend 
+                valueColorScale={valueColorScale}
+                selectedView={selectedView}
+                selectedViewLabel={selectedViewLabel}
+            />
 
-            {/* Download CSV Layout Customizer */}
-            {showDownloadCSVModal && (
-                <div className="modal show tw:block tw:bg-black/50">
-                    <div className="modal-dialog">
-                        <div className="modal-content">
-                            <div className="modal-header">
-                                <button type="button" className="close" onClick={() => setShowDownloadCSVModal(false)}>&times;</button>
-                                <h4 className="modal-title">Download Spatial Layout Customizer</h4>
-                            </div>
-                            <div className="modal-body">
-                                <div className="checkbox">
-                                    <label><input type="checkbox" checked={csvDownloadOpts.accession} onChange={e => setCsvDownloadOpts({ ...csvDownloadOpts, accession: e.target.checked })} /> Accession Name</label>
-                                </div>
-                                <div className="checkbox">
-                                    <label><input type="checkbox" checked={csvDownloadOpts.obsUnit} onChange={e => setCsvDownloadOpts({ ...csvDownloadOpts, obsUnit: e.target.checked })} /> Plot Name</label>
-                                </div>
-                                <div className="checkbox">
-                                    <label><input type="checkbox" checked={csvDownloadOpts.seedlot} onChange={e => setCsvDownloadOpts({ ...csvDownloadOpts, seedlot: e.target.checked })} /> Seedlot Name</label>
-                                </div>
-                                <div className="checkbox">
-                                    <label><input type="checkbox" checked={csvDownloadOpts.plotId} onChange={e => setCsvDownloadOpts({ ...csvDownloadOpts, plotId: e.target.checked })} /> Plot ID</label>
-                                </div>
-                                <div className="checkbox">
-                                    <label><input type="checkbox" checked={csvDownloadOpts.plotNum} onChange={e => setCsvDownloadOpts({ ...csvDownloadOpts, plotNum: e.target.checked })} /> Plot Number</label>
-                                </div>
-                                <div className="checkbox">
-                                    <label><input type="checkbox" checked={csvDownloadOpts.familyName} onChange={e => setCsvDownloadOpts({ ...csvDownloadOpts, familyName: e.target.checked })} /> Family</label>
-                                </div>
-                                <div className="checkbox">
-                                    <label><input type="checkbox" checked={csvDownloadOpts.crossName} onChange={e => setCsvDownloadOpts({ ...csvDownloadOpts, crossName: e.target.checked })} /> Cross</label>
-                                </div>
-                            </div>
-                            <div className="modal-footer">
-                                <button className="btn btn-default" onClick={() => setShowDownloadCSVModal(false)}>Close</button>
-                                <button className="btn btn-primary" onClick={handleDownloadCSV}>Download CSV</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
+            <DownloadCSVModal 
+                show={showDownloadCSVModal}
+                onClose={() => setShowDownloadCSVModal(false)}
+                csvDownloadOpts={csvDownloadOpts}
+                setCsvDownloadOpts={setCsvDownloadOpts}
+                onDownload={handleDownloadCSV}
+            />
 
-            {/* Suppress Phenotype outlier dialog */}
-            {showSuppressModal && selectedPlot && (
-                <div className="modal show tw:block tw:bg-black/50">
-                    <div className="modal-dialog">
-                        <div className="modal-content">
-                            <div className="modal-header">
-                                <button type="button" className="close" onClick={() => setShowSuppressModal(false)}>&times;</button>
-                                <h4 className="modal-title">Suppress Plot Phenotype Measurement</h4>
-                            </div>
-                            <div className="modal-body">
-                                <p>Suppressed measurements will be seen as outliers and can be excluded during phenotype analysis.</p>
-                                <div><strong>Plot Name:</strong> {selectedPlot.observationUnitName}</div>
-                                <div><strong>Phenotype Value:</strong> {heatmapData[selectedPlot.observationUnitDbId || '']?.val}</div>
-                            </div>
-                            <div className="modal-footer">
-                                <button className="btn btn-default" onClick={() => setShowSuppressModal(false)}>Close</button>
-                                <button className="btn btn-danger" onClick={handleSuppressPhenotype}>Suppress Phenotype</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
+            <SuppressPhenotypeModal 
+                show={showSuppressModal}
+                onClose={() => setShowSuppressModal(false)}
+                plotName={selectedPlot?.observationUnitName || ''}
+                phenotypeValue={selectedPlot ? heatmapData[selectedPlot.observationUnitDbId || '']?.val : undefined}
+                onSuppress={handleSuppressPhenotype}
+            />
 
-            {/* Delete Trait confirmation dialog */}
-            {showDeleteTraitModal && (
-                <div className="modal show tw:block tw:bg-black/50">
-                    <div className="modal-dialog">
-                        <div className="modal-content">
-                            <div className="modal-header text-center">
-                                <button type="button" className="close" onClick={() => setShowDeleteTraitModal(false)}>&times;</button>
-                                <h4 className="modal-title">Assayed Trait Deletion</h4>
-                            </div>
-                            <div className="modal-body">
-                                <p className="font-bold">Are you sure you want to delete this assayed trait?</p>
-                                <p>All phenotyping data values linked with this trait in this trial will be removed permanently.</p>
-                            </div>
-                            <div className="modal-footer">
-                                <button className="btn btn-default" onClick={() => setShowDeleteTraitModal(false)}>Close</button>
-                                <button className="btn btn-danger" onClick={handleDeleteSingleTrait}>Delete Trait</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
+            <DeleteTraitModal 
+                show={showDeleteTraitModal}
+                onClose={() => setShowDeleteTraitModal(false)}
+                onDelete={handleDeleteSingleTrait}
+            />
 
-            {/* Dimensions Dialog */}
-            {showDimDialog && (
-                <div className="modal show tw:block tw:bg-black/50">
-                    <div className="modal-dialog">
-                        <div className="modal-content">
-                            <div className="modal-header">
-                                <button type="button" className="close" onClick={() => setShowDimDialog(false)}>&times;</button>
-                                <h4 className="modal-title">Change Layout Dimensions</h4>
-                            </div>
-                            <div className="modal-body">
-                                <div className="form-group">
-                                    <label>Rows:</label>
-                                    <input type="number" className="form-control" value={dimRowsInput} onChange={e => setDimRowsInput(e.target.value)} />
-                                </div>
-                                <div className="form-group">
-                                    <label>Columns:</label>
-                                    <input type="number" className="form-control" value={dimColsInput} onChange={e => setDimColsInput(e.target.value)} />
-                                </div>
-                                <div className="form-group">
-                                    <label>Filler Accession (Optional):</label>
-                                    <AccessionAutocomplete value={fillerAccessionInput} onChange={setFillerAccessionInput} className="form-control" />
-                                </div>
-                            </div>
-                            <div className="modal-footer">
-                                <button className="btn btn-default" onClick={() => setShowDimDialog(false)}>Cancel</button>
-                                <button className="btn btn-primary" onClick={handleApplyDimensions}>Apply</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
+            <DimensionsModal 
+                show={showDimDialog}
+                onClose={() => setShowDimDialog(false)}
+                dimRowsInput={dimRowsInput}
+                setDimRowsInput={setDimRowsInput}
+                dimColsInput={dimColsInput}
+                setDimColsInput={setDimColsInput}
+                fillerAccessionInput={fillerAccessionInput}
+                setFillerAccessionInput={setFillerAccessionInput}
+                onApply={handleApplyDimensions}
+            />
 
-            {/* Plot Details Modal */}
-            {showPlotDetails && selectedPlot && (
-                <div className="modal show tw:block tw:bg-black/50">
-                    <div className="modal-dialog modal-lg">
-                        <div className="modal-content">
-                            <div className="modal-header">
-                                <button type="button" className="close" onClick={() => setShowPlotDetails(false)}>&times;</button>
-                                <h4 className="modal-title">Plot Details: {selectedPlot.observationUnitName}</h4>
-                            </div>
-                            <div className="modal-body">
-                                <ul className="nav nav-tabs tw:mb-3.75">
-                                    <li className={!showEditAccession ? 'active' : ''}><a className="tw:cursor-pointer" onClick={() => setShowEditAccession(false)}>Summary</a></li>
-                                    <li className={showEditAccession ? 'active' : ''}><a className="tw:cursor-pointer" onClick={() => setShowEditAccession(true)}>Replace {stockLabel}</a></li>
-                                </ul>
+            <PlotDetailsModal 
+                show={showPlotDetails}
+                onClose={() => setShowPlotDetails(false)}
+                plot={selectedPlot}
+                stockLabel={stockLabel}
+                showEditAccession={showEditAccession}
+                setShowEditAccession={setShowEditAccession}
+                plotStructure={plotStructure}
+                plotStructureLayoutType={plotStructureLayoutType}
+                plotImages={plotImages}
+                newAccession={newAccession}
+                setNewAccession={setNewAccession}
+                newPlotName={newPlotName}
+                setNewPlotName={setNewPlotName}
+                onSubmitReplaceAccession={submitReplaceAccession}
+                selectedView={selectedView}
+                hasHeatmapValue={selectedPlot ? !!heatmapData[selectedPlot.observationUnitDbId || ''] : false}
+                onSuppressClick={() => setShowSuppressModal(true)}
+            />
 
-                                {!showEditAccession ? (
-                                    <div className="tw:p-2.5">
-                                        <table className="table table-bordered">
-                                            <tbody>
-                                                <tr>
-                                                    <td className="tw:w-[30%] tw:font-bold">Plot Database ID:</td>
-                                                    <td>{selectedPlot.observationUnitDbId}</td>
-                                                </tr>
-                                                <tr>
-                                                    <td className="tw:font-bold">{stockLabel} Name:</td>
-                                                    <td>{selectedPlot.germplasmName}</td>
-                                                </tr>
-                                                <tr>
-                                                    <td className="tw:font-bold">Plot Number:</td>
-                                                    <td>{selectedPlot.observationUnitPosition?.observationLevel?.levelCode}</td>
-                                                </tr>
-                                                {selectedPlot.observationUnitPosition?.positionCoordinateX && (
-                                                    <tr>
-                                                        <td className="tw:font-bold">Coordinates (X / Y):</td>
-                                                        <td>{selectedPlot.observationUnitPosition.positionCoordinateX} / {selectedPlot.observationUnitPosition.positionCoordinateY}</td>
-                                                    </tr>
-                                                )}
-                                            </tbody>
-                                        </table>
-
-                                        {/* Expandable Plot Structure Section */}
-                                        {plotStructure && (
-                                            <div className="tw:mt-5">
-                                                <h5 className="tw:font-bold tw:mb-2">Plot Contents & Structure Hierarchy:</h5>
-                                                {plotStructureLayoutType === 'subplot_grid' ? (
-                                                    <div className="tw:p-2.5 tw:border tw:rounded tw:bg-[#fafafa]">
-                                                        <RenderSubplotGrid node={plotStructure} />
-                                                    </div>
-                                                ) : plotStructureLayoutType === 'plant_grid' ? (
-                                                    <div className="tw:p-2.5 tw:border tw:rounded tw:bg-[#fafafa]">
-                                                        <RenderPlantGrid node={plotStructure} />
-                                                    </div>
-                                                ) : (
-                                                    <div className="tw:max-h-62.5 tw:overflow-y-auto tw:bg-[#f5f5f5] tw:p-2.5 tw:rounded tw:text-xs">
-                                                        <pre className="tw:border-0 tw:bg-transparent tw:p-0 tw:m-0">{JSON.stringify(plotStructure, null, 2)}</pre>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        )}
-
-                                        {plotImages && (
-                                            <div className="tw:mt-5">
-                                                <h5><strong>Plot Images:</strong></h5>
-                                                <div dangerouslySetInnerHTML={{ __html: plotImages }} />
-                                            </div>
-                                        )}
-                                    </div>
-                                ) : (
-                                    <div className="tw:p-2.5">
-                                        <div className="form-group">
-                                            <label>New {stockLabel} Name:</label>
-                                            <AccessionAutocomplete value={newAccession} onChange={setNewAccession} className="form-control" />
-                                        </div>
-                                        <div className="form-group">
-                                            <label>New Plot Name (Optional):</label>
-                                            <input type="text" className="form-control" value={newPlotName} onChange={e => setNewPlotName(e.target.value)} />
-                                        </div>
-                                        <div className="alert alert-warning">
-                                            Replacing this {stockLabel.toLowerCase()} will update layout structures and replicates. Ensure changes are correct.
-                                        </div>
-                                        <button className="btn btn-primary tw:mr-2" onClick={() => submitReplaceAccession('check')}>Update {stockLabel}</button>
-                                        {selectedView !== 'fieldmap' && selectedView !== 'geofieldmap' && heatmapData[selectedPlot.observationUnitDbId || ''] && (
-                                            <button className="btn btn-warning" onClick={() => setShowSuppressModal(true)}>Suppress Current Trait Value</button>
-                                        )}
-                                    </div>
-                                )}
-                            </div>
-                            <div className="modal-footer">
-                                <button className="btn btn-default" onClick={() => setShowPlotDetails(false)}>Close</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* Curator overrides warn popup */}
-            {showCuratorWarning && (
-                <div className="modal show tw:block tw:bg-black/50">
-                    <div className="modal-dialog">
-                        <div className="modal-content">
-                            <div className="modal-header">
-                                <button type="button" className="close" onClick={() => setShowCuratorWarning(false)}>&times;</button>
-                                <h4 className="modal-title">Curator Override Warning</h4>
-                            </div>
-                            <div className="modal-body">
-                                <p>One or more traits have already been assayed for this trial. Are you sure you want to replace this accession?</p>
-                            </div>
-                            <div className="modal-footer">
-                                <button className="btn btn-default" onClick={() => setShowCuratorWarning(false)}>No</button>
-                                <button className="btn btn-primary" onClick={() => submitReplaceAccession('override')}>Yes, Override</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
+            <CuratorWarningModal 
+                show={showCuratorWarning}
+                onClose={() => setShowCuratorWarning(false)}
+                onOverride={() => submitReplaceAccession('override')}
+            />
 
             {/* Download Options Panel */}
             {hasColAndRowNumbers && (
