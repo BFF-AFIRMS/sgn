@@ -5,6 +5,8 @@ use lib 't/lib';
 use Test::More;
 use SGN::Test::Fixture;
 use SGN::Test::WWW::WebDriver;
+use Selenium::Waiter qw(wait_until);
+use Try::Tiny;
 
 my $d = SGN::Test::WWW::WebDriver->new();
 
@@ -35,12 +37,12 @@ $d->while_logged_in_as("submitter", sub {
     }
     $d->send_keys_ok("wizard-dataset-name", "class", "$dataset_name", "enter dataset name");
     $d->click_ok("wizard-dataset-create", "class", "click create dataset");
-    # TBD: Find better solution than sleep wrappers.
-    sleep(2);
+    $d->wait_for_alert_appear();
+    $d->accept_alert_ok("accept dataset summary alert");
     my $dataset_id = $f->people_schema()->resultset("SpDataset")->find({ name => $dataset_name })->sp_dataset_id();
 
     # Check tool compatibility
-    wait_for_tool_compatibility($dataset_id);
+    ok(wait_for_tool_compatibility($dataset_id), "locate tool compatibility results");
     $d->find_element_ok("//b[contains(text(), 'Boxplotter')]/span[contains(\@class, 'glyphicon-warning')]", "xpath", "boxplotter status is warning");
     $d->find_element_ok("//b[contains(text(), 'Correlation')]/span[contains(\@class, 'glyphicon-warning')]", "xpath", "correlation status is warning");
     $d->find_element_ok("//b[contains(text(), 'Clustering')]/span[contains(\@class, 'glyphicon-warning')]", "xpath", "clustering status is warning");
@@ -59,16 +61,21 @@ done_testing();
 
 sub wait_for_tool_compatibility {
     my ($dataset_id) = @_;
-    my $max_attempts = 10;
+    my $timeout = $d->_extract_timeout();
 
-    my $tool_compatibility = "";
-    my $num_attempts = 0;
-    while ($tool_compatibility !~ /Correlation/ && $num_attempts < $max_attempts) {
-        $num_attempts++;
-        $d->get_ok("/dataset/$dataset_id", "navigate to dataset page");
-        $tool_compatibility = $d->get_attribute_ok("predicted-tool-compatibility", "id", "innerHTML", "located predicted tool compatibility");
-        sleep(1);
-    }
+    my $ok = wait_until {
+        my $tool_compatibility;
+
+        try {
+            $d->get_ok("/dataset/$dataset_id", "navigate to dataset page");
+            $tool_compatibility = $d->get_attribute_ok("predicted-tool-compatibility", "id", "innerHTML", "locate predicted tool compatibility");
+        } catch {
+            $tool_compatibility = undef;
+        };
+
+        return $tool_compatibility =~ /Correlation/
+    }  timeout => $timeout;
+    return $ok;
 }
 
 
