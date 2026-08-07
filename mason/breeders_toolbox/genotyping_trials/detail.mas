@@ -70,7 +70,7 @@ $assay_type => undef
 
             <div class="panel panel-default">
                 <div class="panel-body">
-                    <div class="row flex-wrap-row">
+                    <div class="flex-wrap-row">
                         <div class="flex-wrap-col">
                             <table class="table table-bordered table-hover table-trial-details">
                                 <tbody>
