@@ -9,7 +9,6 @@ import {
     DownloadOpts
 } from '../include/fieldmap/types';
 import { 
-    palette, 
     trial_colors, 
     trial_colors_text, 
     interpolate, 
@@ -452,49 +451,6 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
             setActiveTrialIds([trialId]);
         }
     };
-
-    const germplasmPalette = useMemo(() => {
-        const names = Array.from(new Set(plotList.map(p => p.germplasmName || p.crossName || p.additionalInfo?.familyName || '')))
-            .filter(n => n && n !== 'Filler');
-        const mapping: Record<string, string> = {};
-        names.sort().forEach((name, i) => {
-            mapping[name] = palette[i % palette.length];
-        });
-        return mapping;
-    }, [plotList]);
-
-    const blockPalette = useMemo(() => {
-        const blocks = Array.from(new Set(plotList.map(p => {
-            return p.observationUnitPosition?.observationLevelRelationships?.find(r => r.levelName === 'block')?.levelCode || '';
-        }))).filter(b => b !== '');
-        const mapping: Record<string, string> = {};
-        blocks.sort().forEach((block, i) => {
-            mapping[block] = palette[i % palette.length];
-        });
-        return mapping;
-    }, [plotList]);
-
-    const familyNamePalette = useMemo(() => {
-        const family_names = Array.from(new Set(plotList.map(p => {
-            return p.additionalInfo?.familyName || '';
-        }))).filter(b => b !== '');
-        const mapping: Record<string, string> = {};
-        family_names.sort().forEach((family_name, i) => {
-            mapping[family_name] = palette[i % palette.length];
-        });
-        return mapping;
-    }, [plotList]);
-
-    const crossNamePalette = useMemo(() => {
-        const cross_names = Array.from(new Set(plotList.map(p => {
-            return p.crossName || '';
-        }))).filter(b => b !== '');
-        const mapping: Record<string, string> = {};
-        cross_names.sort().forEach((cross_name, i) => {
-            mapping[cross_name] = palette[i % palette.length];
-        });
-        return mapping;
-    }, [plotList]);
 
     const controlPlots = useMemo(() => {
         return plotList.filter(p => {
@@ -1418,10 +1374,6 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
                                         overlappingPlots={overlappingPlots}
                                         heatmapData={heatmapData}
                                         valueColorScale={valueColorScale}
-                                        germplasmPalette={germplasmPalette}
-                                        blockPalette={blockPalette}
-                                        familyNamePalette={familyNamePalette}
-                                        crossNamePalette={crossNamePalette}
                                         onSelect={handlePlotSelect}
                                         onHover={(p, clientX, clientY) => setHoveredPlot({ plot: p, x: clientX, y: clientY })}
                                         onLeave={() => setHoveredPlot(null)}

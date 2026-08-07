@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Plot, TrialDetails, HeatmapValue } from '../types';
+import { palette } from '../utils/functions';
 
 interface PlotTileProps {
     plot: Plot;
@@ -171,10 +172,6 @@ interface PlotGridProps {
         colors?: string[];
         scale: (val: number) => string;
     };
-    germplasmPalette: Record<string, string>;
-    blockPalette: Record<string, string>;
-    familyNamePalette: Record<string, string>;
-    crossNamePalette: Record<string, string>;
     onSelect: (plot: Plot) => void;
     onHover: (plot: Plot, clientX: number, clientY: number) => void;
     onLeave: () => void;
@@ -192,14 +189,72 @@ export const PlotGrid: React.FC<PlotGridProps> = ({
     overlappingPlots,
     heatmapData,
     valueColorScale,
-    germplasmPalette,
-    blockPalette,
-    familyNamePalette,
-    crossNamePalette,
     onSelect,
     onHover,
     onLeave
 }) => {
+    const plotList = useMemo(() => {
+        const uniquePlots = new Map<string, Plot>();
+        gridMatrix.forEach(row => {
+            row.forEach(p => {
+                if (p.type === 'data' && p.observationUnitDbId) {
+                    uniquePlots.set(p.observationUnitDbId, p);
+                }
+            });
+        });
+        Object.values(overlappingPlots).forEach(plots => {
+            plots.forEach(p => {
+                if (p.observationUnitDbId) {
+                    uniquePlots.set(p.observationUnitDbId, p);
+                }
+            });
+        });
+        return Array.from(uniquePlots.values());
+    }, [gridMatrix, overlappingPlots]);
+
+    const germplasmPalette = useMemo(() => {
+        const names = Array.from(new Set(plotList.map(p => p.germplasmName || p.crossName || p.additionalInfo?.familyName || '')))
+            .filter(n => n && n !== 'Filler');
+        const mapping: Record<string, string> = {};
+        names.sort().forEach((name, i) => {
+            mapping[name] = palette[i % palette.length];
+        });
+        return mapping;
+    }, [plotList]);
+
+    const blockPalette = useMemo(() => {
+        const blocks = Array.from(new Set(plotList.map(p => {
+            return p.observationUnitPosition?.observationLevelRelationships?.find(r => r.levelName === 'block')?.levelCode || '';
+        }))).filter(b => b !== '');
+        const mapping: Record<string, string> = {};
+        blocks.sort().forEach((block, i) => {
+            mapping[block] = palette[i % palette.length];
+        });
+        return mapping;
+    }, [plotList]);
+
+    const familyNamePalette = useMemo(() => {
+        const family_names = Array.from(new Set(plotList.map(p => {
+            return p.additionalInfo?.familyName || '';
+        }))).filter(b => b !== '');
+        const mapping: Record<string, string> = {};
+        family_names.sort().forEach((family_name, i) => {
+            mapping[family_name] = palette[i % palette.length];
+        });
+        return mapping;
+    }, [plotList]);
+
+    const crossNamePalette = useMemo(() => {
+        const cross_names = Array.from(new Set(plotList.map(p => {
+            return p.crossName || '';
+        }))).filter(b => b !== '');
+        const mapping: Record<string, string> = {};
+        cross_names.sort().forEach((cross_name, i) => {
+            mapping[cross_name] = palette[i % palette.length];
+        });
+        return mapping;
+    }, [plotList]);
+
     return (
         <>
             {gridMatrix.map((row, rIdx) => {
