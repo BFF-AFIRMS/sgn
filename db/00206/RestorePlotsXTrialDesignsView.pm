@@ -2,11 +2,11 @@
 
 =head1 NAME
 
-CreatePlotsXTrialDesignsView.pm
+RestorePlotsXTrialDesignsView.pm
 
 =head1 SYNOPSIS
 
-mx-run CreatePlotsXTrialDesignsView [options] -H hostname -D dbname -u username [-F]
+mx-run RestorePlotsXTrialDesignsView [options] -H hostname -D dbname -u username [-F]
 
 this is a subclass of L<CXGN::Metadata::Dbpatch>
 see the perldoc of parent class for more details.
@@ -29,7 +29,7 @@ it under the same terms as Perl itself.
 
 =cut
 
-package CreatePlotsXTrialDesignsView;
+package RestorePlotsXTrialDesignsView;
 
 use Moose;
 use Bio::Chado::Schema;
