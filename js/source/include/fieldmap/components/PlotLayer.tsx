@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { Plot, TrialDetails, HeatmapValue } from '../types';
 import { palette } from '../utils/functions';
+import { useBounds } from '../contexts/BoundsContext';
 
 interface PlotTileProps {
     plot: Plot;
@@ -152,14 +153,6 @@ interface PlotLayerProps {
     gridMatrix: Plot[][];
     invertRows: boolean;
     invertCols: boolean;
-    renderBounds: {
-        minCol: number;
-        maxCol: number;
-        minRow: number;
-        maxRow: number;
-        numRows: number;
-        numCols: number;
-    };
     colorVar: 'parity' | 'germplasm' | 'block' | 'family_name' | 'cross_name';
     selectedView: string;
     displayLinkedTrials: boolean;
@@ -181,7 +174,6 @@ export const PlotLayer: React.FC<PlotLayerProps> = ({
     gridMatrix,
     invertRows,
     invertCols,
-    renderBounds,
     colorVar,
     selectedView,
     displayLinkedTrials,
@@ -193,6 +185,7 @@ export const PlotLayer: React.FC<PlotLayerProps> = ({
     onHover,
     onLeave
 }) => {
+    const { renderBounds } = useBounds();
     const plotList = useMemo(() => {
         const uniquePlots = new Map<string, Plot>();
         gridMatrix.forEach(row => {

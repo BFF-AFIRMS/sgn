@@ -28,6 +28,8 @@ import {
     DeleteTraitModal, 
     CuratorWarningModal 
 } from '../include/fieldmap/modals/FieldmapModals';
+import { BorderProvider, useBorder } from '../include/fieldmap/contexts/BorderContext';
+import { BoundsProvider, useBounds } from '../include/fieldmap/contexts/BoundsContext';
 
 // Declare external legacy global libraries
 // We must use 'any' here as Leaflet (L) and Turf are loaded globally as script includes 
@@ -46,7 +48,7 @@ interface FieldMapContainerProps {
     authToken?: string;
 }
 
-const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
+const FieldMapContainerInner: React.FC<FieldMapContainerProps> = ({
     trialId,
     trialStockType,
     hasColAndRowNumbers,
@@ -54,9 +56,22 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
     hasPlantEntries,
     authToken
 }) => {
+    const {
+        topBorder, setTopBorder,
+        leftBorder, setLeftBorder,
+        rightBorder, setRightBorder,
+        bottomBorder, setBottomBorder
+    } = useBorder();
+
+    const {
+        plotObject, setPlotObject,
+        plotList,
+        dimensions, setDimensions,
+        bounds, renderBounds
+    } = useBounds();
+
     const [loading, setLoading] = useState(false);
     const [selectedViewLabel, setSelectedViewLabel] = useState<string>('');
-    const [plotObject, setPlotObject] = useState<Record<string, Plot>>({});
     const [variables, setVariables] = useState<Record<string, string>>({});
     const [selectedView, setSelectedView] = useState<string>('fieldmap');
     const [displayLinkedTrials, setDisplayLinkedTrials] = useState(false);
@@ -70,11 +85,6 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
     const [labelSize, setLabelSize] = useState(10);
 
     const [invertCols, setInvertCols] = useState(false);
-    const [topBorder, setTopBorder] = useState(false);
-    const [leftBorder, setLeftBorder] = useState(false);
-    const [rightBorder, setRightBorder] = useState(false);
-    const [bottomBorder, setBottomBorder] = useState(false);
-    const [dimensions, setDimensions] = useState({ rows: 0, cols: 0 });
 
     const [showDimDialog, setShowDimDialog] = useState(false);
     const [dimRowsInput, setDimRowsInput] = useState('');
@@ -150,69 +160,6 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
         loadVariables();
         loadSpatialAdjustments();
     }, [activeTrialIds]);
-
-    const plotList = useMemo(() => {
-        return Object.values(plotObject);
-    }, [plotObject]);
-
-    const bounds = useMemo(() => {
-        if (plotList.length === 0) return { minCol: 1, maxCol: dimensions.cols || 1, minRow: 1, maxRow: dimensions.rows || 1, numRows: dimensions.rows || 1, numCols: dimensions.cols || 1 };
-        let minCol = Infinity;
-        let minRow = Infinity;
-        let maxCol = -Infinity;
-        let maxRow = -Infinity;
-
-        plotList.forEach(p => {
-            const x = Number(p.observationUnitPosition.positionCoordinateX);
-            const y = Number(p.observationUnitPosition.positionCoordinateY);
-            if (!isNaN(x)) {
-                if (x < minCol) minCol = x;
-                if (x > maxCol) maxCol = x;
-            }
-            if (!isNaN(y)) {
-                if (y < minRow) minRow = y;
-                if (y > maxRow) maxRow = y;
-            }
-        });
-
-        if (minCol === Infinity) minCol = 1;
-        if (maxCol === -Infinity) maxCol = 1;
-        if (minRow === Infinity) minRow = 1;
-        if (maxRow === -Infinity) maxRow = 1;
-
-        if (dimensions.cols > (maxCol - minCol + 1)) {
-            maxCol = minCol + dimensions.cols - 1;
-        }
-        if (dimensions.rows > (maxRow - minRow + 1)) {
-            maxRow = minRow + dimensions.rows - 1;
-        }
-
-        return {
-            minCol,
-            maxCol,
-            minRow,
-            maxRow,
-            numRows: maxRow - minRow + 1,
-            numCols: maxCol - minCol + 1
-        };
-    }, [plotList, dimensions]);
-
-    const renderBounds = useMemo(() => {
-        const { minCol, maxCol, minRow, maxRow } = bounds;
-        const rMinCol = leftBorder ? minCol - 1 : minCol;
-        const rMaxCol = rightBorder ? maxCol + 1 : maxCol;
-        const rMinRow = bottomBorder ? minRow - 1 : minRow;
-        const rMaxRow = topBorder ? maxRow + 1 : maxRow;
-
-        return {
-            minCol: rMinCol,
-            maxCol: rMaxCol,
-            minRow: rMinRow,
-            maxRow: rMaxRow,
-            numRows: rMaxRow - rMinRow + 1,
-            numCols: rMaxCol - rMinCol + 1
-        };
-    }, [bounds, topBorder, bottomBorder, leftBorder, rightBorder]);
 
     const svgWidth = (renderBounds.numCols + 1) * 55 + 50;
     const svgHeight = (renderBounds.numRows + 1) * 55 + 50;
@@ -1366,7 +1313,6 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
                                         gridMatrix={gridMatrix}
                                         invertRows={invertRows}
                                         invertCols={invertCols}
-                                        renderBounds={renderBounds}
                                         colorVar={colorVar}
                                         selectedView={selectedView}
                                         displayLinkedTrials={displayLinkedTrials}
@@ -1380,8 +1326,6 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
                                     />
 
                                     <LabelLayer
-                                        bounds={bounds}
-                                        renderBounds={renderBounds}
                                         gridMatrix={gridMatrix}
                                         invertRows={invertRows}
                                         invertCols={invertCols}
@@ -1484,6 +1428,16 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
             onDownload={handleDownloadOrder}
         />
         </div>
+    );
+};
+
+export const FieldMapContainer: React.FC<FieldMapContainerProps> = (props) => {
+    return (
+        <BorderProvider>
+            <BoundsProvider>
+                <FieldMapContainerInner {...props} />
+            </BoundsProvider>
+        </BorderProvider>
     );
 };
 

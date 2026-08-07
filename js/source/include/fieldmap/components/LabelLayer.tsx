@@ -1,23 +1,8 @@
 import React from 'react';
 import { Plot } from '../types';
+import { useBounds } from '../contexts/BoundsContext';
 
 interface LabelLayerProps {
-    bounds: {
-        minCol: number;
-        maxCol: number;
-        minRow: number;
-        maxRow: number;
-        numRows: number;
-        numCols: number;
-    };
-    renderBounds: {
-        minCol: number;
-        maxCol: number;
-        minRow: number;
-        maxRow: number;
-        numRows: number;
-        numCols: number;
-    };
     gridMatrix: Plot[][];
     invertRows: boolean;
     invertCols: boolean;
@@ -27,8 +12,6 @@ interface LabelLayerProps {
 }
 
 export const LabelLayer: React.FC<LabelLayerProps> = ({
-    bounds,
-    renderBounds,
     gridMatrix,
     invertRows,
     invertCols,
@@ -36,6 +19,7 @@ export const LabelLayer: React.FC<LabelLayerProps> = ({
     labelVar,
     labelSize,
 }) => {
+    const { bounds, renderBounds } = useBounds();
     return (
         <g style={{ pointerEvents: 'none' }}>
             {/* Column Axis Labels (Top and Bottom) */}
