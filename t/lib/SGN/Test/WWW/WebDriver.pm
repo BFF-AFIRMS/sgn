@@ -463,6 +463,25 @@ sub wait_for_spinner {
     };
 }
 
+=item wait_for_alert_appear($self)
+Waits for an alert to appear
+=cut
+sub wait_for_alert_appear {
+    my $self = shift;
+    wait_until {
+        my $alert_text;
+
+        try {
+            $self->screenshot("wait_for_alert_appear");
+            $alert_text = $self->driver->get_alert_text();
+        } catch {
+            $alert_text = undef;
+        };
+
+        return defined $alert_text;
+    }
+}
+
 =item wait_for_alert_dismissed($self)
 Waits for an alert to disappear.
 =cut
