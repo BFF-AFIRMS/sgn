@@ -17,6 +17,7 @@ import {
 } from '../include/fieldmap/utils';
 import { FieldMapLegend } from '../include/fieldmap/components/FieldMapLegend';
 import { FieldMapTooltip } from '../include/fieldmap/components/FieldMapTooltip';
+import { PlotTile } from '../include/fieldmap/components/PlotTile';
 import { DownloadPlotOrderPanel } from '../include/fieldmap/components/DownloadPlotOrderPanel';
 import { PlotDetailsModal } from '../include/fieldmap/modals/PlotDetailsModal';
 import { 
@@ -1496,107 +1497,27 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
                                                     const plotX = displayXIdx * 52;
                                                     const plotY = displayY * 52;
 
-                                                    const isObsolete = plot.additionalInfo?.isObsolete;
-
-                                                    const coordKey = `${plot.observationUnitPosition?.positionCoordinateX}-${plot.observationUnitPosition?.positionCoordinateY}`;
-                                                    const isOverlapping = !!overlappingPlots[coordKey];
-
-                                                    let fill = '#c7e9b4'; // Default block parity color (even block placeholder)
-                                                    let stroke = '#41b6c4'; // Default replicate parity stroke
-                                                    let strokeWidth = 1.5;
-
-                                                    if (colorVar === 'germplasm') {
-                                                        const name = plot.germplasmName || plot.crossName || plot.additionalInfo?.familyName || '';
-                                                        if (name && name !== 'Filler' && germplasmPalette[name]) {
-                                                            fill = germplasmPalette[name];
-                                                        }
-                                                    } else if (colorVar === 'block') {
-                                                        const block = plot.observationUnitPosition?.observationLevelRelationships?.find(r => r.levelName === 'block')?.levelCode || '';
-                                                        if (block && blockPalette[block]) {
-                                                            fill = blockPalette[block];
-                                                        }
-                                                    } else if (colorVar === 'family_name') {
-                                                        const family_name = plot.additionalInfo?.familyName || '';
-                                                        if (family_name && familyNamePalette[family_name]) {
-                                                            fill = familyNamePalette[family_name];
-                                                        }
-                                                    } else if (colorVar === 'cross_name') {
-                                                        const cross_name = plot.crossName || '';
-                                                        if (cross_name && crossNamePalette[cross_name]) {
-                                                            fill = crossNamePalette[cross_name];
-                                                        }
-                                                    } else {
-                                                        // Replicate even/odd stroke coloring
-                                                        const repNo = parseInt(String(plot.observationUnitPosition?.observationLevelRelationships?.[0]?.levelCode));
-                                                        if (!isNaN(repNo)) {
-                                                            stroke = repNo % 2 === 0 ? 'red' : 'green';
-                                                        }
-
-                                                        // Block even/odd fill coloring
-                                                        const blockNo = parseInt(String(plot.observationUnitPosition?.observationLevelRelationships?.[1]?.levelCode));
-                                                        if (!isNaN(blockNo)) {
-                                                            fill = blockNo % 2 === 0 ? '#c7e9b4' : '#41b6c4';
-                                                        }
-                                                    }
-
-                                                    if (plot.observationUnitPosition?.entryType === 'check') fill = '#6a5acd';
-                                                    else if (plot.type === 'border' || plot.type === 'filler') fill = '#ecefef';
-                                                    else if (plot.type === 'empty_space') fill = 'transparent';
-
-                                                    // Overlapping style override
-                                                    if (isOverlapping) {
-                                                        fill = '#000000';
-                                                        stroke = '#ff0000';
-                                                        strokeWidth = 3;
-                                                    }
-
-                                                    // Heatmap views logic
-                                                    if (selectedView !== 'fieldmap' && selectedView !== 'geofieldmap' && plot.observationUnitDbId) {
-                                                        const valObj = heatmapData[plot.observationUnitDbId];
-                                                        fill = valObj ? valueColorScale.scale(valObj.val) : '#a9afaf';
-                                                    }
-
-                                                    if (isObsolete) return null;
-
                                                     return (
-                                                        <g
+                                                        <PlotTile
                                                             key={plot.observationUnitDbId || `empty-${cIdx}-${rIdx}`}
-                                                            transform={`translate(${plotX}, ${plotY})`}
-                                                            className="tw:cursor-pointer"
-                                                            onClick={() => handlePlotSelect(plot)}
-                                                            onMouseEnter={(e) => setHoveredPlot({ plot, x: e.clientX, y: e.clientY })}
-                                                            onMouseLeave={() => setHoveredPlot(null)}
-                                                        >
-                                                            {plot.type !== 'empty_space' && (
-                                                                <rect
-                                                                    width={50}
-                                                                    height={50}
-                                                                    rx={4}
-                                                                    fill={fill}
-                                                                    stroke={stroke}
-                                                                    strokeWidth={strokeWidth}
-                                                                />
-                                                            )}
-
-                                                            {/* Multiple trial colored band */}
-                                                            {displayLinkedTrials && plot.studyName && (
-                                                                <rect
-                                                                    x={4}
-                                                                    y={43}
-                                                                    width={42}
-                                                                    height={4}
-                                                                    fill={linkedTrialsList.find(t => t.name === plot.studyName)?.bg || '#888'}
-                                                                />
-                                                            )}
-
-                                                            {/* Camera Image Icon */}
-                                                            {plot.plotImageDbIds && plot.plotImageDbIds.length > 0 && (
-                                                                <g transform="translate(5, 5) scale(0.6)">
-                                                                    <rect width="18" height="14" rx="2" fill="#ff8c00" />
-                                                                    <circle cx="9" cy="7" r="3" fill="#ffffff" />
-                                                                </g>
-                                                            )}
-                                                        </g>
+                                                            plot={plot}
+                                                            plotX={plotX}
+                                                            plotY={plotY}
+                                                            colorVar={colorVar}
+                                                            selectedView={selectedView}
+                                                            displayLinkedTrials={displayLinkedTrials}
+                                                            linkedTrialsList={linkedTrialsList}
+                                                            overlappingPlots={overlappingPlots}
+                                                            heatmapData={heatmapData}
+                                                            valueColorScale={valueColorScale}
+                                                            germplasmPalette={germplasmPalette}
+                                                            blockPalette={blockPalette}
+                                                            familyNamePalette={familyNamePalette}
+                                                            crossNamePalette={crossNamePalette}
+                                                            onSelect={handlePlotSelect}
+                                                            onHover={(p, clientX, clientY) => setHoveredPlot({ plot: p, x: clientX, y: clientY })}
+                                                            onLeave={() => setHoveredPlot(null)}
+                                                        />
                                                     );
                                                 })}
                                             </g>
