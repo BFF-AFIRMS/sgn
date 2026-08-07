@@ -73,6 +73,9 @@ $dataset_contents => ''
         border-collapse: collapse;
         border-style: hidden;
     }
+    #dataset_results>tbody>tr>td {
+        border: 1px solid black;
+    }
 </style>
 
 <head>
@@ -89,7 +92,7 @@ $dataset_contents => ''
 <body>
     <div id="wizard" class="row">
         <div class="wizard-datasets">
-            <table id="dataset_results"; border="1">
+            <table id="dataset_results">
                     <tr><td>Name<td><% $dataset_name %>
 %                   if ($c->user()) {
                     <tr><td>Description
@@ -289,7 +292,7 @@ sizes. Hover for details."></span>
                 if (keys.length == 0) {
                     return "";
                 }
-                let table = '<table border="1" style="border-color: #ddd"><tr><td>' + keys.join("<td>") + '</table>';
+                let table = '<table class="table-bordered"><tr><td>' + keys.join("<td>") + '</table>';
                 return table;
             }
 
