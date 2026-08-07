@@ -17,7 +17,7 @@ import {
 import { printFieldMap } from '../include/fieldmap/utils/print';
 import { FieldMapLegend } from '../include/fieldmap/components/FieldMapLegend';
 import { FieldMapTooltip } from '../include/fieldmap/components/FieldMapTooltip';
-import { PlotGrid } from '../include/fieldmap/components/PlotGrid';
+import { PlotLayer } from '../include/fieldmap/components/PlotLayer';
 import { LabelLayer } from '../include/fieldmap/components/LabelLayer';
 import { DownloadPlotOrderPanel } from '../include/fieldmap/components/DownloadPlotOrderPanel';
 import { PlotDetailsModal } from '../include/fieldmap/modals/PlotDetailsModal';
@@ -1362,8 +1362,7 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
                                 style={{ transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`, transformOrigin: '0 0' }}
                             >
                                 <g transform="translate(50, 25)">
-                                    {/* Pass 1: Render Plot Geometry (Backgrounds, Borders, Icons) */}
-                                    <PlotGrid
+                                    <PlotLayer
                                         gridMatrix={gridMatrix}
                                         invertRows={invertRows}
                                         invertCols={invertCols}
@@ -1380,7 +1379,6 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
                                         onLeave={() => setHoveredPlot(null)}
                                     />
 
-                                    {/* Pass 2: Render Label Layer (Always on top) */}
                                     <LabelLayer
                                         bounds={bounds}
                                         renderBounds={renderBounds}

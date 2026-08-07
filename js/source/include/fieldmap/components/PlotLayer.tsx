@@ -148,7 +148,7 @@ const PlotTile: React.FC<PlotTileProps> = ({
     );
 };
 
-interface PlotGridProps {
+interface PlotLayerProps {
     gridMatrix: Plot[][];
     invertRows: boolean;
     invertCols: boolean;
@@ -177,7 +177,7 @@ interface PlotGridProps {
     onLeave: () => void;
 }
 
-export const PlotGrid: React.FC<PlotGridProps> = ({
+export const PlotLayer: React.FC<PlotLayerProps> = ({
     gridMatrix,
     invertRows,
     invertCols,
