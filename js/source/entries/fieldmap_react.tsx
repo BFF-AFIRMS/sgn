@@ -83,10 +83,12 @@ const palette = [
     "#fdb462", "#b3de69", "#fccde5", "#d9d9d9", "#bc80bd",
     "#ccebc5", "#ffed6f"
 ];
+
 const trial_colors = [
     "#2f4f4f", "#ff8c00", "#ffff00", "#00ff00", "#9400d3",
     "#00ffff", "#1e90ff", "#ff1493", "#ffdab9", "#228b22",
 ];
+
 const trial_colors_text = [
     "#ffffff", "#000000", "#000000", "#000000", "#ffffff",
     "#000000", "#ffffff", "#ffffff", "#000000", "#ffffff",
