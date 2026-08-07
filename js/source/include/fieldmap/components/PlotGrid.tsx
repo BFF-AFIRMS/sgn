@@ -26,7 +26,7 @@ interface PlotTileProps {
     onLeave: () => void;
 }
 
-export const PlotTile: React.FC<PlotTileProps> = ({
+const PlotTile: React.FC<PlotTileProps> = ({
     plot,
     plotX,
     plotY,
@@ -144,5 +144,100 @@ export const PlotTile: React.FC<PlotTileProps> = ({
                 </g>
             )}
         </g>
+    );
+};
+
+interface PlotGridProps {
+    gridMatrix: Plot[][];
+    invertRows: boolean;
+    invertCols: boolean;
+    renderBounds: {
+        minCol: number;
+        maxCol: number;
+        minRow: number;
+        maxRow: number;
+        numRows: number;
+        numCols: number;
+    };
+    colorVar: 'parity' | 'germplasm' | 'block' | 'family_name' | 'cross_name';
+    selectedView: string;
+    displayLinkedTrials: boolean;
+    linkedTrialsList: TrialDetails[];
+    overlappingPlots: Record<string, Plot[]>;
+    heatmapData: Record<string, HeatmapValue>;
+    valueColorScale: {
+        min: number;
+        max: number;
+        colors?: string[];
+        scale: (val: number) => string;
+    };
+    germplasmPalette: Record<string, string>;
+    blockPalette: Record<string, string>;
+    familyNamePalette: Record<string, string>;
+    crossNamePalette: Record<string, string>;
+    onSelect: (plot: Plot) => void;
+    onHover: (plot: Plot, clientX: number, clientY: number) => void;
+    onLeave: () => void;
+}
+
+export const PlotGrid: React.FC<PlotGridProps> = ({
+    gridMatrix,
+    invertRows,
+    invertCols,
+    renderBounds,
+    colorVar,
+    selectedView,
+    displayLinkedTrials,
+    linkedTrialsList,
+    overlappingPlots,
+    heatmapData,
+    valueColorScale,
+    germplasmPalette,
+    blockPalette,
+    familyNamePalette,
+    crossNamePalette,
+    onSelect,
+    onHover,
+    onLeave
+}) => {
+    return (
+        <>
+            {gridMatrix.map((row, rIdx) => {
+                const displayY = invertRows ? rIdx : renderBounds.numRows - rIdx - 1;
+
+                return (
+                    <g key={`row-group-${rIdx}`}>
+                        {row.map((plot, cIdx) => {
+                            const displayXIdx = invertCols ? renderBounds.numCols - cIdx - 1 : cIdx;
+                            const plotX = displayXIdx * 52;
+                            const plotY = displayY * 52;
+
+                            return (
+                                <PlotTile
+                                    key={plot.observationUnitDbId || `empty-${cIdx}-${rIdx}`}
+                                    plot={plot}
+                                    plotX={plotX}
+                                    plotY={plotY}
+                                    colorVar={colorVar}
+                                    selectedView={selectedView}
+                                    displayLinkedTrials={displayLinkedTrials}
+                                    linkedTrialsList={linkedTrialsList}
+                                    overlappingPlots={overlappingPlots}
+                                    heatmapData={heatmapData}
+                                    valueColorScale={valueColorScale}
+                                    germplasmPalette={germplasmPalette}
+                                    blockPalette={blockPalette}
+                                    familyNamePalette={familyNamePalette}
+                                    crossNamePalette={crossNamePalette}
+                                    onSelect={onSelect}
+                                    onHover={onHover}
+                                    onLeave={onLeave}
+                                />
+                            );
+                        })}
+                    </g>
+                );
+            })}
+        </>
     );
 };

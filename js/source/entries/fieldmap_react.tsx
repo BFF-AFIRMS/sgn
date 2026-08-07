@@ -18,7 +18,7 @@ import {
 import { printFieldMap } from '../include/fieldmap/utils/print';
 import { FieldMapLegend } from '../include/fieldmap/components/FieldMapLegend';
 import { FieldMapTooltip } from '../include/fieldmap/components/FieldMapTooltip';
-import { PlotTile } from '../include/fieldmap/components/PlotTile';
+import { PlotGrid } from '../include/fieldmap/components/PlotGrid';
 import { DownloadPlotOrderPanel } from '../include/fieldmap/components/DownloadPlotOrderPanel';
 import { PlotDetailsModal } from '../include/fieldmap/modals/PlotDetailsModal';
 import { 
@@ -1406,42 +1406,26 @@ const FieldMapContainer: React.FC<FieldMapContainerProps> = ({
                             >
                                 <g transform="translate(50, 25)">
                                     {/* Pass 1: Render Plot Geometry (Backgrounds, Borders, Icons) */}
-                                    {gridMatrix.map((row, rIdx) => {
-                                        const displayY = invertRows ? rIdx : renderBounds.numRows - rIdx - 1;
-
-                                        return (
-                                            <g key={`row-group-${rIdx}`}>
-                                                {row.map((plot, cIdx) => {
-                                                    const displayXIdx = invertCols ? renderBounds.numCols - cIdx - 1 : cIdx;
-                                                    const plotX = displayXIdx * 52;
-                                                    const plotY = displayY * 52;
-
-                                                    return (
-                                                        <PlotTile
-                                                            key={plot.observationUnitDbId || `empty-${cIdx}-${rIdx}`}
-                                                            plot={plot}
-                                                            plotX={plotX}
-                                                            plotY={plotY}
-                                                            colorVar={colorVar}
-                                                            selectedView={selectedView}
-                                                            displayLinkedTrials={displayLinkedTrials}
-                                                            linkedTrialsList={linkedTrialsList}
-                                                            overlappingPlots={overlappingPlots}
-                                                            heatmapData={heatmapData}
-                                                            valueColorScale={valueColorScale}
-                                                            germplasmPalette={germplasmPalette}
-                                                            blockPalette={blockPalette}
-                                                            familyNamePalette={familyNamePalette}
-                                                            crossNamePalette={crossNamePalette}
-                                                            onSelect={handlePlotSelect}
-                                                            onHover={(p, clientX, clientY) => setHoveredPlot({ plot: p, x: clientX, y: clientY })}
-                                                            onLeave={() => setHoveredPlot(null)}
-                                                        />
-                                                    );
-                                                })}
-                                            </g>
-                                        );
-                                    })}
+                                    <PlotGrid
+                                        gridMatrix={gridMatrix}
+                                        invertRows={invertRows}
+                                        invertCols={invertCols}
+                                        renderBounds={renderBounds}
+                                        colorVar={colorVar}
+                                        selectedView={selectedView}
+                                        displayLinkedTrials={displayLinkedTrials}
+                                        linkedTrialsList={linkedTrialsList}
+                                        overlappingPlots={overlappingPlots}
+                                        heatmapData={heatmapData}
+                                        valueColorScale={valueColorScale}
+                                        germplasmPalette={germplasmPalette}
+                                        blockPalette={blockPalette}
+                                        familyNamePalette={familyNamePalette}
+                                        crossNamePalette={crossNamePalette}
+                                        onSelect={handlePlotSelect}
+                                        onHover={(p, clientX, clientY) => setHoveredPlot({ plot: p, x: clientX, y: clientY })}
+                                        onLeave={() => setHoveredPlot(null)}
+                                    />
 
                                     {/* Pass 2: Render Label Layer (Always on top) */}
                                     <g style={{ pointerEvents: 'none' }}>
