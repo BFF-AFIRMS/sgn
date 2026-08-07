@@ -66,6 +66,33 @@ sub trial_init : Chained('/') PathPart('breeders/trial') CaptureArgs(1) {
     $c->stash->{trial} = $trial;
 }
 
+sub trial_create_page : Path('/breeders/trial/create') Args(0) {
+    my $self = shift;
+    my $c = shift;
+    my $user = $c->user();
+    if (!$user) {
+        $c->res->redirect( uri( path => '/user/login', query => { goto_url => $c->req->uri->path_query } ) );
+        return;
+    }
+
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado');
+    my $program_object = CXGN::BreedersToolbox::Projects->new( { schema => $schema });
+    my $breeding_programs = $program_object->get_breeding_programs();
+    my $locations = $program_object->get_all_locations_by_breeding_program();
+
+    my $field_management_factors = $c->config->{management_factor_types};
+    my @management_factor_types = split ',', $field_management_factors;
+
+    my $design_types_cfg = $c->config->{design_types};
+    my @design_types = split ',', $design_types_cfg;
+
+    $c->stash->{locations} = $locations;
+    $c->stash->{breeding_programs} = $breeding_programs;
+    $c->stash->{management_factor_types} = \@management_factor_types;
+    $c->stash->{design_types} = \@design_types;
+    $c->stash->{template} = '/breeders_toolbox/trial/trial_create_page.mas';
+}
+
 sub old_trial_url : Path('/breeders_toolbox/trial') Args(1) {
     my $self = shift;
     my $c = shift;

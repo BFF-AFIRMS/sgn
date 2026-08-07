@@ -1,5 +1,5 @@
 <& /page/page_title.mas, title=>'Search Cross Details Using Female Parents' &>
-<& /util/import_javascript.mas, entries => [ 'search_state', 'functions' ] &>
+<& /util/import_javascript.mas, entries => [ 'managers/search_state', 'functions' ] &>
 <br>
 <&| /page/info_section.mas, title => 'Search', collapsible=>1, collapsed=>0&>
     <div class="row" id="cross_search_form" >
@@ -159,7 +159,7 @@ jQuery(document).ready(function (){
 
     });
 
-    const searchManager = window.jsMod['search_state'].create({
+    const searchManager = window.jsMod['managers/search_state'].create({
         submitButtonSelector: ['#search_crosses_female_male', '#search_all_crosses_using_female'],
         elements: {
             female_parent: { selector: '#cross_female_parent' },

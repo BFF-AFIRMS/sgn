@@ -77,7 +77,7 @@ if (any(grepl("phenotype_data", inputFiles))) {
     correPhenoData <- c()
 
     if (length(refererQtl) == 0) {
-        correInputData <- cleanAveragePhenotypes(inputFiles, metaDataFile = metaFile)
+        correInputData <- cleanAveragePhenotypes(inputFiles, metaDataFile = metaFile, keepMetaCols=c('observationUnitName'))
         allNames <- names(correInputData)
         nonTraitNames <- metaData
         allTraitNames <- allNames[! allNames %in% nonTraitNames]
@@ -148,9 +148,15 @@ if (is.null(correInputData)) {
 corrInputDataJson <- convertDataFrameToJson(correInputData)
 rownames(correInputData) <- NULL
 
-correInputData <- correInputData %>%
-    select(where(~ n_distinct(.) > 2))
+# Filter on the minimum number of obervations per trait
+min_observations <- 3
+max_na <- nrow(correInputData) - min_observations
+filter <- unname(unlist(colSums(is.na(correInputData)) <= max_na))
+correInputData <- correInputData[, filter]
 
+# Filter on the minimum number of distinct observations per trait
+correInputData <- correInputData %>%
+    select(where(~ n_distinct(.) > 1))
 
 coefpvalues <- rcor.test(correInputData,
     method = "pearson",

@@ -13,12 +13,7 @@ my $t = SGN::Test::WWW::WebDriver->new();
 my $f = SGN::Test::Fixture->new();
 
 $t->while_logged_in_as("submitter", sub {
-	$t->get_ok('/breeders/trials');
-
-	$t->click_ok("refresh_jstree_html", "name", "refresh tree");
-	$t->wait_for_working_dialog();
-
-	$t->click_ok('add_project_link', 'id', "find add trial link");
+	$t->get_ok('/breeders/trial/create');
 
 	# SCREEN 1 /Intro/
 	$t->click_ok('next_step_intro_button', 'id', 'go to next screen - Intro');
@@ -55,11 +50,6 @@ $t->while_logged_in_as("submitter", sub {
 	$t->click_ok('select_design_method', 'id', "find field trial description input");
 	$t->click_ok('//select[@id="select_design_method"]/option[@value="CRD"]', 'xpath', "find randomized method of design");
 
-	$t->click_ok('create_trial_validate_form_button', 'id', "find form validation button and click");
-
-	$t->click_ok('button[name="create_trial_submit"]', 'css', "find form submit button and click");
-
-
 	# SCREEN 3 /Design Information/
 
 	$t->send_keys_ok('rep_count', 'id', "1", "find trial replicates count input");
@@ -69,8 +59,6 @@ $t->while_logged_in_as("submitter", sub {
 
 	$t->click_ok('crbd_list_of_checks_section_list_select', 'id', "find accessions to include select");
 	$t->click_ok('//select[@id="crbd_list_of_checks_section_list_select"]//option[@value ="4"]', "xpath", "find checks for list");
-
-	$t->click_ok('next_step_design_information_button', 'id', 'go to next screen - Design Information');
 
 	# SCREEN 4 /Trail Linkage/
 
@@ -83,20 +71,19 @@ $t->while_logged_in_as("submitter", sub {
 	$t->click_ok('add_project_trial_will_be_crossed', 'id', "find project trial will be crossed select");
 	$t->click_ok('//select[@id="add_project_trial_will_be_crossed"]/option[contains(@value, "no")]', "xpath", "select project trial will be crossed option as 'no'");
 
-	$t->click_ok('next_step_trail_linkage_button', 'id', 'go to next screen - Trail Linkage');
-
 	# SCREEN 5 /Field map information/
 	$t->send_keys_ok('fieldMap_row_number', 'id', "1", "find field map row number input");
 	$t->click_ok('plot_layout_format', 'id', "find plot layout format select");
 	$t->click_ok('//select[@id="plot_layout_format"]//option[contains(@value, "zigzag")]', "xpath", "find checks for list");
-
-	$t->click_ok('next_step_field_map_button', 'id', 'go to next screen - Field map information');
 
 	# SCREEN 6 /Custom plot naming/
 	$t->send_keys_ok('plot_prefix', 'id', "prefix_sel_", "find plot prefix input");
 	$t->click_ok('start_number', 'id', "find plot start number select");
 	$t->click_ok('//select[@id="start_number"]//option[contains(@value, "101")]', "xpath", "find checks for list");
 	$t->send_keys_ok('increment', 'id', "2", "find plot number increment input");
+
+	# Lets the previous inputs settle before attempting to click the submit button
+	sleep(1);
 
 	$t->click_ok('new_trial_submit', 'id', 'go to next screen - Custom plot naming');
 	$t->wait_for_working_dialog();
@@ -105,13 +92,30 @@ $t->while_logged_in_as("submitter", sub {
 	$t->click_ok('redo_trial_layout_button', 'id', "find redo randomization and click button");
 	$t->wait_for_working_dialog();
 
+	# TEST PAGE REFRESH AND DRAFT RESTORATION ON STEP 6 (REVIEW DESIGN)
+	my $current_url = $t->driver->get_current_url();
+	ok($current_url =~ /draft_id=/, "URL contains draft_id parameter");
+
+	$t->get_ok($current_url, "Refresh page at review design step with draft_id");
+	$t->wait_for_network_idle();
+	$t->wait_for_working_dialog();
+
+	$t->find_element_ok('trial_design_information', 'id', "Verify review design section is restored after refresh");
+	my $design_info_text = $t->get_text('trial_design_information', 'id');
+	ok($design_info_text =~ /Completely Randomized Design/, "Verify restored design type in trial design info");
+	ok($design_info_text =~ /Number of locations/, "Verify restored locations in trial design info");
+	ok($design_info_text =~ /Number of accessions/, "Verify restored accessions in trial design info");
+	ok($design_info_text =~ /Number of reps/, "Verify restored reps in trial design info");
+
 	$t->click_ok('new_trial_confirm_submit', 'id', "find new trial confirm and submit");
 	$t->wait_for_working_dialog();
 
-	# Very strange, but the only way to catch the complete trial button. Standard selectors without an extended XPath solution don't work.
-	$t->find_element_ok('create_trial_success_complete_button', 'id', "find success button after trial upload to database");
-	$t->click_ok('//div[@class="panel-body"]//div[@class="workflow-complete-message workflow-message-show"]//center//button[@id="create_trial_success_complete_button"]',
+	$t->wait_for_network_idle();
+
+	# This xpath is required because there are actually two buttons with the same id on the page, one of which is hidden.
+	$t->click_ok('//div[@class="panel-body"]//div[@class="workflow-complete-message workflow-message-show"]//button[@id="create_trial_success_complete_button"]',
 		'xpath', 'click complete button on last screen and finish a modal process');
+	$t->wait_for_network_idle();
 
 	$t->click_ok("refresh_jstree_html", "name", "refresh tree with new trial added");
 

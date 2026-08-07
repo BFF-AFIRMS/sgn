@@ -112,6 +112,11 @@ has 'plant_list' => (
     is => 'rw',
 );
 
+has 'tissue_sample_list' => (
+    isa => 'ArrayRef[Int]|Undef',
+    is => 'rw',
+);
+
 has 'subplot_list' => (
     isa => 'ArrayRef[Int]|Undef',
     is => 'rw',
@@ -270,6 +275,7 @@ sub get_phenotype_matrix {
             analysis_result_stock_list=>$self->analysis_result_stock_list,
             plot_list=>$self->plot_list,
             plant_list=>$self->plant_list,
+            tissue_sample_list=>$self->tissue_sample_list,
             subplot_list=>$self->subplot_list,
             include_timestamp=>$include_timestamp,
             exclude_phenotype_outlier=>$self->exclude_phenotype_outlier,

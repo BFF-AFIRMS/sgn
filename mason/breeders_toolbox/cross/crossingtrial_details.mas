@@ -16,7 +16,7 @@ $trial_owner
 </%args>
 
 
-<div class="row flex-wrap-row">
+<div class="flex-wrap-row">
     <div class="flex-wrap-col">
 
         <table class="table table-hover table-bordered table-trial-details" >

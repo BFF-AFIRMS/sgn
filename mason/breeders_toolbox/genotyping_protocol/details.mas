@@ -12,10 +12,10 @@ $marker_type
 $assay_type
 </%args>
 
-<div class="row">
-    <div class="col-sm-12 tw:min-w-0 tw:overflow-auto">
+<div class="flex-wrap-row">
+    <div class="flex-wrap-col">
 
-        <table class="table table-hover table-bordered" >
+        <table class="table table-hover table-bordered table-trial-details" >
 
             <tr>
                 <td><b>Genotyping Protocol Name</b></td>
@@ -101,3 +101,5 @@ $assay_type
 
     </div>
 </div>
+
+<& /page/project_overview_accordion.mas, project_id => $protocol_id, prefix => "genotypingProtocol" &>

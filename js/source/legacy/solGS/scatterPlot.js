@@ -44,7 +44,7 @@ solGS.scatterPlot = {
 
         var height = 300;
         var width = 500;
-        var statsBlockWidth = 140;
+        var statsBlockWidth = 200;
         var pad = { left: 40, top: 20, right: 20 + statsBlockWidth, bottom: 60 };
         var totalH = height + pad.top + pad.bottom;
         var totalW = width + pad.left + pad.right;

@@ -5,6 +5,8 @@ use Data::Dumper;
 use URI::FromHash 'uri';
 use Text::MultiMarkdown qw | markdown |;
 use CXGN::People::Wiki;
+use Try::Tiny;
+use HTML::Scrubber;
 
 use Moose;
 
@@ -85,6 +87,35 @@ sub ajax_wiki_new :Path('/ajax/wiki/new') Args(0) {
 	print STDERR "Page creation a success! $sp_wiki_id with $wiki_page_name\n";
 	$c->stash->{rest} = { success => 1, sp_wiki_id => $sp_wiki_id, page_name => $wiki_page_name };
     }
+}
+
+sub ajax_wiki_rename :Path('/ajax/wiki/rename') Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    if (! $c->user()->check_roles("curator")) {
+	    $c->stash->{rest} = { error => "You do not have the privileges to create wiki pages." };
+	    $c->detach();
+    }
+
+    try {
+        my $old_page_name = $c->req->param('old_page_name');
+        my $new_page_name = $c->req->param('new_page_name');
+
+        my $wiki_page_name = $new_page_name;
+        $wiki_page_name =~ s/(_|-|\s+)(\w)/\U$2/g;
+        $wiki_page_name =~ s/\W//g;
+
+        if (length($wiki_page_name) == 0) {
+	        die "The name of the new page cannot be the empty string or consist only of special characters.";
+	    }
+
+        my $wiki = CXGN::People::Wiki->new( { people_schema => $c->dbic_schema("CXGN::People::Schema") } );
+        my $sp_wiki_id = $wiki->rename_page($old_page_name, $wiki_page_name);
+        $c->stash->{rest} = { success => 1, sp_wiki_id => $sp_wiki_id, page_name => $wiki_page_name };
+    } catch {
+        $c->stash->{rest} = { error =>  $_ };
+    };
 }
 
 # stores the content for a given wiki_id
@@ -198,7 +229,7 @@ sub view : Chained('ajax_wiki') PathPart('view') Args(0) {
 	$page_content = $page_data->{page_content};
 
         $page_version = $wiki->get_version();
-
+        $page_content = $wiki->scrub_page($page_content);
     };
     if ($@) {
 	$c->stash->{rest} = { error => "An error occurred retrieving the page. It may not exist $@" };

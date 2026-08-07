@@ -244,9 +244,11 @@ sub create_list_pop_data_files {
     $c->controller('solGS::Files')->phenotype_file_name( $c, $file_id );
     my $pheno_file = $c->stash->{phenotype_file_name};
 
-    $c->controller('solGS::Files')
-      ->genotype_file_name( $c, $file_id, $protocol_id );
-    my $geno_file = $c->stash->{genotype_file_name};
+    my $geno_file;
+    if ($c->stash->{genotyping_protocol_id}){
+        $c->controller('solGS::Files')->genotype_file_name( $c, $file_id, $protocol_id );
+        $geno_file = $c->stash->{genotype_file_name};
+    }
 
     my $files = {
         pheno_file => $pheno_file,
@@ -652,10 +654,13 @@ sub plots_list_phenotype_query_job {
     my $plots_names = $c->stash->{plots_list};
     my $plots_ids   = $c->stash->{plots_ids};
 
+    my $traits_ids = $c->stash->{traits_ids};
+
     if ( !$plots_ids ) {
         $self->get_plots_list_elements_ids($c);
         $plots_ids = $c->stash->{list_elements_ids};
     }
+
 
     $c->stash->{pop_id} =
       $dataset_id ? 'dataset_' . $dataset_id : 'list_' . $list_id;
@@ -684,6 +689,7 @@ sub plots_list_phenotype_query_job {
     my $args = {
         'list_id'        => $list_id,
         'plots_ids'      => $plots_ids,
+        'traits_ids'     => $traits_ids,
         'traits_file'    => $traits_file,
         'list_data_dir'  => $data_dir,
         'phenotype_file' => $pheno_file,

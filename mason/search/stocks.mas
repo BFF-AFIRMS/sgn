@@ -19,7 +19,7 @@
   }
 </%perl>
 
-<& /util/import_javascript.mas, entries => [ 'search_state' ] &>
+<& /util/import_javascript.mas, entries => [ 'managers/search_state' ] &>
 
 <style>
 #stock_search_results_div {
@@ -81,7 +81,7 @@ my @view_column_options = (@{ $editable_stock_props || [] }, 'organism', 'synony
   <div id="stock_search_form" class="well well-sm">
 
 
-    <&| /page/info_section.mas, title => 'Name Search', collapsible=>1, collapsed=>0 &>
+    <&| /page/info_section.mas, title => 'Name Search', collapsible=>1, collapsed=>0, id=>'name_search_panel' &>
 
     <div class="row">
       <div class="col-sm-11">
@@ -666,9 +666,10 @@ jQuery(document).ready(function () {
     });
 
     // Instantiate the unified Search State Manager configuration
-    const searchManager = window.jsMod['search_state'].create({
+    const searchManager = window.jsMod['managers/search_state'].create({
         submitButtonSelector: '#submit_stock_search',
         resetButtonSelector: '#reset_stock_search',
+        collapseBlacklist: ['#name_search_panel_content'],
         onReset: function() {
             for (const key in editable_stockprops_search) {
                 delete editable_stockprops_search[key];
@@ -682,15 +683,15 @@ jQuery(document).ready(function () {
         },
         elements: {
             any_name: { selector: '#any_name' },
-            any_name_matchtype: { selector: '#any_name_matchtype' },
-            stock_type: { selector: '#stock_type_select' },
-            organism: { selector: '#organism_select' },
+            any_name_matchtype: { selector: '#any_name_matchtype', defaultValue: 'starts_with' },
+            stock_type: { selector: '#stock_type_select', defaultValue: 'accession' },
+            organism: { selector: '#organism_select', defaultValue: '0' },
             organization: { selector: '#organization' },
-            obsolete_stock_search_term: { selector: '#obsolete_stock_search_term' },
+            obsolete_stock_search_term: { selector: '#obsolete_stock_search_term', defaultValue: 'false' },
             project: { selector: '#project' },
             location: { selector: '#location' },
             year: { selector: '#year' },
-            breeding_program: { selector: '#breeding_program' },
+            breeding_program: { selector: '#breeding_program', defaultValue: '0' },
             trait: { selector: '#trait' },
             minimum_trait_value: { selector: '#minimum_trait_value' },
             maximum_trait_value: { selector: '#maximum_trait_value' },
@@ -698,6 +699,7 @@ jQuery(document).ready(function () {
             editable_stockprops: {
                 selector: '#editable_stockprop_search_div',
                 type: 'json',
+                defaultValue: '{}',
                 getValue: function() { return editable_stockprops_search; },
                 setValue: function(val) {
                     for (const key in editable_stockprops_search) {
@@ -716,7 +718,7 @@ jQuery(document).ready(function () {
     });
 
     // Instantiate a separate manager to independently persist and reset custom table columns
-    const columnManager = window.jsMod['search_state'].create({
+    const columnManager = window.jsMod['managers/search_state'].create({
         submitButtonSelector: ['#editable_stockprop_view_column_add', '#editable_stockprop_view_column_remove'],
         resetButtonSelector: '#reset_stock_columns',
         elements: {

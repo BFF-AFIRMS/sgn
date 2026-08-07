@@ -19,7 +19,7 @@
 </div>
 -->
 
-<div class="modal fade" id="working_modal" name="working_modal" tabindex="-1" role="dialog" aria-labelledby="workingModalDialog" data-controls-modal="your_div_id" data-backdrop="static" data-keyboard="false" href="#">
+<div class="modal fade" id="working_modal" name="working_modal" style= "z-index: 9999" tabindex="-1" role="dialog" aria-labelledby="workingModalDialog" data-controls-modal="your_div_id" data-backdrop="static" data-keyboard="false" href="#">
   <div class="modal-dialog modal-sm" role="document">
     <div class="modal-content">
       <div class="modal-header">
@@ -77,3 +77,59 @@
 <div class="col-md-1 col-lg-1 col-xl-2">
 </div>
 </div>
+
+<script>
+// Reference counting wrapper for #working_modal to handle concurrent AJAX requests
+// and prevent duplicate Bootstrap modal backdrops from accumulating in the DOM.
+(function($) {
+    var origModal = $.fn.modal;
+    var workingModalCount = 0;
+    var hideTimer = null;
+
+    // Debounce time in milliseconds to wait before hiding the modal after the last hide request.
+    var debounce = 150;
+
+    $.fn.modal = function(option, _relatedTarget) {
+        if (this.attr('id') === 'working_modal') {
+            var $self = this;
+            if (option === 'show') {
+                workingModalCount++;
+                if (hideTimer) {
+                    clearTimeout(hideTimer);
+                    hideTimer = null;
+                }
+                if (workingModalCount === 1) {
+                    return origModal.call($self, option, _relatedTarget);
+                }
+                return $self;
+            } else if (option === 'hide') {
+                workingModalCount--;
+                if (workingModalCount <= 0) {
+                    workingModalCount = 0;
+                    if (hideTimer) {
+                        clearTimeout(hideTimer);
+                    }
+                    hideTimer = setTimeout(function() {
+                        hideTimer = null;
+                        if (workingModalCount <= 0) {
+                            origModal.call($self, 'hide');
+                        }
+                    }, debounce);
+                }
+                return $self;
+            }
+        }
+        return origModal.call(this, option, _relatedTarget);
+    };
+
+    $(document).ready(function() {
+        $('#working_modal').on('hidden.bs.modal', function() {
+            workingModalCount = 0;
+            if (hideTimer) {
+                clearTimeout(hideTimer);
+                hideTimer = null;
+            }
+        });
+    });
+})(jQuery);
+</script>
