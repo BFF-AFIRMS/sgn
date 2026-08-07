@@ -14,7 +14,7 @@ import {
     trial_colors_text, 
     interpolate, 
     pearsonSkewness 
-} from '../include/fieldmap/utils';
+} from '../include/fieldmap/utils/functions';
 import { printFieldMap } from '../include/fieldmap/utils/print';
 import { FieldMapLegend } from '../include/fieldmap/components/FieldMapLegend';
 import { FieldMapTooltip } from '../include/fieldmap/components/FieldMapTooltip';
