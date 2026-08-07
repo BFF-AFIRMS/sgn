@@ -12,20 +12,22 @@ export interface GridBounds {
 }
 
 interface PlotGridContextType {
-    plotObject: Record<string, Plot>;
-    setPlotObject: React.Dispatch<React.SetStateAction<Record<string, Plot>>>;
     plotList: Plot[];
-    dimensions: { rows: number; cols: number };
     bounds: GridBounds;
     renderBounds: GridBounds;
-    parsePlotData: (data: any[]) => void;
+    gridMatrix: Plot[][];
+
+    dimensions: { rows: number; cols: number };
+    setDimensions: (dimensions: { rows: number; cols: number }) => void;
+
     fillerAccessionId: string | undefined;
     setFillerAccessionId: React.Dispatch<React.SetStateAction<string | undefined>>;
-    gridMatrix: Plot[][];
+
+    parsePlotData: (data: any[]) => void;
+    recalculateLayout: (layout: 'serpentine' | 'zigzag') => void;
+
     transposeLayout: () => void;
     rotateLayout: () => void;
-    applyDimensions: (rows: number, cols: number, layout: 'serpentine' | 'zigzag', fillerAccessionId?: string) => void;
-    recalculateLayout: (currentPlots: Record<string, Plot>, rows: number, cols: number, layout: 'serpentine' | 'zigzag') => Record<string, Plot>;
 }
 
 const PlotGridContext = createContext<PlotGridContextType | undefined>(undefined);
@@ -217,50 +219,55 @@ export const PlotGridProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         return matrix;
     }, [bounds, renderBounds, plotList, fillerAccessionId]);
 
-    const recalculateLayout = (currentPlots: Record<string, Plot>, rows: number, cols: number, layout: 'serpentine' | 'zigzag') => {
-        const plotsArr = Object.values(currentPlots).filter(p => !!p.observationUnitDbId);
-        
-        let minC = Infinity, minR = Infinity;
-        plotsArr.forEach(p => {
-            const x = Number(p.observationUnitPosition.positionCoordinateX);
-            const y = Number(p.observationUnitPosition.positionCoordinateY);
-            if (x < minC) minC = x;
-            if (y < minR) minR = y;
-        });
-        if (minC === Infinity) minC = 1;
-        if (minR === Infinity) minR = 1;
+    const recalculateLayout = (layout: 'serpentine' | 'zigzag') => {
+        setPlotObject(currentPlots => {
+            const rows = dimensions.rows || bounds.numRows;
+            const cols = dimensions.cols || bounds.numCols;
 
-        const sortedPlots = [...plotsArr];
-        sortedPlots.sort((a, b) => {
-            const codeA = parseFloat(String(a.observationUnitPosition?.observationLevel?.levelCode)) || 0;
-            const codeB = parseFloat(String(b.observationUnitPosition?.observationLevel?.levelCode)) || 0;
-            return codeA - codeB;
-        });
+            const plotsArr = Object.values(currentPlots).filter(p => !!p.observationUnitDbId);
 
-        const newPlotObject: Record<string, Plot> = {};
-        let plotIdx = 0;
-        for (let r = 0; r < rows; r++) {
-            const currentRow = minR + r;
-            const swap_columns = layout === 'serpentine' && (currentRow % 2 === 0);
+            let minC = Infinity, minR = Infinity;
+            plotsArr.forEach(p => {
+                const x = Number(p.observationUnitPosition.positionCoordinateX);
+                const y = Number(p.observationUnitPosition.positionCoordinateY);
+                if (x < minC) minC = x;
+                if (y < minR) minR = y;
+            });
+            if (minC === Infinity) minC = 1;
+            if (minR === Infinity) minR = 1;
 
-            for (let c = 0; c < cols; c++) {
-                if (plotIdx < sortedPlots.length) {
-                    const plot = sortedPlots[plotIdx];
-                    const currentCol = swap_columns ? (minC + cols - 1 - c) : (minC + c);
+            const sortedPlots = [...plotsArr];
+            sortedPlots.sort((a, b) => {
+                const codeA = parseFloat(String(a.observationUnitPosition?.observationLevel?.levelCode)) || 0;
+                const codeB = parseFloat(String(b.observationUnitPosition?.observationLevel?.levelCode)) || 0;
+                return codeA - codeB;
+            });
 
-                    newPlotObject[plot.observationUnitDbId!] = {
-                        ...plot,
-                        observationUnitPosition: {
-                            ...plot.observationUnitPosition,
-                            positionCoordinateX: currentCol,
-                            positionCoordinateY: currentRow,
-                        }
-                    };
-                    plotIdx++;
+            const newPlotObject: Record<string, Plot> = {};
+            let plotIdx = 0;
+            for (let r = 0; r < rows; r++) {
+                const currentRow = minR + r;
+                const swap_columns = layout === 'serpentine' && (currentRow % 2 === 0);
+
+                for (let c = 0; c < cols; c++) {
+                    if (plotIdx < sortedPlots.length) {
+                        const plot = sortedPlots[plotIdx];
+                        const currentCol = swap_columns ? (minC + cols - 1 - c) : (minC + c);
+
+                        newPlotObject[plot.observationUnitDbId!] = {
+                            ...plot,
+                            observationUnitPosition: {
+                                ...plot.observationUnitPosition,
+                                positionCoordinateX: currentCol,
+                                positionCoordinateY: currentRow,
+                            }
+                        };
+                        plotIdx++;
+                    }
                 }
             }
-        }
-        return newPlotObject;
+            return newPlotObject;
+        });
     };
 
     const transposeLayout = () => {
@@ -303,20 +310,11 @@ export const PlotGridProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         setDimensions(d => ({ rows: d.cols, cols: d.rows }));
     };
 
-    const applyDimensions = (rows: number, cols: number, layout: 'serpentine' | 'zigzag', nextFillerId?: string) => {
-        if (nextFillerId) {
-            setFillerAccessionId(nextFillerId);
-        }
-        setDimensions({ rows, cols });
-        setPlotObject(prev => recalculateLayout(prev, rows, cols, layout));
-    };
-
     return (
         <PlotGridContext.Provider value={{
-            plotObject,
-            setPlotObject,
             plotList,
             dimensions,
+            setDimensions,
             bounds,
             renderBounds,
             parsePlotData,
@@ -325,7 +323,6 @@ export const PlotGridProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             gridMatrix,
             transposeLayout,
             rotateLayout,
-            applyDimensions,
             recalculateLayout
         }}>
             {children}

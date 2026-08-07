@@ -70,15 +70,13 @@ const FieldMapContainerInner: React.FC<FieldMapContainerProps> = ({
     } = useBorder();
 
     const {
-        setPlotObject,
         plotList,
         bounds, renderBounds,
         parsePlotData,
-        fillerAccessionId, setFillerAccessionId,
+        fillerAccessionId,
         gridMatrix,
-        transposeLayout,
-        rotateLayout,
-        applyDimensions
+        setDimensions,
+        setFillerAccessionId
     } = usePlotGrid();
 
     const {
@@ -676,7 +674,10 @@ const FieldMapContainerInner: React.FC<FieldMapContainerProps> = ({
         }
 
         const proceed = (accessionId?: string) => {
-            applyDimensions(rows, cols, plotLayout, accessionId);
+            if (accessionId) {
+                setFillerAccessionId(accessionId);
+            }
+            setDimensions({ rows, cols });
             setShowDimDialog(false);
         };
 

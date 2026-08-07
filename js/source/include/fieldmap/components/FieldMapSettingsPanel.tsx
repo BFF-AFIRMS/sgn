@@ -37,7 +37,6 @@ export const FieldMapSettingsPanel: React.FC<FieldMapSettingsPanelProps> = ({
     } = useBorder();
 
     const {
-        setPlotObject,
         dimensions,
         bounds,
         transposeLayout,
@@ -64,8 +63,8 @@ export const FieldMapSettingsPanel: React.FC<FieldMapSettingsPanelProps> = ({
                     onChange={e => {
                         const nextLayout = e.target.value as PlotLayout;
                         setPlotLayout(nextLayout);
-                        setPlotObject(prev => recalculateLayout(prev, dimensions.rows || bounds.numRows, dimensions.cols || bounds.numCols, nextLayout));
-                    }} 
+                        recalculateLayout(nextLayout);
+                    }}
                     disabled={displayLinkedTrials}
                 >
                     <option value="serpentine">Serpentine</option>
