@@ -60,6 +60,19 @@ export interface TrialDetails {
     fg: string;
 }
 
+export interface DownloadOpts {
+    type: string;
+    order: string;
+    start: string;
+    borders: boolean;
+    gaps: boolean;
+    subplots: boolean;
+    plants: boolean;
+    hmPltid: string;
+    hmRange: string;
+    hmRow: string;
+}
+
 export interface PlotStructureNode {
     type: string;
     stock_id?: number;
