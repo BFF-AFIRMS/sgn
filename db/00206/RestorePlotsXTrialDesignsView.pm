@@ -14,7 +14,7 @@ see the perldoc of parent class for more details.
 =head1 DESCRIPTION
 
 This patch:
- - Creates a new view plotsxtrial_designs for tool compatibility for datasets with plots.
+ - Restores the view plotsxtrial_designs which was dropped in a previous patch (00190/AddOrganismsToMaterializedview).
 
 =head1 AUTHOR
 
@@ -36,7 +36,7 @@ use Bio::Chado::Schema;
 extends 'CXGN::Metadata::Dbpatch';
 
 has '+description' => ( default => <<'' );
-This patch creates a new view plotsxtrial_designs for tool compatibility for datasets with plots.
+This patch restores the view plotsxtrial_designs which was dropped in a previous patch (00190/AddOrganismsToMaterializedview).
 
 sub patch {
     my $self=shift;
@@ -48,22 +48,14 @@ sub patch {
     print STDOUT "\nExecuting the SQL commands.\n";
 
     $self->dbh->do(<<EOSQL);
-create view public.plotsxtrial_designs as (
-    select
-        stock.stock_id as plot_id,
-        trialdesign.value as trial_design_id
-    from materialized_phenoview
-    join projectprop trialdesign on (
-        materialized_phenoview.trial_id = trialdesign.project_id
-        and trialdesign.type_id = (select cvterm.cvterm_id from cvterm where cvterm.name::text = 'design')
-    )
-    join stock on (
-        materialized_phenoview.stock_id = stock.stock_id
-        and stock.type_id = (select cvterm.cvterm_id from cvterm where cvterm.name = 'plot')
-    )
-    group by trialdesign.value, stock.stock_id
-);
-alter view public.plotsxtrial_designs owner to web_usr;
+CREATE VIEW public.plotsXtrial_designs AS
+SELECT public.stock.stock_id AS plot_id,
+    trialdesign.value AS trial_design_id
+   FROM public.materialized_phenoview
+   JOIN public.stock ON(public.materialized_phenoview.stock_id = public.stock.stock_id AND public.stock.type_id = (SELECT cvterm_id from cvterm where cvterm.name = 'plot'))
+   JOIN public.projectprop trialdesign ON materialized_phenoview.trial_id = trialdesign.project_id AND trialdesign.type_id = (SELECT cvterm_id from cvterm where cvterm.name = 'design' )
+  GROUP BY stock.stock_id, trialdesign.value;
+ALTER VIEW plotsXtrial_designs OWNER TO web_usr;
 
 EOSQL
 
