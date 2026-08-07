@@ -6711,4 +6711,75 @@ sub add_additional_stocks_for_greenhouse_POST : Args(0) {
 }
 
 
+sub north_arrow_angle : Chained('trial') PathPart('north_arrow_angle') Args(0) ActionClass('REST') {};
+
+sub north_arrow_angle_GET {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->stash->{schema};
+    my $trial_id = $c->stash->{trial_id};
+
+    my $north_arrow_angle_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'north_arrow_angle', 'project_property');
+    if (!$north_arrow_angle_cvterm) {
+        $c->stash->{rest} = { error => "north_arrow_angle cvterm not found. Has the db patch been run?" };
+        return;
+    }
+
+    my $prop = $schema->resultset("Project::Projectprop")->find({
+        project_id => $trial_id,
+        type_id => $north_arrow_angle_cvterm->cvterm_id()
+    });
+
+    my $angle = $prop ? $prop->value() : undef;
+    $c->stash->{rest} = { north_arrow_angle => $angle };
+}
+
+sub north_arrow_angle_POST {
+    my $self = shift;
+    my $c = shift;
+
+    if ($self->privileges_denied($c)) {
+        $c->stash->{rest} = { error => "You have insufficient access privileges to edit this trial." };
+        return;
+    }
+
+    my $schema = $c->stash->{schema};
+    my $trial_id = $c->stash->{trial_id};
+    my $angle = $c->req->param('north_arrow_angle');
+
+    my $north_arrow_angle_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'north_arrow_angle', 'project_property');
+    if (!$north_arrow_angle_cvterm) {
+        $c->stash->{rest} = { error => "north_arrow_angle cvterm not found. Has the db patch been run?" };
+        return;
+    }
+
+    my $prop = $schema->resultset("Project::Projectprop")->find({
+        project_id => $trial_id,
+        type_id => $north_arrow_angle_cvterm->cvterm_id()
+    });
+
+    if (defined $angle && $angle ne '') {
+        if ($angle !~ /^-?\d+(\.\d+)?$/) {
+            $c->stash->{rest} = { error => "North arrow angle must be a number." };
+            return;
+        }
+        if ($prop) {
+            $prop->update({ value => $angle });
+        } else {
+            $schema->resultset("Project::Projectprop")->create({
+                project_id => $trial_id,
+                type_id => $north_arrow_angle_cvterm->cvterm_id(),
+                value => $angle,
+                rank => 0
+            });
+        }
+    } else {
+        if ($prop) {
+            $prop->delete();
+        }
+    }
+
+    $c->stash->{rest} = { success => 1 };
+}
+
 1;
