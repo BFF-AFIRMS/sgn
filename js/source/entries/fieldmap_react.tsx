@@ -33,7 +33,7 @@ import {
     CuratorWarningModal 
 } from '../include/fieldmap/modals/FieldmapModals';
 import { BorderProvider, useBorder } from '../include/fieldmap/contexts/BorderContext';
-import { BoundsProvider, useBounds } from '../include/fieldmap/contexts/BoundsContext';
+import { PlotGridProvider, usePlotGrid } from '../include/fieldmap/contexts/PlotGridContext';
 import { ControlProvider } from '../include/fieldmap/contexts/ControlContext';
 import { LayoutConfigProvider, useLayoutConfig } from '../include/fieldmap/contexts/LayoutConfigContext';
 
@@ -74,7 +74,7 @@ const FieldMapContainerInner: React.FC<FieldMapContainerProps> = ({
         plotList,
         dimensions, setDimensions,
         bounds, renderBounds
-    } = useBounds();
+    } = usePlotGrid();
 
     const {
         plotLayout, setPlotLayout,
@@ -1194,13 +1194,13 @@ const FieldMapContainerInner: React.FC<FieldMapContainerProps> = ({
 export const FieldMapContainer: React.FC<FieldMapContainerProps> = (props) => {
     return (
         <BorderProvider>
-            <BoundsProvider>
+            <PlotGridProvider>
                 <ControlProvider trialId={props.trialId}>
                     <LayoutConfigProvider>
                         <FieldMapContainerInner {...props} />
                     </LayoutConfigProvider>
                 </ControlProvider>
-            </BoundsProvider>
+            </PlotGridProvider>
         </BorderProvider>
     );
 };

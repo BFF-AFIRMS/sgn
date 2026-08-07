@@ -1,6 +1,6 @@
 import React from 'react';
 import { useControl } from '../contexts/ControlContext';
-import { useBounds } from '../contexts/BoundsContext';
+import { usePlotGrid } from '../contexts/PlotGridContext';
 
 interface FieldMapControlPanelProps {
     selectedView: string;
@@ -16,7 +16,7 @@ export const FieldMapControlPanel: React.FC<FieldMapControlPanelProps> = ({
         controlPlots
     } = useControl();
 
-    const { plotList } = useBounds();
+    const { plotList } = usePlotGrid();
 
     if (selectedView === 'fieldmap' || selectedView === 'geofieldmap') {
         return null;

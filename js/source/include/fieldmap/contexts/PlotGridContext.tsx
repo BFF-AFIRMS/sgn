@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useMemo } from 'react';
 import { Plot } from '../types';
 import { useBorder } from './BorderContext';
 
-interface Bounds {
+export interface GridBounds {
     minCol: number;
     maxCol: number;
     minRow: number;
@@ -11,19 +11,19 @@ interface Bounds {
     numCols: number;
 }
 
-interface BoundsContextType {
+interface PlotGridContextType {
     plotObject: Record<string, Plot>;
     setPlotObject: React.Dispatch<React.SetStateAction<Record<string, Plot>>>;
     plotList: Plot[];
     dimensions: { rows: number; cols: number };
     setDimensions: React.Dispatch<React.SetStateAction<{ rows: number; cols: number }>>;
-    bounds: Bounds;
-    renderBounds: Bounds;
+    bounds: GridBounds;
+    renderBounds: GridBounds;
 }
 
-const BoundsContext = createContext<BoundsContextType | undefined>(undefined);
+const PlotGridContext = createContext<PlotGridContextType | undefined>(undefined);
 
-export const BoundsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const PlotGridProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const { topBorder, bottomBorder, leftBorder, rightBorder } = useBorder();
     const [plotObject, setPlotObject] = useState<Record<string, Plot>>({});
     const [dimensions, setDimensions] = useState({ rows: 0, cols: 0 });
@@ -104,7 +104,7 @@ export const BoundsProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }, [bounds, topBorder, bottomBorder, leftBorder, rightBorder]);
 
     return (
-        <BoundsContext.Provider value={{
+        <PlotGridContext.Provider value={{
             plotObject,
             setPlotObject,
             plotList,
@@ -114,14 +114,14 @@ export const BoundsProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             renderBounds
         }}>
             {children}
-        </BoundsContext.Provider>
+        </PlotGridContext.Provider>
     );
 };
 
-export const useBounds = () => {
-    const context = useContext(BoundsContext);
+export const usePlotGrid = () => {
+    const context = useContext(PlotGridContext);
     if (!context) {
-        throw new Error('useBounds must be used within a BoundsProvider');
+        throw new Error('usePlotGrid must be used within a PlotGridProvider');
     }
     return context;
 };

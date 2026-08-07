@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { Plot, TrialDetails, HeatmapValue } from '../types';
 import { palette } from '../utils/functions';
-import { useBounds } from '../contexts/BoundsContext';
+import { usePlotGrid } from '../contexts/PlotGridContext';
 import { useLayoutConfig } from '../contexts/LayoutConfigContext';
 
 interface PlotTileProps {
@@ -180,7 +180,7 @@ export const PlotLayer: React.FC<PlotLayerProps> = ({
     onHover,
     onLeave
 }) => {
-    const { renderBounds } = useBounds();
+    const { renderBounds } = usePlotGrid();
     const { invertRows, invertCols, colorVar } = useLayoutConfig();
 
     const plotList = useMemo(() => {

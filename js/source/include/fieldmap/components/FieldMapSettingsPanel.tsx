@@ -1,7 +1,7 @@
 import React from 'react';
 import { Plot } from '../types';
 import { useBorder } from '../contexts/BorderContext';
-import { useBounds } from '../contexts/BoundsContext';
+import { usePlotGrid } from '../contexts/PlotGridContext';
 import { useLayoutConfig, PlotLayout, ColorVar, LabelVar } from '../contexts/LayoutConfigContext';
 
 interface FieldMapSettingsPanelProps {
@@ -46,7 +46,7 @@ export const FieldMapSettingsPanel: React.FC<FieldMapSettingsPanelProps> = ({
         setPlotObject,
         dimensions,
         bounds
-    } = useBounds();
+    } = usePlotGrid();
 
     const {
         plotLayout, setPlotLayout,

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Plot } from '../types';
-import { useBounds } from '../contexts/BoundsContext';
+import { usePlotGrid } from '../contexts/PlotGridContext';
 import { useLayoutConfig } from '../contexts/LayoutConfigContext';
 
 interface LabelLayerProps {
@@ -12,7 +12,7 @@ export const LabelLayer: React.FC<LabelLayerProps> = ({
     gridMatrix,
     overlappingPlots,
 }) => {
-    const { bounds, renderBounds } = useBounds();
+    const { bounds, renderBounds } = usePlotGrid();
     const { invertRows, invertCols, labelVar, labelSize } = useLayoutConfig();
 
     return (
