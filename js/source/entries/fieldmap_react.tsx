@@ -30,6 +30,7 @@ import {
 } from '../include/fieldmap/modals/FieldmapModals';
 import { BorderProvider, useBorder } from '../include/fieldmap/contexts/BorderContext';
 import { BoundsProvider, useBounds } from '../include/fieldmap/contexts/BoundsContext';
+import { LayoutConfigProvider, useLayoutConfig } from '../include/fieldmap/contexts/LayoutConfigContext';
 
 // Declare external legacy global libraries
 // We must use 'any' here as Leaflet (L) and Turf are loaded globally as script includes 
@@ -70,6 +71,15 @@ const FieldMapContainerInner: React.FC<FieldMapContainerProps> = ({
         bounds, renderBounds
     } = useBounds();
 
+    const {
+        plotLayout, setPlotLayout,
+        invertRows, setInvertRows,
+        invertCols, setInvertCols,
+        colorVar, setColorVar,
+        labelVar, setLabelVar,
+        labelSize, setLabelSize
+    } = useLayoutConfig();
+
     const [loading, setLoading] = useState(false);
     const [selectedViewLabel, setSelectedViewLabel] = useState<string>('');
     const [variables, setVariables] = useState<Record<string, string>>({});
@@ -77,14 +87,6 @@ const FieldMapContainerInner: React.FC<FieldMapContainerProps> = ({
     const [displayLinkedTrials, setDisplayLinkedTrials] = useState(false);
     const [linkedTrialsList, setLinkedTrialsList] = useState<TrialDetails[]>([]);
     const [activeTrialIds, setActiveTrialIds] = useState<string[]>([trialId]);
-
-    const [plotLayout, setPlotLayout] = useState<'serpentine' | 'zigzag'>('serpentine');
-    const [invertRows, setInvertRows] = useState(false);
-    const [colorVar, setColorVar] = useState<'parity' | 'germplasm' | 'block' | 'family_name' | 'cross_name'>('parity');
-    const [labelVar, setLabelVar] = useState<'plot_number' | 'germplasm' | 'block' | 'family_name' | 'cross_name'>('plot_number');
-    const [labelSize, setLabelSize] = useState(10);
-
-    const [invertCols, setInvertCols] = useState(false);
 
     const [showDimDialog, setShowDimDialog] = useState(false);
     const [dimRowsInput, setDimRowsInput] = useState('');
@@ -1311,9 +1313,6 @@ const FieldMapContainerInner: React.FC<FieldMapContainerProps> = ({
                                 <g transform="translate(50, 25)">
                                     <PlotLayer
                                         gridMatrix={gridMatrix}
-                                        invertRows={invertRows}
-                                        invertCols={invertCols}
-                                        colorVar={colorVar}
                                         selectedView={selectedView}
                                         displayLinkedTrials={displayLinkedTrials}
                                         linkedTrialsList={linkedTrialsList}
@@ -1327,11 +1326,7 @@ const FieldMapContainerInner: React.FC<FieldMapContainerProps> = ({
 
                                     <LabelLayer
                                         gridMatrix={gridMatrix}
-                                        invertRows={invertRows}
-                                        invertCols={invertCols}
                                         overlappingPlots={overlappingPlots}
-                                        labelVar={labelVar}
-                                        labelSize={labelSize}
                                     />
                                 </g>
                             </svg>
@@ -1435,7 +1430,9 @@ export const FieldMapContainer: React.FC<FieldMapContainerProps> = (props) => {
     return (
         <BorderProvider>
             <BoundsProvider>
-                <FieldMapContainerInner {...props} />
+                <LayoutConfigProvider>
+                    <FieldMapContainerInner {...props} />
+                </LayoutConfigProvider>
             </BoundsProvider>
         </BorderProvider>
     );

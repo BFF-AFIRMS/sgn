@@ -1,25 +1,20 @@
 import React from 'react';
 import { Plot } from '../types';
 import { useBounds } from '../contexts/BoundsContext';
+import { useLayoutConfig } from '../contexts/LayoutConfigContext';
 
 interface LabelLayerProps {
     gridMatrix: Plot[][];
-    invertRows: boolean;
-    invertCols: boolean;
     overlappingPlots: Record<string, Plot[]>;
-    labelVar: 'plot_number' | 'germplasm' | 'block' | 'family_name' | 'cross_name';
-    labelSize: number;
 }
 
 export const LabelLayer: React.FC<LabelLayerProps> = ({
     gridMatrix,
-    invertRows,
-    invertCols,
     overlappingPlots,
-    labelVar,
-    labelSize,
 }) => {
     const { bounds, renderBounds } = useBounds();
+    const { invertRows, invertCols, labelVar, labelSize } = useLayoutConfig();
+
     return (
         <g style={{ pointerEvents: 'none' }}>
             {/* Column Axis Labels (Top and Bottom) */}

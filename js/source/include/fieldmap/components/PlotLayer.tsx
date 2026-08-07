@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { Plot, TrialDetails, HeatmapValue } from '../types';
 import { palette } from '../utils/functions';
 import { useBounds } from '../contexts/BoundsContext';
+import { useLayoutConfig } from '../contexts/LayoutConfigContext';
 
 interface PlotTileProps {
     plot: Plot;
@@ -151,9 +152,6 @@ const PlotTile: React.FC<PlotTileProps> = ({
 
 interface PlotLayerProps {
     gridMatrix: Plot[][];
-    invertRows: boolean;
-    invertCols: boolean;
-    colorVar: 'parity' | 'germplasm' | 'block' | 'family_name' | 'cross_name';
     selectedView: string;
     displayLinkedTrials: boolean;
     linkedTrialsList: TrialDetails[];
@@ -172,9 +170,6 @@ interface PlotLayerProps {
 
 export const PlotLayer: React.FC<PlotLayerProps> = ({
     gridMatrix,
-    invertRows,
-    invertCols,
-    colorVar,
     selectedView,
     displayLinkedTrials,
     linkedTrialsList,
@@ -186,6 +181,8 @@ export const PlotLayer: React.FC<PlotLayerProps> = ({
     onLeave
 }) => {
     const { renderBounds } = useBounds();
+    const { invertRows, invertCols, colorVar } = useLayoutConfig();
+
     const plotList = useMemo(() => {
         const uniquePlots = new Map<string, Plot>();
         gridMatrix.forEach(row => {
