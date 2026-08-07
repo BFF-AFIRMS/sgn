@@ -1,5 +1,5 @@
 import React from 'react';
-import { AccessionAutocomplete } from '../subcomponents/AccessionAutocomplete';
+import { AccessionAutocomplete } from '../components/AccessionAutocomplete';
 
 interface DimensionsModalProps {
     show: boolean;

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Plot, PlotStructureNode } from '../types';
-import { RenderPlantGrid, RenderSubplotGrid } from '../subcomponents/PlantSubplotGrids';
-import { AccessionAutocomplete } from '../subcomponents/AccessionAutocomplete';
+import { RenderPlantGrid, RenderSubplotGrid } from '../components/PlantSubplotGrids';
+import { AccessionAutocomplete } from '../components/AccessionAutocomplete';
 
 interface PlotDetailsModalProps {
     show: boolean;
