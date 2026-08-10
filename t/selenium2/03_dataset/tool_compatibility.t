@@ -16,6 +16,40 @@ my $dbh = $f->dbh();
 $d->while_logged_in_as("submitter", sub {
 
     # -------------------------------------------------------------------------
+    # Tool Compatibility for Datasets with Trials
+
+    my $dataset_name = "Trial.ToolCompatibility";
+
+    # Create small dataset using wizard for analysis
+    $d->get_ok("/breeders/search", "navigate to search wizard");
+    $d->click_ok('(//div[@class="panel-heading"]/select)[1]//option[@value="trials"]', 'xpath', 'select trials');
+    $d->click_ok('(//div[@class="panel-body"])[1]//a[contains(text(), "Kasese solgs trial")]//preceding-sibling::button' , 'xpath', 'add Kasese solgs trial');
+    $d->send_keys_ok("wizard-dataset-name", "class", "$dataset_name", "enter dataset name");
+    $d->click_ok("wizard-dataset-create", "class", "click create dataset");
+    $d->wait_for_alert_appear();
+    $d->accept_alert_ok("accept dataset summary alert");
+    my $dataset_id = $f->people_schema()->resultset("SpDataset")->find({ name => $dataset_name })->sp_dataset_id();
+
+    # Wait for tool compatibliity to be done
+    wait_for_tool_compatibility($dataset_id);
+
+    # Check job status in user profile
+    $d->click_ok("navbar_profile", "id", "click user profile");
+    $d->find_element_ok("//td[text()='tool_compatibility']/following-sibling::td[text()='finished']", 'xpath', 'tool_compatibility status is finished');
+
+    # Check tool compatibility values
+    $d->get_ok("/dataset/$dataset_id", "navigate to dataset page");
+    $d->find_element_ok("//b[contains(text(), 'Boxplotter')]/span[contains(\@class, 'glyphicon-ok')]", "xpath", "boxplotter status is ok");
+    $d->find_element_ok("//b[contains(text(), 'Correlation')]/span[contains(\@class, 'glyphicon-ok')]", "xpath", "correlation status is ok");
+    $d->find_element_ok("//b[contains(text(), 'Clustering')]/span[contains(\@class, 'glyphicon-warning')]", "xpath", "clustering status is warning");
+    $d->find_element_ok("//b[contains(text(), 'GWAS')]/span[contains(\@class, 'glyphicon-warning')]", "xpath", "gwas status is warning");
+    $d->find_element_ok("//b[contains(text(), 'Heritability')]/span[contains(\@class, 'glyphicon-remove')]", "xpath", "heritability status is fail");
+    $d->find_element_ok("//b[contains(text(), 'Mixed Models')]/span[contains(\@class, 'glyphicon-ok')]", "xpath", "mixed models status is ok");
+    $d->find_element_ok("//b[contains(text(), 'NIRS')]/span[contains(\@class, 'glyphicon-remove')]", "xpath", "nirs status is fail");
+    $d->find_element_ok("//b[contains(text(), 'Population Structure')]/span[contains(\@class, 'glyphicon-warning')]", "xpath", "population structure status is warning");
+    $d->find_element_ok("//b[contains(text(), 'Stability')]/span[contains(\@class, 'glyphicon-remove')]", "xpath", "stability status is fail");
+
+    # -------------------------------------------------------------------------
     # Tool Compatibility for Trials + Traits + Plots
 
     my $dataset_name = "Trials.Traits.Plots.ToolCompatibility";
