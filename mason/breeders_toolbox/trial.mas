@@ -90,7 +90,7 @@ $project_id => undef
 %     $barcode_section_title = 'Generate barcode labels for plots or plants or accessions in this trial.';
 % }
 
-<div class="row flex-wrap-row">
+<div class="flex-wrap-row">
     <div class="flex-wrap-col">
         <& /page/detail_page_3_col_section.mas, icon_class => "glyphicon glyphicon-qrcode", title => $barcode_section_title, label_design_btn_id => "label_designer_link", legacy_barcode_btn_id => "generate_trial_barcode_link" &>
     </div>
