@@ -1,22 +1,19 @@
 import React, { useMemo, useState } from 'react';
-import { Plot, PlotStructureNode } from '../model.types';
+import { PlotStructureNode } from '../model.types';
 import { RenderPlantGrid, RenderSubplotGrid } from '../components/PlantSubplotGrids';
 import { AccessionAutocomplete } from '../components/AccessionAutocomplete';
 import { useDataFetch } from '../contexts/DataFetchContext';
 import { useModals } from '../contexts/ModalsContext';
 import { useHeatmap } from '../contexts/HeatmapContext';
 import { useView } from '../contexts/ViewContext';
+import { usePlotGrid } from '../contexts/PlotGridContext';
 
 interface PlotDetailsModalProps {
     stockLabel: string;
-    plotStructure: PlotStructureNode | null;
-    plotImages: string;
 }
 
 export const PlotDetailsModal: React.FC<PlotDetailsModalProps> = ({
     stockLabel,
-    plotStructure,
-    plotImages,
 }) => {
     const {
         showPlotDetails: show,
@@ -34,6 +31,11 @@ export const PlotDetailsModal: React.FC<PlotDetailsModalProps> = ({
         selectedPlot,
         selectedView,
     } = useView();
+
+    const {
+        plotStructure,
+        plotImages
+    } = usePlotGrid();
 
     const { heatmapData } = useHeatmap();
 

@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useMemo } from 'react';
-import { Plot } from '../model.types';
+import { Plot, PlotStructureNode } from '../model.types';
 import { useLayoutConfig } from './LayoutConfigContext';
 import { FieldMapContextProps } from '../context.types';
 
@@ -36,6 +36,13 @@ export interface PlotGridContextType {
 
     isTransposed: boolean;
     mapRotation: number;
+
+    plotStructure: PlotStructureNode | null;
+    setPlotStructure: React.Dispatch<React.SetStateAction<PlotStructureNode | null>>;
+    plotContentCache: Record<string, string[]>;
+    setPlotContentCache: React.Dispatch<React.SetStateAction<Record<string, string[]>>>;
+    plotImages: string;
+    setPlotImages: React.Dispatch<React.SetStateAction<string>>;
 }
 
 const PlotGridContext = createContext<PlotGridContextType | undefined>(undefined);
@@ -49,6 +56,10 @@ export const PlotGridProvider: React.FC<FieldMapContextProps> = ({ children }) =
     const [fillerAccessionName, setFillerAccessionName] = useState<string | undefined>(undefined);
     const [isTransposed, setIsTransposed] = useState<boolean>(false);
     const [mapRotation, setMapRotation] = useState<number>(0);
+
+    const [plotStructure, setPlotStructure] = useState<PlotStructureNode | null>(null);
+    const [plotContentCache, setPlotContentCache] = useState<Record<string, string[]>>({});
+    const [plotImages, setPlotImages] = useState<string>('');
 
     const plotList = useMemo(() => {
         return Object.values(plotObject);
@@ -372,7 +383,13 @@ export const PlotGridProvider: React.FC<FieldMapContextProps> = ({ children }) =
             rotateLayout,
             recalculateLayout,
             isTransposed,
-            mapRotation
+            mapRotation,
+            plotStructure,
+            setPlotStructure,
+            plotContentCache,
+            setPlotContentCache,
+            plotImages,
+            setPlotImages
         }}>
             {children}
         </PlotGridContext.Provider>

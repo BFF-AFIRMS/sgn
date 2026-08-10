@@ -1,10 +1,12 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useRef } from 'react';
 import { Plot, TrialDetails, HeatmapValue } from '../model.types';
 import { palette } from '../utils/functions';
 import { usePlotGrid } from '../contexts/PlotGridContext';
 import { useLayoutConfig } from '../contexts/LayoutConfigContext';
 import { useView } from '../contexts/ViewContext';
 import { useHeatmap } from '../contexts/HeatmapContext';
+import { useZoomPan } from '../contexts/ZoomPanContext';
+import { useModals } from '../contexts/ModalsContext';
 
 interface PlotTileProps {
     plot: Plot;
@@ -153,21 +155,19 @@ const PlotTile: React.FC<PlotTileProps> = ({
 };
 
 interface PlotLayerProps {
-    overlappingPlots: Record<string, Plot[]>;
-    onSelect: (plot: Plot) => void;
-    onHover: (plot: Plot, clientX: number, clientY: number) => void;
-    onLeave: () => void;
+    trialId: string;
 }
 
 export const PlotLayer: React.FC<PlotLayerProps> = ({
-    overlappingPlots,
-    onSelect,
-    onHover,
-    onLeave
+    trialId
 }) => {
     const {
         renderBounds,
         gridMatrix,
+        overlappingPlots,
+        setPlotStructure,
+        setPlotContentCache,
+        setPlotImages
     } = usePlotGrid();
 
     const {
@@ -177,6 +177,8 @@ export const PlotLayer: React.FC<PlotLayerProps> = ({
 
     const {
         selectedView,
+        setSelectedPlot,
+        setHoveredPlot,
         displayLinkedTrials,
         linkedTrialsList,
         colorVar
@@ -186,6 +188,14 @@ export const PlotLayer: React.FC<PlotLayerProps> = ({
         heatmapData,
         valueColorScale
     } = useHeatmap();
+
+    const {
+        hasDragged,
+    } = useZoomPan();
+
+    const {
+        setShowPlotDetails,
+    } = useModals();
 
     const plotList = useMemo(() => {
         const uniquePlots = new Map<string, Plot>();
@@ -249,6 +259,67 @@ export const PlotLayer: React.FC<PlotLayerProps> = ({
         return mapping;
     }, [plotList]);
 
+    const clickTimer = useRef<NodeJS.Timeout | null>(null);
+
+    // Handle click vs double click logic
+    const handlePlotSelect = (plot: Plot) => {
+        if (hasDragged.current) {
+            return;
+        }
+        if (clickTimer.current) {
+            clearTimeout(clickTimer.current);
+            clickTimer.current = null;
+            // Double Click behavior
+            if (plot.observationUnitDbId) {
+                window.open(`/stock/${plot.observationUnitDbId}/view`, '_blank');
+            }
+        } else {
+            clickTimer.current = setTimeout(() => {
+                clickTimer.current = null;
+                // Single Click behavior
+                if (plot.type === 'empty_space') return;
+                setSelectedPlot(plot);
+                setShowPlotDetails(true);
+                setPlotStructure(null);
+                setPlotImages('');
+
+                fetch(`/stock/get_child_stocks/${plot.observationUnitDbId}`)
+                    .then(res => res.json())
+                    .then(response => {
+                        if (response?.data) {
+                            const struct = JSON.parse(response.data);
+                            const plants: string[] = [];
+                            if (struct.has) {
+                                Object.values(struct.has).forEach((node: any) => {
+                                    if (node.type === 'plant') plants.push(node.name || '');
+                                });
+                            }
+                            setPlotContentCache(prev => ({ ...prev, [plot.observationUnitDbId!]: plants }));
+                            setPlotStructure(struct);
+                        }
+                    })
+                    .catch(() => {});
+
+                fetch(`/ajax/breeders/trial/${trialId}/retrieve_plot_images`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: new URLSearchParams({
+                        image_ids: JSON.stringify(plot.plotImageDbIds || []),
+                        plot_name: plot.observationUnitName,
+                        plot_id: plot.observationUnitDbId || ''
+                    })
+                })
+                    .then(res => res.json())
+                    .then(response => {
+                        if (response?.image_html) {
+                            setPlotImages(response.image_html);
+                        }
+                    })
+                    .catch(() => {});
+            }, 250);
+        }
+    };
+
     return (
         <>
             {gridMatrix.map((row, rIdx) => {
@@ -278,9 +349,9 @@ export const PlotLayer: React.FC<PlotLayerProps> = ({
                                     blockPalette={blockPalette}
                                     familyNamePalette={familyNamePalette}
                                     crossNamePalette={crossNamePalette}
-                                    onSelect={onSelect}
-                                    onHover={onHover}
-                                    onLeave={onLeave}
+                                    onSelect={handlePlotSelect}
+                                    onHover={(p, clientX, clientY) => setHoveredPlot({ plot: p, x: clientX, y: clientY })}
+                                    onLeave={() => setHoveredPlot(null)}
                                 />
                             );
                         })}

@@ -4,18 +4,14 @@ import { usePlotGrid } from '../contexts/PlotGridContext';
 import { useLayoutConfig } from '../contexts/LayoutConfigContext';
 import { useView } from '../contexts/ViewContext';
 
-interface LabelLayerProps {
-    gridMatrix: Plot[][];
-    overlappingPlots: Record<string, Plot[]>;
-}
+interface LabelLayerProps { }
 
-export const LabelLayer: React.FC<LabelLayerProps> = ({
-    gridMatrix,
-    overlappingPlots,
-}) => {
+export const LabelLayer: React.FC<LabelLayerProps> = ({ }) => {
     const {
         bounds,
-        renderBounds
+        renderBounds,
+        gridMatrix,
+        overlappingPlots
     } = usePlotGrid();
     const {
         invertRows,

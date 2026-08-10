@@ -48,7 +48,6 @@ const FieldMap: React.FC<FieldMapProps> = ({
     const {
         overlappingPlots,
         svgDimensions: { width: svgWidth, height: svgHeight },
-        parsePlotData,
         gridMatrix,
     } = usePlotGrid();
 
@@ -61,28 +60,18 @@ const FieldMap: React.FC<FieldMapProps> = ({
 
     const {
         selectedView,
-        setSelectedPlot,
-        setHoveredPlot,
-        displayLinkedTrials,
-        linkedTrialsList,
         activeTrialIds,
     } = useView();
 
     const {
         loading,
         setShowDownloadCSVModal,
-        setShowPlotDetails,
     } = useModals();
 
     const {
         submitGeoLayout,
     } = useDataFetch();
 
-    const [plotStructure, setPlotStructure] = useState<PlotStructureNode | null>(null);
-    const [plotContentCache, setPlotContentCache] = useState<Record<string, string[]>>({});
-    const [plotImages, setPlotImages] = useState<string>('');
-
-    const clickTimer = useRef<NodeJS.Timeout | null>(null);
     const geoMapRef = useRef<HTMLDivElement | null>(null);
     const leafletMapInstance = useRef<any>(null);
 
@@ -171,66 +160,6 @@ const FieldMap: React.FC<FieldMapProps> = ({
         };
     }, [selectedView, trialId, authToken]);
 
-
-    // Handle click vs double click logic
-    const handlePlotSelect = (plot: Plot) => {
-        if (hasDragged.current) {
-            return;
-        }
-        if (clickTimer.current) {
-            clearTimeout(clickTimer.current);
-            clickTimer.current = null;
-            // Double Click behavior
-            if (plot.observationUnitDbId) {
-                window.open(`/stock/${plot.observationUnitDbId}/view`, '_blank');
-            }
-        } else {
-            clickTimer.current = setTimeout(() => {
-                clickTimer.current = null;
-                // Single Click behavior
-                if (plot.type === 'empty_space') return;
-                setSelectedPlot(plot);
-                setShowPlotDetails(true);
-                setPlotStructure(null);
-                setPlotImages('');
-
-                fetch(`/stock/get_child_stocks/${plot.observationUnitDbId}`)
-                    .then(res => res.json())
-                    .then(response => {
-                        if (response?.data) {
-                            const struct = JSON.parse(response.data);
-                            const plants: string[] = [];
-                            if (struct.has) {
-                                Object.values(struct.has).forEach((node: any) => {
-                                    if (node.type === 'plant') plants.push(node.name || '');
-                                });
-                            }
-                            setPlotContentCache(prev => ({ ...prev, [plot.observationUnitDbId!]: plants }));
-                            setPlotStructure(struct);
-                        }
-                    })
-                    .catch(() => {});
-
-                fetch(`/ajax/breeders/trial/${trialId}/retrieve_plot_images`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                    body: new URLSearchParams({
-                        image_ids: JSON.stringify(plot.plotImageDbIds || []),
-                        plot_name: plot.observationUnitName,
-                        plot_id: plot.observationUnitDbId || ''
-                    })
-                })
-                    .then(res => res.json())
-                    .then(response => {
-                        if (response?.image_html) {
-                            setPlotImages(response.image_html);
-                        }
-                    })
-                    .catch(() => {});
-            }, 250);
-        }
-    };
-
     const handleDownloadOrder = () => {
         const q = new URLSearchParams({
             trial_ids: activeTrialIds.join(','),
@@ -291,24 +220,12 @@ const FieldMap: React.FC<FieldMapProps> = ({
                                 style={{ transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`, transformOrigin: '0 0' }}
                             >
                                 <g transform="translate(50, 25)">
-                                    <PlotLayer
-                                        overlappingPlots={overlappingPlots}
-                                        onSelect={handlePlotSelect}
-                                        onHover={(p, clientX, clientY) => setHoveredPlot({ plot: p, x: clientX, y: clientY })}
-                                        onLeave={() => setHoveredPlot(null)}
-                                    />
-
-                                    <LabelLayer
-                                        gridMatrix={gridMatrix}
-                                        overlappingPlots={overlappingPlots}
-                                    />
+                                    <PlotLayer trialId={trialId} />
+                                    <LabelLayer />
                                 </g>
                             </svg>
 
-                            {/* Dynamic Tooltip */}
-                            <FieldMapTooltip
-                                plotContentCache={plotContentCache}
-                            />
+                            <FieldMapTooltip />
                         </div>
                     </div>
                 </div>
@@ -320,7 +237,7 @@ const FieldMap: React.FC<FieldMapProps> = ({
             <SuppressPhenotypeModal />
             <DeleteTraitModal />
             <DimensionsModal />
-            <PlotDetailsModal stockLabel={stockLabel} plotStructure={plotStructure} plotImages={plotImages} />
+            <PlotDetailsModal stockLabel={stockLabel} />
 
             <DownloadPlotOrderPanel
                 hasColAndRowNumbers={hasColAndRowNumbers}

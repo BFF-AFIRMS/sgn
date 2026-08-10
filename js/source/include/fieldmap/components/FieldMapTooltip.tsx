@@ -4,12 +4,9 @@ import { useView } from '../contexts/ViewContext';
 import { usePlotGrid } from '../contexts/PlotGridContext';
 
 interface FieldMapTooltipProps {
-    plotContentCache: Record<string, string[]>;
 }
 
-export const FieldMapTooltip: React.FC<FieldMapTooltipProps> = ({
-    plotContentCache,
-}) => {
+export const FieldMapTooltip: React.FC<FieldMapTooltipProps> = ({ }) => {
     const {
         hoveredPlot,
         displayLinkedTrials,
@@ -18,6 +15,7 @@ export const FieldMapTooltip: React.FC<FieldMapTooltipProps> = ({
 
     const {
         overlappingPlots,
+        plotContentCache,
     } = usePlotGrid();
 
     if (!hoveredPlot) return null;
