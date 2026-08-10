@@ -950,7 +950,7 @@ sub init_genotype_iterator {
         });
         my @tissue_sample_ids = map { $_->subject_id() } $tissue_samples_rs->all();
         push @$tissue_sample_list, @tissue_sample_ids;
-        $has_parent_stock_filter = 0;
+        $has_parent_stock_filter = 1;
     }
     if ($tissue_sample_list && scalar(@$tissue_sample_list)>0) {
         my $stock_sql = join ("," , @$tissue_sample_list);
