@@ -37,6 +37,7 @@ import { BorderProvider, useBorder } from '../include/fieldmap/contexts/BorderCo
 import { PlotGridProvider, usePlotGrid } from '../include/fieldmap/contexts/PlotGridContext';
 import { ControlProvider } from '../include/fieldmap/contexts/ControlContext';
 import { LayoutConfigProvider, useLayoutConfig } from '../include/fieldmap/contexts/LayoutConfigContext';
+import { useDataFetch } from '../include/fieldmap/contexts/DataFetchContext';
 
 // Declare external legacy global libraries
 // We must use 'any' here as Leaflet (L) and Turf are loaded globally as script includes 
@@ -76,8 +77,6 @@ const FieldMapContainerInner: React.FC<FieldMapContainerProps> = ({
         parsePlotData,
         fillerAccessionId,
         gridMatrix,
-        setDimensions,
-        setFillerAccessionId
     } = usePlotGrid();
 
     const {
@@ -88,6 +87,8 @@ const FieldMapContainerInner: React.FC<FieldMapContainerProps> = ({
         labelVar, setLabelVar,
         labelSize, setLabelSize
     } = useLayoutConfig();
+
+    const { applyDimensions } = useDataFetch();
 
     const [loading, setLoading] = useState(false);
     const [selectedViewLabel, setSelectedViewLabel] = useState<string>('');
@@ -686,33 +687,9 @@ const FieldMapContainerInner: React.FC<FieldMapContainerProps> = ({
         }
     };
 
-    const handleApplyDimensions = () => {
-        const cols = parseInt(dimColsInput) || 0;
-        const rows = parseInt(dimRowsInput) || 0;
-        const numRealPlots = plotList.length;
-
-        if (cols * rows < numRealPlots) {
-            alert('Those are not valid dimensions.\nPlease select dimensions that can accommodate your current plots.');
-            return;
-        }
-
-        const proceed = (accessionId?: string) => {
-            if (accessionId) {
-                setFillerAccessionId(accessionId);
-            }
-            setDimensions({ rows, cols });
-            setShowDimDialog(false);
-        };
-
-        if (fillerAccessionInput) {
-            fetch(`/ajax/breeders/trial/${trialId}/accession_exists?accession_name=${encodeURIComponent(fillerAccessionInput)}`)
-                .then(res => res.json())
-                .then(response => {
-                    if (response.success) proceed(response.success); else alert(response.error || 'Accession not found.');
-                });
-        } else {
-            proceed();
-        }
+    const handleApplyDimensions = async () => {
+        await applyDimensions(dimRowsInput, dimColsInput, trialId, fillerAccessionInput);
+        setShowDimDialog(false);
     };
 
     const downloadHeatmapImage = () => {

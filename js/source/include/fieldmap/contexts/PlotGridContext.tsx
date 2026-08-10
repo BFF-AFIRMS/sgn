@@ -18,7 +18,7 @@ interface PlotGridContextType {
     gridMatrix: Plot[][];
 
     dimensions: { rows: number; cols: number };
-    setDimensions: (dimensions: { rows: number; cols: number }) => void;
+    setDimensions: React.Dispatch<React.SetStateAction<{ rows: number; cols: number }>>;
 
     fillerAccessionId: string | undefined;
     setFillerAccessionId: React.Dispatch<React.SetStateAction<string | undefined>>;
