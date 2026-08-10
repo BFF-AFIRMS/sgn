@@ -166,6 +166,10 @@ sub BUILD {
     $h->execute($protocol_vcf_details_cvterm_id, $pcr_marker_protocolprop_cvterm_id, $geno_cvterm_id, $pcr_marker_protocol_cvterm_id, $self->nd_protocol_id);
     my ($nd_protocol_id, $nd_protocol_name, $value, $create_date, $description) = $h->fetchrow_array();
 
+    if (!defined $nd_protocol_name) {
+        die "NaturalDiversity::NdProtocol with id " . $self->nd_protocol_id . " does not exist.\n";
+    }
+
     my $map_details = $value ? decode_json $value : {};
     my $marker_names = $map_details->{marker_names} || [];
     my $assay_type = $map_details->{assay_type};
