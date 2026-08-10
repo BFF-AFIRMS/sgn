@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { PlotStructureNode } from '../model.types';
 import { RenderPlantGrid, RenderSubplotGrid } from '../components/PlantSubplotGrids';
 import { AccessionAutocomplete } from '../components/AccessionAutocomplete';
-import { useDataFetch } from '../contexts/DataFetchContext';
+import { ReplaceAccessionResult, useDataFetch } from '../contexts/DataFetchContext';
 import { useModals } from '../contexts/ModalsContext';
 import { useHeatmap } from '../contexts/HeatmapContext';
 import { useView } from '../contexts/ViewContext';
@@ -20,10 +20,11 @@ export const PlotDetailsModal: React.FC<PlotDetailsModalProps> = ({
         setShowPlotDetails: setShow,
         showEditAccession,
         setShowEditAccession,
+        setShowSuppressModal,
+        setShowCuratorWarning
     } = useModals();
 
     const {
-        handleSuppressPhenotype,
         submitReplaceAccession
     } = useDataFetch();
 
@@ -68,8 +69,19 @@ export const PlotDetailsModal: React.FC<PlotDetailsModalProps> = ({
         return !!heatmapData[selectedPlot.observationUnitDbId || ''];
     }, [selectedPlot, heatmapData]);
 
+    const handleReplaceAccession = async (override: 'check' | 'override') => {
+        const result = await submitReplaceAccession(override, selectedPlot, newAccession, newPlotName);
+        if (result === ReplaceAccessionResult.Success) {
+            setShow(false);
+            setShowEditAccession(false);
+            setShowCuratorWarning(false);
+        } else if (result === ReplaceAccessionResult.Warning) {
+            setShowCuratorWarning(true);
+        }
+    }
+
     return <>
-        <CuratorWarningModal newAccession={newAccession} newPlotName={newPlotName} />
+        <CuratorWarningModal handleReplaceAccession={handleReplaceAccession} />
         <div className="modal show tw:block tw:bg-black/50">
             <div className="modal-dialog modal-lg">
                 <div className="modal-content">
@@ -152,9 +164,9 @@ export const PlotDetailsModal: React.FC<PlotDetailsModalProps> = ({
                                 <div className="alert alert-warning">
                                     Replacing this {stockLabel.toLowerCase()} will update layout structures and replicates. Ensure changes are correct.
                                 </div>
-                                <button className="btn btn-primary tw:mr-2" onClick={() => submitReplaceAccession('check', selectedPlot, newAccession, newPlotName)}>Update {stockLabel}</button>
+                                <button className="btn btn-primary tw:mr-2" onClick={() => handleReplaceAccession('check')}>Update {stockLabel}</button>
                                 {selectedView !== 'fieldmap' && selectedView !== 'geofieldmap' && hasHeatmapValue && (
-                                    <button className="btn btn-warning" onClick={() => handleSuppressPhenotype()}>Suppress Current Trait Value</button>
+                                    <button className="btn btn-warning" onClick={() => setShowSuppressModal(true)}>Suppress Current Trait Value</button>
                                 )}
                             </div>
                         )}
@@ -169,25 +181,16 @@ export const PlotDetailsModal: React.FC<PlotDetailsModalProps> = ({
 };
 
 interface CuratorWarningModalProps {
-    newAccession: string;
-    newPlotName: string;
+    handleReplaceAccession: (override: 'check' | 'override') => Promise<void>;
 }
 
-export const CuratorWarningModal: React.FC<CuratorWarningModalProps> = ({ newAccession, newPlotName }) => {
+export const CuratorWarningModal: React.FC<CuratorWarningModalProps> = ({ handleReplaceAccession }) => {
     const {
         showCuratorWarning: show,
         setShowCuratorWarning: setShow
     } = useModals();
 
     if (!show) return null;
-
-    const {
-        submitReplaceAccession 
-    } = useDataFetch();
-
-    const {
-        selectedPlot,
-    } = useView();
 
     return (
         <div className="modal show tw:block tw:bg-black/50">
@@ -202,7 +205,7 @@ export const CuratorWarningModal: React.FC<CuratorWarningModalProps> = ({ newAcc
                     </div>
                     <div className="modal-footer">
                         <button className="btn btn-default" onClick={() => setShow(false)}>No</button>
-                        <button className="btn btn-primary" onClick={() => submitReplaceAccession('override', selectedPlot, newAccession, newPlotName)}>Yes, Override</button>
+                        <button className="btn btn-primary" onClick={() => handleReplaceAccession('override')}>Yes, Override</button>
                     </div>
                 </div>
             </div>

@@ -7,10 +7,12 @@ import { useDataFetch } from '../contexts/DataFetchContext';
 interface SuppressPhenotypeModalProps {
 }
 
-export const SuppressPhenotypeModal: React.FC<SuppressPhenotypeModalProps> = ({ }) => {
+export const SuppressPhenotypeModal: React.FC<SuppressPhenotypeModalProps> = ({
+}) => {
     const {
         showSuppressModal: show,
-        setShowSuppressModal: setShow
+        setShowSuppressModal: setShow,
+        setShowPlotDetails
     } = useModals();
 
     if (!show) return null;
@@ -24,7 +26,7 @@ export const SuppressPhenotypeModal: React.FC<SuppressPhenotypeModalProps> = ({ 
     } = useHeatmap();
 
     const {
-        handleSuppressPhenotype
+        submitSuppressPhenotype
     } = useDataFetch();
 
     const plotName = useMemo(() => {
@@ -34,6 +36,14 @@ export const SuppressPhenotypeModal: React.FC<SuppressPhenotypeModalProps> = ({ 
     const phenotypeValue = useMemo(() => {
         return selectedPlot ? heatmapData[selectedPlot.observationUnitDbId || '']?.val : undefined;
     }, [selectedPlot, heatmapData]);
+
+    const handleSuppressPhenotype = async () => {
+        const ok = await submitSuppressPhenotype();
+        if (ok) {
+            setShow(false);
+            setShowPlotDetails(false);
+        }
+    }
 
     return (
         <div className="modal show tw:block tw:bg-black/50">

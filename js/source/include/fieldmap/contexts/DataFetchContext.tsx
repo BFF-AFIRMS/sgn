@@ -11,11 +11,17 @@ import { useLayoutConfig } from './LayoutConfigContext';
 import { useHeatmap } from './HeatmapContext';
 import { useView } from './ViewContext';
 
+export enum ReplaceAccessionResult {
+	Success = 'success',
+	Warning = 'warning',
+	Error = 'error'
+}
+
 export interface DataFetchContextType {
 	fetchObservationUnits: () => void;
 	applyDimensions: (rowsInput: string, colsInput: string, fillerAccessionInput?: string) => Promise<void>;
-	submitReplaceAccession: (override: 'check' | 'override', selectedPlot: Plot | null, newAccession: string, newPlotName: string) => void;
-	handleSuppressPhenotype: () => void;
+	submitReplaceAccession: (override: 'check' | 'override', selectedPlot: Plot | null, newAccession: string, newPlotName: string) => Promise<ReplaceAccessionResult>;
+	submitSuppressPhenotype: () => Promise<boolean>;
 	loadNorthArrowAngle: () => void;
 	loadVariables: () => void;
 	loadSpatialAdjustments: () => void;
@@ -40,11 +46,6 @@ export const DataFetchProvider: React.FC<FieldMapContextProps> = ({ trialId, aut
 
 	const {
 		setLoading,
-		setShowPlotDetails,
-		setShowEditAccession,
-		setShowCuratorWarning,
-		setShowSuppressModal,
-		setShowDeleteTraitModal,
 	} = useModals();
 
 	const {
@@ -202,7 +203,7 @@ export const DataFetchProvider: React.FC<FieldMapContextProps> = ({ trialId, aut
     };
 
     const submitReplaceAccession = async (override: 'check' | 'override', selectedPlot: Plot | null, newAccession: string, newPlotName: string) => {
-        if (!selectedPlot) return;
+        if (!selectedPlot) return ReplaceAccessionResult.Error;
         setLoading(true);
         try {
             const response = await fetch(`/ajax/breeders/trial/${trialId}/replace_plot_accessions`, {
@@ -219,28 +220,32 @@ export const DataFetchProvider: React.FC<FieldMapContextProps> = ({ trialId, aut
             });
             const body = await response.json();
             if (body.warning) {
-                setShowCuratorWarning(true);
+				return ReplaceAccessionResult.Warning;
             } else if (body.error) {
                 alert(body.error);
             } else {
                 alert('Plot Accession Replaced successfully!');
-                setShowPlotDetails(false);
-                setShowEditAccession(false);
-                setShowCuratorWarning(false);
                 fetchObservationUnits();
+				return ReplaceAccessionResult.Success;
             }
         } catch (e) {
             console.error('Error replacing accession:', e);
         } finally {
             setLoading(false);
         }
+
+		return ReplaceAccessionResult.Error;
     };
 
-    const handleSuppressPhenotype = async () => {
-        if (!selectedPlot) return;
+    const submitSuppressPhenotype = async () => {
+		if (!selectedPlot) {
+			return false;
+		}
         const currentTraitId = selectedView.replace(' (corrected)', '').replace(' (adjustment)', '');
         const valObj = heatmapData[selectedPlot.observationUnitDbId || ''];
-        if (!valObj) return;
+		if (!valObj) {
+			return false;
+		}
 
         setLoading(true);
         try {
@@ -259,15 +264,16 @@ export const DataFetchProvider: React.FC<FieldMapContextProps> = ({ trialId, aut
                 alert(body.error);
             } else {
                 alert('Phenotype was suppressed successfully!');
-                setShowSuppressModal(false);
-                setShowPlotDetails(false);
                 fetchHeatmapObservations(currentTraitId);
+				return true;
             }
         } catch (e) {
 			console.error('Error suppressing phenotype:', e);
         } finally {
             setLoading(false);
         }
+
+		return false;
     };
 
     const loadNorthArrowAngle = async () => {
@@ -505,7 +511,7 @@ export const DataFetchProvider: React.FC<FieldMapContextProps> = ({ trialId, aut
 			fetchObservationUnits,
 			applyDimensions,
 			submitReplaceAccession,
-			handleSuppressPhenotype,
+			submitSuppressPhenotype,
 			loadNorthArrowAngle,
 			loadVariables,
 			loadSpatialAdjustments,
