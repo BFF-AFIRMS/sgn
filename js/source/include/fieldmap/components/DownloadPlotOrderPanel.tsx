@@ -1,24 +1,40 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { DownloadOpts } from '../model.types';
+import { downloadPlotOrder } from '../utils/downloadPlotOrder';
+import { useLayoutConfig } from '../contexts/LayoutConfigContext';
+import { useView } from '../contexts/ViewContext';
 
 interface DownloadPlotOrderPanelProps {
     hasColAndRowNumbers: boolean;
     hasSubplotEntries: boolean;
     hasPlantEntries: boolean;
-    downloadOpts: DownloadOpts;
-    setDownloadOpts: React.Dispatch<React.SetStateAction<DownloadOpts>>;
-    onDownload: () => void;
 }
 
 export const DownloadPlotOrderPanel: React.FC<DownloadPlotOrderPanelProps> = ({
     hasColAndRowNumbers,
     hasSubplotEntries,
     hasPlantEntries,
-    downloadOpts,
-    setDownloadOpts,
-    onDownload
 }) => {
     if (!hasColAndRowNumbers) return null;
+
+    const layoutConfig = useLayoutConfig();
+
+    const {
+        activeTrialIds
+    } = useView();
+
+    const [downloadOpts, setDownloadOpts] = useState<DownloadOpts>({
+        type: '',
+        order: 'by_row_zigzag',
+        start: 'bottom_left',
+        borders: false,
+        gaps: false,
+        subplots: false,
+        plants: false,
+        hmPltid: 'plot_id',
+        hmRange: 'row_number',
+        hmRow: 'col_number'
+    });
 
     return (
         <div className="panel panel-default tw:mt-5">
@@ -108,7 +124,7 @@ export const DownloadPlotOrderPanel: React.FC<DownloadPlotOrderPanelProps> = ({
                     {hasPlantEntries && <label><input type="checkbox" checked={downloadOpts.plants} onChange={e => setDownloadOpts({ ...downloadOpts, plants: e.target.checked })} /> Include Plants</label>}
                 </div>
 
-                <button className="btn btn-primary" onClick={onDownload}>Generate & Download File</button>
+                <button className="btn btn-primary" onClick={() => downloadPlotOrder(downloadOpts, activeTrialIds, layoutConfig)}>Generate & Download File</button>
             </div>
         </div>
     );

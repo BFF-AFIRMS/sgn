@@ -46,21 +46,11 @@ const FieldMap: React.FC<FieldMapProps> = ({
     authToken
 }) => {
     const {
-        overlappingPlots,
         svgDimensions: { width: svgWidth, height: svgHeight },
-        gridMatrix,
     } = usePlotGrid();
 
     const {
-        topBorder,
-        leftBorder,
-        rightBorder,
-        bottomBorder,
-    } = useLayoutConfig();
-
-    const {
         selectedView,
-        activeTrialIds,
     } = useView();
 
     const {
@@ -75,18 +65,6 @@ const FieldMap: React.FC<FieldMapProps> = ({
     const geoMapRef = useRef<HTMLDivElement | null>(null);
     const leafletMapInstance = useRef<any>(null);
 
-    const [downloadOpts, setDownloadOpts] = useState<DownloadOpts>({
-        type: '',
-        order: 'by_row_zigzag',
-        start: 'bottom_left',
-        borders: false,
-        gaps: false,
-        subplots: false,
-        plants: false,
-        hmPltid: 'plot_id',
-        hmRange: 'row_number',
-        hmRow: 'col_number'
-    });
 
     const stockLabel = useMemo(() => {
         if (trialStockType === 'cross') return 'Cross';
@@ -160,26 +138,6 @@ const FieldMap: React.FC<FieldMapProps> = ({
         };
     }, [selectedView, trialId, authToken]);
 
-    const handleDownloadOrder = () => {
-        const q = new URLSearchParams({
-            trial_ids: activeTrialIds.join(','),
-            type: downloadOpts.type,
-            order: downloadOpts.order,
-            start: downloadOpts.start,
-            top_border: String(downloadOpts.borders && topBorder),
-            right_border: String(downloadOpts.borders && rightBorder),
-            bottom_border: String(downloadOpts.borders && bottomBorder),
-            left_border: String(downloadOpts.borders && leftBorder),
-            gaps: String(downloadOpts.gaps),
-            subplots: String(downloadOpts.subplots),
-            plants: String(downloadOpts.plants),
-            hm_pltid: downloadOpts.hmPltid,
-            hm_range: downloadOpts.hmRange,
-            hm_row: downloadOpts.hmRow
-        }).toString();
-        window.open(`/ajax/breeders/trial_plot_order?${q}`, '_blank');
-    };
-
     return (
         <div className="tw:p-3.75">
             <FieldMapHeaderPanel />
@@ -243,9 +201,6 @@ const FieldMap: React.FC<FieldMapProps> = ({
                 hasColAndRowNumbers={hasColAndRowNumbers}
                 hasSubplotEntries={hasSubplotEntries}
                 hasPlantEntries={hasPlantEntries}
-                downloadOpts={downloadOpts}
-                setDownloadOpts={setDownloadOpts}
-                onDownload={handleDownloadOrder}
             />
         </div>
     );
