@@ -25,13 +25,11 @@ import { FieldMapHeaderPanel } from '../include/fieldmap/components/FieldMapHead
 import { FieldMapControlPanel } from '../include/fieldmap/components/FieldMapControlPanel';
 import { FieldMapSettingsPanel } from '../include/fieldmap/components/FieldMapSettingsPanel';
 import { NorthArrow } from '../include/fieldmap/components/NorthArrow';
-import { 
-    DimensionsModal, 
-    DownloadCSVModal, 
-    SuppressPhenotypeModal,
-    DeleteTraitModal, 
-    CuratorWarningModal 
-} from '../include/fieldmap/modals/FieldmapModals';
+import { DimensionsModal } from '../include/fieldmap/modals/DimensionsModal';
+import { DownloadCSVModal } from '../include/fieldmap/modals/DownloadCSVModal';
+import { SuppressPhenotypeModal } from '../include/fieldmap/modals/SuppressPhenotypeModal';
+import { DeleteTraitModal } from '../include/fieldmap/modals/DeleteTraitModal';
+import { CuratorWarningModal } from '../include/fieldmap/modals/CuratorWarningModal';
 import { PlotGridProvider, usePlotGrid } from '../include/fieldmap/contexts/PlotGridContext';
 import { ControlProvider } from '../include/fieldmap/contexts/ControlContext';
 import { LayoutConfigProvider, useLayoutConfig } from '../include/fieldmap/contexts/LayoutConfigContext';
