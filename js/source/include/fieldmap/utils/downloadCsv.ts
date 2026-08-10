@@ -1,14 +1,4 @@
-import { Plot } from '../model.types';
-
-export interface CSVDownloadOpts {
-    accession: boolean;
-    obsUnit: boolean;
-    seedlot: boolean;
-    plotId: boolean;
-    plotNum: boolean;
-    familyName: boolean;
-    crossName: boolean;
-}
+import { CsvDownloadOpts, Plot } from '../model.types';
 
 export const downloadLayoutCSV = (
     trialId: string,
@@ -16,7 +6,7 @@ export const downloadLayoutCSV = (
     plotList: Plot[],
     invertCols: boolean,
     invertRows: boolean,
-    csvDownloadOpts: CSVDownloadOpts
+    csvDownloadOpts: CsvDownloadOpts
 ) => {
     let cols_csv_header = [];
     for (let i = bounds.minCol; i <= bounds.maxCol; i++) {

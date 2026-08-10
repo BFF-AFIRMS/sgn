@@ -1,27 +1,40 @@
 import React from 'react';
-import { TrialDetails } from '../model.types';
+import { useView } from '../contexts/ViewContext';
+import { useHeatmap } from '../contexts/HeatmapContext';
+import { useDataFetch } from '../contexts/DataFetchContext';
 
-interface FieldMapHeaderPanelProps {
-    selectedView: string;
-    setSelectedViewLabel: (val: string) => void;
-    handleViewChange: (val: string) => void;
-    variables: Record<string, string>;
-    spatialAdjustments: Record<string, Record<string, number>>;
-    displayLinkedTrials: boolean;
-    toggleLinkedTrials: (checked: boolean) => void;
-    linkedTrialsList: TrialDetails[];
-}
+interface FieldMapHeaderPanelProps { }
 
 export const FieldMapHeaderPanel: React.FC<FieldMapHeaderPanelProps> = ({
-    selectedView,
-    setSelectedViewLabel,
-    handleViewChange,
-    variables,
-    spatialAdjustments,
-    displayLinkedTrials,
-    toggleLinkedTrials,
-    linkedTrialsList
 }) => {
+    const {
+        selectedView, setSelectedView,
+        setSelectedViewLabel,
+        displayLinkedTrials,
+        linkedTrialsList,
+    } = useView();
+
+    const {
+        setHeatmapData,
+        variables,
+        spatialAdjustments,
+    } = useHeatmap();
+
+    const {
+        fetchHeatmapObservations,
+        toggleLinkedTrials
+    } = useDataFetch();
+
+    const handleViewChange = (val: string) => {
+        setSelectedView(val);
+        if (val === 'fieldmap' || val === 'geofieldmap') {
+            setHeatmapData({});
+        } else if (val) {
+            const variableId = val.replace(' (corrected)', '').replace(' (adjustment)', '');
+            fetchHeatmapObservations(variableId);
+        }
+    };
+
     return (
         <div className="panel panel-default">
             <div className="panel-body">

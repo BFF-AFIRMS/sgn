@@ -1,39 +1,20 @@
 import React from 'react';
 import { usePlotGrid } from '../contexts/PlotGridContext';
 import { useLayoutConfig, PlotLayout, ColorVar, LabelVar } from '../contexts/LayoutConfigContext';
+import { useView } from '../contexts/ViewContext';
+import { useModals } from '../contexts/ModalsContext';
+import { printFieldMap } from '../utils/print';
+import { downloadHeatmapImage } from '../utils/downloadHeatmapImage';
+import { useDataFetch } from '../contexts/DataFetchContext';
 
 interface FieldMapSettingsPanelProps {
-    displayLinkedTrials: boolean;
-    selectedView: string;
-    selectedViewLabel: string;
     stockLabel: string;
-    setShowDimDialog: (val: boolean) => void;
-    setShowDownloadCSVModal: (val: boolean) => void;
-    printFieldMap: (selectedView: string, selectedViewLabel: string) => void;
-    downloadHeatmapImage: () => void;
-    submitFieldLayout: () => void;
-    setShowDeleteTraitModal: (val: boolean) => void;
-    northArrowAngle: number;
-    setNorthArrowAngle: (val: number) => void;
 }
 
 export const FieldMapSettingsPanel: React.FC<FieldMapSettingsPanelProps> = ({
-    displayLinkedTrials,
-    selectedView,
-    selectedViewLabel,
     stockLabel,
-    setShowDimDialog,
-    setShowDownloadCSVModal,
-    printFieldMap,
-    downloadHeatmapImage,
-    submitFieldLayout,
-    setShowDeleteTraitModal,
-    northArrowAngle,
-    setNorthArrowAngle
 }) => {
     const {
-        dimensions,
-        bounds,
         transposeLayout,
         rotateLayout,
         recalculateLayout
@@ -43,14 +24,31 @@ export const FieldMapSettingsPanel: React.FC<FieldMapSettingsPanelProps> = ({
         plotLayout, setPlotLayout,
         invertRows, setInvertRows,
         invertCols, setInvertCols,
-        colorVar, setColorVar,
-        labelVar, setLabelVar,
-        labelSize, setLabelSize,
         topBorder, setTopBorder,
         leftBorder, setLeftBorder,
         rightBorder, setRightBorder,
-        bottomBorder, setBottomBorder
+        bottomBorder, setBottomBorder,
+        northArrowAngle, setNorthArrowAngle
     } = useLayoutConfig();
+
+    const {
+        selectedView,
+        selectedViewLabel,
+        displayLinkedTrials,
+        colorVar, setColorVar,
+        labelVar, setLabelVar,
+        labelSize, setLabelSize,
+    } = useView();
+
+    const {
+        setShowDownloadCSVModal,
+        setShowDimDialog,
+        setShowDeleteTraitModal
+    } = useModals();
+
+    const {
+        submitFieldLayout
+    } = useDataFetch();
 
     return (
         <div className="tw:flex tw:gap-5 tw:flex-wrap tw:mb-3.75">
@@ -133,7 +131,7 @@ export const FieldMapSettingsPanel: React.FC<FieldMapSettingsPanelProps> = ({
                 <button className="btn btn-default" onClick={() => setShowDownloadCSVModal(true)}>Download Spatial Layout (CSV)</button>
                 <button className="btn btn-default" onClick={() => printFieldMap(selectedView, selectedViewLabel)}>Print Fieldmap</button>
                 {selectedView !== 'fieldmap' && selectedView !== 'geofieldmap' && (
-                    <button className="btn btn-default" onClick={downloadHeatmapImage}>Download Heatmap Image</button>
+                    <button className="btn btn-default" onClick={() => downloadHeatmapImage(selectedViewLabel)}>Download Heatmap Image</button>
                 )}
                 <button className="btn btn-success" onClick={submitFieldLayout} disabled={displayLinkedTrials}>Submit Layout Changes</button>
                 {selectedView !== 'fieldmap' && selectedView !== 'geofieldmap' && (

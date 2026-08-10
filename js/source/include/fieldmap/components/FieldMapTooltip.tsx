@@ -1,28 +1,32 @@
 import React from 'react';
-import { Plot, TrialDetails, HeatmapValue } from '../model.types';
+import { useHeatmap } from '../contexts/HeatmapContext';
+import { useView } from '../contexts/ViewContext';
+import { usePlotGrid } from '../contexts/PlotGridContext';
 
 interface FieldMapTooltipProps {
-    hoveredPlot: { plot: Plot; x: number; y: number } | null;
-    overlappingPlots: Record<string, Plot[]>;
-    displayLinkedTrials: boolean;
-    linkedTrialsList: TrialDetails[];
     plotContentCache: Record<string, string[]>;
-    selectedView: string;
-    selectedViewLabel: string;
-    heatmapData: Record<string, HeatmapValue>;
 }
 
 export const FieldMapTooltip: React.FC<FieldMapTooltipProps> = ({
-    hoveredPlot,
-    overlappingPlots,
-    displayLinkedTrials,
-    linkedTrialsList,
     plotContentCache,
-    selectedView,
-    selectedViewLabel,
-    heatmapData,
 }) => {
+    const {
+        hoveredPlot,
+        displayLinkedTrials,
+        linkedTrialsList,
+    } = useView();
+
+    const {
+        overlappingPlots,
+    } = usePlotGrid();
+
     if (!hoveredPlot) return null;
+
+    const {
+        selectedView,
+        selectedViewLabel
+    } = useView();
+    const { heatmapData } = useHeatmap();
 
     const plot = hoveredPlot.plot;
     const coordKey = `${plot.observationUnitPosition?.positionCoordinateX}-${plot.observationUnitPosition?.positionCoordinateY}`;

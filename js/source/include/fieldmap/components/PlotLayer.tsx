@@ -3,6 +3,8 @@ import { Plot, TrialDetails, HeatmapValue } from '../model.types';
 import { palette } from '../utils/functions';
 import { usePlotGrid } from '../contexts/PlotGridContext';
 import { useLayoutConfig } from '../contexts/LayoutConfigContext';
+import { useView } from '../contexts/ViewContext';
+import { useHeatmap } from '../contexts/HeatmapContext';
 
 interface PlotTileProps {
     plot: Plot;
@@ -151,37 +153,39 @@ const PlotTile: React.FC<PlotTileProps> = ({
 };
 
 interface PlotLayerProps {
-    gridMatrix: Plot[][];
-    selectedView: string;
-    displayLinkedTrials: boolean;
-    linkedTrialsList: TrialDetails[];
     overlappingPlots: Record<string, Plot[]>;
-    heatmapData: Record<string, HeatmapValue>;
-    valueColorScale: {
-        min: number;
-        max: number;
-        colors?: string[];
-        scale: (val: number) => string;
-    };
     onSelect: (plot: Plot) => void;
     onHover: (plot: Plot, clientX: number, clientY: number) => void;
     onLeave: () => void;
 }
 
 export const PlotLayer: React.FC<PlotLayerProps> = ({
-    gridMatrix,
-    selectedView,
-    displayLinkedTrials,
-    linkedTrialsList,
     overlappingPlots,
-    heatmapData,
-    valueColorScale,
     onSelect,
     onHover,
     onLeave
 }) => {
-    const { renderBounds } = usePlotGrid();
-    const { invertRows, invertCols, colorVar } = useLayoutConfig();
+    const {
+        renderBounds,
+        gridMatrix,
+    } = usePlotGrid();
+
+    const {
+        invertRows,
+        invertCols
+    } = useLayoutConfig();
+
+    const {
+        selectedView,
+        displayLinkedTrials,
+        linkedTrialsList,
+        colorVar
+    } = useView();
+
+    const {
+        heatmapData,
+        valueColorScale
+    } = useHeatmap();
 
     const plotList = useMemo(() => {
         const uniquePlots = new Map<string, Plot>();

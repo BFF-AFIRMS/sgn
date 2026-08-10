@@ -5,7 +5,7 @@ import { FieldMapContextProps } from '../context.types';
 const CLICK_DRAG_THRESHOLD = 1;
 const PAN_MAX_EMPTY_SPACE = 200;
 
-interface ZoomPanContextType {
+export interface ZoomPanContextType {
 	zoom: number;
 	setZoom: React.Dispatch<React.SetStateAction<number>>;
 	pan: { x: number; y: number };

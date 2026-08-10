@@ -3,7 +3,7 @@ import { Plot } from '../model.types';
 import { usePlotGrid } from './PlotGridContext';
 import { FieldMapContextProps } from '../context.types';
 
-interface ControlContextType {
+export interface ControlContextType {
     showControlsSection: boolean;
     setShowControlsSection: (val: boolean) => void;
     selectedControlPlot: string;

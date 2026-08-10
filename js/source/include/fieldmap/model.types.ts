@@ -73,6 +73,16 @@ export interface DownloadOpts {
     hmRow: string;
 }
 
+export interface CsvDownloadOpts {
+    accession: boolean;
+    obsUnit: boolean;
+    seedlot: boolean;
+    plotId: boolean;
+    plotNum: boolean;
+    familyName: boolean;
+    crossName: boolean;
+}
+
 export interface PlotStructureNode {
     type: string;
     stock_id?: number;

@@ -1,23 +1,28 @@
 import React from 'react';
+import { useModals } from '../contexts/ModalsContext';
+import { useDataFetch } from '../contexts/DataFetchContext';
 
 interface DeleteTraitModalProps {
-    show: boolean;
-    onClose: () => void;
-    onDelete: () => void;
 }
 
-export const DeleteTraitModal: React.FC<DeleteTraitModalProps> = ({
-    show,
-    onClose,
-    onDelete
-}) => {
+export const DeleteTraitModal: React.FC<DeleteTraitModalProps> = ({}) => {
+    const {
+        showDeleteTraitModal: show,
+        setShowDeleteTraitModal: setShow
+    } = useModals();
+
     if (!show) return null;
+
+    const {
+        handleDeleteSingleTrait
+    } = useDataFetch();
+
     return (
         <div className="modal show tw:block tw:bg-black/50">
             <div className="modal-dialog">
                 <div className="modal-content">
                     <div className="modal-header text-center">
-                        <button type="button" className="close" onClick={onClose}>&times;</button>
+                        <button type="button" className="close" onClick={() => setShow(false)}>&times;</button>
                         <h4 className="modal-title">Assayed Trait Deletion</h4>
                     </div>
                     <div className="modal-body">
@@ -25,8 +30,8 @@ export const DeleteTraitModal: React.FC<DeleteTraitModalProps> = ({
                         <p>All phenotyping data values linked with this trait in this trial will be removed permanently.</p>
                     </div>
                     <div className="modal-footer">
-                        <button className="btn btn-default" onClick={onClose}>Close</button>
-                        <button className="btn btn-danger" onClick={onDelete}>Delete Trait</button>
+                        <button className="btn btn-default" onClick={() => setShow(false)}>Close</button>
+                        <button className="btn btn-danger" onClick={handleDeleteSingleTrait}>Delete Trait</button>
                     </div>
                 </div>
             </div>

@@ -2,6 +2,7 @@ import React from 'react';
 import { Plot } from '../model.types';
 import { usePlotGrid } from '../contexts/PlotGridContext';
 import { useLayoutConfig } from '../contexts/LayoutConfigContext';
+import { useView } from '../contexts/ViewContext';
 
 interface LabelLayerProps {
     gridMatrix: Plot[][];
@@ -12,8 +13,18 @@ export const LabelLayer: React.FC<LabelLayerProps> = ({
     gridMatrix,
     overlappingPlots,
 }) => {
-    const { bounds, renderBounds } = usePlotGrid();
-    const { invertRows, invertCols, labelVar, labelSize } = useLayoutConfig();
+    const {
+        bounds,
+        renderBounds
+    } = usePlotGrid();
+    const {
+        invertRows,
+        invertCols
+    } = useLayoutConfig();
+    const {
+        labelVar,
+        labelSize
+    } = useView();
 
     return (
         <g style={{ pointerEvents: 'none' }}>

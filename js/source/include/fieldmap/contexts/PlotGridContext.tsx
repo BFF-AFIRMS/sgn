@@ -12,8 +12,9 @@ export interface GridBounds {
     numCols: number;
 }
 
-interface PlotGridContextType {
+export interface PlotGridContextType {
     plotList: Plot[];
+    overlappingPlots: Record<string, Plot[]>;
     bounds: GridBounds;
     renderBounds: GridBounds;
     svgDimensions: { width: number; height: number };
@@ -24,6 +25,8 @@ interface PlotGridContextType {
 
     fillerAccessionId: string | undefined;
     setFillerAccessionId: React.Dispatch<React.SetStateAction<string | undefined>>;
+    fillerAccessionName: string | undefined;
+    setFillerAccessionName: React.Dispatch<React.SetStateAction<string | undefined>>;
 
     parsePlotData: (data: any[]) => void;
     recalculateLayout: (layout: 'serpentine' | 'zigzag') => void;
@@ -39,15 +42,35 @@ const PlotGridContext = createContext<PlotGridContextType | undefined>(undefined
 
 export const PlotGridProvider: React.FC<FieldMapContextProps> = ({ children }) => {
     const { topBorder, bottomBorder, leftBorder, rightBorder } = useLayoutConfig();
+
     const [plotObject, setPlotObject] = useState<Record<string, Plot>>({});
     const [dimensions, setDimensions] = useState({ rows: 0, cols: 0 });
     const [fillerAccessionId, setFillerAccessionId] = useState<string | undefined>(undefined);
+    const [fillerAccessionName, setFillerAccessionName] = useState<string | undefined>(undefined);
     const [isTransposed, setIsTransposed] = useState<boolean>(false);
     const [mapRotation, setMapRotation] = useState<number>(0);
 
     const plotList = useMemo(() => {
         return Object.values(plotObject);
     }, [plotObject]);
+
+    const overlappingPlots = useMemo(() => {
+        const positions: Record<string, Plot[]> = {};
+        plotList.forEach(p => {
+            const x = p.observationUnitPosition?.positionCoordinateX;
+            const y = p.observationUnitPosition?.positionCoordinateY;
+            if (x !== undefined && y !== undefined) {
+                const key = `${x}-${y}`;
+                if (!positions[key]) positions[key] = [];
+                positions[key].push(p);
+            }
+        });
+        const overlaps: Record<string, Plot[]> = {};
+        Object.entries(positions).forEach(([key, plots]) => {
+            if (plots.length > 1) overlaps[key] = plots;
+        });
+        return overlaps;
+    }, [plotList]);
 
     const bounds = useMemo(() => {
         if (plotList.length === 0) {
@@ -333,6 +356,7 @@ export const PlotGridProvider: React.FC<FieldMapContextProps> = ({ children }) =
     return (
         <PlotGridContext.Provider value={{
             plotList,
+            overlappingPlots,
             dimensions,
             setDimensions,
             bounds,
@@ -341,6 +365,8 @@ export const PlotGridProvider: React.FC<FieldMapContextProps> = ({ children }) =
             parsePlotData,
             fillerAccessionId,
             setFillerAccessionId,
+            fillerAccessionName,
+            setFillerAccessionName,
             gridMatrix,
             transposeLayout,
             rotateLayout,

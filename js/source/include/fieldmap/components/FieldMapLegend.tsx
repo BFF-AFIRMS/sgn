@@ -1,21 +1,20 @@
 import React from 'react';
+import { useHeatmap } from '../contexts/HeatmapContext';
+import { useView } from '../contexts/ViewContext';
 
 interface FieldMapLegendProps {
-    valueColorScale: {
-        min: number;
-        max: number;
-        colors?: string[];
-        scale: (val: number) => string;
-    };
-    selectedView: string;
-    selectedViewLabel: string;
 }
 
-export const FieldMapLegend: React.FC<FieldMapLegendProps> = ({
-    valueColorScale,
-    selectedView,
-    selectedViewLabel
-}) => {
+export const FieldMapLegend: React.FC<FieldMapLegendProps> = ({ }) => {
+    const {
+        selectedView,
+        selectedViewLabel
+    } = useView();
+
+    const {
+        valueColorScale
+    } = useHeatmap();
+
     return (
         <div id="legend_list" className="panel panel-default">
             <div className="panel-body">

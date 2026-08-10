@@ -3,12 +3,18 @@ import { usePlotGrid } from '../contexts/PlotGridContext';
 import { useLayoutConfig } from '../contexts/LayoutConfigContext';
 
 interface NorthArrowProps {
-    northArrowAngle: number;
 }
 
-export const NorthArrow: React.FC<NorthArrowProps> = ({ northArrowAngle }) => {
-    const { isTransposed, mapRotation } = usePlotGrid();
-    const { invertRows, invertCols } = useLayoutConfig();
+export const NorthArrow: React.FC<NorthArrowProps> = ({ }) => {
+    const {
+        isTransposed,
+        mapRotation
+    } = usePlotGrid();
+    const {
+        invertRows,
+        invertCols,
+        northArrowAngle
+    } = useLayoutConfig();
 
     const northArrowRotation = useMemo(() => {
         let angle = northArrowAngle + mapRotation;

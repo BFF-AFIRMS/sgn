@@ -1,20 +1,21 @@
 import React from 'react';
 import { useControl } from '../contexts/ControlContext';
 import { usePlotGrid } from '../contexts/PlotGridContext';
+import { useView } from '../contexts/ViewContext';
 
-interface FieldMapControlPanelProps {
-    selectedView: string;
-}
+interface FieldMapControlPanelProps { }
 
-export const FieldMapControlPanel: React.FC<FieldMapControlPanelProps> = ({
-    selectedView,
-}) => {
+export const FieldMapControlPanel: React.FC<FieldMapControlPanelProps> = ({}) => {
     const {
         showControlsSection, setShowControlsSection,
         selectedControlPlot, setSelectedControlPlot,
         controlRelationshipText, setControlRelationshipText,
         controlPlots
     } = useControl();
+
+    const {
+        selectedView
+    } = useView(); 
 
     const { plotList } = usePlotGrid();
 

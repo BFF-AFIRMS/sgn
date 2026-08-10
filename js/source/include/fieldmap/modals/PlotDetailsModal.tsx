@@ -1,56 +1,79 @@
-import React from 'react';
+import React, { useMemo, useState } from 'react';
 import { Plot, PlotStructureNode } from '../model.types';
 import { RenderPlantGrid, RenderSubplotGrid } from '../components/PlantSubplotGrids';
 import { AccessionAutocomplete } from '../components/AccessionAutocomplete';
+import { useDataFetch } from '../contexts/DataFetchContext';
+import { useModals } from '../contexts/ModalsContext';
+import { useHeatmap } from '../contexts/HeatmapContext';
+import { useView } from '../contexts/ViewContext';
 
 interface PlotDetailsModalProps {
-    show: boolean;
-    onClose: () => void;
-    plot: Plot | null;
     stockLabel: string;
-    showEditAccession: boolean;
-    setShowEditAccession: (v: boolean) => void;
     plotStructure: PlotStructureNode | null;
-    plotStructureLayoutType: string;
     plotImages: string;
-    newAccession: string;
-    setNewAccession: (v: string) => void;
-    newPlotName: string;
-    setNewPlotName: (v: string) => void;
-    onSubmitReplaceAccession: (override: 'check' | 'override') => void;
-    selectedView: string;
-    hasHeatmapValue: boolean;
-    onSuppressClick: () => void;
 }
 
 export const PlotDetailsModal: React.FC<PlotDetailsModalProps> = ({
-    show,
-    onClose,
-    plot,
     stockLabel,
-    showEditAccession,
-    setShowEditAccession,
     plotStructure,
-    plotStructureLayoutType,
     plotImages,
-    newAccession,
-    setNewAccession,
-    newPlotName,
-    setNewPlotName,
-    onSubmitReplaceAccession,
-    selectedView,
-    hasHeatmapValue,
-    onSuppressClick
 }) => {
-    if (!show || !plot) return null;
+    const {
+        showPlotDetails: show,
+        setShowPlotDetails: setShow,
+        showEditAccession,
+        setShowEditAccession,
+    } = useModals();
 
-    return (
+    const {
+        handleSuppressPhenotype,
+        submitReplaceAccession
+    } = useDataFetch();
+
+    const {
+        selectedPlot,
+        selectedView,
+    } = useView();
+
+    const { heatmapData } = useHeatmap();
+
+    if (!show || !selectedPlot) return null;
+
+    const [newAccession, setNewAccession] = useState('');
+    const [newPlotName, setNewPlotName] = useState('');
+
+    const plotStructureLayoutType = useMemo(() => {
+        if (!plotStructure || !plotStructure.has) return 'none';
+        const children = Object.values(plotStructure.has) as PlotStructureNode[];
+        if (children.length > 0) {
+            const firstChild = children[0];
+            if (firstChild.type === 'subplot') {
+                if (firstChild.has) {
+                    const subChildren = Object.values(firstChild.has) as PlotStructureNode[];
+                    if (subChildren.length > 0 && subChildren[0].attributes?.row_number?.value > 0) {
+                        return 'subplot_grid';
+                    }
+                }
+            } else if (firstChild.type === 'plant' && firstChild.attributes?.row_number?.value > 0) {
+                return 'plant_grid';
+            }
+        }
+        return 'tree';
+    }, [plotStructure]);
+
+    const hasHeatmapValue = useMemo(() => {
+        if (!selectedPlot) return false;
+        return !!heatmapData[selectedPlot.observationUnitDbId || ''];
+    }, [selectedPlot, heatmapData]);
+
+    return <>
+        <CuratorWarningModal newAccession={newAccession} newPlotName={newPlotName} />
         <div className="modal show tw:block tw:bg-black/50">
             <div className="modal-dialog modal-lg">
                 <div className="modal-content">
                     <div className="modal-header">
-                        <button type="button" className="close" onClick={onClose}>&times;</button>
-                        <h4 className="modal-title">Plot Details: {plot.observationUnitName}</h4>
+                        <button type="button" className="close" onClick={() => setShow(false)}>&times;</button>
+                        <h4 className="modal-title">Plot Details: {selectedPlot.observationUnitName}</h4>
                     </div>
                     <div className="modal-body">
                         <ul className="nav nav-tabs tw:mb-3.75">
@@ -68,20 +91,20 @@ export const PlotDetailsModal: React.FC<PlotDetailsModalProps> = ({
                                     <tbody>
                                         <tr>
                                             <td className="tw:w-[30%] tw:font-bold">Plot Database ID:</td>
-                                            <td>{plot.observationUnitDbId}</td>
+                                            <td>{selectedPlot.observationUnitDbId}</td>
                                         </tr>
                                         <tr>
                                             <td className="tw:font-bold">{stockLabel} Name:</td>
-                                            <td>{plot.germplasmName}</td>
+                                            <td>{selectedPlot.germplasmName}</td>
                                         </tr>
                                         <tr>
                                             <td className="tw:font-bold">Plot Number:</td>
-                                            <td>{plot.observationUnitPosition?.observationLevel?.levelCode}</td>
+                                            <td>{selectedPlot.observationUnitPosition?.observationLevel?.levelCode}</td>
                                         </tr>
-                                        {plot.observationUnitPosition?.positionCoordinateX && (
+                                        {selectedPlot.observationUnitPosition?.positionCoordinateX && (
                                             <tr>
                                                 <td className="tw:font-bold">Coordinates (X / Y):</td>
-                                                <td>{plot.observationUnitPosition.positionCoordinateX} / {plot.observationUnitPosition.positionCoordinateY}</td>
+                                                <td>{selectedPlot.observationUnitPosition.positionCoordinateX} / {selectedPlot.observationUnitPosition.positionCoordinateY}</td>
                                             </tr>
                                         )}
                                     </tbody>
@@ -127,15 +150,57 @@ export const PlotDetailsModal: React.FC<PlotDetailsModalProps> = ({
                                 <div className="alert alert-warning">
                                     Replacing this {stockLabel.toLowerCase()} will update layout structures and replicates. Ensure changes are correct.
                                 </div>
-                                <button className="btn btn-primary tw:mr-2" onClick={() => onSubmitReplaceAccession('check')}>Update {stockLabel}</button>
+                                <button className="btn btn-primary tw:mr-2" onClick={() => submitReplaceAccession('check', selectedPlot, newAccession, newPlotName)}>Update {stockLabel}</button>
                                 {selectedView !== 'fieldmap' && selectedView !== 'geofieldmap' && hasHeatmapValue && (
-                                    <button className="btn btn-warning" onClick={onSuppressClick}>Suppress Current Trait Value</button>
+                                    <button className="btn btn-warning" onClick={() => handleSuppressPhenotype()}>Suppress Current Trait Value</button>
                                 )}
                             </div>
                         )}
                     </div>
                     <div className="modal-footer">
-                        <button className="btn btn-default" onClick={onClose}>Close</button>
+                        <button className="btn btn-default" onClick={() => setShow(false)}>Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </>;
+};
+
+interface CuratorWarningModalProps {
+    newAccession: string;
+    newPlotName: string;
+}
+
+export const CuratorWarningModal: React.FC<CuratorWarningModalProps> = ({ newAccession, newPlotName }) => {
+    const {
+        showCuratorWarning: show,
+        setShowCuratorWarning: setShow
+    } = useModals();
+
+    if (!show) return null;
+
+    const {
+        submitReplaceAccession 
+    } = useDataFetch();
+
+    const {
+        selectedPlot,
+    } = useView();
+
+    return (
+        <div className="modal show tw:block tw:bg-black/50">
+            <div className="modal-dialog">
+                <div className="modal-content">
+                    <div className="modal-header">
+                        <button type="button" className="close" onClick={() => setShow(false)}>&times;</button>
+                        <h4 className="modal-title">Curator Override Warning</h4>
+                    </div>
+                    <div className="modal-body">
+                        <p>One or more traits have already been assayed for this trial. Are you sure you want to replace this accession?</p>
+                    </div>
+                    <div className="modal-footer">
+                        <button className="btn btn-default" onClick={() => setShow(false)}>No</button>
+                        <button className="btn btn-primary" onClick={() => submitReplaceAccession('override', selectedPlot, newAccession, newPlotName)}>Yes, Override</button>
                     </div>
                 </div>
             </div>
