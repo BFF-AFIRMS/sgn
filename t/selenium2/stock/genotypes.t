@@ -38,7 +38,6 @@ $d->while_logged_in_as("curator", sub {
         <td>Cassava SNP genotypes for stock 520 20 24 25 29 30 44 46 108 109 112 114 520name = UG120180, id = 39973)</td>
         <td><a href="/stock/39973/genotypes?genotype_id=798">Download</a></td>
     </tr>';
-    # Trim leading whitespace and line breaks
     $expected_tbody =~ s/^[ ]+|\R//mg;
     is($observed_tbody, $expected_tbody, "accession $stock_name has 1 expected genotypes");
 
@@ -74,7 +73,6 @@ $d->while_logged_in_as("curator", sub {
         <td>SNP genotypes for stock (name = test_accession1_leaf-3, id = 41796)</td>
         <td><a href="/stock/38840/genotypes?genotype_id=1066">Download</a></td>
     </tr>';
-    # Trim leading whitespace and line breaks
     $expected_tbody =~ s/^[ ]+|\R//mg;
     is($observed_tbody, $expected_tbody, "accession $stock_name has 3 expected genotypes");
 
@@ -100,7 +98,6 @@ $d->while_logged_in_as("curator", sub {
         <td>SNP genotypes for stock (name = test_accession1_leaf-2, id = 41795)</td>
         <td><a href="/stock/38861/genotypes?genotype_id=1065">Download</a></td>
     </tr>';
-    # Trim leading whitespace and line breaks
     $expected_tbody =~ s/^[ ]+|\R//mg;
     is($observed_tbody, $expected_tbody, "plot $stock_name has 2 expected genotypes");
 
@@ -119,7 +116,6 @@ $d->while_logged_in_as("curator", sub {
         <td>SNP genotypes for stock (name = test_accession1_leaf-3, id = 41796)</td>
         <td><a href="/stock/38864/genotypes?genotype_id=1066">Download</a></td>
     </tr>';
-    # Trim leading whitespace and line breaks
     $expected_tbody =~ s/^[ ]+|\R//mg;
     is($observed_tbody, $expected_tbody, "plot $stock_name has 1 expected genotype");
 
@@ -138,7 +134,6 @@ $d->while_logged_in_as("curator", sub {
         <td>SNP genotypes for stock (name = test_accession1_leaf-3, id = 41796)</td>
         <td><a href="/stock/41797/genotypes?genotype_id=1066">Download</a></td>
     </tr>';
-    # Trim leading whitespace and line breaks
     $expected_tbody =~ s/^[ ]+|\R//mg;
     is($observed_tbody, $expected_tbody, "plant $stock_name has 1 expected genotype");
 
@@ -157,9 +152,41 @@ $d->while_logged_in_as("curator", sub {
         <td>SNP genotypes for stock (name = test_accession1_leaf-3, id = 41796)</td>
         <td><a href="/stock/41796/genotypes?genotype_id=1066">Download</a></td>
     </tr>';
-    # Trim leading whitespace and line breaks
     $expected_tbody =~ s/^[ ]+|\R//mg;
     is($observed_tbody, $expected_tbody, "plant $stock_name has 1 expected genotype");
+
+    # -------------------------------------------------------------------------
+    # Accession with no genotypes
+
+    my $stock_name = 'IITA-TMS-IBA011412';
+    my $stock_id = $schema->resultset('Stock::Stock')->find( { uniquename => $stock_name })->stock_id();
+    $d->get_ok("/stock/$stock_id/view", "navigate to accession stock page");
+    $d->click_ok('stock_genotypes_section_onswitch', 'id', "Expand genotypes section");
+    $d->wait_for_network_idle();
+    my $observed_tbody = $d->get_attribute_ok("//table[\@id='stock_direct_genotypes_datatable']/tbody", "xpath", "innerHTML", "get $stock_name genotype table");
+    my $expected_tbody = '
+    <tr>
+        <td colspan="5" class="dt-empty">No data available in table</td>
+    </tr>';
+    $expected_tbody =~ s/^[ ]+|\R//mg;
+    is($observed_tbody, $expected_tbody, "accession $stock_name has 0 expected genotypes");
+
+    # -------------------------------------------------------------------------
+    # Plot with no genotypes
+
+    my $stock_name = 'KASESE_TP2013_1000';
+    my $stock_id = $schema->resultset('Stock::Stock')->find( { uniquename => $stock_name })->stock_id();
+    $d->get_ok("/stock/$stock_id/view", "navigate to plot stock page");
+    $d->click_ok('stock_genotypes_section_onswitch', 'id', "Expand genotypes section");
+    $d->wait_for_network_idle();
+    my $observed_tbody = $d->get_attribute_ok("//table[\@id='stock_direct_genotypes_datatable']/tbody", "xpath", "innerHTML", "get $stock_name genotype table");
+    my $expected_tbody = '
+    <tr>
+        <td colspan="5" class="dt-empty">No data available in table</td>
+    </tr>';
+    $expected_tbody =~ s/^[ ]+|\R//mg;
+    is($observed_tbody, $expected_tbody, "plot $stock_name has 0 expected genotypes");
+
 });
 
 $d->driver->quit();
