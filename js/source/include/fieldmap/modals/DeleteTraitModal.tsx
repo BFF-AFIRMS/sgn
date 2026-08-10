@@ -14,8 +14,15 @@ export const DeleteTraitModal: React.FC<DeleteTraitModalProps> = ({}) => {
     if (!show) return null;
 
     const {
-        handleDeleteSingleTrait
+        deleteSingleTrait
     } = useDataFetch();
+
+    const handleDeleteSingleTrait = async () => {
+        const ok = await deleteSingleTrait();
+        if (ok) {
+            setShow(false);
+        }
+    };
 
     return (
         <div className="modal show tw:block tw:bg-black/50">

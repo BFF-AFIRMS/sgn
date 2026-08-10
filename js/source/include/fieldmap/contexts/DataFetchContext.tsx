@@ -19,11 +19,11 @@ export interface DataFetchContextType {
 	loadNorthArrowAngle: () => void;
 	loadVariables: () => void;
 	loadSpatialAdjustments: () => void;
-	toggleLinkedTrials: (checked: boolean) => void;
+    toggleLinkedTrials: (checked: boolean) => Promise<void>;
 	submitFieldLayout: () => void;
 	fetchHeatmapObservations: (variableId: string) => void;
 	submitGeoLayout: () => Promise<void>;
-	handleDeleteSingleTrait: () => Promise<void>;
+	deleteSingleTrait: () => Promise<boolean>;
 }
 
 const DataFetchContext = createContext<DataFetchContextType | undefined>(undefined);
@@ -60,16 +60,15 @@ export const DataFetchProvider: React.FC<FieldMapContextProps> = ({ trialId, aut
 
 	const {
 		heatmapData, setHeatmapData,
-		variables, setVariables,
+		setVariables,
 		spatialAdjustments, setSpatialAdjustments
 	} = useHeatmap();
 
 	const {
-		selectedViewLabel, setSelectedViewLabel,
 		selectedView, setSelectedView,
-		selectedPlot, setSelectedPlot,
-		displayLinkedTrials, setDisplayLinkedTrials,
-		linkedTrialsList, setLinkedTrialsList,
+		selectedPlot,
+		setDisplayLinkedTrials,
+		setLinkedTrialsList,
 		activeTrialIds, setActiveTrialIds,
 		colorVar, setColorVar,
 		labelVar, setLabelVar,
@@ -95,7 +94,7 @@ export const DataFetchProvider: React.FC<FieldMapContextProps> = ({ trialId, aut
         return maxVal;
     }, [plotList]);
 
-    const fetchObservationUnits = () => {
+    const fetchObservationUnits = async () => {
         setLoading(true);
         const headers: Record<string, string> = {};
         if (authToken) {
@@ -103,72 +102,72 @@ export const DataFetchProvider: React.FC<FieldMapContextProps> = ({ trialId, aut
         }
 
         const url = `/brapi/v2/observationunits?studyDbIds=${activeTrialIds.join(',')}&observationUnitLevelName=plot&pageSize=10000`;
-        fetch(url, { headers })
-            .then(res => res.json())
-            .then(response => {
-                const units = response?.result?.data || [];
-                if (units.length > 0) {
-                    const firstInfo = units[0].additionalInfo;
-                    if (firstInfo) {
-                        setTopBorder(firstInfo.top_border_selection);
-                        setLeftBorder(firstInfo.left_border_selection);
-                        setRightBorder(firstInfo.right_border_selection);
-                        setBottomBorder(firstInfo.bottom_border_selection);
-                        setInvertRows(firstInfo.invert_row_checkmark);
-                        setInvertCols(firstInfo.invert_col_checkmark);
-                        if (firstInfo.plot_layout) {
-                            setPlotLayout(firstInfo.plot_layout);
-                        }
-                        if (firstInfo.plot_color_var) setColorVar(firstInfo.plot_color_var);
-                        if (firstInfo.plot_label_var) setLabelVar(firstInfo.plot_label_var);
-                        if (firstInfo.plot_label_size) setLabelSize(firstInfo.plot_label_size);
+        try {
+            const response = await fetch(url, { headers });
+            const body = await response.json();
+            const units = body?.result?.data || [];
+            if (units.length > 0) {
+                const firstInfo = units[0].additionalInfo;
+                if (firstInfo) {
+                    setTopBorder(firstInfo.top_border_selection);
+                    setLeftBorder(firstInfo.left_border_selection);
+                    setRightBorder(firstInfo.right_border_selection);
+                    setBottomBorder(firstInfo.bottom_border_selection);
+                    setInvertRows(firstInfo.invert_row_checkmark);
+                    setInvertCols(firstInfo.invert_col_checkmark);
+                    if (firstInfo.plot_layout) {
+                        setPlotLayout(firstInfo.plot_layout);
                     }
-                    parsePlotData(units);
+                    if (firstInfo.plot_color_var) setColorVar(firstInfo.plot_color_var);
+                    if (firstInfo.plot_label_var) setLabelVar(firstInfo.plot_label_var);
+                    if (firstInfo.plot_label_size) setLabelSize(firstInfo.plot_label_size);
                 }
-                setLoading(false);
-            })
-            .catch(() => {
-                setLoading(false);
-                alert('Error loading plot units.');
-            });
+                parsePlotData(units);
+            }
+        } catch (e) {
+            console.error('Error loading plot units:', e);
+            alert('Error loading plot units.');
+        } finally {
+            setLoading(false);
+        }
     };
 
-    const fetchHeatmapObservations = (variableId: string) => {
+    const fetchHeatmapObservations = async (variableId: string) => {
         setLoading(true);
         const headers: Record<string, string> = {};
         if (authToken) {
             headers['Authorization'] = `Bearer ${authToken}`;
         }
-        fetch(`/brapi/v2/observations?observationVariableDbId=${variableId}&studyDbId=${activeTrialIds.join(',')}&pageSize=10000`, { headers })
-            .then(res => res.json())
-            .then(response => {
-                const data = response?.result?.data || [];
-                const map: Record<string, HeatmapValue> = {};
-                data.forEach((obs: any) => {
-                    let finalVal = Number(obs.value);
-                    const plotName = obs.observationUnitName;
+        try {
+            const response = await fetch(`/brapi/v2/observations?observationVariableDbId=${variableId}&studyDbId=${activeTrialIds.join(',')}&pageSize=10000`, { headers });
+            const body = await response.json();
+            const data = body?.result?.data || [];
+            const map: Record<string, HeatmapValue> = {};
+            data.forEach((obs: any) => {
+                let finalVal = Number(obs.value);
+                const plotName = obs.observationUnitName;
 
-                    // Apply Spatial adjustments if viewing Corrected or Adjustments
-                    if (selectedView.includes(' (corrected)') && spatialAdjustments[plotName]?.[variableId] !== undefined) {
-                        finalVal += Number(spatialAdjustments[plotName][variableId]);
-                    } else if (selectedView.includes(' (adjustment)') && spatialAdjustments[plotName]?.[variableId] !== undefined) {
-                        finalVal = Number(spatialAdjustments[plotName][variableId]);
-                    }
+                // Apply Spatial adjustments if viewing Corrected or Adjustments
+                if (selectedView.includes(' (corrected)') && spatialAdjustments[plotName]?.[variableId] !== undefined) {
+                    finalVal += Number(spatialAdjustments[plotName][variableId]);
+                } else if (selectedView.includes(' (adjustment)') && spatialAdjustments[plotName]?.[variableId] !== undefined) {
+                    finalVal = Number(spatialAdjustments[plotName][variableId]);
+                }
 
-                    if (!isNaN(finalVal)) {
-                        map[obs.observationUnitDbId] = {
-                            val: finalVal,
-                            plot_name: obs.observationUnitName,
-                            id: obs.observationDbId
-                        };
-                    }
-                });
-                setHeatmapData(map);
-                setLoading(false);
-            })
-            .catch(() => {
-                setLoading(false);
+                if (!isNaN(finalVal)) {
+                    map[obs.observationUnitDbId] = {
+                        val: finalVal,
+                        plot_name: obs.observationUnitName,
+                        id: obs.observationDbId
+                    };
+                }
             });
+            setHeatmapData(map);
+        } catch (e) {
+            console.error('Error loading heatmap observations:', e);
+        } finally {
+            setLoading(false);
+        }
     };
 
     const applyDimensions = async (rowsInput: string, colsInput: string, fillerAccessionInput?: string) => {
@@ -183,13 +182,13 @@ export const DataFetchProvider: React.FC<FieldMapContextProps> = ({ trialId, aut
 
         let accessionId: string | undefined;
         if (fillerAccessionInput) {
-            const response = await fetch(`/ajax/breeders/trial/${trialId}/accession_exists?accession_name=${encodeURIComponent(fillerAccessionInput)}`)
-                .then(res => res.json());
+			const response = await fetch(`/ajax/breeders/trial/${trialId}/accession_exists?accession_name=${encodeURIComponent(fillerAccessionInput)}`);
+			const body = await response.json();
             
-            if (response.success) {
-                accessionId = response.success;
+            if (body.success) {
+                accessionId = body.success;
             } else {
-                alert(response.error || 'Accession not found.');
+                alert(body.error || 'Accession not found.');
             }
 
 			setFillerAccessionName(fillerAccessionInput);
@@ -202,151 +201,152 @@ export const DataFetchProvider: React.FC<FieldMapContextProps> = ({ trialId, aut
         setDimensions({ rows, cols });
     };
 
-    const submitReplaceAccession = (override: 'check' | 'override', selectedPlot: Plot | null, newAccession: string, newPlotName: string) => {
+    const submitReplaceAccession = async (override: 'check' | 'override', selectedPlot: Plot | null, newAccession: string, newPlotName: string) => {
         if (!selectedPlot) return;
         setLoading(true);
-        fetch(`/ajax/breeders/trial/${trialId}/replace_plot_accessions`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: new URLSearchParams({
-                new_accession: newAccession,
-                new_plot_name: newPlotName,
-                old_accession: selectedPlot.germplasmName || '',
-                old_plot_id: selectedPlot.observationUnitDbId || '',
-                old_plot_name: selectedPlot.observationUnitName,
-                override: override
-            })
-        })
-            .then(res => res.json())
-            .then(response => {
-                if (response.warning) {
-                    setLoading(false);
-                    setShowCuratorWarning(true);
-                } else if (response.error) {
-                    setLoading(false);
-                    alert(response.error);
-                } else {
-                    alert('Plot Accession Replaced successfully!');
-                    setShowPlotDetails(false);
-                    setShowEditAccession(false);
-                    setShowCuratorWarning(false);
-                    fetchObservationUnits();
-                }
-            })
-            .catch(() => {
-                setLoading(false);
+        try {
+            const response = await fetch(`/ajax/breeders/trial/${trialId}/replace_plot_accessions`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams({
+                    new_accession: newAccession,
+                    new_plot_name: newPlotName,
+                    old_accession: selectedPlot.germplasmName || '',
+                    old_plot_id: selectedPlot.observationUnitDbId || '',
+                    old_plot_name: selectedPlot.observationUnitName,
+                    override: override
+                })
             });
+            const body = await response.json();
+            if (body.warning) {
+                setShowCuratorWarning(true);
+            } else if (body.error) {
+                alert(body.error);
+            } else {
+                alert('Plot Accession Replaced successfully!');
+                setShowPlotDetails(false);
+                setShowEditAccession(false);
+                setShowCuratorWarning(false);
+                fetchObservationUnits();
+            }
+        } catch (e) {
+            console.error('Error replacing accession:', e);
+        } finally {
+            setLoading(false);
+        }
     };
 
-    const handleSuppressPhenotype = () => {
+    const handleSuppressPhenotype = async () => {
         if (!selectedPlot) return;
         const currentTraitId = selectedView.replace(' (corrected)', '').replace(' (adjustment)', '');
         const valObj = heatmapData[selectedPlot.observationUnitDbId || ''];
         if (!valObj) return;
 
         setLoading(true);
-        fetch(`/ajax/breeders/trial/${trialId}/suppress_phenotype`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: new URLSearchParams({
-                plot_name: selectedPlot.observationUnitName,
-                phenotype_value: String(valObj.val),
-                trait_id: currentTraitId,
-                phenotype_id: valObj.id
-            })
-        })
-            .then(res => res.json())
-            .then(response => {
-                setLoading(false);
-                if (response.error) {
-                    alert(response.error);
-                } else {
-                    alert('Phenotype was suppressed successfully!');
-                    setShowSuppressModal(false);
-                    setShowPlotDetails(false);
-                    fetchHeatmapObservations(currentTraitId);
-                }
-            })
-            .catch(() => {
-                setLoading(false);
+        try {
+            const response = await fetch(`/ajax/breeders/trial/${trialId}/suppress_phenotype`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams({
+                    plot_name: selectedPlot.observationUnitName,
+                    phenotype_value: String(valObj.val),
+                    trait_id: currentTraitId,
+                    phenotype_id: valObj.id
+                })
             });
+            const body = await response.json();
+            if (body.error) {
+                alert(body.error);
+            } else {
+                alert('Phenotype was suppressed successfully!');
+                setShowSuppressModal(false);
+                setShowPlotDetails(false);
+                fetchHeatmapObservations(currentTraitId);
+            }
+        } catch (e) {
+			console.error('Error suppressing phenotype:', e);
+        } finally {
+            setLoading(false);
+        }
     };
 
-    const loadNorthArrowAngle = () => {
-        fetch(`/ajax/breeders/trial/${trialId}/north_arrow_angle`)
-            .then(res => res.json())
-            .then(data => {
-                if (data?.north_arrow_angle !== undefined && data.north_arrow_angle !== null) {
-                    setNorthArrowAngle(Number(data.north_arrow_angle));
-                }
-            })
-            .catch(() => {});
+    const loadNorthArrowAngle = async () => {
+        try {
+            const response = await fetch(`/ajax/breeders/trial/${trialId}/north_arrow_angle`);
+            const body = await response.json();
+            if (body?.north_arrow_angle !== undefined && body.north_arrow_angle !== null) {
+                setNorthArrowAngle(Number(body.north_arrow_angle));
+            }
+        } catch (e) {
+			console.error('Error loading north arrow angle:', e);
+        }
     };
 
-    const loadVariables = () => {
+    const loadVariables = async () => {
         const headers: Record<string, string> = {};
         if (authToken) {
             headers['Authorization'] = `Bearer ${authToken}`;
         }
-        fetch(`/brapi/v2/variables?studyDbId=${trialId}&pageSize=10000`, { headers })
-            .then(res => res.json())
-            .then(response => {
-                const data = response?.result?.data || [];
-                const vars: Record<string, string> = {};
-                data.forEach((v: any) => {
-                    if (v.observationVariableName && v.observationVariableDbId) {
-                        vars[v.observationVariableName] = v.observationVariableDbId;
-                    }
-                });
-                setVariables(vars);
-            })
-            .catch(() => {});
-    };
-
-    const loadSpatialAdjustments = () => {
-        fetch(`/ajax/spatial_model/retrieve_spatial_adjustments/${trialId}`)
-            .then(res => res.json())
-            .then(response => {
-                if (response?.data) {
-                    setSpatialAdjustments(JSON.parse(response.data));
+        try {
+            const response = await fetch(`/brapi/v2/variables?studyDbId=${trialId}&pageSize=10000`, { headers });
+            const body = await response.json();
+            const data = body?.result?.data || [];
+            const vars: Record<string, string> = {};
+            data.forEach((v: any) => {
+                if (v.observationVariableName && v.observationVariableDbId) {
+                    vars[v.observationVariableName] = v.observationVariableDbId;
                 }
-            })
-            .catch(() => {});
+            });
+            setVariables(vars);
+        } catch (e) {
+			console.error('Error loading variables:', e);
+        }
     };
 
-    const toggleLinkedTrials = (checked: boolean) => {
+    const loadSpatialAdjustments = async () => {
+        try {
+            const response = await fetch(`/ajax/spatial_model/retrieve_spatial_adjustments/${trialId}`);
+            const body = await response.json();
+            if (body?.data) {
+                setSpatialAdjustments(JSON.parse(body.data));
+            }
+        } catch (e) {
+			console.error('Error loading spatial adjustments:', e);
+        }
+    };
+
+    const toggleLinkedTrials = async (checked: boolean) => {
         setDisplayLinkedTrials(checked);
         if (checked) {
-            fetch(`/ajax/breeders/trial/${trialId}/linked_field_trials`)
-                .then(res => res.json())
-                .then(response => {
-                    if (response?.trials) {
-                        const list = response.trials.map((t: any, i: number) => {
-                            const idx = i % trial_colors.length;
-                            return {
-                                id: t.trial_id,
-                                name: t.trial_name,
-                                bg: trial_colors[idx],
-                                fg: trial_colors_text[idx]
-                            };
-                        });
-                        setLinkedTrialsList(list);
-                        setActiveTrialIds([trialId, ...list.map((l: any) => l.id)]);
-                    } else {
-                        alert(response?.error || 'Could not load linked trials.');
-                        setDisplayLinkedTrials(false);
-                    }
-                })
-                .catch(() => {
+            try {
+                const response = await fetch(`/ajax/breeders/trial/${trialId}/linked_field_trials`);
+                const body = await response.json();
+                if (body?.trials) {
+                    const list = body.trials.map((t: any, i: number) => {
+                        const idx = i % trial_colors.length;
+                        return {
+                            id: t.trial_id,
+                            name: t.trial_name,
+                            bg: trial_colors[idx],
+                            fg: trial_colors_text[idx]
+                        };
+                    });
+                    setLinkedTrialsList(list);
+                    setActiveTrialIds([trialId, ...list.map((l: any) => l.id)]);
+                } else {
+                    alert(body?.error || 'Could not load linked trials.');
                     setDisplayLinkedTrials(false);
-                });
+                }
+            } catch {
+                setDisplayLinkedTrials(false);
+            }
         } else {
             setLinkedTrialsList([]);
             setActiveTrialIds([trialId]);
         }
     };
 
-    const submitFieldLayout = () => {
+    const submitFieldLayout = async () => {
         const answer = window.confirm('You are about to save this plot layout to the database. Are you sure you would like to continue?');
         if (!answer) return;
         setLoading(true);
@@ -417,13 +417,13 @@ export const DataFetchProvider: React.FC<FieldMapContextProps> = ({ trialId, aut
         console.log('BRAPI POST OBJECT', brapiPostObject);
         console.log('BRAPI PUT OBJECT', brapiPutObject);
 
-        const putPromise = fetch('/brapi/v2/observationunits', {
+        const putRequest = fetch('/brapi/v2/observationunits', {
             method: 'PUT',
             headers,
             body: JSON.stringify(brapiPutObject)
         });
 
-        const postPromise = brapiPostObject.length > 0
+        const postRequest = brapiPostObject.length > 0
             ? fetch('/brapi/v2/observationunits', {
                 method: 'POST',
                 headers,
@@ -431,7 +431,7 @@ export const DataFetchProvider: React.FC<FieldMapContextProps> = ({ trialId, aut
             })
             : Promise.resolve();
 
-        const northArrowPromise = fetch(`/ajax/breeders/trial/${trialId}/north_arrow_angle`, {
+        const northArrowRequest = fetch(`/ajax/breeders/trial/${trialId}/north_arrow_angle`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
             body: new URLSearchParams({
@@ -439,17 +439,19 @@ export const DataFetchProvider: React.FC<FieldMapContextProps> = ({ trialId, aut
             })
         });
 
-        Promise.all([putPromise, postPromise, northArrowPromise])
-            .then(() => fetch(`/ajax/breeders/trial/${trialId}/refresh_cache`, { method: 'POST' }))
-            .then(() => {
-                alert('Field Plot layout submitted successfully!');
-                fetchObservationUnits();
-                loadNorthArrowAngle();
-            })
-            .catch(() => {
-                setLoading(false);
-                alert('Error submitting layout metadata.');
-            });
+		try {
+			await Promise.all([putRequest, postRequest, northArrowRequest]);
+			await fetch(`/ajax/breeders/trial/${trialId}/refresh_cache`, { method: 'POST' });
+
+			alert('Field Plot layout submitted successfully!');
+			fetchObservationUnits();
+			loadNorthArrowAngle();
+		} catch (e) {
+			console.error('Error submitting layout metadata:', e);
+			alert('Error submitting layout metadata.');
+		} finally {
+			setLoading(false);
+		}
     };
 
     const submitGeoLayout = async () => {
@@ -461,13 +463,14 @@ export const DataFetchProvider: React.FC<FieldMapContextProps> = ({ trialId, aut
 				alert(msg || 'Geo layout updated successfully!');
 				fetchObservationUnits();
 			} catch (e) {
-				setLoading(false);
 				alert(e || 'Failed to update geo layout');
+			} finally {
+				setLoading(false);
 			}
         }
     };
 
-    const handleDeleteSingleTrait = async () => {
+    const deleteSingleTrait = async () => {
         const currentTraitId = selectedView.replace(' (corrected)', '').replace(' (adjustment)', '');
         setLoading(true);
 		try {
@@ -477,21 +480,24 @@ export const DataFetchProvider: React.FC<FieldMapContextProps> = ({ trialId, aut
 				body: new URLSearchParams({
 					traits_id: JSON.stringify([currentTraitId])
 				})
-			}).then(res => res.json());
+			});
+			const body = await response.json();
 
-			setLoading(false);
-			if (response.error) {
-				alert(response.error);
+			if (body.error) {
+				alert(body.error);
 			} else {
 				alert('Trait deleted successfully!');
-				setShowDeleteTraitModal(false);
 				setSelectedView('fieldmap');
 				setHeatmapData({});
 				loadVariables();
+				return true;
 			}
 		} catch (e) {
+			console.error('Error deleting trait:', e);
+		} finally {
 			setLoading(false);
 		}
+		return false;
     };
 
     return (
@@ -507,7 +513,7 @@ export const DataFetchProvider: React.FC<FieldMapContextProps> = ({ trialId, aut
 			submitFieldLayout,
 			fetchHeatmapObservations,
 			submitGeoLayout,
-			handleDeleteSingleTrait
+			deleteSingleTrait
         }}>
             {children}
         </DataFetchContext.Provider>
