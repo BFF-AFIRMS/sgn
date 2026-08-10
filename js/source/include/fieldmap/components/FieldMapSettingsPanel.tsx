@@ -1,6 +1,4 @@
 import React from 'react';
-import { Plot } from '../types';
-import { useBorder } from '../contexts/BorderContext';
 import { usePlotGrid } from '../contexts/PlotGridContext';
 import { useLayoutConfig, PlotLayout, ColorVar, LabelVar } from '../contexts/LayoutConfigContext';
 
@@ -34,13 +32,6 @@ export const FieldMapSettingsPanel: React.FC<FieldMapSettingsPanelProps> = ({
     setNorthArrowAngle
 }) => {
     const {
-        topBorder, setTopBorder,
-        leftBorder, setLeftBorder,
-        rightBorder, setRightBorder,
-        bottomBorder, setBottomBorder
-    } = useBorder();
-
-    const {
         dimensions,
         bounds,
         transposeLayout,
@@ -54,7 +45,11 @@ export const FieldMapSettingsPanel: React.FC<FieldMapSettingsPanelProps> = ({
         invertCols, setInvertCols,
         colorVar, setColorVar,
         labelVar, setLabelVar,
-        labelSize, setLabelSize
+        labelSize, setLabelSize,
+        topBorder, setTopBorder,
+        leftBorder, setLeftBorder,
+        rightBorder, setRightBorder,
+        bottomBorder, setBottomBorder
     } = useLayoutConfig();
 
     return (

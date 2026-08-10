@@ -33,7 +33,6 @@ import {
     DeleteTraitModal, 
     CuratorWarningModal 
 } from '../include/fieldmap/modals/FieldmapModals';
-import { BorderProvider, useBorder } from '../include/fieldmap/contexts/BorderContext';
 import { PlotGridProvider, usePlotGrid } from '../include/fieldmap/contexts/PlotGridContext';
 import { ControlProvider } from '../include/fieldmap/contexts/ControlContext';
 import { LayoutConfigProvider, useLayoutConfig } from '../include/fieldmap/contexts/LayoutConfigContext';
@@ -65,13 +64,6 @@ const FieldMapContainerInner: React.FC<FieldMapContainerProps> = ({
     authToken
 }) => {
     const {
-        topBorder, setTopBorder,
-        leftBorder, setLeftBorder,
-        rightBorder, setRightBorder,
-        bottomBorder, setBottomBorder
-    } = useBorder();
-
-    const {
         plotList,
         bounds, renderBounds,
         parsePlotData,
@@ -85,7 +77,11 @@ const FieldMapContainerInner: React.FC<FieldMapContainerProps> = ({
         invertCols, setInvertCols,
         colorVar, setColorVar,
         labelVar, setLabelVar,
-        labelSize, setLabelSize
+        labelSize, setLabelSize,
+        topBorder, setTopBorder,
+        leftBorder, setLeftBorder,
+        rightBorder, setRightBorder,
+        bottomBorder, setBottomBorder
     } = useLayoutConfig();
 
     const { applyDimensions } = useDataFetch();
@@ -1005,15 +1001,13 @@ const FieldMapContainerInner: React.FC<FieldMapContainerProps> = ({
 
 export const FieldMapContainer: React.FC<FieldMapContainerProps> = (props) => {
     return (
-        <BorderProvider>
+        <LayoutConfigProvider>
             <PlotGridProvider>
                 <ControlProvider trialId={props.trialId}>
-                    <LayoutConfigProvider>
-                        <FieldMapContainerInner {...props} />
-                    </LayoutConfigProvider>
+                    <FieldMapContainerInner {...props} />
                 </ControlProvider>
             </PlotGridProvider>
-        </BorderProvider>
+        </LayoutConfigProvider>
     );
 };
 

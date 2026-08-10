@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useMemo } from 'react';
 import { Plot } from '../types';
-import { useBorder } from './BorderContext';
+import { useLayoutConfig } from './LayoutConfigContext';
 
 export interface GridBounds {
     minCol: number;
@@ -36,7 +36,7 @@ interface PlotGridContextType {
 const PlotGridContext = createContext<PlotGridContextType | undefined>(undefined);
 
 export const PlotGridProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const { topBorder, bottomBorder, leftBorder, rightBorder } = useBorder();
+    const { topBorder, bottomBorder, leftBorder, rightBorder } = useLayoutConfig();
     const [plotObject, setPlotObject] = useState<Record<string, Plot>>({});
     const [dimensions, setDimensions] = useState({ rows: 0, cols: 0 });
     const [fillerAccessionId, setFillerAccessionId] = useState<string | undefined>(undefined);

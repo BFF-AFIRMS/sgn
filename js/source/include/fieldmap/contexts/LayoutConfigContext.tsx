@@ -17,6 +17,14 @@ interface LayoutConfigContextType {
     setLabelVar: (val: LabelVar) => void;
     labelSize: number;
     setLabelSize: (val: number) => void;
+    topBorder: boolean;
+    setTopBorder: (val: boolean) => void;
+    bottomBorder: boolean;
+    setBottomBorder: (val: boolean) => void;
+    leftBorder: boolean;
+    setLeftBorder: (val: boolean) => void;
+    rightBorder: boolean;
+    setRightBorder: (val: boolean) => void;
 }
 
 const LayoutConfigContext = createContext<LayoutConfigContextType | undefined>(undefined);
@@ -28,6 +36,10 @@ export const LayoutConfigProvider: React.FC<{ children: React.ReactNode }> = ({ 
     const [colorVar, setColorVar] = useState<ColorVar>('parity');
     const [labelVar, setLabelVar] = useState<LabelVar>('plot_number');
     const [labelSize, setLabelSize] = useState(10);
+    const [topBorder, setTopBorder] = useState(false);
+    const [bottomBorder, setBottomBorder] = useState(false);
+    const [leftBorder, setLeftBorder] = useState(false);
+    const [rightBorder, setRightBorder] = useState(false);
 
     return (
         <LayoutConfigContext.Provider value={{
@@ -36,7 +48,11 @@ export const LayoutConfigProvider: React.FC<{ children: React.ReactNode }> = ({ 
             invertCols, setInvertCols,
             colorVar, setColorVar,
             labelVar, setLabelVar,
-            labelSize, setLabelSize
+            labelSize, setLabelSize,
+            topBorder, setTopBorder,
+            bottomBorder, setBottomBorder,
+            leftBorder, setLeftBorder,
+            rightBorder, setRightBorder
         }}>
             {children}
         </LayoutConfigContext.Provider>
