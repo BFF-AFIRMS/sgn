@@ -499,6 +499,7 @@ sub get_genotype_info {
     if ($plant_list && scalar(@$plant_list)>0) {
         push @parent_stock_list, @$plant_list;
     }
+    my $has_parent_stock_filter = 0;
     if (scalar(@parent_stock_list)>0){
         my $tissue_samples_rs = $schema->resultset('Stock::StockRelationship')->search({
             object_id => {-in => @parent_stock_list},
@@ -506,6 +507,7 @@ sub get_genotype_info {
         });
         my @tissue_sample_ids = map { $_->subject_id() } $tissue_samples_rs->all();
         push @$tissue_sample_list, @tissue_sample_ids;
+        $has_parent_stock_filter = 1;
     }
     if ($tissue_sample_list && scalar(@$tissue_sample_list)>0) {
         my $stock_sql = join ("," , @$tissue_sample_list);
@@ -533,9 +535,10 @@ sub get_genotype_info {
         }
     }
 
-    # If there is no where_clause at this point, there is likely an upstream mistake
+    # If we were trying to filter by a parent stock (ex. plot, plant), but there
+    # is no where_clause at this point, there is likely an upstream mistake
     # and we should return 0 genotypes, instead of returning all of them.
-    if (scalar(@where_clause)==0) {
+    if ($has_parent_stock_filter && scalar(@where_clause)==0) {
         push @where_clause, "false";
     }
 
@@ -939,6 +942,7 @@ sub init_genotype_iterator {
     if ($plant_list && scalar(@$plant_list)>0) {
         push @parent_stock_list, @$plant_list;
     }
+    my $has_parent_stock_filter = 0;
     if (scalar(@parent_stock_list)>0){
         my $tissue_samples_rs = $schema->resultset('Stock::StockRelationship')->search({
             object_id => {-in => @parent_stock_list},
@@ -946,6 +950,7 @@ sub init_genotype_iterator {
         });
         my @tissue_sample_ids = map { $_->subject_id() } $tissue_samples_rs->all();
         push @$tissue_sample_list, @tissue_sample_ids;
+        $has_parent_stock_filter = 0;
     }
     if ($tissue_sample_list && scalar(@$tissue_sample_list)>0) {
         my $stock_sql = join ("," , @$tissue_sample_list);
@@ -978,9 +983,10 @@ sub init_genotype_iterator {
         }
     }
 
-    # If there is no where_clause at this point, there is likely an upstream mistake
+    # If we were trying to filter by a parent stock (ex. plot, plant), but there
+    # is no where_clause at this point, there is likely an upstream mistake
     # and we should return 0 genotypes, instead of returning all of them.
-    if (scalar(@where_clause)==0) {
+    if ($has_parent_stock_filter && scalar(@where_clause)==0) {
         push @where_clause, "false";
     }
 
