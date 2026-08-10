@@ -38,6 +38,7 @@ import { LayoutConfigProvider, useLayoutConfig } from '../include/fieldmap/conte
 import { useDataFetch } from '../include/fieldmap/contexts/DataFetchContext';
 import { useZoomPan, ZoomPanProvider } from '../include/fieldmap/contexts/ZoomPanContext';
 import { FieldMapContextProps } from '../include/fieldmap/context.types';
+import { ZoomControls } from '../include/fieldmap/components/ZoomControls';
 
 // Declare external legacy global libraries
 // We must use 'any' here as Leaflet (L) and Turf are loaded globally as script includes 
@@ -851,27 +852,8 @@ const FieldMapContainerInner: React.FC<FieldMapContainerProps> = ({
                             onMouseUp={handleMouseUpOrLeave}
                             onMouseLeave={handleMouseUpOrLeave}
                         >
-                            {/* North Arrow HUD overlay */}
                             <NorthArrow northArrowAngle={northArrowAngle} />
-
-                            {/* Zoom controls HUD */}
-                            <div className="tw:absolute tw:bottom-4 tw:right-4 tw:z-50 tw:flex tw:flex-col tw:gap-1 tw:bg-white/80 tw:p-1.5 tw:rounded-md tw:border tw:border-[#ccc] tw:shadow-sm">
-                                <button 
-                                    className="btn btn-default btn-xs tw:font-bold" 
-                                    onClick={() => updateZoomAndPan(zoom * 1.2)}
-                                    title="Zoom In"
-                                >+</button>
-                                <button 
-                                    className="btn btn-default btn-xs tw:font-bold" 
-                                    onClick={() => updateZoomAndPan(zoom / 1.2)}
-                                    title="Zoom Out"
-                                >-</button>
-                                <button
-                                    className="btn btn-default btn-xs tw:text-[10px]" 
-                                    onClick={handleResetZoomPan}
-                                    title="Reset View"
-                                >Reset</button>
-                            </div>
+                            <ZoomControls />
 
                             <svg
                                 id="fieldmap_chart_svg"
