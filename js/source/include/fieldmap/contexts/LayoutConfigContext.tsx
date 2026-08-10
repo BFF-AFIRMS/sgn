@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState } from 'react';
+import { FieldMapContextProps } from '../context.types';
 
 export type PlotLayout = 'serpentine' | 'zigzag';
 export type ColorVar = 'parity' | 'germplasm' | 'block' | 'family_name' | 'cross_name';
@@ -29,7 +30,7 @@ interface LayoutConfigContextType {
 
 const LayoutConfigContext = createContext<LayoutConfigContextType | undefined>(undefined);
 
-export const LayoutConfigProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const LayoutConfigProvider: React.FC<FieldMapContextProps> = ({ children }) => {
     const [plotLayout, setPlotLayout] = useState<PlotLayout>('serpentine');
     const [invertRows, setInvertRows] = useState(false);
     const [invertCols, setInvertCols] = useState(false);

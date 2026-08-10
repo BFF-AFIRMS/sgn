@@ -1,9 +1,33 @@
-import { useState, useRef, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
+import { usePlotGrid } from './PlotGridContext';
+import { FieldMapContextProps } from '../context.types';
 
 const CLICK_DRAG_THRESHOLD = 1;
 const PAN_MAX_EMPTY_SPACE = 200;
 
-export const useZoomPan = (svgWidth: number, svgHeight: number) => {
+interface ZoomPanContextType {
+	zoom: number;
+	setZoom: React.Dispatch<React.SetStateAction<number>>;
+	pan: { x: number; y: number };
+	setPan: React.Dispatch<React.SetStateAction<{ x: number; y: number }>>;
+
+	isDragging: boolean;
+	hasDragged: React.RefObject<boolean>;
+
+	containerRef: React.RefObject<HTMLDivElement | null>;
+
+	handleMouseDown: (e: React.MouseEvent<HTMLDivElement>) => void;
+	handleMouseMove: (e: React.MouseEvent<HTMLDivElement>) => void;
+	handleMouseUpOrLeave: () => void;
+	handleResetZoomPan: () => void;
+	updateZoomAndPan: (nextZoom: number, targetPan?: { x: number; y: number }) => void;
+}
+
+const ZoomPanContext = createContext<ZoomPanContextType | undefined>(undefined);
+
+export const ZoomPanProvider: React.FC<FieldMapContextProps> = ({ trialId, children }) => {
+	const { svgDimensions: { width: svgWidth, height: svgHeight } } = usePlotGrid();
+
     const [zoom, setZoom] = useState<number>(1);
     const [pan, setPan] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
     const [isDragging, setIsDragging] = useState<boolean>(false);
@@ -116,19 +140,30 @@ export const useZoomPan = (svgWidth: number, svgHeight: number) => {
         setZoom(1);
         setPan({ x: 0, y: 0 });
     };
+    return (
+        <ZoomPanContext.Provider value={{
+			zoom,
+			setZoom,
+			pan,
+			setPan,
+			isDragging,
+			hasDragged,
+			containerRef,
+			handleMouseDown,
+			handleMouseMove,
+			handleMouseUpOrLeave,
+			handleResetZoomPan,
+			updateZoomAndPan
+        }}>
+            {children}
+        </ZoomPanContext.Provider>
+    );
+};
 
-    return {
-        zoom,
-        setZoom,
-        pan,
-        setPan,
-        isDragging,
-        hasDragged,
-        containerRef,
-        handleMouseDown,
-        handleMouseMove,
-        handleMouseUpOrLeave,
-        handleResetZoomPan,
-        updateZoomAndPan
-    };
+export const useZoomPan = () => {
+    const context = useContext(ZoomPanContext);
+    if (!context) {
+        throw new Error('useZoomPan must be used within a ZoomPanProvider');
+    }
+    return context;
 };

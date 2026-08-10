@@ -1,5 +1,5 @@
 import React from 'react';
-import { Plot } from '../types';
+import { Plot } from '../model.types';
 import { usePlotGrid } from '../contexts/PlotGridContext';
 import { useLayoutConfig } from '../contexts/LayoutConfigContext';
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Plot, TrialDetails, HeatmapValue } from '../types';
+import { Plot, TrialDetails, HeatmapValue } from '../model.types';
 
 interface FieldMapTooltipProps {
     hoveredPlot: { plot: Plot; x: number; y: number } | null;

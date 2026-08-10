@@ -1,5 +1,5 @@
 import React from 'react';
-import { DownloadOpts } from '../types';
+import { DownloadOpts } from '../model.types';
 
 interface DownloadPlotOrderPanelProps {
     hasColAndRowNumbers: boolean;

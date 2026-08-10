@@ -1,5 +1,5 @@
 import React from 'react';
-import { Plot, PlotStructureNode } from '../types';
+import { Plot, PlotStructureNode } from '../model.types';
 import { RenderPlantGrid, RenderSubplotGrid } from '../components/PlantSubplotGrids';
 import { AccessionAutocomplete } from '../components/AccessionAutocomplete';
 

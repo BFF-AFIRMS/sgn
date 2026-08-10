@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useMemo } from 'react';
-import { Plot } from '../types';
+import { Plot } from '../model.types';
 import { useLayoutConfig } from './LayoutConfigContext';
+import { FieldMapContextProps } from '../context.types';
 
 export interface GridBounds {
     minCol: number;
@@ -15,6 +16,7 @@ interface PlotGridContextType {
     plotList: Plot[];
     bounds: GridBounds;
     renderBounds: GridBounds;
+    svgDimensions: { width: number; height: number };
     gridMatrix: Plot[][];
 
     dimensions: { rows: number; cols: number };
@@ -35,7 +37,7 @@ interface PlotGridContextType {
 
 const PlotGridContext = createContext<PlotGridContextType | undefined>(undefined);
 
-export const PlotGridProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const PlotGridProvider: React.FC<FieldMapContextProps> = ({ children }) => {
     const { topBorder, bottomBorder, leftBorder, rightBorder } = useLayoutConfig();
     const [plotObject, setPlotObject] = useState<Record<string, Plot>>({});
     const [dimensions, setDimensions] = useState({ rows: 0, cols: 0 });
@@ -117,6 +119,14 @@ export const PlotGridProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             numCols: rMaxCol - rMinCol + 1
         };
     }, [bounds, topBorder, bottomBorder, leftBorder, rightBorder]);
+
+    const svgDimensions = useMemo(() => {
+        return {
+            width: (renderBounds.numCols + 1) * 55 + 50,
+            height: (renderBounds.numRows + 1) * 55 + 50
+        };
+    }, [renderBounds]);
+
 
     const parsePlotData = (data: any[]) => {
         const mapped: Record<string, Plot> = {};
@@ -327,6 +337,7 @@ export const PlotGridProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             setDimensions,
             bounds,
             renderBounds,
+            svgDimensions,
             parsePlotData,
             fillerAccessionId,
             setFillerAccessionId,

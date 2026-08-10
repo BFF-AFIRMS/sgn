@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useMemo, useEffect } from 'react';
-import { Plot } from '../types';
+import { Plot } from '../model.types';
 import { usePlotGrid } from './PlotGridContext';
+import { FieldMapContextProps } from '../context.types';
 
 interface ControlContextType {
     showControlsSection: boolean;
@@ -14,7 +15,7 @@ interface ControlContextType {
 
 const ControlContext = createContext<ControlContextType | undefined>(undefined);
 
-export const ControlProvider: React.FC<{ trialId: string; children: React.ReactNode }> = ({ trialId, children }) => {
+export const ControlProvider: React.FC<FieldMapContextProps> = ({ trialId, children }) => {
     const { plotList } = usePlotGrid();
     const [showControlsSection, setShowControlsSection] = useState(false);
     const [selectedControlPlot, setSelectedControlPlot] = useState('');

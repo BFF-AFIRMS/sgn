@@ -1,4 +1,4 @@
-import { Plot } from '../types';
+import { Plot } from '../model.types';
 
 export interface CSVDownloadOpts {
     accession: boolean;

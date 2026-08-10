@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState } from 'react';
 import { usePlotGrid } from './PlotGridContext';
+import { FieldMapContextProps } from '../context.types';
 
 interface DataFetchContextType {
 	applyDimensions: (rowsInput: string, colsInput: string, trialId: string, fillerAccessionInput?: string) => Promise<void>;
@@ -7,10 +8,10 @@ interface DataFetchContextType {
 
 const DataFetchContext = createContext<DataFetchContextType | undefined>(undefined);
 
-export const DataFetchProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const DataFetchProvider: React.FC<FieldMapContextProps> = ({ trialId, children }) => {
 	const { plotList, setFillerAccessionId, setDimensions } = usePlotGrid();
 
-    const applyDimensions = async (rowsInput: string, colsInput: string, trialId: string, fillerAccessionInput?: string) => {
+    const applyDimensions = async (rowsInput: string, colsInput: string, fillerAccessionInput?: string) => {
         const rows = parseInt(rowsInput) || 0;
         const cols = parseInt(colsInput) || 0;
         const numRealPlots = plotList.length;

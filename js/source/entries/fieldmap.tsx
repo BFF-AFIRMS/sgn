@@ -1,13 +1,12 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { createRoot } from 'react-dom/client';
-import { useZoomPan } from '../include/fieldmap/hooks/useZoomPan';
 import { 
     Plot, 
     HeatmapValue, 
     TrialDetails, 
     PlotStructureNode,
     DownloadOpts
-} from '../include/fieldmap/types';
+} from '../include/fieldmap/model.types';
 import { 
     trial_colors, 
     trial_colors_text, 
@@ -37,6 +36,8 @@ import { PlotGridProvider, usePlotGrid } from '../include/fieldmap/contexts/Plot
 import { ControlProvider } from '../include/fieldmap/contexts/ControlContext';
 import { LayoutConfigProvider, useLayoutConfig } from '../include/fieldmap/contexts/LayoutConfigContext';
 import { useDataFetch } from '../include/fieldmap/contexts/DataFetchContext';
+import { useZoomPan, ZoomPanProvider } from '../include/fieldmap/contexts/ZoomPanContext';
+import { FieldMapContextProps } from '../include/fieldmap/context.types';
 
 // Declare external legacy global libraries
 // We must use 'any' here as Leaflet (L) and Turf are loaded globally as script includes 
@@ -65,7 +66,8 @@ const FieldMapContainerInner: React.FC<FieldMapContainerProps> = ({
 }) => {
     const {
         plotList,
-        bounds, renderBounds,
+        bounds,
+        svgDimensions: { width: svgWidth, height: svgHeight },
         parsePlotData,
         fillerAccessionId,
         gridMatrix,
@@ -177,14 +179,10 @@ const FieldMapContainerInner: React.FC<FieldMapContainerProps> = ({
             .catch(() => {});
     };
 
-    const svgWidth = (renderBounds.numCols + 1) * 55 + 50;
-    const svgHeight = (renderBounds.numRows + 1) * 55 + 50;
-
-    // Navigation Engine Hooks
     const { 
         zoom, pan, isDragging, containerRef, hasDragged, 
         handleMouseDown, handleMouseMove, handleMouseUpOrLeave, handleResetZoomPan, updateZoomAndPan 
-    } = useZoomPan(svgWidth, svgHeight);
+    } = useZoomPan();
 
     useEffect(() => {
         const handleExternalClick = (e: MouseEvent) => {
@@ -1000,15 +998,24 @@ const FieldMapContainerInner: React.FC<FieldMapContainerProps> = ({
 };
 
 export const FieldMapContainer: React.FC<FieldMapContainerProps> = (props) => {
-    return (
-        <LayoutConfigProvider>
-            <PlotGridProvider>
-                <ControlProvider trialId={props.trialId}>
-                    <FieldMapContainerInner {...props} />
-                </ControlProvider>
-            </PlotGridProvider>
-        </LayoutConfigProvider>
-    );
+    const buildProviderTree = (providers: React.FC<FieldMapContextProps>[]): React.ReactNode => {
+        if (providers.length === 0) {
+            return <FieldMapContainerInner {...props} />;
+        }
+        const [CurrentProvider, ...remainingProviders] = providers;
+        return (
+            <CurrentProvider trialId={props.trialId}>
+                {buildProviderTree(remainingProviders)}
+            </CurrentProvider>
+        );
+    };
+
+    return buildProviderTree([
+        LayoutConfigProvider,
+        PlotGridProvider,
+        ZoomPanProvider,
+        ControlProvider
+    ]);
 };
 
 export const init = (containerId: string, options: any) => {

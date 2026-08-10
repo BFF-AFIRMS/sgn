@@ -1,5 +1,5 @@
 import React from 'react';
-import { TrialDetails } from '../types';
+import { TrialDetails } from '../model.types';
 
 interface FieldMapHeaderPanelProps {
     selectedView: string;

@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { Plot, TrialDetails, HeatmapValue } from '../types';
+import { Plot, TrialDetails, HeatmapValue } from '../model.types';
 import { palette } from '../utils/functions';
 import { usePlotGrid } from '../contexts/PlotGridContext';
 import { useLayoutConfig } from '../contexts/LayoutConfigContext';
