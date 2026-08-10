@@ -197,7 +197,7 @@ has 'cache_expiry' => (
 has 'forbid_cache' => (
     isa => 'Bool',
     is => 'ro',
-    default => 0
+    default => 1
 );
 
 has 'prevent_transpose' => (
