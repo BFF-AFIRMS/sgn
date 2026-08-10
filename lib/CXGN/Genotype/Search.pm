@@ -590,6 +590,7 @@ sub get_genotype_info {
     my %genotype_hash;
     my %genotypeprop_hash;
     my %protocolprop_hash;
+    my %stock_synonyms = ();
     while (my ($stock_id, $igd_number_json, $protocol_id, $protocol_name, $stock_name, $stock_type_id, $stock_type_name, $genotype_id, $genotype_uniquename, $genotype_description, $project_id, $project_name, $project_description, $accession_id, $accession_uniquename, $full_count) = $h->fetchrow_array()) {
         my $igd_number_hash = $igd_number_json ? decode_json $igd_number_json : undef;
         my $igd_number = $igd_number_hash ? $igd_number_hash->{'igd number'} : undef;
@@ -621,15 +622,14 @@ sub get_genotype_info {
             }
         }
 
-        my $stock_object = CXGN::Stock::Accession->new({schema=>$self->bcs_schema, stock_id=>$stock_obj_id});
-
         push @genotype_id_array, $genotype_id;
+        $stock_synonyms{$stock_id} = [];
 
+        # Reminder: Synonyms gets added after this loop
         $genotype_hash{$genotype_id} = {
             markerProfileDbId => $genotype_id,
             germplasmDbId => $germplasmDbId,
             germplasmName => $germplasmName,
-            synonyms => $stock_object->synonyms,
             stock_id => $stock_id,
             stock_name => $stock_name,
             stock_type_id => $stock_type_id,
@@ -646,6 +646,21 @@ sub get_genotype_info {
         };
         $protocolprop_hash{$protocol_id}++;
         $total_count = $full_count;
+    }
+
+    # Get stockprop information outside of the while loop in one query
+    my @stock_ids = ( keys %stock_synonyms );
+    my $stockprop_rs = $self->bcs_schema->resultset('Stock::Stockprop')->search(
+        {'stock_id' => {-in => \@stock_ids}}
+    );
+    while (my $stockprop = $stockprop_rs->next()) {
+        my $stock_id = $stockprop->stock_id();
+        my $synonym = $stockprop->value();
+        push @{$stock_synonyms{$stock_id}}, $synonym;
+    }
+    foreach my $genotype_id ( keys %genotype_hash ) {
+        my $stock_id = $genotype_hash{$genotype_id}->{stock_id};
+        $genotype_hash{$genotype_id}->{synonyms} = $stock_synonyms{$stock_id};
     }
 
     my @found_protocolprop_ids = keys %protocolprop_hash;
@@ -1073,6 +1088,8 @@ sub init_genotype_iterator {
     $h->execute();
     my @genotypeprop_infos;
     my %seen_protocol_ids;
+
+    my %stock_synonyms = ();
     while (my ($stock_id, $igd_number_json, $protocol_id, $protocol_name, $stock_name, $stock_type_id, $stock_type_name, $genotype_id, $genotype_uniquename, $genotype_description, $project_id, $project_name, $project_description, $accession_id, $accession_uniquename, $full_count) = $h->fetchrow_array()) {
 
         my $germplasmName = '';
@@ -1104,13 +1121,13 @@ sub init_genotype_iterator {
             }
         }
 
-        my $stock_object = CXGN::Stock::Accession->new({schema=>$self->bcs_schema, stock_id=>$stock_obj_id});
+        $stock_synonyms{$stock_id} = [];
 
+        # Reminder: Synonyms gets added after this loop
         my %genotypeprop_info = (
             markerProfileDbId => $genotype_id,
             germplasmDbId => $germplasmDbId,
             germplasmName => $germplasmName,
-            synonyms => $stock_object->synonyms,
             stock_id => $stock_id,
             stock_name => $stock_name,
             stock_type_id => $stock_type_id,
@@ -1128,6 +1145,20 @@ sub init_genotype_iterator {
         );
         $seen_protocol_ids{$protocol_id}++;
         push @genotypeprop_infos, \%genotypeprop_info;
+    }
+
+    # Get stockprop information outside of the while loop in one query
+    my @stock_ids = ( keys %stock_synonyms );
+    my $stockprop_rs = $self->bcs_schema->resultset('Stock::Stockprop')->search(
+        {'stock_id' => {-in => \@stock_ids}}
+    );
+    while (my $stockprop = $stockprop_rs->next()) {
+        my $stock_id = $stockprop->stock_id();
+        my $synonym = $stockprop->value();
+        push @{$stock_synonyms{$stock_id}}, $synonym;
+    }
+    foreach my $info (@genotypeprop_infos) {
+        $info->{synonyms} = $stock_synonyms{$info->{stock_id}};
     }
 
     $self->_genotypeprop_infos(\@genotypeprop_infos);
