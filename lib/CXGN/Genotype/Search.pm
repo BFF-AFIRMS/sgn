@@ -505,9 +505,7 @@ sub get_genotype_info {
             type_id => $tissue_sample_of_cvterm_id
         });
         my @tissue_sample_ids = map { $_->subject_id() } $tissue_samples_rs->all();
-        if (scalar(@parent_stock_list)>0){
-            push @$tissue_sample_list, @tissue_sample_ids;
-        }
+        push @$tissue_sample_list, @tissue_sample_ids;
     }
     if ($tissue_sample_list && scalar(@$tissue_sample_list)>0) {
         my $stock_sql = join ("," , @$tissue_sample_list);
@@ -533,6 +531,12 @@ sub get_genotype_info {
             my $json_val = encode_json $_;
             push @where_clause, "genotype_values.value \\@> $json_val"."::jsonb";
         }
+    }
+
+    # If there is no where_clause at this point, there is likely an upstream mistake
+    # and we should return 0 genotypes, instead of returning all of them.
+    if (scalar(@where_clause)==0) {
+        push @where_clause, "false";
     }
 
     # Prevent partial duplicate records from LEFT JOIN
@@ -926,9 +930,7 @@ sub init_genotype_iterator {
             type_id => $tissue_sample_of_cvterm_id
         });
         my @tissue_sample_ids = map { $_->subject_id() } $tissue_samples_rs->all();
-        if (scalar(@parent_stock_list)>0){
-            push @$tissue_sample_list, @tissue_sample_ids;
-        }
+        push @$tissue_sample_list, @tissue_sample_ids;
     }
     if ($tissue_sample_list && scalar(@$tissue_sample_list)>0) {
         my $stock_sql = join ("," , @$tissue_sample_list);
@@ -959,6 +961,12 @@ sub init_genotype_iterator {
             my $json_val = encode_json $_;
             push @where_clause, "genotype_values.value \\@> $json_val"."::jsonb";
         }
+    }
+
+    # If there is no where_clause at this point, there is likely an upstream mistake
+    # and we should return 0 genotypes, instead of returning all of them.
+    if (scalar(@where_clause)==0) {
+        push @where_clause, "false";
     }
 
     # Prevent partial duplicate records from LEFT JOIN
