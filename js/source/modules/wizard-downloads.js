@@ -112,7 +112,6 @@ export function WizardDownloads(main_id,wizard){
         }
         var url = document.location.origin+'/breeders/download_gbs_action';
         var format = "accession_ids";
-        tissue_samples.length > 0 ? 'tissue_sample_ids' : 'accession_ids';
         var ids = accession_ids;
         if (tissue_samples.length > 0) {
           ids = tissue_sample_ids;
