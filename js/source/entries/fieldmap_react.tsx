@@ -76,7 +76,9 @@ const FieldMapContainerInner: React.FC<FieldMapContainerProps> = ({
         fillerAccessionId,
         gridMatrix,
         setDimensions,
-        setFillerAccessionId
+        setFillerAccessionId,
+        isTransposed,
+        mapRotation
     } = usePlotGrid();
 
     const {
@@ -92,6 +94,7 @@ const FieldMapContainerInner: React.FC<FieldMapContainerProps> = ({
     const [selectedViewLabel, setSelectedViewLabel] = useState<string>('');
     const [variables, setVariables] = useState<Record<string, string>>({});
     const [selectedView, setSelectedView] = useState<string>('fieldmap');
+    const [northArrowAngle, setNorthArrowAngle] = useState<number>(0);
     const [displayLinkedTrials, setDisplayLinkedTrials] = useState(false);
     const [linkedTrialsList, setLinkedTrialsList] = useState<TrialDetails[]>([]);
     const [activeTrialIds, setActiveTrialIds] = useState<string[]>([trialId]);
@@ -164,7 +167,19 @@ const FieldMapContainerInner: React.FC<FieldMapContainerProps> = ({
         fetchObservationUnits();
         loadVariables();
         loadSpatialAdjustments();
+        loadNorthArrowAngle();
     }, [activeTrialIds]);
+
+    const loadNorthArrowAngle = () => {
+        fetch(`/ajax/breeders/trial/${trialId}/north_arrow_angle`)
+            .then(res => res.json())
+            .then(data => {
+                if (data?.north_arrow_angle !== undefined && data.north_arrow_angle !== null) {
+                    setNorthArrowAngle(Number(data.north_arrow_angle));
+                }
+            })
+            .catch(() => {});
+    };
 
     const svgWidth = (renderBounds.numCols + 1) * 55 + 50;
     const svgHeight = (renderBounds.numRows + 1) * 55 + 50;
@@ -174,6 +189,18 @@ const FieldMapContainerInner: React.FC<FieldMapContainerProps> = ({
         zoom, pan, isDragging, containerRef, hasDragged, 
         handleMouseDown, handleMouseMove, handleMouseUpOrLeave, handleResetZoomPan, updateZoomAndPan 
     } = useZoomPan(svgWidth, svgHeight);
+
+    const northArrowRotation = useMemo(() => {
+        let angle = northArrowAngle + mapRotation;
+        if (invertCols && invertRows) {
+            return angle + 180;
+        } else if (invertCols) {
+            return -angle;
+        } else if (invertRows) {
+            return 180 - angle;
+        }
+        return angle;
+    }, [northArrowAngle, mapRotation, invertCols, invertRows]);
 
     useEffect(() => {
         const handleExternalClick = (e: MouseEvent) => {
@@ -615,11 +642,20 @@ const FieldMapContainerInner: React.FC<FieldMapContainerProps> = ({
             })
             : Promise.resolve();
 
-        Promise.all([putPromise, postPromise])
+        const northArrowPromise = fetch(`/ajax/breeders/trial/${trialId}/north_arrow_angle`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({
+                north_arrow_angle: String(northArrowAngle)
+            })
+        });
+
+        Promise.all([putPromise, postPromise, northArrowPromise])
             .then(() => fetch(`/ajax/breeders/trial/${trialId}/refresh_cache`, { method: 'POST' }))
             .then(() => {
                 alert('Field Plot layout submitted successfully!');
                 fetchObservationUnits();
+                loadNorthArrowAngle();
             })
             .catch(() => {
                 setLoading(false);
@@ -845,6 +881,8 @@ const FieldMapContainerInner: React.FC<FieldMapContainerProps> = ({
                             downloadHeatmapImage={downloadHeatmapImage}
                             submitFieldLayout={submitFieldLayout}
                             setShowDeleteTraitModal={setShowDeleteTraitModal}
+                            northArrowAngle={northArrowAngle}
+                            setNorthArrowAngle={setNorthArrowAngle}
                         />
 
                         <div
@@ -855,6 +893,31 @@ const FieldMapContainerInner: React.FC<FieldMapContainerProps> = ({
                             onMouseUp={handleMouseUpOrLeave}
                             onMouseLeave={handleMouseUpOrLeave}
                         >
+                            {/* North Arrow HUD overlay */}
+                            {!isTransposed && (
+                                <div
+                                    className="tw:absolute tw:top-4 tw:right-4 tw:z-50 tw:flex tw:items-center tw:justify-center tw:pointer-events-none tw:bg-white/85 tw:rounded-full tw:border tw:border-[#ccc] tw:shadow-sm"
+                                    style={{ width: '70px', height: '70px' }}
+                                >
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        viewBox="0 0 200 200"
+                                        width="32"
+                                        height="60"
+                                        overflow="visible"
+                                        style={{
+                                            transform: `rotate(${northArrowRotation}deg) translateY(-10px)`,
+                                            transformOrigin: 'center center',
+                                            transition: 'transform 0.2s ease-out'
+                                        }}
+                                    >
+                                        <path style={{ fill: '#ffffff', stroke: 'rgb(0, 0, 0)', strokeLinecap: 'round', strokeLinejoin: 'round', strokeWidth: '7px' }} d="M 99.395 63.781 L 99.395 238.843 L 7.257 292.897 L 99.395 63.781 Z" />
+                                        <path style={{ stroke: 'rgb(0, 0, 0)', strokeLinecap: 'round', strokeLinejoin: 'round', strokeWidth: '7px', transformBox: 'fill-box', transformOrigin: '50% 50%' }} d="M 191.623 292.345 L 191.623 117.283 L 99.485 63.229 L 191.623 292.345 Z" transform="matrix(-1, 0, 0, -1, -0.000015, 0.000014)" />
+                                        <text style={{ fontFamily: 'Roboto, sans-serif', fontSize: '70px', fontWeight: 572, whiteSpace: 'pre', fill: '#000000', transform: `rotate(${-northArrowRotation}deg)`, transformBox: 'fill-box', transformOrigin: 'center' }} x="76.43" y="35">N</text>
+                                    </svg>
+                                </div>
+                            )}
+
                             {/* Zoom controls HUD */}
                             <div className="tw:absolute tw:bottom-4 tw:right-4 tw:z-50 tw:flex tw:flex-col tw:gap-1 tw:bg-white/80 tw:p-1.5 tw:rounded-md tw:border tw:border-[#ccc] tw:shadow-sm">
                                 <button 

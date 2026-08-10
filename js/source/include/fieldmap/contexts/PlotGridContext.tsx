@@ -28,6 +28,9 @@ interface PlotGridContextType {
 
     transposeLayout: () => void;
     rotateLayout: () => void;
+
+    isTransposed: boolean;
+    mapRotation: number;
 }
 
 const PlotGridContext = createContext<PlotGridContextType | undefined>(undefined);
@@ -37,6 +40,8 @@ export const PlotGridProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const [plotObject, setPlotObject] = useState<Record<string, Plot>>({});
     const [dimensions, setDimensions] = useState({ rows: 0, cols: 0 });
     const [fillerAccessionId, setFillerAccessionId] = useState<string | undefined>(undefined);
+    const [isTransposed, setIsTransposed] = useState<boolean>(false);
+    const [mapRotation, setMapRotation] = useState<number>(0);
 
     const plotList = useMemo(() => {
         return Object.values(plotObject);
@@ -118,6 +123,9 @@ export const PlotGridProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         const pseudo_layout: Record<string, number> = {};
 
         let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+
+        setIsTransposed(false);
+        setMapRotation(0);
 
         data.forEach(plot => {
             let x = parseInt(plot.observationUnitPosition?.positionCoordinateX);
@@ -271,6 +279,7 @@ export const PlotGridProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     };
 
     const transposeLayout = () => {
+        setIsTransposed(t => !t);
         setPlotObject(current => {
             const transposed: Record<string, Plot> = {};
             for (const [id, plot] of Object.entries(current)) {
@@ -289,6 +298,7 @@ export const PlotGridProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     };
 
     const rotateLayout = () => {
+        setMapRotation(r => (r + 90) % 360);
         const { minCol, maxCol } = bounds;
         setPlotObject(current => {
             const rotated: Record<string, Plot> = {};
@@ -323,7 +333,9 @@ export const PlotGridProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             gridMatrix,
             transposeLayout,
             rotateLayout,
-            recalculateLayout
+            recalculateLayout,
+            isTransposed,
+            mapRotation
         }}>
             {children}
         </PlotGridContext.Provider>

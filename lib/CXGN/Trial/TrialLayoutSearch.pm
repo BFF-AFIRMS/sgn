@@ -412,7 +412,7 @@ sub _include_observations {
 
     foreach (@$data){
 
-        if ( ($_->{phenotype_value} && $_->{phenotype_value} ne "") || $_->{phenotype_value} eq '0' ) {
+        if (defined $_->{phenotype_value} && $_->{phenotype_value} ne "") {
             my $observation_id = "$_->{phenotype_id}";
             my $observation_unit_id = "$_->{obsunit_stock_id}";
             my $additional_info;

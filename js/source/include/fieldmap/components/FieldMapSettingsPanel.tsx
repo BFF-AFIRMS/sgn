@@ -15,6 +15,8 @@ interface FieldMapSettingsPanelProps {
     downloadHeatmapImage: () => void;
     submitFieldLayout: () => void;
     setShowDeleteTraitModal: (val: boolean) => void;
+    northArrowAngle: number;
+    setNorthArrowAngle: (val: number) => void;
 }
 
 export const FieldMapSettingsPanel: React.FC<FieldMapSettingsPanelProps> = ({
@@ -27,7 +29,9 @@ export const FieldMapSettingsPanel: React.FC<FieldMapSettingsPanelProps> = ({
     printFieldMap,
     downloadHeatmapImage,
     submitFieldLayout,
-    setShowDeleteTraitModal
+    setShowDeleteTraitModal,
+    northArrowAngle,
+    setNorthArrowAngle
 }) => {
     const {
         topBorder, setTopBorder,
@@ -106,6 +110,18 @@ export const FieldMapSettingsPanel: React.FC<FieldMapSettingsPanelProps> = ({
             <div className="form-inline">
                 <label className="tw:mr-1.25">Label Size:</label>
                 <input type="number" className="form-control tw:w-15" value={labelSize} onChange={e => setLabelSize(parseInt(e.target.value) || 10)} />
+            </div>
+            <div className="form-inline">
+                <label className="tw:mr-1.25">North Angle (°):</label>
+                <input
+                    type="number"
+                    className="form-control tw:w-20"
+                    value={northArrowAngle}
+                    onChange={e => {
+                        const val = e.target.value;
+                        setNorthArrowAngle(val === '' ? 0 : parseFloat(val) || 0);
+                    }}
+                />
             </div>
             <div className="tw:flex tw:gap-2.5 tw:items-center">
                 <label className="tw:m-0">Include Borders:</label>
