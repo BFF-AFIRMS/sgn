@@ -2313,6 +2313,7 @@ sub get_stock_datatables_genotype_data_GET  {
     my $c = shift;
     my $limit = $c->req->param('length') || 1000;
     my $offset = $c->req->param('start') || 0;
+    my $forbid_cache = $c->req->param('forbid_cache') || 0;
     my $stock_id = $c->stash->{stock_row}->stock_id();
 
     my $schema = $c->dbic_schema("Bio::Chado::Schema", 'sgn_chado');
@@ -2324,12 +2325,19 @@ sub get_stock_datatables_genotype_data_GET  {
         bcs_schema=>$schema,
         people_schema=>$people_schema,
         cache_root=>$c->config->{cache_file_path},
+        forbid_cache=>$forbid_cache,
         genotypeprop_hash_select=>[],
         protocolprop_top_key_select=>[],
         protocolprop_marker_hash_select=>[]
     );
     if ($stock_type eq 'accession') {
         $genotype_search_params{accession_list} = [$stock_id];
+    } elsif ($stock_type eq 'plot') {
+        $genotype_search_params{plot_list} = [$stock_id];
+    } elsif ($stock_type eq 'subplot') {
+        $genotype_search_params{subplot_list} = [$stock_id];
+    } elsif ($stock_type eq 'plant') {
+        $genotype_search_params{plant_list} = [$stock_id];
     } elsif ($stock_type eq 'tissue_sample') {
         $genotype_search_params{tissue_sample_list} = [$stock_id];
     }

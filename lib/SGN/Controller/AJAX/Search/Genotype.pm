@@ -49,11 +49,15 @@ sub genotyping_data_search_GET : Args(0) {
     my $limit = $c->req->param('length');
     my $offset = $c->req->param('start');
 
+
     my $genotypes_search = CXGN::Genotype::Search->new({
         bcs_schema=>$bcs_schema,
         people_schema=>$people_schema,
         cache_root=>$c->config->{cache_file_path},
         accession_list=>$clean_inputs->{accession_id_list},
+        plot_list=>$clean_inputs->{plot_list},
+        subplot_list=>$clean_inputs->{subplot_list},
+        plant_list=>$clean_inputs->{plant_list},
         tissue_sample_list=>$clean_inputs->{tissue_sample_id_list},
         genotype_data_project_list=>$clean_inputs->{genotyping_data_project_id_list},
         protocol_id_list=>$clean_inputs->{protocol_id_list},

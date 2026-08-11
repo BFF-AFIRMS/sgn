@@ -216,10 +216,17 @@ sub create_dataset_geno_data_query_jobs {
     my $dataset_id = $c->stash->{dataset_id};
 
     my $data = $self->get_model($c)->get_dataset_data($dataset_id);
-
     my $geno_protocol = $self->get_dataset_genotyping_protocol($c);
 
-    if ($data->{categories}->{accessions}->[0])
+    my $stock_type;
+    if ($data->{categories}->{plots}->[0]){
+        $stock_type = 'plot';
+    } elsif ($data->{categories}->{accessions}->[0]){
+        $stock_type = 'accession';
+    }
+    $c->stash->{stock_type} = $stock_type;
+
+    if ($stock_type)
     {
            $self->dataset_genotype_query_jobs($c);
     }
@@ -244,6 +251,7 @@ sub dataset_genotype_query_jobs {
     my $pop_id = 'dataset_' . $dataset_id;
     my $data_dir =  $c->stash->{solgs_datasets_dir};
     my $pop_type = 'dataset';
+    my $stock_type = $c->stash->{stock_type};
 
     $c->controller('solGS::Files')->genotype_file_name($c, $pop_id);
     my $geno_file = $c->stash->{genotype_file_name};
@@ -254,6 +262,7 @@ sub dataset_genotype_query_jobs {
     'genotype_file'  => $geno_file,
     'genotyping_protocol_id'=> $protocol_id,
     'r_temp_file'    => "genotypes-list-genotype-data-query-${pop_id}",
+    'stock_type'     => $stock_type,
     };
 
     $c->stash->{r_temp_file} = $args->{r_temp_file};

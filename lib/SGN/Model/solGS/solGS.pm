@@ -778,7 +778,7 @@ sub first_stock_genotype_data {
     my ($self, $accessions_ids, $protocol_id) = @_;
 
     my $geno_data = do { \my $geno_data};
-    my $geno_search = $self->genotypes_list_genotype_data($accessions_ids, $protocol_id);
+    my $geno_search = $self->genotypes_list_genotype_data($accessions_ids, $protocol_id, 'accession_list');
     my $count = 1;
     
     while (my $geno = $geno_search->get_next_genotype_info())
@@ -848,7 +848,9 @@ sub structure_genotype_data {
 }
 
 sub genotypes_list_genotype_data {
-    my ( $self, $genotypes_ids, $protocol_id ) = @_;
+    my ( $self, $genotypes_ids, $protocol_id, $stock_type ) = @_;
+
+    print STDERR "genotypes_list_genotype_data stock_type: $stock_type, genotypes_ids: " . Dumper($genotypes_ids);
 
     my $protocol_detail;
     if ( !$protocol_id ) {
@@ -856,10 +858,30 @@ sub genotypes_list_genotype_data {
         $protocol_id = $protocol_detail->{protocol_id};
     }
 
+    my ($accession_list, $plot_list, $subplot_list, $plant_list, $tissue_sample_list);
+    if ( $stock_type eq 'accession'){
+        $accession_list = $genotypes_ids;
+    } elsif ($stock_type eq 'plot') {
+        $plot_list = $genotypes_ids;
+    } elsif ($stock_type eq 'subplot') {
+        $subplot_list = $genotypes_ids;
+    } elsif ($stock_type eq 'plant') {
+        $plant_list = $genotypes_ids;
+    } elsif ($stock_type eq 'tissue_sample') {
+        $tissue_sample_list = $genotypes_ids;
+    } else {
+        # default to accession for legacy support
+        $accession_list = $genotypes_ids;
+    }
+
     my $geno_search = CXGN::Genotype::Search->new(
         bcs_schema                               => $self->schema(),
         people_schema                            => $self->people_schema,
-        accession_list                           => $genotypes_ids,
+        accession_list                           => $accession_list,
+        plot_list                                => $plot_list,
+        subplot_list                             => $subplot_list,
+        plant_list                               => $plant_list,
+        tissue_sample_list                       => $tissue_sample_list,
         protocol_id_list                         => [$protocol_id],
         genotypeprop_hash_select                 => ['DS'],
         protocolprop_top_key_select              => [],
@@ -2083,14 +2105,18 @@ sub get_all_genotyping_protocols {
 }
 
 sub get_genotypes_from_dataset {
-    my ( $self, $dataset_id ) = @_;
+    my ( $self, $dataset_id, $stock_type ) = @_;
 
-    my $data = $self->get_dataset_data($dataset_id);
-    my @accessions_ids;
+    my @stock_ids;
 
-    if ( $data->{categories}->{accessions}->[0] ) {
-        @accessions_ids = @{$data->{categories}->{accessions}};
+    # If we are requesting genotypes for a particular stock type
+    if ($stock_type){
+        my $stock_category = $stock_type . 's';
+        my $data = $self->get_dataset_data($dataset_id);
+        @stock_ids = @{$data->{categories}->{$stock_category}};
     }
+    # Otherwise, default to retrieving accessions. This will occur
+    # if only a project (ex. trial) is specified.
     else {
         my $dataset = CXGN::Dataset->new(
             {
@@ -2103,14 +2129,15 @@ sub get_genotypes_from_dataset {
         my $accessions = $dataset->retrieve_accessions();
         if ($accessions->[0]) {
             for (my $i=0; $i < scalar(@$accessions); $i++) {
-                push @accessions_ids, $accessions->[$i][0];
+                push @stock_ids, $accessions->[$i][0];
             }
         }
+        $stock_type = 'accession_list';
     }
     
-    @accessions_ids = uniq(@accessions_ids) if @accessions_ids;
+    @stock_ids = uniq(@stock_ids) if @stock_ids;
 
-    return \@accessions_ids;
+    return \@stock_ids;
 }
 
 sub get_dataset_data {

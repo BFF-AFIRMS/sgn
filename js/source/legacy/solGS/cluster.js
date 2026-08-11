@@ -792,7 +792,7 @@ solGS.cluster = {
     lists = list.addDataStrAttr(lists);
     lists = list.addDataTypeAttr(lists, "");
 
-    var datasets = solGS.dataset.getDatasetPops(["accessions", "trials"]);
+    var datasets = solGS.dataset.getDatasetPops(["accessions", "plots", "subplots", "plants", "tissue_samples", "trials"]);
     datasets = solGS.dataset.addDataTypeAttr(datasets, "Clustering");
     clusterPops = [lists, datasets];
 

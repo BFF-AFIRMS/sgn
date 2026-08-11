@@ -12,6 +12,9 @@ my $genotypes_search = CXGN::Genotype::Search->new({
     bcs_schema=>$schema,
     people_schema=>$people_schema,
     accession_list=>$accession_list,
+    plot_list=>$plot_list,
+    subplot_list=>$subplot_list,
+    plant_list=>$plant_list,
     tissue_sample_list=>$tissue_sample_list,
     trial_list=>$trial_list,
     protocol_id_list=>$protocol_id_list,
@@ -91,6 +94,21 @@ has 'markerprofile_id_list' => (
 );
 
 has 'accession_list' => (
+    isa => 'ArrayRef[Int]|Undef',
+    is => 'ro',
+);
+
+has 'plot_list' => (
+    isa => 'ArrayRef[Int]|Undef',
+    is => 'ro',
+);
+
+has 'subplot_list' => (
+    isa => 'ArrayRef[Int]|Undef',
+    is => 'ro',
+);
+
+has 'plant_list' => (
     isa => 'ArrayRef[Int]|Undef',
     is => 'ro',
 );
@@ -244,6 +262,11 @@ has '_plot_cvterm_id' => (
     is => 'rw'
 );
 
+has '_subplot_cvterm_id' => (
+    isa => 'Int',
+    is => 'rw'
+);
+
 has '_plant_cvterm_id' => (
     isa => 'Int',
     is => 'rw'
@@ -376,6 +399,9 @@ sub get_genotype_info {
     my $protocol_id_list = $self->protocol_id_list;
     my $markerprofile_id_list = $self->markerprofile_id_list;
     my $accession_list = $self->accession_list;
+    my $plot_list = $self->plot_list;
+    my $subplot_list = $self->subplot_list;
+    my $plant_list = $self->plant_list;
     my $tissue_sample_list = $self->tissue_sample_list;
     my $genotyping_plate_list = $self->genotyping_plate_list;
     my $marker_name_list = $self->marker_name_list;
@@ -405,7 +431,12 @@ sub get_genotype_info {
     my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'accession', 'stock_type')->cvterm_id();
     my $tissue_sample_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'tissue_sample', 'stock_type')->cvterm_id();
     my $plot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'plot', 'stock_type')->cvterm_id();
+    my $subplot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'subplot', 'stock_type')->cvterm_id();
     my $plant_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'plant', 'stock_type')->cvterm_id();
+
+    my $plot_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'plot_of', 'stock_relationship')->cvterm_id();
+    my $subplot_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'subplot_of', 'stock_relationship')->cvterm_id();
+    my $plant_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'plant_of', 'stock_relationship')->cvterm_id();
     my $tissue_sample_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'tissue_sample_of', 'stock_relationship')->cvterm_id();
 
     my @trials_accessions;
@@ -457,6 +488,27 @@ sub get_genotype_info {
         push @where_clause, " ( stock.stock_id in ($accession_sql) OR (accession_of_tissue_sample.stock_id in ($accession_sql) AND accession_of_tissue_sample.type_id = $accession_cvterm_id) ) ";
         push @where_clause, "stock.type_id in ($accession_cvterm_id, $tissue_sample_cvterm_id)";
     }
+    # Other stocks to fetch tissue samples of
+    my @parent_stock_list;
+    if ($plot_list && scalar(@$plot_list)>0) {
+        push @parent_stock_list, @$plot_list;
+    }
+    if ($subplot_list && scalar(@$subplot_list)>0) {
+        push @parent_stock_list, @$subplot_list;
+    }
+    if ($plant_list && scalar(@$plant_list)>0) {
+        push @parent_stock_list, @$plant_list;
+    }
+    if (scalar(@parent_stock_list)>0){
+        my $tissue_samples_rs = $schema->resultset('Stock::StockRelationship')->search({
+            object_id => {-in => @parent_stock_list},
+            type_id => $tissue_sample_of_cvterm_id
+        });
+        my @tissue_sample_ids = map { $_->subject_id() } $tissue_samples_rs->all();
+        if (scalar(@parent_stock_list)>0){
+            push @$tissue_sample_list, @tissue_sample_ids;
+        }
+    }
     if ($tissue_sample_list && scalar(@$tissue_sample_list)>0) {
         my $stock_sql = join ("," , @$tissue_sample_list);
         push @where_clause, "stock.stock_id in ($stock_sql)";
@@ -483,6 +535,9 @@ sub get_genotype_info {
         }
     }
 
+    # Prevent partial duplicate records from LEFT JOIN
+    # final records can either be accessions, or they can be a tissue sample that must be linked to an accession
+    push @where_clause, "(accession_of_tissue_sample.stock_id IS NOT NULL OR stock.type_id = $accession_cvterm_id)";
     my $where_clause = scalar(@where_clause)>0 ? " WHERE " . (join (" AND " , @where_clause)) : '';
 
     my $offset_clause = '';
@@ -505,7 +560,7 @@ sub get_genotype_info {
         FROM stock
         JOIN cvterm AS stock_cvterm ON(stock.type_id = stock_cvterm.cvterm_id)
         LEFT JOIN stock_relationship ON(stock_relationship.subject_id=stock.stock_id AND stock_relationship.type_id = $tissue_sample_of_cvterm_id)
-        LEFT JOIN stock AS accession_of_tissue_sample ON(stock_relationship.object_id=accession_of_tissue_sample.stock_id)
+        LEFT JOIN stock AS accession_of_tissue_sample ON(stock_relationship.object_id=accession_of_tissue_sample.stock_id and accession_of_tissue_sample.type_id = $accession_cvterm_id)
         JOIN nd_experiment_stock ON(stock.stock_id=nd_experiment_stock.stock_id)
         JOIN nd_experiment USING(nd_experiment_id)
         JOIN nd_experiment_protocol USING(nd_experiment_id)
@@ -753,6 +808,9 @@ sub init_genotype_iterator {
     my $protocol_id_list = $self->protocol_id_list;
     my $markerprofile_id_list = $self->markerprofile_id_list;
     my $accession_list = $self->accession_list;
+    my $plot_list = $self->plot_list;
+    my $subplot_list = $self->subplot_list;
+    my $plant_list = $self->plant_list;
     my $tissue_sample_list = $self->tissue_sample_list;
     my $genotyping_plate_list = $self->genotyping_plate_list;
     my $marker_name_list = $self->marker_name_list;
@@ -789,10 +847,18 @@ sub init_genotype_iterator {
     $self->_tissue_sample_cvterm_id($tissue_sample_cvterm_id);
     my $plot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'plot', 'stock_type')->cvterm_id();
     $self->_plot_cvterm_id($plot_cvterm_id);
+    my $subplot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'subplot', 'stock_type')->cvterm_id();
+    $self->_subplot_cvterm_id($plot_cvterm_id);
+    my $plant_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'plant', 'stock_type')->cvterm_id();
+    $self->_plant_cvterm_id($plant_cvterm_id);
+
     my $plant_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'plant', 'stock_type')->cvterm_id();
     $self->_plant_cvterm_id($plant_cvterm_id);
     my $tissue_sample_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'tissue_sample_of', 'stock_relationship')->cvterm_id();
     $self->_tissue_sample_of_cvterm_id($tissue_sample_of_cvterm_id);
+    my $plot_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'plot_of', 'stock_relationship')->cvterm_id();
+    my $subplot_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'subplot_of', 'stock_relationship')->cvterm_id();
+    my $plant_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'plant_of', 'stock_relationship')->cvterm_id();
 
     my @trials_accessions;
     foreach (@$trial_list){
@@ -843,6 +909,28 @@ sub init_genotype_iterator {
         push @where_clause, " ( stock.stock_id in ($accession_sql) OR (accession_of_tissue_sample.stock_id in ($accession_sql) AND accession_of_tissue_sample.type_id = $accession_cvterm_id) ) ";
         push @where_clause, "stock.type_id in ($accession_cvterm_id, $tissue_sample_cvterm_id)";
     }
+    # Other stocks to fetch tissue samples of
+    my @parent_stock_list;
+    if ($plot_list && scalar(@$plot_list)>0) {
+        push @parent_stock_list, @$plot_list;
+    }
+    if ($subplot_list && scalar(@$subplot_list)>0) {
+        push @parent_stock_list, @$subplot_list;
+    }
+    if ($plant_list && scalar(@$plant_list)>0) {
+        push @parent_stock_list, @$plant_list;
+    }
+    if (scalar(@parent_stock_list)>0){
+        print STDERR "parent_stock_list: " . Dumper(\@parent_stock_list);
+        my $tissue_samples_rs = $schema->resultset('Stock::StockRelationship')->search({
+            object_id => {-in => @parent_stock_list},
+            type_id => $tissue_sample_of_cvterm_id
+        });
+        my @tissue_sample_ids = map { $_->subject_id() } $tissue_samples_rs->all();
+        if (scalar(@parent_stock_list)>0){
+            push @$tissue_sample_list, @tissue_sample_ids;
+        }
+    }
     if ($tissue_sample_list && scalar(@$tissue_sample_list)>0) {
         my $stock_sql = join ("," , @$tissue_sample_list);
         push @where_clause, "stock.stock_id in ($stock_sql)";
@@ -874,6 +962,9 @@ sub init_genotype_iterator {
         }
     }
 
+    # Prevent partial duplicate records from LEFT JOIN
+    # final records can either be accessions, or they can be a tissue sample that must be linked to an accession
+    push @where_clause, "(accession_of_tissue_sample.stock_id IS NOT NULL OR stock.type_id = $accession_cvterm_id)";
     my $where_clause = scalar(@where_clause)>0 ? " WHERE " . (join (" AND " , @where_clause)) : '';
 
     my $offset_clause = '';
@@ -954,7 +1045,7 @@ sub init_genotype_iterator {
         FROM stock
         JOIN cvterm AS stock_cvterm ON(stock.type_id = stock_cvterm.cvterm_id)
         LEFT JOIN stock_relationship ON(stock_relationship.subject_id=stock.stock_id AND stock_relationship.type_id = $tissue_sample_of_cvterm_id)
-        LEFT JOIN stock AS accession_of_tissue_sample ON(stock_relationship.object_id=accession_of_tissue_sample.stock_id)
+        LEFT JOIN stock AS accession_of_tissue_sample ON(stock_relationship.object_id=accession_of_tissue_sample.stock_id and accession_of_tissue_sample.type_id = $accession_cvterm_id)
         JOIN nd_experiment_stock ON(stock.stock_id=nd_experiment_stock.stock_id)
         JOIN nd_experiment USING(nd_experiment_id)
         JOIN nd_experiment_protocol USING(nd_experiment_id)
@@ -970,7 +1061,7 @@ sub init_genotype_iterator {
         $limit_clause
         $offset_clause;";
 
-    #print STDERR Dumper $q;
+    print STDERR Dumper $q;
     my $h = $schema->storage->dbh()->prepare($q);
     $h->execute();
     my @genotypeprop_infos;
