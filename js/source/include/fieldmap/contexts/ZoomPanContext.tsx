@@ -25,7 +25,7 @@ export interface ZoomPanContextType {
 
 const ZoomPanContext = createContext<ZoomPanContextType | undefined>(undefined);
 
-export const ZoomPanProvider: React.FC<FieldMapContextProps> = ({ trialId, children }) => {
+export const ZoomPanProvider: React.FC<FieldMapContextProps> = ({ children }) => {
 	const { svgDimensions: { width: svgWidth, height: svgHeight } } = usePlotGrid();
 
     const [zoom, setZoom] = useState<number>(1);

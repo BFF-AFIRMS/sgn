@@ -25,8 +25,8 @@ import { useView, ViewProvider } from '../include/fieldmap/contexts/ViewContext'
 import { DataFetchProvider, useDataFetch } from '../include/fieldmap/contexts/DataFetchContext';
 import { HeatmapProvider } from '../include/fieldmap/contexts/HeatmapContext';
 import { useSubmitGeoLayout } from '../include/fieldmap/hooks/useSubmitGeoLayout';
+import { GeoFieldMap } from '../include/fieldmap/components/GeoFieldMap';
 
-declare const BrAPIFieldmap: any;
 
 declare global {
     interface Window {
@@ -43,7 +43,6 @@ const FieldMap: React.FC<FieldMapProps> = ({
     hasColAndRowNumbers,
     hasSubplotEntries,
     hasPlantEntries,
-    authToken
 }) => {
     const {
         svgDimensions: { width: svgWidth, height: svgHeight },
@@ -57,14 +56,6 @@ const FieldMap: React.FC<FieldMapProps> = ({
         loading,
         setShowDownloadCSVModal,
     } = useModals();
-
-    const {
-        submitGeoLayout,
-    } = useSubmitGeoLayout();
-
-    const geoMapRef = useRef<HTMLDivElement | null>(null);
-    const leafletMapInstance = useRef<any>(null);
-
 
     const stockLabel = useMemo(() => {
         if (trialStockType === 'cross') return 'Cross';
@@ -82,7 +73,7 @@ const FieldMap: React.FC<FieldMapProps> = ({
 
 
     const { 
-        zoom, pan, isDragging, containerRef, hasDragged, 
+        zoom, pan, isDragging, containerRef, 
         handleMouseDown, handleMouseMove, handleMouseUpOrLeave
     } = useZoomPan();
 
@@ -99,45 +90,6 @@ const FieldMap: React.FC<FieldMapProps> = ({
         };
     }, []);
 
-    // Handle Leaflet GeoMap rendering
-    useEffect(() => {
-        if (selectedView === 'geofieldmap' && geoMapRef.current) {
-            if (leafletMapInstance.current) {
-                leafletMapInstance.current.remove();
-            }
-            try {
-                // Initialize custom Leaflet container mapping
-                const mapEl = geoMapRef.current;
-                mapEl.innerHTML = "<div id='geoflatmap_leaflet' style='width:100%; height:600px;'></div>";
-                
-                const fmInstance = new BrAPIFieldmap('#geoflatmap_leaflet', '/brapi/v2', {
-                    viewOnly: false,
-                    brapi_auth: authToken,
-                    defaultPos: [0, 0],
-                    defaultZoom: 2,
-                    plotScaleFactor: 1,
-                    style: { weight: 1, color: '#41b6c4', fillOpacity: 0.4 }
-                });
-                fmInstance.load(trialId).then((success: boolean) => {
-                    if (!success) {
-                        alert("No geo reference data in this trial!");
-                    }
-                });
-                leafletMapInstance.current = fmInstance.map;
-                window.geoFieldMapInstance = fmInstance;
-            } catch (e) {
-                console.error("Leaflet initialization failed", e);
-            }
-        }
-        return () => {
-            if (leafletMapInstance.current) {
-                leafletMapInstance.current.remove();
-                leafletMapInstance.current = null;
-            }
-            delete window.geoFieldMapInstance;
-        };
-    }, [selectedView, trialId, authToken]);
-
     return (
         <div className="tw:p-3.75">
             <FieldMapHeaderPanel />
@@ -145,12 +97,7 @@ const FieldMap: React.FC<FieldMapProps> = ({
             <FieldMapControlPanel />
 
             {selectedView === 'geofieldmap' ? (
-                <div key="geofieldmap-panel" className="panel panel-default">
-                    <div className="panel-body tw:flex tw:flex-col tw:gap-2.5">
-                        <div ref={geoMapRef} style={{ width: '100%', height: '600px' }}></div>
-                        <button className="btn btn-success tw:self-start" onClick={submitGeoLayout}>Submit Geo Layout Changes</button>
-                    </div>
-                </div>
+                <GeoFieldMap />
             ) : (
                 <div key="standard-fieldmap-panel" className="panel panel-default">
                     <div className="panel-body tw:grid">
