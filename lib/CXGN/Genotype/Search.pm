@@ -314,22 +314,26 @@ has '_protocolprop_top_key_select_arr' => (
 
 has '_selected_protocol_marker_info' => (
     isa => 'Ref',
-    is => 'rw'
+    is => 'rw',
+    default => sub {{}}
 );
 
 has '_selected_protocol_top_key_info' => (
     isa => 'Ref',
-    is => 'rw'
+    is => 'rw',
+    default => sub {{}}
 );
 
 has '_genotypeprop_infos' => (
     isa => 'ArrayRef',
-    is => 'rw'
+    is => 'rw',
+    default => sub {[]}
 );
 
 has '_genotypeprop_infos_counter' => (
     isa => 'Int',
-    is => 'rw'
+    is => 'rw',
+    default => 0,
 );
 
 has '_genotypeprop_hash_select_arr' => (
@@ -539,7 +543,7 @@ sub get_genotype_info {
     # is no where_clause at this point, there is likely an upstream mistake
     # and we should return 0 genotypes, instead of returning all of them.
     if ($has_parent_stock_filter && scalar(@where_clause)==0) {
-        push @where_clause, "false";
+        return;
     }
 
     # Prevent partial duplicate records from LEFT JOIN
@@ -987,7 +991,7 @@ sub init_genotype_iterator {
     # is no where_clause at this point, there is likely an upstream mistake
     # and we should return 0 genotypes, instead of returning all of them.
     if ($has_parent_stock_filter && scalar(@where_clause)==0) {
-        push @where_clause, "false";
+        return;
     }
 
     # Prevent partial duplicate records from LEFT JOIN
