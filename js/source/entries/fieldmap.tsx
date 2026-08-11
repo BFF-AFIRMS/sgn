@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef } from 'react';
+import React, { useEffect } from 'react';
 import { createRoot } from 'react-dom/client';
 import { FieldMapLegend } from '../include/fieldmap/components/FieldMapLegend';
 import { FieldMapTooltip } from '../include/fieldmap/components/FieldMapTooltip';
@@ -22,24 +22,16 @@ import { FieldMapContextProps, FieldMapProps } from '../include/fieldmap/context
 import { ZoomControls } from '../include/fieldmap/components/ZoomControls';
 import { ModalsProvider, useModals } from '../include/fieldmap/contexts/ModalsContext';
 import { useView, ViewProvider } from '../include/fieldmap/contexts/ViewContext';
-import { DataFetchProvider, useDataFetch } from '../include/fieldmap/contexts/DataFetchContext';
 import { HeatmapProvider } from '../include/fieldmap/contexts/HeatmapContext';
-import { useSubmitGeoLayout } from '../include/fieldmap/hooks/useSubmitGeoLayout';
 import { GeoFieldMap } from '../include/fieldmap/components/GeoFieldMap';
 
-
 declare global {
-    interface Window {
-        geoFieldMapInstance: any;
-    }
     interface JQuery {
         modal: (action: string) => void;
     }
 }
 
 const FieldMap: React.FC<FieldMapProps> = ({
-    trialId,
-    trialStockType,
     hasColAndRowNumbers,
     hasSubplotEntries,
     hasPlantEntries,
@@ -57,12 +49,6 @@ const FieldMap: React.FC<FieldMapProps> = ({
         setShowDownloadCSVModal,
     } = useModals();
 
-    const stockLabel = useMemo(() => {
-        if (trialStockType === 'cross') return 'Cross';
-        if (trialStockType === 'family_name') return 'Family';
-        return 'Accession';
-    }, [trialStockType]);
-
     useEffect(() => {
         if (loading) {
             jQuery("#working_modal").modal("show");
@@ -70,7 +56,6 @@ const FieldMap: React.FC<FieldMapProps> = ({
             jQuery("#working_modal").modal("hide");
         }
     }, [loading]);
-
 
     const { 
         zoom, pan, isDragging, containerRef, 
@@ -93,7 +78,6 @@ const FieldMap: React.FC<FieldMapProps> = ({
     return (
         <div className="tw:p-3.75">
             <FieldMapHeaderPanel />
-
             <FieldMapControlPanel />
 
             {selectedView === 'geofieldmap' ? (
@@ -101,9 +85,7 @@ const FieldMap: React.FC<FieldMapProps> = ({
             ) : (
                 <div key="standard-fieldmap-panel" className="panel panel-default">
                     <div className="panel-body tw:grid">
-                        <FieldMapSettingsPanel
-                            stockLabel={stockLabel}
-                        />
+                        <FieldMapSettingsPanel />
 
                         <div
                             ref={containerRef}
@@ -125,7 +107,7 @@ const FieldMap: React.FC<FieldMapProps> = ({
                                 style={{ transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`, transformOrigin: '0 0' }}
                             >
                                 <g transform="translate(50, 25)">
-                                    <PlotLayer trialId={trialId} />
+                                    <PlotLayer />
                                     <LabelLayer />
                                 </g>
                             </svg>
@@ -138,11 +120,11 @@ const FieldMap: React.FC<FieldMapProps> = ({
 
             <FieldMapLegend />
 
-            <DownloadCSVModal trialId={trialId} />
+            <DownloadCSVModal />
             <SuppressPhenotypeModal />
             <DeleteTraitModal />
             <DimensionsModal />
-            <PlotDetailsModal stockLabel={stockLabel} />
+            <PlotDetailsModal />
 
             <DownloadPlotOrderPanel
                 hasColAndRowNumbers={hasColAndRowNumbers}
@@ -174,7 +156,6 @@ export const FieldMapContainer: React.FC<FieldMapProps> = (props: FieldMapProps)
         HeatmapProvider,
         ZoomPanProvider,
         ControlProvider,
-        DataFetchProvider
     ]);
 };
 

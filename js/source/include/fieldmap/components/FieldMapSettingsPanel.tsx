@@ -8,12 +8,9 @@ import { useDownloadHeatmapImage } from '../hooks/useDownloadHeatmapImage';
 import { useSubmitFieldLayout } from '../hooks/useSubmitFieldLayout';
 
 interface FieldMapSettingsPanelProps {
-    stockLabel: string;
 }
 
-export const FieldMapSettingsPanel: React.FC<FieldMapSettingsPanelProps> = ({
-    stockLabel,
-}) => {
+export const FieldMapSettingsPanel: React.FC<FieldMapSettingsPanelProps> = ({ }) => {
     const {
         transposeLayout,
         rotateLayout,
@@ -35,6 +32,7 @@ export const FieldMapSettingsPanel: React.FC<FieldMapSettingsPanelProps> = ({
     } = useLayoutConfig();
 
     const {
+        stockLabel,
         selectedView,
         selectedViewLabel,
         displayLinkedTrials,

@@ -155,11 +155,9 @@ const PlotTile: React.FC<PlotTileProps> = ({
 };
 
 interface PlotLayerProps {
-    trialId: string;
 }
 
 export const PlotLayer: React.FC<PlotLayerProps> = ({
-    trialId
 }) => {
     const {
         renderBounds,
@@ -177,6 +175,7 @@ export const PlotLayer: React.FC<PlotLayerProps> = ({
     } = useLayoutConfig();
 
     const {
+        trialId,
         selectedView,
         setSelectedPlot,
         setHoveredPlot,

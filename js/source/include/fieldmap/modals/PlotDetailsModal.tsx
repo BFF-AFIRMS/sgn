@@ -9,12 +9,9 @@ import { usePlotGrid } from '../contexts/PlotGridContext';
 import { ReplaceAccessionResult, useReplaceAccession } from '../hooks/useReplaceAccession';
 
 interface PlotDetailsModalProps {
-    stockLabel: string;
 }
 
-export const PlotDetailsModal: React.FC<PlotDetailsModalProps> = ({
-    stockLabel,
-}) => {
+export const PlotDetailsModal: React.FC<PlotDetailsModalProps> = ({ }) => {
     const {
         showPlotDetails: show,
         setShowPlotDetails: setShow,
@@ -29,6 +26,7 @@ export const PlotDetailsModal: React.FC<PlotDetailsModalProps> = ({
     } = useReplaceAccession();
 
     const {
+        stockLabel,
         selectedPlot,
         selectedView,
     } = useView();

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useMemo, useState } from 'react';
 import { FieldMapContextProps } from '../context.types';
 import { Plot, TrialDetails } from '../model.types';
 import { trial_colors, trial_colors_text } from '../utils/functions';
@@ -10,6 +10,7 @@ export type LabelVar = 'plot_number' | 'germplasm' | 'block' | 'family_name' | '
 export interface ViewContextType {
     trialId: string;
     authToken?: string;
+    stockLabel: string;
     selectedViewLabel: string;
     setSelectedViewLabel: React.Dispatch<React.SetStateAction<string>>;
     selectedView: string;
@@ -29,7 +30,7 @@ export interface ViewContextType {
 
 const ViewContext = createContext<ViewContextType | undefined>(undefined);
 
-export const ViewProvider: React.FC<FieldMapContextProps> = ({ trialId, authToken, children }) => {
+export const ViewProvider: React.FC<FieldMapContextProps> = ({ trialId, authToken, trialStockType, children }) => {
     const [selectedViewLabel, setSelectedViewLabel] = useState<string>('');
     const [selectedView, setSelectedView] = useState<string>('fieldmap');
 
@@ -39,6 +40,12 @@ export const ViewProvider: React.FC<FieldMapContextProps> = ({ trialId, authToke
     const [displayLinkedTrials, setDisplayLinkedTrials] = useState(false);
     const [linkedTrialsList, setLinkedTrialsList] = useState<TrialDetails[]>([]);
     const [activeTrialIds, setActiveTrialIds] = useState<string[]>([trialId]);
+
+    const stockLabel = useMemo(() => {
+        if (trialStockType === 'cross') return 'Cross';
+        if (trialStockType === 'family_name') return 'Family';
+        return 'Accession';
+    }, [trialStockType]);
 
     const toggleLinkedTrials = async (checked: boolean) => {
         setDisplayLinkedTrials(checked);
@@ -71,12 +78,11 @@ export const ViewProvider: React.FC<FieldMapContextProps> = ({ trialId, authToke
         }
     };
 
-
-
     return (
         <ViewContext.Provider value={{
             trialId,
             authToken,
+            stockLabel,
             selectedViewLabel, setSelectedViewLabel,
             selectedView, setSelectedView,
             hoveredPlot, setHoveredPlot,

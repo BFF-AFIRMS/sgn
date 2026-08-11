@@ -1,6 +1,5 @@
 import React from 'react';
 import { useModals } from '../contexts/ModalsContext';
-import { useDataFetch } from '../contexts/DataFetchContext';
 import { useDeleteTrait } from '../hooks/useDeleteTrait';
 
 interface DeleteTraitModalProps {

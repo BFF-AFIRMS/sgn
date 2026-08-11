@@ -1,7 +1,5 @@
 import React, { useState } from 'react';
 import { DownloadOpts } from '../model.types';
-import { useLayoutConfig } from '../contexts/LayoutConfigContext';
-import { useView } from '../contexts/ViewContext';
 import { useDownloadPlotOrder } from '../hooks/useDownloadPlotOrder';
 
 interface DownloadPlotOrderPanelProps {
@@ -16,12 +14,6 @@ export const DownloadPlotOrderPanel: React.FC<DownloadPlotOrderPanelProps> = ({
     hasPlantEntries,
 }) => {
     if (!hasColAndRowNumbers) return null;
-
-    const layoutConfig = useLayoutConfig();
-
-    const {
-        activeTrialIds
-    } = useView();
 
     const { downloadPlotOrder } = useDownloadPlotOrder();
 
