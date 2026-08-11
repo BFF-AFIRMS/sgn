@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useMemo, useEffect } from 'react';
-import { Plot } from '../model.types';
+import { Plot } from '../types';
 import { usePlotGrid } from './PlotGridContext';
-import { FieldMapContextProps } from '../context.types';
+import { FieldMapContextProps } from '../types';
 
 export interface ControlContextType {
     showControlsSection: boolean;

@@ -18,7 +18,7 @@ import { PlotGridProvider, usePlotGrid } from '../include/fieldmap/contexts/Plot
 import { ControlProvider } from '../include/fieldmap/contexts/ControlContext';
 import { LayoutConfigProvider } from '../include/fieldmap/contexts/LayoutConfigContext';
 import { useZoomPan, ZoomPanProvider } from '../include/fieldmap/contexts/ZoomPanContext';
-import { FieldMapContextProps, FieldMapProps } from '../include/fieldmap/context.types';
+import { FieldMapContextProps, FieldMapProps } from '../include/fieldmap/types';
 import { ZoomControls } from '../include/fieldmap/components/ZoomControls';
 import { ModalsProvider, useModals } from '../include/fieldmap/contexts/ModalsContext';
 import { useView, ViewProvider } from '../include/fieldmap/contexts/ViewContext';

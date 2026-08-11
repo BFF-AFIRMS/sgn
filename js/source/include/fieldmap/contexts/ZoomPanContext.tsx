@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { usePlotGrid } from './PlotGridContext';
-import { FieldMapContextProps } from '../context.types';
+import { FieldMapContextProps } from '../types';
 
 const CLICK_DRAG_THRESHOLD = 1;
 const PAN_MAX_EMPTY_SPACE = 200;

@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useMemo, useState } from 'react';
-import { FieldMapContextProps } from '../context.types';
-import { Plot, TrialDetails } from '../model.types';
+import { FieldMapContextProps } from '../types';
+import { Plot, TrialDetails } from '../types';
 import { trial_colors, trial_colors_text } from '../utils/functions';
 
 export type PlotLayout = 'serpentine' | 'zigzag';

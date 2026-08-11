@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { DownloadOpts } from '../model.types';
+import { DownloadOpts } from '../types';
 import { useDownloadPlotOrder } from '../hooks/useDownloadPlotOrder';
 
 interface DownloadPlotOrderPanelProps {

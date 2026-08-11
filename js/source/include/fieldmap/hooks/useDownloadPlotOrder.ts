@@ -1,6 +1,6 @@
 import { useLayoutConfig } from '../contexts/LayoutConfigContext';
 import { useView } from '../contexts/ViewContext';
-import { DownloadOpts } from '../model.types';
+import { DownloadOpts } from '../types';
 
 export const useDownloadPlotOrder = () => {
 	const {

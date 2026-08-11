@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState } from 'react';
-import { FieldMapContextProps } from '../context.types';
+import { FieldMapContextProps } from '../types';
 
 export interface ModalsContextType {
 	showPlotDetails: boolean;

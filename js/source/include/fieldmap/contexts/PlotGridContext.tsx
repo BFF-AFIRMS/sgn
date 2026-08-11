@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useMemo } from 'react';
-import { Plot, PlotStructureNode } from '../model.types';
+import { Plot, PlotStructureNode } from '../types';
 import { useLayoutConfig } from './LayoutConfigContext';
-import { FieldMapContextProps } from '../context.types';
+import { FieldMapContextProps } from '../types';
 import { useModals } from './ModalsContext';
 import { useView } from './ViewContext';
 

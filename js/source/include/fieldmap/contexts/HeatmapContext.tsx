@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
-import { FieldMapContextProps } from '../context.types';
-import { HeatmapValue } from '../model.types';
+import { FieldMapContextProps } from '../types';
+import { HeatmapValue } from '../types';
 import { interpolate, pearsonSkewness } from '../utils/functions';
 import { useView } from './ViewContext';
 import { useModals } from './ModalsContext';

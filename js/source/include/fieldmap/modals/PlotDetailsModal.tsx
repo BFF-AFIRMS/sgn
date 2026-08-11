@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { PlotStructureNode } from '../model.types';
+import { PlotStructureNode } from '../types';
 import { RenderPlantGrid, RenderSubplotGrid } from '../components/PlantSubplotGrids';
 import { AccessionAutocomplete } from '../components/AccessionAutocomplete';
 import { useModals } from '../contexts/ModalsContext';

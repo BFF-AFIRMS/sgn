@@ -1,7 +1,7 @@
 import { useLayoutConfig } from '../contexts/LayoutConfigContext';
 import { usePlotGrid } from '../contexts/PlotGridContext';
 import { useView } from '../contexts/ViewContext';
-import { CsvDownloadOpts } from '../model.types';
+import { CsvDownloadOpts } from '../types';
 
 export const useDownloadLayoutCSV = () => {
 	const {

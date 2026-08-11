@@ -1,3 +1,16 @@
+export interface FieldMapProps {
+    trialId: string;
+    trialStockType: string;
+    hasColAndRowNumbers: boolean;
+    hasSubplotEntries: boolean;
+    hasPlantEntries: boolean;
+    authToken?: string;
+}
+
+export interface FieldMapContextProps extends FieldMapProps {
+    children: React.ReactNode;
+}
+
 export interface ObservationLevel {
     levelCode: string | number;
     levelName: string;
@@ -90,3 +103,4 @@ export interface PlotStructureNode {
     attributes?: Record<string, { value: any }>;
     has?: Record<string, PlotStructureNode>;
 }
+

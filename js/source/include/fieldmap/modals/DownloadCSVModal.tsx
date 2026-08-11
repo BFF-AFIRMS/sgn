@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useModals } from '../contexts/ModalsContext';
-import { CsvDownloadOpts } from '../model.types';
+import { CsvDownloadOpts } from '../types';
 import { useDownloadLayoutCSV } from '../hooks/useDownloadLayoutCSV';
 
 interface DownloadCSVModalProps {

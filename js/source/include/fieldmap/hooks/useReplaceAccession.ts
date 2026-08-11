@@ -1,7 +1,7 @@
 import { useModals } from '../contexts/ModalsContext';
 import { usePlotGrid } from '../contexts/PlotGridContext';
 import { useView } from '../contexts/ViewContext';
-import { Plot } from '../model.types';
+import { Plot } from '../types';
 
 export enum ReplaceAccessionResult {
 	Success = 'success',

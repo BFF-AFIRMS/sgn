@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { FieldMapContextProps } from '../context.types';
+import { FieldMapContextProps } from '../types';
 
 export type PlotLayout = 'serpentine' | 'zigzag';
 export type ColorVar = 'parity' | 'germplasm' | 'block' | 'family_name' | 'cross_name';

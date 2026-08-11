@@ -1,5 +1,5 @@
 import React from 'react';
-import { PlotStructureNode } from '../model.types';
+import { PlotStructureNode } from '../types';
 
 export const RenderPlantGrid: React.FC<{ node: PlotStructureNode }> = ({ node }) => {
     if (!node.has) return null;
