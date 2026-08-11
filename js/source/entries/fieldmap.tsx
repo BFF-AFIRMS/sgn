@@ -1,10 +1,5 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import { createRoot } from 'react-dom/client';
-import { 
-    Plot, 
-    PlotStructureNode,
-    DownloadOpts
-} from '../include/fieldmap/model.types';
 import { FieldMapLegend } from '../include/fieldmap/components/FieldMapLegend';
 import { FieldMapTooltip } from '../include/fieldmap/components/FieldMapTooltip';
 import { PlotLayer } from '../include/fieldmap/components/PlotLayer';
@@ -21,22 +16,25 @@ import { SuppressPhenotypeModal } from '../include/fieldmap/modals/SuppressPheno
 import { DeleteTraitModal } from '../include/fieldmap/modals/DeleteTraitModal';
 import { PlotGridProvider, usePlotGrid } from '../include/fieldmap/contexts/PlotGridContext';
 import { ControlProvider } from '../include/fieldmap/contexts/ControlContext';
-import { LayoutConfigProvider, useLayoutConfig } from '../include/fieldmap/contexts/LayoutConfigContext';
+import { LayoutConfigProvider } from '../include/fieldmap/contexts/LayoutConfigContext';
 import { useZoomPan, ZoomPanProvider } from '../include/fieldmap/contexts/ZoomPanContext';
 import { FieldMapContextProps, FieldMapProps } from '../include/fieldmap/context.types';
 import { ZoomControls } from '../include/fieldmap/components/ZoomControls';
 import { ModalsProvider, useModals } from '../include/fieldmap/contexts/ModalsContext';
-import { useView, ViewConfigProvider } from '../include/fieldmap/contexts/ViewContext';
+import { useView, ViewProvider } from '../include/fieldmap/contexts/ViewContext';
 import { DataFetchProvider, useDataFetch } from '../include/fieldmap/contexts/DataFetchContext';
 import { HeatmapProvider } from '../include/fieldmap/contexts/HeatmapContext';
 
-// Declare external legacy global libraries
-// We must use 'any' here as Leaflet (L) and Turf are loaded globally as script includes 
-// via Mason templates and do not have type declarations within this bundler.
-declare const L: any;
-declare const turf: any;
 declare const BrAPIFieldmap: any;
-declare const jQuery: any;
+
+declare global {
+    interface Window {
+        geoFieldMapInstance: any;
+    }
+    interface JQuery {
+        modal: (action: string) => void;
+    }
+}
 
 const FieldMap: React.FC<FieldMapProps> = ({
     trialId,
@@ -125,7 +123,7 @@ const FieldMap: React.FC<FieldMapProps> = ({
                     }
                 });
                 leafletMapInstance.current = fmInstance.map;
-                (window as any).geoFieldMapInstance = fmInstance;
+                window.geoFieldMapInstance = fmInstance;
             } catch (e) {
                 console.error("Leaflet initialization failed", e);
             }
@@ -135,7 +133,7 @@ const FieldMap: React.FC<FieldMapProps> = ({
                 leafletMapInstance.current.remove();
                 leafletMapInstance.current = null;
             }
-            delete (window as any).geoFieldMapInstance;
+            delete window.geoFieldMapInstance;
         };
     }, [selectedView, trialId, authToken]);
 
@@ -222,7 +220,7 @@ export const FieldMapContainer: React.FC<FieldMapProps> = (props: FieldMapProps)
 
     return buildProviderTree([
         LayoutConfigProvider,
-        ViewConfigProvider,
+        ViewProvider,
         ModalsProvider,
         PlotGridProvider,
         HeatmapProvider,

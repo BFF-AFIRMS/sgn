@@ -31,7 +31,7 @@ export interface ViewContextType {
 
 const ViewContext = createContext<ViewContextType | undefined>(undefined);
 
-export const ViewConfigProvider: React.FC<FieldMapContextProps> = ({ trialId, children }) => {
+export const ViewProvider: React.FC<FieldMapContextProps> = ({ trialId, children }) => {
     const [selectedViewLabel, setSelectedViewLabel] = useState<string>('');
     const [selectedView, setSelectedView] = useState<string>('fieldmap');
 
@@ -67,7 +67,7 @@ export const ViewConfigProvider: React.FC<FieldMapContextProps> = ({ trialId, ch
 export const useView = () => {
     const context = useContext(ViewContext);
     if (!context) {
-        throw new Error('useViewConfig must be used within a ViewConfigProvider');
+        throw new Error('useView must be used within a ViewProvider');
     }
     return context;
 };
