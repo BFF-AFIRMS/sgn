@@ -25,9 +25,10 @@ import { LayoutConfigProvider, useLayoutConfig } from '../include/fieldmap/conte
 import { useZoomPan, ZoomPanProvider } from '../include/fieldmap/contexts/ZoomPanContext';
 import { FieldMapContextProps, FieldMapProps } from '../include/fieldmap/context.types';
 import { ZoomControls } from '../include/fieldmap/components/ZoomControls';
-import { useModals } from '../include/fieldmap/contexts/ModalsContext';
-import { useView } from '../include/fieldmap/contexts/ViewContext';
-import { useDataFetch } from '../include/fieldmap/contexts/DataFetchContext';
+import { ModalsProvider, useModals } from '../include/fieldmap/contexts/ModalsContext';
+import { useView, ViewConfigProvider } from '../include/fieldmap/contexts/ViewContext';
+import { DataFetchProvider, useDataFetch } from '../include/fieldmap/contexts/DataFetchContext';
+import { HeatmapProvider } from '../include/fieldmap/contexts/HeatmapContext';
 
 // Declare external legacy global libraries
 // We must use 'any' here as Leaflet (L) and Turf are loaded globally as script includes 
@@ -221,9 +222,13 @@ export const FieldMapContainer: React.FC<FieldMapProps> = (props: FieldMapProps)
 
     return buildProviderTree([
         LayoutConfigProvider,
+        ViewConfigProvider,
+        ModalsProvider,
         PlotGridProvider,
+        HeatmapProvider,
         ZoomPanProvider,
-        ControlProvider
+        ControlProvider,
+        DataFetchProvider
     ]);
 };
 
