@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { useModals } from '../contexts/ModalsContext';
 import { useView } from '../contexts/ViewContext';
 import { useHeatmap } from '../contexts/HeatmapContext';
-import { useDataFetch } from '../contexts/DataFetchContext';
+import { useSubmitSuppressPhenotype } from '../hooks/useSubmitSuppressPhenotype';
 
 interface SuppressPhenotypeModalProps {
 }
@@ -27,7 +27,7 @@ export const SuppressPhenotypeModal: React.FC<SuppressPhenotypeModalProps> = ({
 
     const {
         submitSuppressPhenotype
-    } = useDataFetch();
+    } = useSubmitSuppressPhenotype();
 
     const plotName = useMemo(() => {
         return selectedPlot?.observationUnitName || '';

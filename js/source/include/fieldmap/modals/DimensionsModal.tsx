@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { AccessionAutocomplete } from '../components/AccessionAutocomplete';
 import { useModals } from '../contexts/ModalsContext';
-import { useDataFetch } from '../contexts/DataFetchContext';
+import { usePlotGrid } from '../contexts/PlotGridContext';
 
 interface DimensionsModalProps {
 }
@@ -18,7 +18,7 @@ export const DimensionsModal: React.FC<DimensionsModalProps> = ({}) => {
 
     const {
         applyDimensions
-    } = useDataFetch();
+    } = usePlotGrid();
 
     if (!show) return null;
 

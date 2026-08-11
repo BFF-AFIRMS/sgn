@@ -1,7 +1,6 @@
 import React from 'react';
 import { useView } from '../contexts/ViewContext';
 import { useHeatmap } from '../contexts/HeatmapContext';
-import { useDataFetch } from '../contexts/DataFetchContext';
 
 interface FieldMapHeaderPanelProps { }
 
@@ -12,18 +11,15 @@ export const FieldMapHeaderPanel: React.FC<FieldMapHeaderPanelProps> = ({
         setSelectedViewLabel,
         displayLinkedTrials,
         linkedTrialsList,
+        toggleLinkedTrials
     } = useView();
 
     const {
         setHeatmapData,
         variables,
         spatialAdjustments,
-    } = useHeatmap();
-
-    const {
         fetchHeatmapObservations,
-        toggleLinkedTrials
-    } = useDataFetch();
+    } = useHeatmap();
 
     const handleViewChange = (val: string) => {
         setSelectedView(val);

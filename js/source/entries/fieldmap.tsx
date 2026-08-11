@@ -24,6 +24,7 @@ import { ModalsProvider, useModals } from '../include/fieldmap/contexts/ModalsCo
 import { useView, ViewProvider } from '../include/fieldmap/contexts/ViewContext';
 import { DataFetchProvider, useDataFetch } from '../include/fieldmap/contexts/DataFetchContext';
 import { HeatmapProvider } from '../include/fieldmap/contexts/HeatmapContext';
+import { useSubmitGeoLayout } from '../include/fieldmap/hooks/useSubmitGeoLayout';
 
 declare const BrAPIFieldmap: any;
 
@@ -59,7 +60,7 @@ const FieldMap: React.FC<FieldMapProps> = ({
 
     const {
         submitGeoLayout,
-    } = useDataFetch();
+    } = useSubmitGeoLayout();
 
     const geoMapRef = useRef<HTMLDivElement | null>(null);
     const leafletMapInstance = useRef<any>(null);

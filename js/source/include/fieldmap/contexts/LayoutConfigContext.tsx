@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 import { FieldMapContextProps } from '../context.types';
 
 export type PlotLayout = 'serpentine' | 'zigzag';
@@ -20,21 +20,51 @@ export interface LayoutConfigContextType {
     setLeftBorder: React.Dispatch<React.SetStateAction<boolean>>;
     rightBorder: boolean;
     setRightBorder: React.Dispatch<React.SetStateAction<boolean>>;
+    colorVar: ColorVar;
+    setColorVar: React.Dispatch<React.SetStateAction<ColorVar>>;
+    labelVar: LabelVar;
+    setLabelVar: React.Dispatch<React.SetStateAction<LabelVar>>;
+    labelSize: number;
+    setLabelSize: React.Dispatch<React.SetStateAction<number>>;
     northArrowAngle: number;
     setNorthArrowAngle: React.Dispatch<React.SetStateAction<number>>;
+    loadNorthArrowAngle: () => void;
 }
 
 const LayoutConfigContext = createContext<LayoutConfigContextType | undefined>(undefined);
 
-export const LayoutConfigProvider: React.FC<FieldMapContextProps> = ({ children }) => {
+export const LayoutConfigProvider: React.FC<FieldMapContextProps> = ({ trialId, children }) => {
     const [plotLayout, setPlotLayout] = useState<PlotLayout>('serpentine');
+
     const [invertRows, setInvertRows] = useState(false);
     const [invertCols, setInvertCols] = useState(false);
+
     const [topBorder, setTopBorder] = useState(false);
     const [bottomBorder, setBottomBorder] = useState(false);
     const [leftBorder, setLeftBorder] = useState(false);
     const [rightBorder, setRightBorder] = useState(false);
+
+    const [colorVar, setColorVar] = useState<ColorVar>('parity');
+    const [labelVar, setLabelVar] = useState<LabelVar>('plot_number');
+    const [labelSize, setLabelSize] = useState(10);
+
     const [northArrowAngle, setNorthArrowAngle] = useState<number>(0);
+
+    useEffect(() => {
+        loadNorthArrowAngle();
+    }, [trialId]);
+
+    const loadNorthArrowAngle = async () => {
+        try {
+            const response = await fetch(`/ajax/breeders/trial/${trialId}/north_arrow_angle`);
+            const body = await response.json();
+            if (body?.north_arrow_angle !== undefined && body.north_arrow_angle !== null) {
+                setNorthArrowAngle(Number(body.north_arrow_angle));
+            }
+        } catch (e) {
+			console.error('Error loading north arrow angle:', e);
+        }
+    };
 
     return (
         <LayoutConfigContext.Provider value={{
@@ -45,7 +75,11 @@ export const LayoutConfigProvider: React.FC<FieldMapContextProps> = ({ children 
             bottomBorder, setBottomBorder,
             leftBorder, setLeftBorder,
             rightBorder, setRightBorder,
-            northArrowAngle, setNorthArrowAngle
+            colorVar, setColorVar,
+            labelVar, setLabelVar,
+            labelSize, setLabelSize,
+            northArrowAngle, setNorthArrowAngle,
+            loadNorthArrowAngle
         }}>
             {children}
         </LayoutConfigContext.Provider>

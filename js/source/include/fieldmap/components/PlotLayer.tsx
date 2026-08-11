@@ -172,7 +172,8 @@ export const PlotLayer: React.FC<PlotLayerProps> = ({
 
     const {
         invertRows,
-        invertCols
+        invertCols,
+        colorVar
     } = useLayoutConfig();
 
     const {
@@ -181,7 +182,6 @@ export const PlotLayer: React.FC<PlotLayerProps> = ({
         setHoveredPlot,
         displayLinkedTrials,
         linkedTrialsList,
-        colorVar
     } = useView();
 
     const {

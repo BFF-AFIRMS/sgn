@@ -2,11 +2,11 @@ import React, { useMemo, useState } from 'react';
 import { PlotStructureNode } from '../model.types';
 import { RenderPlantGrid, RenderSubplotGrid } from '../components/PlantSubplotGrids';
 import { AccessionAutocomplete } from '../components/AccessionAutocomplete';
-import { ReplaceAccessionResult, useDataFetch } from '../contexts/DataFetchContext';
 import { useModals } from '../contexts/ModalsContext';
 import { useHeatmap } from '../contexts/HeatmapContext';
 import { useView } from '../contexts/ViewContext';
 import { usePlotGrid } from '../contexts/PlotGridContext';
+import { ReplaceAccessionResult, useReplaceAccession } from '../hooks/useReplaceAccession';
 
 interface PlotDetailsModalProps {
     stockLabel: string;
@@ -25,8 +25,8 @@ export const PlotDetailsModal: React.FC<PlotDetailsModalProps> = ({
     } = useModals();
 
     const {
-        submitReplaceAccession
-    } = useDataFetch();
+        replaceAccession
+    } = useReplaceAccession();
 
     const {
         selectedPlot,
@@ -70,7 +70,7 @@ export const PlotDetailsModal: React.FC<PlotDetailsModalProps> = ({
     }, [selectedPlot, heatmapData]);
 
     const handleReplaceAccession = async (override: 'check' | 'override') => {
-        const result = await submitReplaceAccession(override, selectedPlot, newAccession, newPlotName);
+        const result = await replaceAccession(override, selectedPlot, newAccession, newPlotName);
         if (result === ReplaceAccessionResult.Success) {
             setShow(false);
             setShowEditAccession(false);

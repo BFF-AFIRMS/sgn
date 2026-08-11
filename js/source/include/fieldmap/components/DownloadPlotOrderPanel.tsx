@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { DownloadOpts } from '../model.types';
-import { downloadPlotOrder } from '../utils/downloadPlotOrder';
 import { useLayoutConfig } from '../contexts/LayoutConfigContext';
 import { useView } from '../contexts/ViewContext';
+import { useDownloadPlotOrder } from '../hooks/useDownloadPlotOrder';
 
 interface DownloadPlotOrderPanelProps {
     hasColAndRowNumbers: boolean;
@@ -22,6 +22,8 @@ export const DownloadPlotOrderPanel: React.FC<DownloadPlotOrderPanelProps> = ({
     const {
         activeTrialIds
     } = useView();
+
+    const { downloadPlotOrder } = useDownloadPlotOrder();
 
     const [downloadOpts, setDownloadOpts] = useState<DownloadOpts>({
         type: '',
@@ -124,7 +126,7 @@ export const DownloadPlotOrderPanel: React.FC<DownloadPlotOrderPanelProps> = ({
                     {hasPlantEntries && <label><input type="checkbox" checked={downloadOpts.plants} onChange={e => setDownloadOpts({ ...downloadOpts, plants: e.target.checked })} /> Include Plants</label>}
                 </div>
 
-                <button className="btn btn-primary" onClick={() => downloadPlotOrder(downloadOpts, activeTrialIds, layoutConfig)}>Generate & Download File</button>
+                <button className="btn btn-primary" onClick={() => downloadPlotOrder(downloadOpts)}>Generate & Download File</button>
             </div>
         </div>
     );

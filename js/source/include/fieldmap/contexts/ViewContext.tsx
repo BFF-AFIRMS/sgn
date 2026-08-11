@@ -1,12 +1,15 @@
 import React, { createContext, useContext, useState } from 'react';
 import { FieldMapContextProps } from '../context.types';
 import { Plot, TrialDetails } from '../model.types';
+import { trial_colors, trial_colors_text } from '../utils/functions';
 
 export type PlotLayout = 'serpentine' | 'zigzag';
 export type ColorVar = 'parity' | 'germplasm' | 'block' | 'family_name' | 'cross_name';
 export type LabelVar = 'plot_number' | 'germplasm' | 'block' | 'family_name' | 'cross_name';
 
 export interface ViewContextType {
+    trialId: string;
+    authToken?: string;
     selectedViewLabel: string;
     setSelectedViewLabel: React.Dispatch<React.SetStateAction<string>>;
     selectedView: string;
@@ -21,17 +24,12 @@ export interface ViewContextType {
 	setLinkedTrialsList: React.Dispatch<React.SetStateAction<TrialDetails[]>>;
 	activeTrialIds: string[];
 	setActiveTrialIds: React.Dispatch<React.SetStateAction<string[]>>;
-    colorVar: ColorVar;
-    setColorVar: React.Dispatch<React.SetStateAction<ColorVar>>;
-    labelVar: LabelVar;
-    setLabelVar: React.Dispatch<React.SetStateAction<LabelVar>>;
-    labelSize: number;
-    setLabelSize: React.Dispatch<React.SetStateAction<number>>;
+    toggleLinkedTrials: (checked: boolean) => Promise<void>;
 }
 
 const ViewContext = createContext<ViewContextType | undefined>(undefined);
 
-export const ViewProvider: React.FC<FieldMapContextProps> = ({ trialId, children }) => {
+export const ViewProvider: React.FC<FieldMapContextProps> = ({ trialId, authToken, children }) => {
     const [selectedViewLabel, setSelectedViewLabel] = useState<string>('');
     const [selectedView, setSelectedView] = useState<string>('fieldmap');
 
@@ -42,12 +40,43 @@ export const ViewProvider: React.FC<FieldMapContextProps> = ({ trialId, children
     const [linkedTrialsList, setLinkedTrialsList] = useState<TrialDetails[]>([]);
     const [activeTrialIds, setActiveTrialIds] = useState<string[]>([trialId]);
 
-    const [colorVar, setColorVar] = useState<ColorVar>('parity');
-    const [labelVar, setLabelVar] = useState<LabelVar>('plot_number');
-    const [labelSize, setLabelSize] = useState(10);
+    const toggleLinkedTrials = async (checked: boolean) => {
+        setDisplayLinkedTrials(checked);
+        if (checked) {
+            try {
+                const response = await fetch(`/ajax/breeders/trial/${trialId}/linked_field_trials`);
+                const body = await response.json();
+                if (body?.trials) {
+                    const list = body.trials.map((t: any, i: number) => {
+                        const idx = i % trial_colors.length;
+                        return {
+                            id: t.trial_id,
+                            name: t.trial_name,
+                            bg: trial_colors[idx],
+                            fg: trial_colors_text[idx]
+                        };
+                    });
+                    setLinkedTrialsList(list);
+                    setActiveTrialIds([trialId, ...list.map((l: any) => l.id)]);
+                } else {
+                    alert(body?.error || 'Could not load linked trials.');
+                    setDisplayLinkedTrials(false);
+                }
+            } catch {
+                setDisplayLinkedTrials(false);
+            }
+        } else {
+            setLinkedTrialsList([]);
+            setActiveTrialIds([trialId]);
+        }
+    };
+
+
 
     return (
         <ViewContext.Provider value={{
+            trialId,
+            authToken,
             selectedViewLabel, setSelectedViewLabel,
             selectedView, setSelectedView,
             hoveredPlot, setHoveredPlot,
@@ -55,9 +84,7 @@ export const ViewProvider: React.FC<FieldMapContextProps> = ({ trialId, children
             displayLinkedTrials, setDisplayLinkedTrials,
             linkedTrialsList, setLinkedTrialsList,
             activeTrialIds, setActiveTrialIds,
-            colorVar, setColorVar,
-            labelVar, setLabelVar,
-            labelSize, setLabelSize,
+            toggleLinkedTrials,
         }}>
             {children}
         </ViewContext.Provider>

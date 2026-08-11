@@ -1,8 +1,9 @@
-import React, { createContext, useContext, useMemo, useState } from 'react';
+import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { FieldMapContextProps } from '../context.types';
 import { HeatmapValue } from '../model.types';
 import { interpolate, pearsonSkewness } from '../utils/functions';
 import { useView } from './ViewContext';
+import { useModals } from './ModalsContext';
 
 export interface HeatmapContextType {
     heatmapData: Record<string, HeatmapValue>;
@@ -17,13 +18,21 @@ export interface HeatmapContextType {
 		scale: (val: number) => string;
 		colors?: string[];
 	};
+	fetchHeatmapObservations: (variableId: string) => void;
+	loadVariables: () => Promise<void>;
+	loadSpatialAdjustments: () => Promise<void>;
 }
 
 const HeatmapContext = createContext<HeatmapContextType | undefined>(undefined);
 
-export const HeatmapProvider: React.FC<FieldMapContextProps> = ({ children }) => {
+export const HeatmapProvider: React.FC<FieldMapContextProps> = ({ trialId, authToken, children }) => {
 	const {
-		selectedView
+		setLoading
+	} = useModals();
+
+	const {
+		selectedView,
+		activeTrialIds
 	} = useView();
 
     const [heatmapData, setHeatmapData] = useState<Record<string, HeatmapValue>>({});
@@ -60,6 +69,82 @@ export const HeatmapProvider: React.FC<FieldMapContextProps> = ({ children }) =>
         return { min, max, scale, colors };
     }, [heatmapData, selectedView]);
 
+	useEffect(() => {
+		loadVariables();
+		loadSpatialAdjustments();
+	}, [activeTrialIds]);
+
+    const fetchHeatmapObservations = async (variableId: string) => {
+        setLoading(true);
+        const headers: Record<string, string> = {};
+        if (authToken) {
+            headers['Authorization'] = `Bearer ${authToken}`;
+        }
+        try {
+            const response = await fetch(`/brapi/v2/observations?observationVariableDbId=${variableId}&studyDbId=${activeTrialIds.join(',')}&pageSize=10000`, { headers });
+            const body = await response.json();
+            const data = body?.result?.data || [];
+            const map: Record<string, HeatmapValue> = {};
+            data.forEach((obs: any) => {
+                let finalVal = Number(obs.value);
+                const plotName = obs.observationUnitName;
+
+                // Apply Spatial adjustments if viewing Corrected or Adjustments
+                if (selectedView.includes(' (corrected)') && spatialAdjustments[plotName]?.[variableId] !== undefined) {
+                    finalVal += Number(spatialAdjustments[plotName][variableId]);
+                } else if (selectedView.includes(' (adjustment)') && spatialAdjustments[plotName]?.[variableId] !== undefined) {
+                    finalVal = Number(spatialAdjustments[plotName][variableId]);
+                }
+
+                if (!isNaN(finalVal)) {
+                    map[obs.observationUnitDbId] = {
+                        val: finalVal,
+                        plot_name: obs.observationUnitName,
+                        id: obs.observationDbId
+                    };
+                }
+            });
+            setHeatmapData(map);
+        } catch (e) {
+            console.error('Error loading heatmap observations:', e);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const loadVariables = async () => {
+        const headers: Record<string, string> = {};
+        if (authToken) {
+            headers['Authorization'] = `Bearer ${authToken}`;
+        }
+        try {
+            const response = await fetch(`/brapi/v2/variables?studyDbId=${trialId}&pageSize=10000`, { headers });
+            const body = await response.json();
+            const data = body?.result?.data || [];
+            const vars: Record<string, string> = {};
+            data.forEach((v: any) => {
+                if (v.observationVariableName && v.observationVariableDbId) {
+                    vars[v.observationVariableName] = v.observationVariableDbId;
+                }
+            });
+            setVariables(vars);
+        } catch (e) {
+			console.error('Error loading variables:', e);
+        }
+    };
+
+    const loadSpatialAdjustments = async () => {
+        try {
+            const response = await fetch(`/ajax/spatial_model/retrieve_spatial_adjustments/${trialId}`);
+            const body = await response.json();
+            if (body?.data) {
+                setSpatialAdjustments(JSON.parse(body.data));
+            }
+        } catch (e) {
+			console.error('Error loading spatial adjustments:', e);
+        }
+    };
+
     return (
         <HeatmapContext.Provider value={{
             heatmapData,
@@ -68,7 +153,10 @@ export const HeatmapProvider: React.FC<FieldMapContextProps> = ({ children }) =>
             setVariables,
             spatialAdjustments,
             setSpatialAdjustments,
-			valueColorScale
+			valueColorScale,
+			fetchHeatmapObservations,
+			loadVariables,
+			loadSpatialAdjustments
         }}>
             {children}
         </HeatmapContext.Provider>

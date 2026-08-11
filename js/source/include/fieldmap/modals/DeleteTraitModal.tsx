@@ -1,6 +1,7 @@
 import React from 'react';
 import { useModals } from '../contexts/ModalsContext';
 import { useDataFetch } from '../contexts/DataFetchContext';
+import { useDeleteTrait } from '../hooks/useDeleteTrait';
 
 interface DeleteTraitModalProps {
 }
@@ -14,11 +15,11 @@ export const DeleteTraitModal: React.FC<DeleteTraitModalProps> = ({}) => {
     if (!show) return null;
 
     const {
-        deleteSingleTrait
-    } = useDataFetch();
+       deleteTrait 
+    } = useDeleteTrait();
 
     const handleDeleteSingleTrait = async () => {
-        const ok = await deleteSingleTrait();
+        const ok = await deleteTrait();
         if (ok) {
             setShow(false);
         }

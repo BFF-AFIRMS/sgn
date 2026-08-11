@@ -4,8 +4,8 @@ import { useLayoutConfig, PlotLayout, ColorVar, LabelVar } from '../contexts/Lay
 import { useView } from '../contexts/ViewContext';
 import { useModals } from '../contexts/ModalsContext';
 import { printFieldMap } from '../utils/print';
-import { downloadHeatmapImage } from '../utils/downloadHeatmapImage';
-import { useDataFetch } from '../contexts/DataFetchContext';
+import { useDownloadHeatmapImage } from '../hooks/useDownloadHeatmapImage';
+import { useSubmitFieldLayout } from '../hooks/useSubmitFieldLayout';
 
 interface FieldMapSettingsPanelProps {
     stockLabel: string;
@@ -28,6 +28,9 @@ export const FieldMapSettingsPanel: React.FC<FieldMapSettingsPanelProps> = ({
         leftBorder, setLeftBorder,
         rightBorder, setRightBorder,
         bottomBorder, setBottomBorder,
+        colorVar, setColorVar,
+        labelVar, setLabelVar,
+        labelSize, setLabelSize,
         northArrowAngle, setNorthArrowAngle
     } = useLayoutConfig();
 
@@ -35,9 +38,6 @@ export const FieldMapSettingsPanel: React.FC<FieldMapSettingsPanelProps> = ({
         selectedView,
         selectedViewLabel,
         displayLinkedTrials,
-        colorVar, setColorVar,
-        labelVar, setLabelVar,
-        labelSize, setLabelSize,
     } = useView();
 
     const {
@@ -48,7 +48,11 @@ export const FieldMapSettingsPanel: React.FC<FieldMapSettingsPanelProps> = ({
 
     const {
         submitFieldLayout
-    } = useDataFetch();
+    } = useSubmitFieldLayout();
+
+    const {
+        downloadHeatmapImage
+    } = useDownloadHeatmapImage();
 
     return (
         <div className="tw:flex tw:gap-5 tw:flex-wrap tw:mb-3.75">
@@ -131,7 +135,7 @@ export const FieldMapSettingsPanel: React.FC<FieldMapSettingsPanelProps> = ({
                 <button className="btn btn-default" onClick={() => setShowDownloadCSVModal(true)}>Download Spatial Layout (CSV)</button>
                 <button className="btn btn-default" onClick={() => printFieldMap(selectedView, selectedViewLabel)}>Print Fieldmap</button>
                 {selectedView !== 'fieldmap' && selectedView !== 'geofieldmap' && (
-                    <button className="btn btn-default" onClick={() => downloadHeatmapImage(selectedViewLabel)}>Download Heatmap Image</button>
+                    <button className="btn btn-default" onClick={() => downloadHeatmapImage()}>Download Heatmap Image</button>
                 )}
                 <button className="btn btn-success" onClick={submitFieldLayout} disabled={displayLinkedTrials}>Submit Layout Changes</button>
                 {selectedView !== 'fieldmap' && selectedView !== 'geofieldmap' && (

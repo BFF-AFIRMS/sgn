@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { useModals } from '../contexts/ModalsContext';
 import { CsvDownloadOpts } from '../model.types';
-import { downloadLayoutCSV } from '../utils/downloadCsv';
 import { useLayoutConfig } from '../contexts/LayoutConfigContext';
 import { usePlotGrid } from '../contexts/PlotGridContext';
+import { useDownloadLayoutCSV } from '../hooks/useDownloadLayoutCSV';
 
 interface DownloadCSVModalProps {
     trialId: string;
@@ -30,8 +30,10 @@ export const DownloadCSVModal: React.FC<DownloadCSVModalProps> = ({ trialId }) =
         crossName: false,
     });
 
+    const { downloadLayoutCSV } = useDownloadLayoutCSV();
+
     const handleDownload = () => {
-        downloadLayoutCSV(trialId, bounds, plotList, invertCols, invertRows, csvDownloadOpts);
+        downloadLayoutCSV(csvDownloadOpts);
         setShow(false);
     };
 

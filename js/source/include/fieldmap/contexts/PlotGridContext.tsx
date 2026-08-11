@@ -2,6 +2,8 @@ import React, { createContext, useContext, useState, useMemo } from 'react';
 import { Plot, PlotStructureNode } from '../model.types';
 import { useLayoutConfig } from './LayoutConfigContext';
 import { FieldMapContextProps } from '../context.types';
+import { useModals } from './ModalsContext';
+import { useView } from './ViewContext';
 
 export interface GridBounds {
     minCol: number;
@@ -21,14 +23,12 @@ export interface PlotGridContextType {
     gridMatrix: Plot[][];
 
     dimensions: { rows: number; cols: number };
-    setDimensions: React.Dispatch<React.SetStateAction<{ rows: number; cols: number }>>;
 
     fillerAccessionId: string | undefined;
     setFillerAccessionId: React.Dispatch<React.SetStateAction<string | undefined>>;
     fillerAccessionName: string | undefined;
     setFillerAccessionName: React.Dispatch<React.SetStateAction<string | undefined>>;
 
-    parsePlotData: (data: any[]) => void;
     recalculateLayout: (layout: 'serpentine' | 'zigzag') => void;
 
     transposeLayout: () => void;
@@ -43,12 +43,34 @@ export interface PlotGridContextType {
     setPlotContentCache: React.Dispatch<React.SetStateAction<Record<string, string[]>>>;
     plotImages: string;
     setPlotImages: React.Dispatch<React.SetStateAction<string>>;
+
+    fetchObservationUnits: () => Promise<void>;
+    applyDimensions: (rowsInput: string, colsInput: string, fillerAccessionInput?: string) => Promise<void>;
 }
 
 const PlotGridContext = createContext<PlotGridContextType | undefined>(undefined);
 
-export const PlotGridProvider: React.FC<FieldMapContextProps> = ({ children }) => {
-    const { topBorder, bottomBorder, leftBorder, rightBorder } = useLayoutConfig();
+export const PlotGridProvider: React.FC<FieldMapContextProps> = ({ trialId, authToken, children }) => {
+    const {
+        topBorder, setTopBorder,
+        bottomBorder, setBottomBorder,
+        leftBorder, setLeftBorder,
+        rightBorder, setRightBorder,
+        setInvertCols,
+        setInvertRows,
+        setPlotLayout,
+        setColorVar,
+        setLabelVar,
+        setLabelSize
+    } = useLayoutConfig();
+
+    const {
+        activeTrialIds
+    } = useView();
+
+    const {
+        setLoading
+    } = useModals();
 
     const [plotObject, setPlotObject] = useState<Record<string, Plot>>({});
     const [dimensions, setDimensions] = useState({ rows: 0, cols: 0 });
@@ -364,16 +386,83 @@ export const PlotGridProvider: React.FC<FieldMapContextProps> = ({ children }) =
         setDimensions(d => ({ rows: d.cols, cols: d.rows }));
     };
 
+    const fetchObservationUnits = async () => {
+        setLoading(true);
+        const headers: Record<string, string> = {};
+        if (authToken) {
+            headers['Authorization'] = `Bearer ${authToken}`;
+        }
+
+        const url = `/brapi/v2/observationunits?studyDbIds=${activeTrialIds.join(',')}&observationUnitLevelName=plot&pageSize=10000`;
+        try {
+            const response = await fetch(url, { headers });
+            const body = await response.json();
+            const units = body?.result?.data || [];
+            if (units.length > 0) {
+                const firstInfo = units[0].additionalInfo;
+                if (firstInfo) {
+                    setTopBorder(firstInfo.top_border_selection);
+                    setLeftBorder(firstInfo.left_border_selection);
+                    setRightBorder(firstInfo.right_border_selection);
+                    setBottomBorder(firstInfo.bottom_border_selection);
+                    setInvertRows(firstInfo.invert_row_checkmark);
+                    setInvertCols(firstInfo.invert_col_checkmark);
+                    if (firstInfo.plot_layout) {
+                        setPlotLayout(firstInfo.plot_layout);
+                    }
+                    if (firstInfo.plot_color_var) setColorVar(firstInfo.plot_color_var);
+                    if (firstInfo.plot_label_var) setLabelVar(firstInfo.plot_label_var);
+                    if (firstInfo.plot_label_size) setLabelSize(firstInfo.plot_label_size);
+                }
+                parsePlotData(units);
+            }
+        } catch (e) {
+            console.error('Error loading plot units:', e);
+            alert('Error loading plot units.');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const applyDimensions = async (rowsInput: string, colsInput: string, fillerAccessionInput?: string) => {
+        const rows = parseInt(rowsInput) || 0;
+        const cols = parseInt(colsInput) || 0;
+        const numRealPlots = plotList.length;
+
+        if (cols * rows < numRealPlots) {
+            alert('Those are not valid dimensions.\nPlease select dimensions that can accommodate your current plots.');
+            return;
+        }
+
+        let accessionId: string | undefined;
+        if (fillerAccessionInput) {
+			const response = await fetch(`/ajax/breeders/trial/${trialId}/accession_exists?accession_name=${encodeURIComponent(fillerAccessionInput)}`);
+			const body = await response.json();
+            
+            if (body.success) {
+                accessionId = body.success;
+            } else {
+                alert(body.error || 'Accession not found.');
+            }
+
+			setFillerAccessionName(fillerAccessionInput);
+        }
+
+        if (accessionId) {
+            setFillerAccessionId(accessionId);
+        }
+
+        setDimensions({ rows, cols });
+    };
+
     return (
         <PlotGridContext.Provider value={{
             plotList,
             overlappingPlots,
             dimensions,
-            setDimensions,
             bounds,
             renderBounds,
             svgDimensions,
-            parsePlotData,
             fillerAccessionId,
             setFillerAccessionId,
             fillerAccessionName,
@@ -389,7 +478,9 @@ export const PlotGridProvider: React.FC<FieldMapContextProps> = ({ children }) =
             plotContentCache,
             setPlotContentCache,
             plotImages,
-            setPlotImages
+            setPlotImages,
+            fetchObservationUnits,
+            applyDimensions
         }}>
             {children}
         </PlotGridContext.Provider>

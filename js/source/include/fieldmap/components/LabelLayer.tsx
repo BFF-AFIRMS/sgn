@@ -1,8 +1,6 @@
 import React from 'react';
-import { Plot } from '../model.types';
 import { usePlotGrid } from '../contexts/PlotGridContext';
 import { useLayoutConfig } from '../contexts/LayoutConfigContext';
-import { useView } from '../contexts/ViewContext';
 
 interface LabelLayerProps { }
 
@@ -15,12 +13,10 @@ export const LabelLayer: React.FC<LabelLayerProps> = ({ }) => {
     } = usePlotGrid();
     const {
         invertRows,
-        invertCols
-    } = useLayoutConfig();
-    const {
+        invertCols,
         labelVar,
         labelSize
-    } = useView();
+    } = useLayoutConfig();
 
     return (
         <g style={{ pointerEvents: 'none' }}>
