@@ -11,12 +11,6 @@ export interface ModalsContextType {
 	showDimDialog: boolean;
 	setShowDimDialog: React.Dispatch<React.SetStateAction<boolean>>;
 
-	showCuratorWarning: boolean;
-	setShowCuratorWarning: React.Dispatch<React.SetStateAction<boolean>>;
-
-	showSuppressModal: boolean;
-	setShowSuppressModal: React.Dispatch<React.SetStateAction<boolean>>;
-
 	showDeleteTraitModal: boolean;
 	setShowDeleteTraitModal: React.Dispatch<React.SetStateAction<boolean>>;
 
@@ -33,8 +27,6 @@ export const ModalsProvider: React.FC<FieldMapContextProps> = ({ children }) => 
     const [showPlotDetails, setShowPlotDetails] = useState(false);
     const [showEditAccession, setShowEditAccession] = useState(false);
     const [showDimDialog, setShowDimDialog] = useState(false);
-    const [showCuratorWarning, setShowCuratorWarning] = useState(false);
-    const [showSuppressModal, setShowSuppressModal] = useState(false);
     const [showDeleteTraitModal, setShowDeleteTraitModal] = useState(false);
     const [showDownloadCSVModal, setShowDownloadCSVModal] = useState(false);
 
@@ -45,8 +37,6 @@ export const ModalsProvider: React.FC<FieldMapContextProps> = ({ children }) => 
             showPlotDetails, setShowPlotDetails,
             showEditAccession, setShowEditAccession,
             showDimDialog, setShowDimDialog,
-            showCuratorWarning, setShowCuratorWarning,
-            showSuppressModal, setShowSuppressModal,
             showDeleteTraitModal, setShowDeleteTraitModal,
             showDownloadCSVModal, setShowDownloadCSVModal,
             loading, setLoading,

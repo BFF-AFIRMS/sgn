@@ -7,6 +7,7 @@ import { useHeatmap } from '../contexts/HeatmapContext';
 import { useView } from '../contexts/ViewContext';
 import { usePlotGrid } from '../contexts/PlotGridContext';
 import { ReplaceAccessionResult, useReplaceAccession } from '../hooks/useReplaceAccession';
+import { useSubmitSuppressPhenotype } from '../hooks/useSubmitSuppressPhenotype';
 
 interface PlotDetailsModalProps {
 }
@@ -17,8 +18,6 @@ export const PlotDetailsModal: React.FC<PlotDetailsModalProps> = ({ }) => {
         setShowPlotDetails: setShow,
         showEditAccession,
         setShowEditAccession,
-        setShowSuppressModal,
-        setShowCuratorWarning
     } = useModals();
 
     const {
@@ -42,6 +41,9 @@ export const PlotDetailsModal: React.FC<PlotDetailsModalProps> = ({ }) => {
 
     const [newAccession, setNewAccession] = useState('');
     const [newPlotName, setNewPlotName] = useState('');
+
+    const [showCuratorWarning, setShowCuratorWarning] = useState(false);
+    const [showSuppressModal, setShowSuppressModal] = useState(false);
 
     const plotStructureLayoutType = useMemo(() => {
         if (!plotStructure || !plotStructure.has) return 'none';
@@ -79,7 +81,8 @@ export const PlotDetailsModal: React.FC<PlotDetailsModalProps> = ({ }) => {
     }, [selectedPlot, newAccession, newPlotName, replaceAccession, setShow, setShowEditAccession, setShowCuratorWarning]);
 
     return <>
-        <CuratorWarningModal handleReplaceAccession={handleReplaceAccession} />
+        <CuratorWarningModal show={showCuratorWarning} setShow={setShowCuratorWarning} handleReplaceAccession={handleReplaceAccession} />
+        <SuppressPhenotypeModal show={showSuppressModal} setShow={setShowSuppressModal} setShowPlotDetails={setShow} />
         <div className="modal show tw:block tw:bg-black/50">
             <div className="modal-dialog modal-lg">
                 <div className="modal-content">
@@ -178,16 +181,22 @@ export const PlotDetailsModal: React.FC<PlotDetailsModalProps> = ({ }) => {
     </>;
 };
 
+/**
+ * Supporting modals for the PlotDetailsModal
+ */
+
 interface CuratorWarningModalProps {
+    show: boolean;
+    setShow: React.Dispatch<React.SetStateAction<boolean>>;
+
     handleReplaceAccession: (override: 'check' | 'override') => Promise<void>;
 }
 
-export const CuratorWarningModal: React.FC<CuratorWarningModalProps> = ({ handleReplaceAccession }) => {
-    const {
-        showCuratorWarning: show,
-        setShowCuratorWarning: setShow
-    } = useModals();
-
+export const CuratorWarningModal: React.FC<CuratorWarningModalProps> = ({
+    show,
+    setShow,
+    handleReplaceAccession
+}) => {
     if (!show) return null;
 
     return (
@@ -204,6 +213,70 @@ export const CuratorWarningModal: React.FC<CuratorWarningModalProps> = ({ handle
                     <div className="modal-footer">
                         <button className="btn btn-default" onClick={() => setShow(false)}>No</button>
                         <button className="btn btn-primary" onClick={() => handleReplaceAccession('override')}>Yes, Override</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+interface SuppressPhenotypeModalProps {
+    show: boolean;
+    setShow: React.Dispatch<React.SetStateAction<boolean>>;
+    setShowPlotDetails: React.Dispatch<React.SetStateAction<boolean>>;
+}
+
+export const SuppressPhenotypeModal: React.FC<SuppressPhenotypeModalProps> = ({
+    show,
+    setShow,
+    setShowPlotDetails
+}) => {
+    if (!show) return null;
+
+    const {
+        selectedPlot,
+    } = useView();
+
+    const {
+        heatmapData
+    } = useHeatmap();
+
+    const {
+        submitSuppressPhenotype
+    } = useSubmitSuppressPhenotype();
+
+    const plotName = useMemo(() => {
+        return selectedPlot?.observationUnitName || '';
+    }, [selectedPlot]);
+
+    const phenotypeValue = useMemo(() => {
+        return selectedPlot ? heatmapData[selectedPlot.observationUnitDbId || '']?.val : undefined;
+    }, [selectedPlot, heatmapData]);
+
+    const handleSuppressPhenotype = async () => {
+        const ok = await submitSuppressPhenotype();
+        if (ok) {
+            setShow(false);
+            setShowPlotDetails(false);
+        }
+    }
+
+    return (
+        <div className="modal show tw:block tw:bg-black/50">
+            <div className="modal-dialog">
+                <div className="modal-content">
+                    <div className="modal-header">
+                        <button type="button" className="close" onClick={() => setShow(false)}>&times;</button>
+                        <h4 className="modal-title">Suppress Plot Phenotype Measurement</h4>
+                    </div>
+                    <div className="modal-body">
+                        <p>Suppressed measurements will be seen as outliers and can be excluded during phenotype analysis.</p>
+                        <div><strong>Plot Name:</strong> {plotName}</div>
+                        <div><strong>Phenotype Value:</strong> {phenotypeValue}</div>
+                    </div>
+                    <div className="modal-footer">
+                        <button className="btn btn-default" onClick={() => setShow(false)}>Close</button>
+                        <button className="btn btn-danger" onClick={handleSuppressPhenotype}>Suppress Phenotype</button>
                     </div>
                 </div>
             </div>
