@@ -14,7 +14,7 @@ export interface ZoomPanContextType {
 	isDragging: boolean;
 	hasDragged: React.RefObject<boolean>;
 
-	containerRef: React.RefObject<HTMLDivElement | null>;
+	containerRef: React.RefCallback<HTMLElement | null>;
 
 	handleMouseDown: (e: React.MouseEvent<HTMLDivElement>) => void;
 	handleMouseMove: (e: React.MouseEvent<HTMLDivElement>) => void;
@@ -31,21 +31,23 @@ export const ZoomPanProvider: React.FC<FieldMapContextProps> = ({ children }) =>
     const [zoom, setZoom] = useState<number>(1);
     const [pan, setPan] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
     const [isDragging, setIsDragging] = useState<boolean>(false);
-    const containerRef = useRef<HTMLDivElement | null>(null);
     const hasDragged = useRef<boolean>(false);
     const dragStart = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
+
+    // Stash the container element received by the containerRef callback for use in updateZoomAndPan
+    const containerValueRef = useRef<HTMLElement | null>(null);
 
     const updateZoomAndPan = useCallback((
         nextZoom: number, 
         targetPan?: { x: number; y: number }
     ) => {
         const clampedZoom = Math.max(0.1, Math.min(5, nextZoom));
-        if (!containerRef.current) {
+        if (!containerValueRef.current) {
             setZoom(clampedZoom);
             if (targetPan) setPan(targetPan);
             return;
         }
-        const rect = containerRef.current.getBoundingClientRect();
+        const rect = containerValueRef.current.getBoundingClientRect();
 
         // Zoom around the center of the viewport if no target pan is provided
         if (!targetPan) {
@@ -71,41 +73,45 @@ export const ZoomPanProvider: React.FC<FieldMapContextProps> = ({ children }) =>
         });
     }, [pan, zoom, svgWidth, svgHeight]);
 
+    const handleNativeWheel = useCallback((node: HTMLElement | null, e: WheelEvent) => {
+        e.preventDefault();
+        if (!node) return;
+
+        // Get dimensions of the viewport container
+        const rect = node.getBoundingClientRect();
+        const cursorX = e.clientX - rect.left;
+        const cursorY = e.clientY - rect.top;
+
+        // Determine target coordinates on the unscaled map corresponding to the cursor position
+        const mapX = (cursorX - pan.x) / zoom;
+        const mapY = (cursorY - pan.y) / zoom;
+
+        const scaleFactor = 1.1;
+        let nextZoom = e.deltaY < 0 ? zoom * scaleFactor : zoom / scaleFactor;
+        nextZoom = Math.max(0.1, Math.min(5, nextZoom));
+
+        // Recalculate pan to keep the point under the cursor stable
+        const nextPanX = cursorX - mapX * nextZoom;
+        const nextPanY = cursorY - mapY * nextZoom;
+
+        updateZoomAndPan(nextZoom, { x: nextPanX, y: nextPanY });
+    }, [pan, zoom, updateZoomAndPan]);
+
     // Bind native non-passive wheel listener to allow e.preventDefault() and prevent window scroll
-    useEffect(() => {
-        const handleNativeWheel = (e: WheelEvent) => {
-            e.preventDefault();
-            if (!containerRef.current) return;
+    const containerRef = useCallback((node: HTMLElement | null) => {
+        containerValueRef.current = node;
+        const handleWheel = (event: WheelEvent) => handleNativeWheel(node, event);
 
-            // Get dimensions of the viewport container
-            const rect = containerRef.current.getBoundingClientRect();
-            const cursorX = e.clientX - rect.left;
-            const cursorY = e.clientY - rect.top;
-
-            // Determine target coordinates on the unscaled map corresponding to the cursor position
-            const mapX = (cursorX - pan.x) / zoom;
-            const mapY = (cursorY - pan.y) / zoom;
-
-            const scaleFactor = 1.1;
-            let nextZoom = e.deltaY < 0 ? zoom * scaleFactor : zoom / scaleFactor;
-            nextZoom = Math.max(0.1, Math.min(5, nextZoom));
-
-            // Recalculate pan to keep the point under the cursor stable
-            const nextPanX = cursorX - mapX * nextZoom;
-            const nextPanY = cursorY - mapY * nextZoom;
-
-            updateZoomAndPan(nextZoom, { x: nextPanX, y: nextPanY });
-        };
-        const element = containerRef.current;
-        if (element) {
-            element.addEventListener('wheel', handleNativeWheel, { passive: false });
+        if (node) {
+            node.addEventListener('wheel', handleWheel, { passive: false });
         }
         return () => {
-            if (element) {
-                element.removeEventListener('wheel', handleNativeWheel);
+            if (node) {
+                node.removeEventListener('wheel', handleWheel);
+                containerValueRef.current = null;
             }
         };
-    }, [zoom, pan, svgWidth, svgHeight]);
+    }, [handleNativeWheel]);
 
     const handleMouseDown = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
         // Only drag with primary mouse button
@@ -117,7 +123,6 @@ export const ZoomPanProvider: React.FC<FieldMapContextProps> = ({ children }) =>
 
     const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
         if (!isDragging) return;
-        if (!containerRef.current) return;
 
         // Calculate the raw next pan coordinates
         const nextX = e.clientX - dragStart.current.x;
