@@ -12,7 +12,6 @@ import { FieldMapSettingsPanel } from '../include/fieldmap/components/FieldMapSe
 import { NorthArrow } from '../include/fieldmap/components/NorthArrow';
 import { DimensionsModal } from '../include/fieldmap/modals/DimensionsModal';
 import { DownloadCSVModal } from '../include/fieldmap/modals/DownloadCSVModal';
-import { SuppressPhenotypeModal } from '../include/fieldmap/modals/SuppressPhenotypeModal';
 import { DeleteTraitModal } from '../include/fieldmap/modals/DeleteTraitModal';
 import { PlotGridProvider, usePlotGrid } from '../include/fieldmap/contexts/PlotGridContext';
 import { ControlProvider } from '../include/fieldmap/contexts/ControlContext';
@@ -121,7 +120,6 @@ const FieldMap: React.FC<FieldMapProps> = ({
             <FieldMapLegend />
 
             <DownloadCSVModal />
-            <SuppressPhenotypeModal />
             <DeleteTraitModal />
             <DimensionsModal />
             <PlotDetailsModal />
