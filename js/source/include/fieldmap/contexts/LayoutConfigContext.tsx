@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import { FieldMapContextProps } from '../types';
 
 export type PlotLayout = 'serpentine' | 'zigzag';
@@ -50,11 +50,7 @@ export const LayoutConfigProvider: React.FC<FieldMapContextProps> = ({ trialId, 
 
     const [northArrowAngle, setNorthArrowAngle] = useState<number>(0);
 
-    useEffect(() => {
-        loadNorthArrowAngle();
-    }, [trialId]);
-
-    const loadNorthArrowAngle = async () => {
+    const loadNorthArrowAngle = useCallback(async () => {
         try {
             const response = await fetch(`/ajax/breeders/trial/${trialId}/north_arrow_angle`);
             const body = await response.json();
@@ -64,7 +60,11 @@ export const LayoutConfigProvider: React.FC<FieldMapContextProps> = ({ trialId, 
         } catch (e) {
 			console.error('Error loading north arrow angle:', e);
         }
-    };
+    }, [trialId]);
+
+    useEffect(() => {
+        loadNorthArrowAngle();
+    }, [loadNorthArrowAngle]);
 
     return (
         <LayoutConfigContext.Provider value={{

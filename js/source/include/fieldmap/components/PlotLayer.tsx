@@ -1,4 +1,4 @@
-import React, { useMemo, useRef } from 'react';
+import React, { useCallback, useMemo, useRef } from 'react';
 import { Plot, TrialDetails, HeatmapValue } from '../types';
 import { palette } from '../utils/functions';
 import { usePlotGrid } from '../contexts/PlotGridContext';
@@ -261,7 +261,7 @@ export const PlotLayer: React.FC<PlotLayerProps> = ({
     const clickTimer = useRef<NodeJS.Timeout | null>(null);
 
     // Handle click vs double click logic
-    const handlePlotSelect = (plot: Plot) => {
+    const handlePlotSelect = useCallback((plot: Plot) => {
         if (hasDragged.current) {
             return;
         }
@@ -317,7 +317,15 @@ export const PlotLayer: React.FC<PlotLayerProps> = ({
                     .catch(() => {});
             }, 250);
         }
-    };
+    }, [trialId, setSelectedPlot, setShowPlotDetails, setPlotStructure, setPlotContentCache, setPlotImages]);
+
+    const handlePlotHover = useCallback((plot: Plot, clientX: number, clientY: number) => {
+        setHoveredPlot({ plot, x: clientX, y: clientY });
+    }, [setHoveredPlot]);
+
+    const handlePlotLeave = useCallback(() => {
+        setHoveredPlot(null);
+    }, [setHoveredPlot]);
 
     return (
         <>
@@ -349,8 +357,8 @@ export const PlotLayer: React.FC<PlotLayerProps> = ({
                                     familyNamePalette={familyNamePalette}
                                     crossNamePalette={crossNamePalette}
                                     onSelect={handlePlotSelect}
-                                    onHover={(p, clientX, clientY) => setHoveredPlot({ plot: p, x: clientX, y: clientY })}
-                                    onLeave={() => setHoveredPlot(null)}
+                                    onHover={handlePlotHover}
+                                    onLeave={handlePlotLeave}
                                 />
                             );
                         })}

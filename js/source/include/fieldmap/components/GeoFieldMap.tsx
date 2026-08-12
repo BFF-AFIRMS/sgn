@@ -65,6 +65,7 @@ export const GeoFieldMap: React.FC<GeoFieldMapProps> = ({ }) => {
             delete window.geoFieldMapInstance;
         };
     }, [selectedView, trialId, authToken]);
+
     return (
 		<div key="geofieldmap-panel" className="panel panel-default">
 			<div className="panel-body tw:flex tw:flex-col tw:gap-2.5">

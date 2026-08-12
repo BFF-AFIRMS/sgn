@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { FieldMapContextProps } from '../types';
 import { HeatmapValue } from '../types';
 import { interpolate, pearsonSkewness } from '../utils/functions';
@@ -74,7 +74,7 @@ export const HeatmapProvider: React.FC<FieldMapContextProps> = ({ trialId, authT
 		loadSpatialAdjustments();
 	}, [activeTrialIds]);
 
-    const fetchHeatmapObservations = async (variableId: string) => {
+    const fetchHeatmapObservations = useCallback(async (variableId: string) => {
         setLoading(true);
         const headers: Record<string, string> = {};
         if (authToken) {
@@ -110,7 +110,7 @@ export const HeatmapProvider: React.FC<FieldMapContextProps> = ({ trialId, authT
         } finally {
             setLoading(false);
         }
-    };
+    }, [activeTrialIds, authToken, selectedView, spatialAdjustments, setLoading]);
 
     const loadVariables = async () => {
         const headers: Record<string, string> = {};

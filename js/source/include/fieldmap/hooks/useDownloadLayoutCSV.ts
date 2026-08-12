@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { useLayoutConfig } from '../contexts/LayoutConfigContext';
 import { usePlotGrid } from '../contexts/PlotGridContext';
 import { useView } from '../contexts/ViewContext';
@@ -18,7 +19,7 @@ export const useDownloadLayoutCSV = () => {
 		invertRows
 	} = useLayoutConfig();
 
-	const downloadLayoutCSV = (
+	const downloadLayoutCSV = useCallback((
 		csvDownloadOpts: CsvDownloadOpts
 	) => {
 		let cols_csv_header = [];
@@ -90,6 +91,6 @@ export const useDownloadLayoutCSV = () => {
 		hiddenElement.target = '_blank';
 		hiddenElement.download = `Trial_${trialId}_spatial_layout.csv`;
 		hiddenElement.click();
-	};
+	}, [bounds, plotList, invertCols, invertRows, trialId]);
 	return { downloadLayoutCSV };
 };

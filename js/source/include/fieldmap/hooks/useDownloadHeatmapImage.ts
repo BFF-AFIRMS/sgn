@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { useView } from '../contexts/ViewContext';
 
 export const useDownloadHeatmapImage = () => {
@@ -5,7 +6,7 @@ export const useDownloadHeatmapImage = () => {
 		selectedViewLabel
 	} = useView();
 
-	const downloadHeatmapImage = () => {
+	const downloadHeatmapImage = useCallback(() => {
 		const svgEl = document.getElementById('fieldmap_chart_svg');
 		if (!svgEl) return;
 
@@ -32,6 +33,7 @@ export const useDownloadHeatmapImage = () => {
 			}
 		};
 		image.src = blobURL;
-	};
+	}, [selectedViewLabel]);
+
 	return { downloadHeatmapImage };
-}
+};

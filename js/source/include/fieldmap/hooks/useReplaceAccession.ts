@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { useModals } from '../contexts/ModalsContext';
 import { usePlotGrid } from '../contexts/PlotGridContext';
 import { useView } from '../contexts/ViewContext';
@@ -22,7 +23,7 @@ export const useReplaceAccession = () => {
 		fetchObservationUnits
 	} = usePlotGrid();
 
-    const replaceAccession = async (override: 'check' | 'override', selectedPlot: Plot | null, newAccession: string, newPlotName: string) => {
+    const replaceAccession = useCallback(async (override: 'check' | 'override', selectedPlot: Plot | null, newAccession: string, newPlotName: string) => {
         if (!selectedPlot) return ReplaceAccessionResult.Error;
         setLoading(true);
         try {
@@ -55,6 +56,7 @@ export const useReplaceAccession = () => {
         }
 
 		return ReplaceAccessionResult.Error;
-    };
+    }, [trialId, setLoading, fetchObservationUnits]);
+
     return { replaceAccession };
 };

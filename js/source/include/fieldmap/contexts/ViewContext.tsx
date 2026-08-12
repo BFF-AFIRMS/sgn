@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useMemo, useState } from 'react';
+import React, { createContext, useCallback, useContext, useMemo, useState } from 'react';
 import { FieldMapContextProps } from '../types';
 import { Plot, TrialDetails } from '../types';
 import { trial_colors, trial_colors_text } from '../utils/functions';
@@ -47,7 +47,7 @@ export const ViewProvider: React.FC<FieldMapContextProps> = ({ trialId, authToke
         return 'Accession';
     }, [trialStockType]);
 
-    const toggleLinkedTrials = async (checked: boolean) => {
+    const toggleLinkedTrials = useCallback(async (checked: boolean) => {
         setDisplayLinkedTrials(checked);
         if (checked) {
             try {
@@ -76,7 +76,7 @@ export const ViewProvider: React.FC<FieldMapContextProps> = ({ trialId, authToke
             setLinkedTrialsList([]);
             setActiveTrialIds([trialId]);
         }
-    };
+    }, [trialId, setDisplayLinkedTrials, setLinkedTrialsList, setActiveTrialIds]);
 
     return (
         <ViewContext.Provider value={{

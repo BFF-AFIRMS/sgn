@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { useModals } from '../contexts/ModalsContext';
 import { useDeleteTrait } from '../hooks/useDeleteTrait';
 
@@ -17,12 +17,12 @@ export const DeleteTraitModal: React.FC<DeleteTraitModalProps> = ({}) => {
        deleteTrait 
     } = useDeleteTrait();
 
-    const handleDeleteSingleTrait = async () => {
+    const handleDeleteSingleTrait = useCallback(async () => {
         const ok = await deleteTrait();
         if (ok) {
             setShow(false);
         }
-    };
+    }, [deleteTrait, setShow]);
 
     return (
         <div className="modal show tw:block tw:bg-black/50">

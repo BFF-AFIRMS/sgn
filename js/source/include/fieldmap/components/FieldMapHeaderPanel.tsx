@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { useView } from '../contexts/ViewContext';
 import { useHeatmap } from '../contexts/HeatmapContext';
 
@@ -21,7 +21,7 @@ export const FieldMapHeaderPanel: React.FC<FieldMapHeaderPanelProps> = ({
         fetchHeatmapObservations,
     } = useHeatmap();
 
-    const handleViewChange = (val: string) => {
+    const handleViewChange = useCallback((val: string) => {
         setSelectedView(val);
         if (val === 'fieldmap' || val === 'geofieldmap') {
             setHeatmapData({});
@@ -29,7 +29,7 @@ export const FieldMapHeaderPanel: React.FC<FieldMapHeaderPanelProps> = ({
             const variableId = val.replace(' (corrected)', '').replace(' (adjustment)', '');
             fetchHeatmapObservations(variableId);
         }
-    };
+    }, [setSelectedView, setHeatmapData, fetchHeatmapObservations]);
 
     return (
         <div className="panel panel-default">

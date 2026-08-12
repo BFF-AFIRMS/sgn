@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import { useLayoutConfig } from '../contexts/LayoutConfigContext';
 import { useModals } from '../contexts/ModalsContext';
 import { usePlotGrid } from '../contexts/PlotGridContext';
@@ -48,7 +48,7 @@ export const useSubmitFieldLayout = () => {
         return maxVal;
     }, [plotList]);
 
-	const submitFieldLayout = async () => {
+	const submitFieldLayout = useCallback(async () => {
 		const answer = window.confirm('You are about to save this plot layout to the database. Are you sure you would like to continue?');
 		if (!answer) return;
 		setLoading(true);
@@ -154,7 +154,13 @@ export const useSubmitFieldLayout = () => {
 		} finally {
 			setLoading(false);
 		}
-	};
+	}, [
+		trialId, authToken, gridMatrix, invertRows,
+		invertCols, topBorder, leftBorder, rightBorder,
+		bottomBorder, plotLayout, colorVar, labelVar,
+		labelSize, northArrowAngle, fetchObservationUnits,
+		loadNorthArrowAngle, setLoading
+	]);
 
 	return { submitFieldLayout };
 };

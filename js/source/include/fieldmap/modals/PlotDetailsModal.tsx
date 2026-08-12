@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { PlotStructureNode } from '../types';
 import { RenderPlantGrid, RenderSubplotGrid } from '../components/PlantSubplotGrids';
 import { AccessionAutocomplete } from '../components/AccessionAutocomplete';
@@ -67,7 +67,7 @@ export const PlotDetailsModal: React.FC<PlotDetailsModalProps> = ({ }) => {
         return !!heatmapData[selectedPlot.observationUnitDbId || ''];
     }, [selectedPlot, heatmapData]);
 
-    const handleReplaceAccession = async (override: 'check' | 'override') => {
+    const handleReplaceAccession = useCallback(async (override: 'check' | 'override') => {
         const result = await replaceAccession(override, selectedPlot, newAccession, newPlotName);
         if (result === ReplaceAccessionResult.Success) {
             setShow(false);
@@ -76,7 +76,7 @@ export const PlotDetailsModal: React.FC<PlotDetailsModalProps> = ({ }) => {
         } else if (result === ReplaceAccessionResult.Warning) {
             setShowCuratorWarning(true);
         }
-    }
+    }, [selectedPlot, newAccession, newPlotName, replaceAccession, setShow, setShowEditAccession, setShowCuratorWarning]);
 
     return <>
         <CuratorWarningModal handleReplaceAccession={handleReplaceAccession} />

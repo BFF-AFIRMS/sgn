@@ -1,9 +1,10 @@
-import React, { createContext, useContext, useState, useMemo } from 'react';
+import React, { createContext, useContext, useState, useMemo, useCallback } from 'react';
 import { Plot, PlotStructureNode } from '../types';
 import { useLayoutConfig } from './LayoutConfigContext';
 import { FieldMapContextProps } from '../types';
 import { useModals } from './ModalsContext';
 import { useView } from './ViewContext';
+import { derivePlotGrid } from '../utils/derivePlotGrid';
 
 export interface GridBounds {
     minCol: number;
@@ -22,20 +23,21 @@ export interface PlotGridContextType {
     svgDimensions: { width: number; height: number };
     gridMatrix: Plot[][];
 
+    fetchObservationUnits: () => Promise<void>;
+    recalculateLayout: (layout: 'serpentine' | 'zigzag') => void;
+
     dimensions: { rows: number; cols: number };
+    applyDimensions: (rowsInput: string, colsInput: string, fillerAccessionInput?: string) => Promise<void>;
 
     fillerAccessionId: string | undefined;
     setFillerAccessionId: React.Dispatch<React.SetStateAction<string | undefined>>;
     fillerAccessionName: string | undefined;
     setFillerAccessionName: React.Dispatch<React.SetStateAction<string | undefined>>;
 
-    recalculateLayout: (layout: 'serpentine' | 'zigzag') => void;
-
-    transposeLayout: () => void;
-    rotateLayout: () => void;
-
     isTransposed: boolean;
+    transposeLayout: () => void;
     mapRotation: number;
+    rotateLayout: () => void;
 
     plotStructure: PlotStructureNode | null;
     setPlotStructure: React.Dispatch<React.SetStateAction<PlotStructureNode | null>>;
@@ -43,9 +45,6 @@ export interface PlotGridContextType {
     setPlotContentCache: React.Dispatch<React.SetStateAction<Record<string, string[]>>>;
     plotImages: string;
     setPlotImages: React.Dispatch<React.SetStateAction<string>>;
-
-    fetchObservationUnits: () => Promise<void>;
-    applyDimensions: (rowsInput: string, colsInput: string, fillerAccessionInput?: string) => Promise<void>;
 }
 
 const PlotGridContext = createContext<PlotGridContextType | undefined>(undefined);
@@ -184,74 +183,18 @@ export const PlotGridProvider: React.FC<FieldMapContextProps> = ({ trialId, auth
     }, [renderBounds]);
 
 
-    const parsePlotData = (data: any[]) => {
-        const mapped: Record<string, Plot> = {};
-        const pseudo_layout: Record<string, number> = {};
-
-        let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
-
+    const parsePlotData = useCallback((data: any[]) => {
         setIsTransposed(false);
         setMapRotation(0);
 
-        data.forEach(plot => {
-            let x = parseInt(plot.observationUnitPosition?.positionCoordinateX);
-            let y = parseInt(plot.observationUnitPosition?.positionCoordinateY);
+        const {
+            plotObject,
+            dimensions: { rows, cols }
+        } = derivePlotGrid(data);
 
-            if (isNaN(y)) {
-                const rel = plot.observationUnitPosition?.observationLevelRelationships || [];
-                const blockRel = rel.find((r: any) => r.levelName === 'block');
-                const repRel = rel.find((r: any) => r.levelName === 'rep');
-                const plotRel = rel.find((r: any) => r.levelName === 'plot');
-                const code = blockRel?.levelCode || repRel?.levelCode || plotRel?.levelCode || '1';
-                y = parseInt(code);
-                if (isNaN(y)) y = 1;
-            }
-
-            if (isNaN(x)) {
-                if (pseudo_layout[y] !== undefined) {
-                    pseudo_layout[y] += 1;
-                    x = pseudo_layout[y];
-                } else {
-                    pseudo_layout[y] = 1;
-                    x = 1;
-                }
-            }
-
-            if (!isNaN(x)) { minX = Math.min(minX, x); maxX = Math.max(maxX, x); }
-            if (!isNaN(y)) { minY = Math.min(minY, y); maxY = Math.max(maxY, y); }
-
-            if (plot.observationUnitPosition?.observationLevel?.levelName === 'plot') {
-                let type: Plot['type'] = 'data';
-                if (plot.observationUnitPosition.entryType === 'filler' || plot.germplasmName === 'Filler') type = 'filler';
-                else if (plot.observationUnitPosition.entryType === 'border') type = 'border';
-
-                mapped[plot.observationUnitDbId] = {
-                    type,
-                    observationUnitDbId: plot.observationUnitDbId,
-                    observationUnitName: plot.observationUnitName,
-                    observationUnitPosition: {
-                        positionCoordinateX: x,
-                        positionCoordinateY: y,
-                        observationLevel: plot.observationUnitPosition.observationLevel,
-                        observationLevelRelationships: plot.observationUnitPosition.observationLevelRelationships,
-                        entryType: plot.observationUnitPosition.entryType
-                    },
-                    germplasmDbId: plot.germplasmDbId,
-                    germplasmName: plot.germplasmName,
-                    crossName: plot.crossName,
-                    locationName: plot.locationName,
-                    studyName: plot.studyName,
-                    plotImageDbIds: plot.plotImageDbIds || [],
-                    additionalInfo: plot.additionalInfo || {}
-                };
-            }
-        });
-        setPlotObject(mapped);
-        setDimensions({
-            rows: isFinite(maxY) ? maxY - minY + 1 : 0,
-            cols: isFinite(maxX) ? maxX - minX + 1 : 0
-        });
-    };
+        setPlotObject(plotObject);
+        setDimensions({ rows, cols });
+    }, []);
 
     const gridMatrix = useMemo(() => {
         const { minCol, maxCol, minRow, maxRow } = renderBounds;
@@ -293,7 +236,7 @@ export const PlotGridProvider: React.FC<FieldMapContextProps> = ({ trialId, auth
         return matrix;
     }, [bounds, renderBounds, plotList, fillerAccessionId]);
 
-    const recalculateLayout = (layout: 'serpentine' | 'zigzag') => {
+    const recalculateLayout = useCallback((layout: 'serpentine' | 'zigzag') => {
         setPlotObject(currentPlots => {
             const rows = dimensions.rows || bounds.numRows;
             const cols = dimensions.cols || bounds.numCols;
@@ -342,9 +285,9 @@ export const PlotGridProvider: React.FC<FieldMapContextProps> = ({ trialId, auth
             }
             return newPlotObject;
         });
-    };
+    }, [dimensions.rows, dimensions.cols, bounds.numRows, bounds.numCols]);
 
-    const transposeLayout = () => {
+    const transposeLayout = useCallback(() => {
         setIsTransposed(t => !t);
         setPlotObject(current => {
             const transposed: Record<string, Plot> = {};
@@ -361,9 +304,9 @@ export const PlotGridProvider: React.FC<FieldMapContextProps> = ({ trialId, auth
             return transposed;
         });
         setDimensions(d => ({ rows: d.cols, cols: d.rows }));
-    };
+    }, []);
 
-    const rotateLayout = () => {
+    const rotateLayout = useCallback(() => {
         setMapRotation(r => (r + 90) % 360);
         const { minCol, maxCol } = bounds;
         setPlotObject(current => {
@@ -384,9 +327,9 @@ export const PlotGridProvider: React.FC<FieldMapContextProps> = ({ trialId, auth
             return rotated;
         });
         setDimensions(d => ({ rows: d.cols, cols: d.rows }));
-    };
+    }, [bounds.minCol, bounds.maxCol]);
 
-    const fetchObservationUnits = async () => {
+    const fetchObservationUnits = useCallback(async () => {
         setLoading(true);
         const headers: Record<string, string> = {};
         if (authToken) {
@@ -407,9 +350,8 @@ export const PlotGridProvider: React.FC<FieldMapContextProps> = ({ trialId, auth
                     setBottomBorder(firstInfo.bottom_border_selection);
                     setInvertRows(firstInfo.invert_row_checkmark);
                     setInvertCols(firstInfo.invert_col_checkmark);
-                    if (firstInfo.plot_layout) {
-                        setPlotLayout(firstInfo.plot_layout);
-                    }
+
+                    if (firstInfo.plot_layout) setPlotLayout(firstInfo.plot_layout);
                     if (firstInfo.plot_color_var) setColorVar(firstInfo.plot_color_var);
                     if (firstInfo.plot_label_var) setLabelVar(firstInfo.plot_label_var);
                     if (firstInfo.plot_label_size) setLabelSize(firstInfo.plot_label_size);
@@ -422,9 +364,9 @@ export const PlotGridProvider: React.FC<FieldMapContextProps> = ({ trialId, auth
         } finally {
             setLoading(false);
         }
-    };
+    }, [activeTrialIds, authToken, setTopBorder, setLeftBorder, setRightBorder, setBottomBorder, setInvertRows, setInvertCols, setPlotLayout, setColorVar, setLabelVar, setLabelSize]);
 
-    const applyDimensions = async (rowsInput: string, colsInput: string, fillerAccessionInput?: string) => {
+    const applyDimensions = useCallback(async (rowsInput: string, colsInput: string, fillerAccessionInput?: string) => {
         const rows = parseInt(rowsInput) || 0;
         const cols = parseInt(colsInput) || 0;
         const numRealPlots = plotList.length;
@@ -453,7 +395,7 @@ export const PlotGridProvider: React.FC<FieldMapContextProps> = ({ trialId, auth
         }
 
         setDimensions({ rows, cols });
-    };
+    }, [trialId, plotList]);
 
     return (
         <PlotGridContext.Provider value={{

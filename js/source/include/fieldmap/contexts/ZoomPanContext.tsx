@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
 import { usePlotGrid } from './PlotGridContext';
 import { FieldMapContextProps } from '../types';
 
@@ -35,7 +35,7 @@ export const ZoomPanProvider: React.FC<FieldMapContextProps> = ({ children }) =>
     const hasDragged = useRef<boolean>(false);
     const dragStart = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
 
-    const updateZoomAndPan = (
+    const updateZoomAndPan = useCallback((
         nextZoom: number, 
         targetPan?: { x: number; y: number }
     ) => {
@@ -69,7 +69,7 @@ export const ZoomPanProvider: React.FC<FieldMapContextProps> = ({ children }) =>
             x: Math.max(minPanX, Math.min(maxPanX, targetPan.x)),
             y: Math.max(minPanY, Math.min(maxPanY, targetPan.y))
         });
-    };
+    }, [pan, zoom, svgWidth, svgHeight]);
 
     // Bind native non-passive wheel listener to allow e.preventDefault() and prevent window scroll
     useEffect(() => {
@@ -107,15 +107,15 @@ export const ZoomPanProvider: React.FC<FieldMapContextProps> = ({ children }) =>
         };
     }, [zoom, pan, svgWidth, svgHeight]);
 
-    const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    const handleMouseDown = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
         // Only drag with primary mouse button
         if (e.button !== 0) return;
         setIsDragging(true);
         hasDragged.current = false;
         dragStart.current = { x: e.clientX - pan.x, y: e.clientY - pan.y };
-    };
+    }, [pan]);
 
-    const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
         if (!isDragging) return;
         if (!containerRef.current) return;
 
@@ -130,16 +130,17 @@ export const ZoomPanProvider: React.FC<FieldMapContextProps> = ({ children }) =>
         if (deltaX > CLICK_DRAG_THRESHOLD || deltaY > CLICK_DRAG_THRESHOLD) {
             hasDragged.current = true;
         }
-    };
+    }, [isDragging, pan, zoom]);
 
-    const handleMouseUpOrLeave = () => {
+    const handleMouseUpOrLeave = useCallback(() => {
         setIsDragging(false);
-    };
+    }, []);
 
-    const handleResetZoomPan = () => {
+    const handleResetZoomPan = useCallback(() => {
         setZoom(1);
         setPan({ x: 0, y: 0 });
-    };
+    }, []);
+
     return (
         <ZoomPanContext.Provider value={{
 			zoom,

@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { useLayoutConfig } from '../contexts/LayoutConfigContext';
 import { useView } from '../contexts/ViewContext';
 import { DownloadOpts } from '../types';
@@ -14,7 +15,7 @@ export const useDownloadPlotOrder = () => {
 		leftBorder
 	} = useLayoutConfig();
 
-	const downloadPlotOrder = (downloadOpts: DownloadOpts) => {
+	const downloadPlotOrder = useCallback((downloadOpts: DownloadOpts) => {
 		const q = new URLSearchParams({
 			trial_ids: activeTrialIds.join(','),
 			type: downloadOpts.type,
@@ -32,6 +33,7 @@ export const useDownloadPlotOrder = () => {
 			hm_row: downloadOpts.hmRow
 		}).toString();
 		window.open(`/ajax/breeders/trial_plot_order?${q}`, '_blank');
-	};
+	}, [activeTrialIds, topBorder, rightBorder, bottomBorder, leftBorder]);
+
 	return { downloadPlotOrder };
 };

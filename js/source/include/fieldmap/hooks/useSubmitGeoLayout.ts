@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { useModals } from '../contexts/ModalsContext';
 import { usePlotGrid } from '../contexts/PlotGridContext';
 
@@ -10,7 +11,7 @@ export const useSubmitGeoLayout = () => {
 		fetchObservationUnits
 	} = usePlotGrid();
 
-    const submitGeoLayout = async () => {
+    const submitGeoLayout = useCallback(async () => {
         const fm = (window as any).geoFieldMapInstance;
         if (fm) {
             setLoading(true);
@@ -24,7 +25,7 @@ export const useSubmitGeoLayout = () => {
 				setLoading(false);
 			}
         }
-    };
+    }, [setLoading, fetchObservationUnits]);
 
 	return { submitGeoLayout };
 };

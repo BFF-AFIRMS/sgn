@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { useHeatmap } from '../contexts/HeatmapContext';
 import { useModals } from '../contexts/ModalsContext';
 import { useView } from '../contexts/ViewContext';
@@ -17,7 +18,7 @@ export const useDeleteTrait = () => {
 		loadVariables
 	} = useHeatmap();
 
-	const deleteTrait = async () => {
+	const deleteTrait = useCallback(async () => {
         const currentTraitId = selectedView.replace(' (corrected)', '').replace(' (adjustment)', '');
         setLoading(true);
 		try {
@@ -45,7 +46,7 @@ export const useDeleteTrait = () => {
 			setLoading(false);
 		}
 		return false;
-    };
+    }, [trialId, selectedView, setSelectedView, setHeatmapData, loadVariables, setLoading]);
 
 	return { deleteTrait };
 };

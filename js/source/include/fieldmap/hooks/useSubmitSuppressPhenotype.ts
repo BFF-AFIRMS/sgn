@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { useHeatmap } from '../contexts/HeatmapContext';
 import { useModals } from '../contexts/ModalsContext';
 import { useView } from '../contexts/ViewContext';
@@ -18,7 +19,7 @@ export const useSubmitSuppressPhenotype = () => {
 		fetchHeatmapObservations,
 	} = useHeatmap();
 
-    const submitSuppressPhenotype = async () => {
+    const submitSuppressPhenotype = useCallback(async () => {
 		if (!selectedPlot) {
 			return false;
 		}
@@ -55,6 +56,7 @@ export const useSubmitSuppressPhenotype = () => {
         }
 
 		return false;
-    };
+    }, [trialId, selectedPlot, selectedView, heatmapData, setLoading, fetchHeatmapObservations]);
+
 	return { submitSuppressPhenotype };
 };
