@@ -11,8 +11,6 @@ export const DeleteTraitModal: React.FC<DeleteTraitModalProps> = ({}) => {
         setShowDeleteTraitModal: setShow
     } = useModals();
 
-    if (!show) return null;
-
     const {
        deleteTrait 
     } = useDeleteTrait();
@@ -23,6 +21,8 @@ export const DeleteTraitModal: React.FC<DeleteTraitModalProps> = ({}) => {
             setShow(false);
         }
     }, [deleteTrait, setShow]);
+
+    if (!show) return null;
 
     return (
         <div className="modal show tw:block tw:bg-black/50">

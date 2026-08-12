@@ -12,8 +12,6 @@ export const DownloadCSVModal: React.FC<DownloadCSVModalProps> = ({ }) => {
         setShowDownloadCSVModal: setShow
     } = useModals();
 
-    if (!show) return null;
-
     const [csvDownloadOpts, setCsvDownloadOpts] = useState<CsvDownloadOpts>({
         accession: true,
         obsUnit: false,
@@ -32,6 +30,8 @@ export const DownloadCSVModal: React.FC<DownloadCSVModalProps> = ({ }) => {
         downloadLayoutCSV(csvDownloadOpts);
         setShow(false);
     };
+
+    if (!show) return null;
 
     return (
         <div className="modal show tw:block tw:bg-black/50">

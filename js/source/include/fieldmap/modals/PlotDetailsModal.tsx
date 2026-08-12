@@ -37,8 +37,6 @@ export const PlotDetailsModal: React.FC<PlotDetailsModalProps> = ({ }) => {
 
     const { heatmapData } = useHeatmap();
 
-    if (!show || !selectedPlot) return null;
-
     const [newAccession, setNewAccession] = useState('');
     const [newPlotName, setNewPlotName] = useState('');
 
@@ -79,6 +77,8 @@ export const PlotDetailsModal: React.FC<PlotDetailsModalProps> = ({ }) => {
             setShowCuratorWarning(true);
         }
     }, [selectedPlot, newAccession, newPlotName, replaceAccession, setShow, setShowEditAccession, setShowCuratorWarning]);
+
+    if (!show || !selectedPlot) return null;
 
     return <>
         <CuratorWarningModal show={showCuratorWarning} setShow={setShowCuratorWarning} handleReplaceAccession={handleReplaceAccession} />
@@ -231,8 +231,6 @@ export const SuppressPhenotypeModal: React.FC<SuppressPhenotypeModalProps> = ({
     setShow,
     setShowPlotDetails
 }) => {
-    if (!show) return null;
-
     const {
         selectedPlot,
     } = useView();
@@ -260,6 +258,8 @@ export const SuppressPhenotypeModal: React.FC<SuppressPhenotypeModalProps> = ({
             setShowPlotDetails(false);
         }
     }
+
+    if (!show) return null;
 
     return (
         <div className="modal show tw:block tw:bg-black/50">

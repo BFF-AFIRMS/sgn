@@ -18,13 +18,14 @@ export const FieldMapTooltip: React.FC<FieldMapTooltipProps> = ({ }) => {
         plotContentCache,
     } = usePlotGrid();
 
-    if (!hoveredPlot) return null;
-
     const {
         selectedView,
         selectedViewLabel
     } = useView();
+
     const { heatmapData } = useHeatmap();
+
+    if (!hoveredPlot) return null;
 
     const plot = hoveredPlot.plot;
     const coordKey = `${plot.observationUnitPosition?.positionCoordinateX}-${plot.observationUnitPosition?.positionCoordinateY}`;

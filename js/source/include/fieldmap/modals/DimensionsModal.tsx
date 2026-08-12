@@ -20,12 +20,12 @@ export const DimensionsModal: React.FC<DimensionsModalProps> = ({}) => {
         applyDimensions
     } = usePlotGrid();
 
-    if (!show) return null;
-
     const handleApplyDimensions = async () => {
         await applyDimensions(dimRowsInput, dimColsInput, fillerAccessionInput);
         setShow(false);
     };
+
+    if (!show) return null;
 
     return (
         <div className="modal show tw:block tw:bg-black/50">
