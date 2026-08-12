@@ -242,8 +242,6 @@ export const PlotGridProvider: React.FC<FieldMapContextProps> = ({ trialId, auth
             rows = rows ?? dimensions.rows ?? bounds.numRows;
             cols = cols ?? dimensions.cols ?? bounds.numCols;
 
-            console.log(`Recalculating layout to ${layout} with dimensions ${rows}x${cols}`);
-
             const plotsArr = Object.values(currentPlots).filter(p => !!p.observationUnitDbId);
 
             let minC = Infinity, minR = Infinity;
@@ -286,8 +284,6 @@ export const PlotGridProvider: React.FC<FieldMapContextProps> = ({ trialId, auth
                     }
                 }
             }
-            console.log('Old plot object before layout recalculation:', currentPlots);
-            console.log('New plot object after layout recalculation:', newPlotObject);
             return newPlotObject;
         });
     }, [dimensions, bounds]);
