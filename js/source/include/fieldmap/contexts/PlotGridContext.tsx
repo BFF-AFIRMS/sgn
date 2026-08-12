@@ -55,6 +55,7 @@ export const PlotGridProvider: React.FC<FieldMapContextProps> = ({ trialId, auth
         bottomBorder, setBottomBorder,
         leftBorder, setLeftBorder,
         rightBorder, setRightBorder,
+        plotLayout,
         setInvertCols,
         setInvertRows,
         setPlotLayout,
@@ -236,10 +237,12 @@ export const PlotGridProvider: React.FC<FieldMapContextProps> = ({ trialId, auth
         return matrix;
     }, [bounds, renderBounds, plotList, fillerAccessionId]);
 
-    const recalculateLayout = useCallback((layout: 'serpentine' | 'zigzag') => {
+    const recalculateLayout = useCallback((layout: 'serpentine' | 'zigzag', rows?: number, cols?: number) => {
         setPlotObject(currentPlots => {
-            const rows = dimensions.rows || bounds.numRows;
-            const cols = dimensions.cols || bounds.numCols;
+            rows = rows ?? dimensions.rows ?? bounds.numRows;
+            cols = cols ?? dimensions.cols ?? bounds.numCols;
+
+            console.log(`Recalculating layout to ${layout} with dimensions ${rows}x${cols}`);
 
             const plotsArr = Object.values(currentPlots).filter(p => !!p.observationUnitDbId);
 
@@ -283,9 +286,11 @@ export const PlotGridProvider: React.FC<FieldMapContextProps> = ({ trialId, auth
                     }
                 }
             }
+            console.log('Old plot object before layout recalculation:', currentPlots);
+            console.log('New plot object after layout recalculation:', newPlotObject);
             return newPlotObject;
         });
-    }, [dimensions.rows, dimensions.cols, bounds.numRows, bounds.numCols]);
+    }, [dimensions, bounds]);
 
     const transposeLayout = useCallback(() => {
         setIsTransposed(t => !t);
@@ -327,7 +332,7 @@ export const PlotGridProvider: React.FC<FieldMapContextProps> = ({ trialId, auth
             return rotated;
         });
         setDimensions(d => ({ rows: d.cols, cols: d.rows }));
-    }, [bounds.minCol, bounds.maxCol]);
+    }, [bounds]);
 
     const fetchObservationUnits = useCallback(async () => {
         setLoading(true);
@@ -395,6 +400,7 @@ export const PlotGridProvider: React.FC<FieldMapContextProps> = ({ trialId, auth
         }
 
         setDimensions({ rows, cols });
+        recalculateLayout(plotLayout, rows, cols);
     }, [trialId, plotList]);
 
     useEffect(() => {
