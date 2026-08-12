@@ -69,6 +69,7 @@ export const PlotDetailsModal: React.FC<PlotDetailsModalProps> = ({ }) => {
 
     const handleReplaceAccession = useCallback(async (override: 'check' | 'override') => {
         const result = await replaceAccession(override, selectedPlot, newAccession, newPlotName);
+        console.log('handleReplaceAccession result:', result);
         if (result === ReplaceAccessionResult.Success) {
             setShow(false);
             setShowEditAccession(false);
@@ -81,8 +82,6 @@ export const PlotDetailsModal: React.FC<PlotDetailsModalProps> = ({ }) => {
     if (!show || !selectedPlot) return null;
 
     return <>
-        <CuratorWarningModal show={showCuratorWarning} setShow={setShowCuratorWarning} handleReplaceAccession={handleReplaceAccession} />
-        <SuppressPhenotypeModal show={showSuppressModal} setShow={setShowSuppressModal} setShowPlotDetails={setShow} />
         <div className="modal show tw:block tw:bg-black/50">
             <div className="modal-dialog modal-lg">
                 <div className="modal-content">
@@ -178,6 +177,8 @@ export const PlotDetailsModal: React.FC<PlotDetailsModalProps> = ({ }) => {
                 </div>
             </div>
         </div>
+        <CuratorWarningModal show={showCuratorWarning} setShow={setShowCuratorWarning} handleReplaceAccession={handleReplaceAccession} />
+        <SuppressPhenotypeModal show={showSuppressModal} setShow={setShowSuppressModal} setShowPlotDetails={setShow} />
     </>;
 };
 
