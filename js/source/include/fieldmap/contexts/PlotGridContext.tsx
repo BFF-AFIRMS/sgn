@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useMemo, useCallback } from 'react';
+import React, { createContext, useContext, useState, useMemo, useCallback, useEffect } from 'react';
 import { Plot, PlotStructureNode } from '../types';
 import { useLayoutConfig } from './LayoutConfigContext';
 import { FieldMapContextProps } from '../types';
@@ -396,6 +396,10 @@ export const PlotGridProvider: React.FC<FieldMapContextProps> = ({ trialId, auth
 
         setDimensions({ rows, cols });
     }, [trialId, plotList]);
+
+    useEffect(() => {
+        fetchObservationUnits();
+    }, [activeTrialIds]);
 
     return (
         <PlotGridContext.Provider value={{

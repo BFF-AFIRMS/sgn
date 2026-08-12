@@ -112,7 +112,7 @@ export const HeatmapProvider: React.FC<FieldMapContextProps> = ({ trialId, authT
         }
     }, [activeTrialIds, authToken, selectedView, spatialAdjustments, setLoading]);
 
-    const loadVariables = async () => {
+    const loadVariables = useCallback(async () => {
         const headers: Record<string, string> = {};
         if (authToken) {
             headers['Authorization'] = `Bearer ${authToken}`;
@@ -131,9 +131,9 @@ export const HeatmapProvider: React.FC<FieldMapContextProps> = ({ trialId, authT
         } catch (e) {
 			console.error('Error loading variables:', e);
         }
-    };
+    }, [authToken, trialId]);
 
-    const loadSpatialAdjustments = async () => {
+    const loadSpatialAdjustments = useCallback(async () => {
         try {
             const response = await fetch(`/ajax/spatial_model/retrieve_spatial_adjustments/${trialId}`);
             const body = await response.json();
@@ -143,7 +143,7 @@ export const HeatmapProvider: React.FC<FieldMapContextProps> = ({ trialId, authT
         } catch (e) {
 			console.error('Error loading spatial adjustments:', e);
         }
-    };
+    }, [trialId]);
 
     return (
         <HeatmapContext.Provider value={{
