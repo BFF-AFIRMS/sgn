@@ -136,11 +136,10 @@ export const PlotDetailsModal: React.FC<PlotDetailsModalProps> = ({ }) => {
                                             <div className="tw:p-2.5 tw:border tw:rounded tw:bg-[#fafafa]">
                                                 <RenderPlantGrid node={plotStructure} />
                                             </div>
-                                        ) : (
-                                            <div className="tw:max-h-62.5 tw:overflow-y-auto tw:bg-[#f5f5f5] tw:p-2.5 tw:rounded tw:text-xs">
-                                                <pre className="tw:border-0 tw:bg-transparent tw:p-0 tw:m-0">{JSON.stringify(plotStructure, null, 2)}</pre>
-                                            </div>
-                                        )}
+                                        ) : null}
+                                        <div className="tw:max-h-62.5 tw:overflow-y-auto tw:bg-[#f5f5f5] tw:p-2.5 tw:rounded tw:text-xs">
+                                            <pre className="tw:border-0 tw:bg-transparent tw:p-0 tw:m-0">{JSON.stringify(plotStructure, null, 2)}</pre>
+                                        </div>
                                     </div>
                                 )}
 
