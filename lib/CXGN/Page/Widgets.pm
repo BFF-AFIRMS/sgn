@@ -107,8 +107,8 @@ sub collapser {
 	my $initial_text = ($state eq "hid") ? $hide_state_linktext : $linktext;
 	my $href_attr = $alt_href ? qq|href="$alt_href"| : qq|href="javascript:void(0);"|;
 
-	my $onswitch_style = $linkstyle . ($state eq "hid") ? "" : "display: none";
-	my $offswitch_style = $linkstyle . ($state eq "hid") ? "display: none" : "";
+	my $onswitch_style = $linkstyle . (($state eq "hid") ? "" : "display: none");
+	my $offswitch_style = $linkstyle . (($state eq "hid") ? "display: none" : "");
 
 	my $esc_linktext = $linktext;
 	$esc_linktext =~ s/"/\\"/g;
@@ -127,8 +127,14 @@ sub collapser {
 	      transform: rotate(-90deg);
 	  }
 	</style>
-	<a class="collapser collapser_show collapsed" data-toggle="collapse" data-target="#${id}_content" target="$alt_target" $href_attr style="$onswitch_style;" id="${id}_onswitch"><span class="glyphicon glyphicon-chevron-down collapser-chevron"></span><span class="collapser-label">$initial_text</span></a>
-	<a class="collapser collapser_show" data-toggle="collapse" data-target="#${id}_content" target="$alt_target" $href_attr style="$offswitch_style;" id="${id}_offswitch"><span class="glyphicon glyphicon-chevron-down collapser-chevron"></span><span class="collapser-label">$initial_text</span></a>
+	<a class="collapser collapser_show collapsed" data-toggle="collapse" data-target="#${id}_content" target="$alt_target" $href_attr style="$onswitch_style;" id="${id}_onswitch">
+		<span class="glyphicon glyphicon-chevron-down collapser-chevron"></span>
+		<span class="collapser-label">$initial_text</span>
+	</a>
+	<a class="collapser collapser_show" data-toggle="collapse" data-target="#${id}_content" target="$alt_target" $href_attr style="$offswitch_style;" id="${id}_offswitch">
+		<span class="glyphicon glyphicon-chevron-down collapser-chevron"></span>
+		<span class="collapser-label">$initial_text</span>
+	</a>
 HTML
 
 	my $wrapped_content = <<HTML;
@@ -143,14 +149,18 @@ jQuery(document).ready(function() {
     var \$onswitch = jQuery('#${id}_onswitch');
     var \$offswitch = jQuery('#${id}_offswitch');
 
-    \$content.on('show.bs.collapse', function() {
+    \$content.on('show.bs.collapse', function(event) {
+        // When collapsers are nested, prevent propogation to parents
+        event.stopPropagation();
         \$onswitch.hide();
         \$offswitch.show();
         \$label.html("$esc_linktext");
         $show_save_js
     });
 
-    \$content.on('hide.bs.collapse', function() {
+    \$content.on('hide.bs.collapse', function(event) {
+        // When collapsers are nested, prevent propogation to parents
+        event.stopPropagation();
         \$offswitch.hide();
         \$onswitch.show();
         \$label.html("$esc_hide_state_linktext");
