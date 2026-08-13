@@ -18,7 +18,7 @@ export const AccessionAutocomplete: React.FC<AccessionAutocompleteProps> = ({
     const [show, setShow] = useState(false);
 
     useEffect(() => {
-        if (value.length < 2) {
+        if (value.length < 1) {
             setSuggestions([]);
             return;
         }
