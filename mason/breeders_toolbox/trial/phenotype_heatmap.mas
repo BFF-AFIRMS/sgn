@@ -9,9 +9,9 @@ $trial_stock_type => undef
 </%args>
 
 <& /util/import_css.mas, paths => ['fieldmap/leaflet-search.min.css', 'fieldmap/leaflet.css'] &>
-<& /util/import_javascript.mas, entries => ['fieldmap_react'], classes => [ 'jqueryui.js', 'jquery.js', 'jstree.dist.jstree', "thickbox", "CXGN.Page.FormattingHelpers", 'brapi.fieldmap.leaflet', 'brapi.fieldmap.L-Path-Transform', 'brapi.fieldmap.leaflet-search', 'brapi.fieldmap.turf', 'brapi.BrAPI', 'brapi.BrAPIFieldmap' ] &>
+<& /util/import_javascript.mas, entries => ['fieldmap'], classes => [ 'jqueryui.js', 'jquery.js', 'jstree.dist.jstree', "thickbox", "CXGN.Page.FormattingHelpers", 'brapi.fieldmap.leaflet', 'brapi.fieldmap.L-Path-Transform', 'brapi.fieldmap.leaflet-search', 'brapi.fieldmap.turf', 'brapi.BrAPI', 'brapi.BrAPIFieldmap' ] &>
 
-<div id="fieldmap_react_root"></div>
+<div id="fieldmap_root"></div>
 
 <script defer="defer" type="text/javascript">
 jQuery(document).ready(function() {
@@ -19,7 +19,7 @@ jQuery(document).ready(function() {
     var require_login = "<%  $c->get_conf('brapi_require_login') %>";
 
     jQuery("#pheno_heatmap_onswitch").click(function() {
-        window.jsMod['fieldmap_react'].init('fieldmap_react_root', {
+        window.jsMod['fieldmap'].init('fieldmap_root', {
             trialId: '<% $trial_id %>',
             trialStockType: '<% $trial_stock_type %>',
             hasColAndRowNumbers: <% $has_col_and_row_numbers ? 'true' : 'false' %>,
