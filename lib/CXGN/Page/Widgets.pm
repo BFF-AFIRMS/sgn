@@ -103,7 +103,6 @@ sub collapser {
 	$hide_state_linktext ||= $linktext;
 
 	my $collapse_in = ($state eq "hid") ? "" : "in";
-	my $collapsed_state = ($state eq "hid") ? "collapsed" : "";
 	my $initial_text = ($state eq "hid") ? $hide_state_linktext : $linktext;
 	my $href_attr = $alt_href ? qq|href="$alt_href"| : qq|href="javascript:void(0);"|;
 
