@@ -20,6 +20,7 @@ my $people_schema = $f->people_schema();
 
 my $mech = Test::WWW::Mechanize->new;
 my $response;
+my $bs = CXGN::BreederSearch->new( { dbh=> $f->dbh() });
 #139 141
 # login
 #
@@ -29,11 +30,20 @@ $response = decode_json $mech->content;
 
 is($response->{'userDisplayName'}, 'Jane Doe', 'check login name');
 
-# create a suitable dataset
+# create a suitable dataset, using all accessions from trials 139 and 141
 #
 my $ds = CXGN::Dataset->new( { schema=> $schema, people_schema => $people_schema });
 
-$ds->trials( [ 139, 141 ]);
+my $criteria_list = ['trials', 'accessions'];
+my $dataref = {'accessions' => { 'trials' => '139,141' }};
+my $queryref = { 'accessions' => { 'trials' => 0 }};
+my $results = $bs->metadata_query($criteria_list, $dataref, $queryref)->{results};
+my @accession_ids;
+foreach my $record (@$results) {
+    my ($accession_id, $accession_name) = @$record;
+    push @accession_ids, $accession_id;
+}
+$ds->accessions(\@accession_ids);
 $ds->store();
 #replicate_factor =fixed
 #studyDesign_factor = None
