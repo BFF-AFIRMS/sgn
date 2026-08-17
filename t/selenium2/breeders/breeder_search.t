@@ -692,6 +692,87 @@ $t->while_logged_in_as("submitter", sub {
     my @observed = splice(@$observed, -4);
     is_deeply(\@observed, \@expected, 'download wizard has expected data for tissue samples');
 
+    # -------------------------------------------------------------------------
+    # Test genotyping project views
+
+    # set test_trial type to misc_trial (previously not set)
+    $t->get_ok('/breeders/trial/137', 'navigate to test trial');
+    $t->click_ok('edit_trial_details', 'id', 'click edit trial details');
+    $t->click_ok('//select[@id="edit_trial_type"]/option[contains(@title, "misc_trial")]', 'xpath', "Select misc_trial type");
+    $t->click_ok('save_trial_details', 'id', 'click save trial details');
+
+    # add a composed trait phenotype to a plot
+    $t->get_ok('/breeders/trial/137', 'navigate to test trial');
+    $t->click_ok('direct_phenotyping_link', 'id', 'click direct phenotyping');
+    $t->click_ok('//select[@id="plot_name"]/option[@value="test_trial25"]', 'xpath', "Select test_trial25 plot");
+    $t->click_ok('//select[@id="select_traits_for_trait_file"]/option[contains(@title, "cass sink leaf|ADP|ug/g|week 16")]', 'xpath', "Select composed trait");
+    $t->send_keys_ok("select_pheno_value", "id", "10", "enter phenotype value");
+    $t->click_ok("pagetitle", "id", "click elsewhere to finalize entry");
+    $t->find_element_ok('//div[@id="success-trial-phenotype" and not(contains(@style, "display: none"))]', "xpath", "wait for success indicator");
+
+    $t->get_ok('/breeders/search', 'navigate to search wizard');
+
+    # COLUMN 1 WIZARD SEARCH - select genotyping projects
+    $t->click_ok('(//div[@class="panel-heading"]/select)[1]//option[@value="genotyping_projects"]', 'xpath', 'select genotyping_projects');
+    $t->click_ok('(//div[@class="panel-body"])[1]//a[contains(text(), "Tissue Sample Genotype Test")]//preceding-sibling::button' , 'xpath', 'select test genotyping project');
+
+    my %params = (
+        accessions           => { includes => ['test_accession1'] },
+        organisms            => { includes => ['Solanum lycopersicum'] },
+        breeding_programs    => { includes => ['test'] },
+        genotyping_protocols => { includes => ['Test Genotyping Protocol for Tissue Samples'] },
+        locations            => { includes => ['test_location'] },
+        plants               => { includes => ['test_accession1_plant-3'] },
+        plots                => { includes => ['test_trial25', 'test_trial28'], excludes => ['test_trial211'] },
+        tissue_sample        => { includes => ['test_accession1_leaf-1', 'test_accession1_leaf-2', 'test_accession1_leaf-3'] },
+        traits               => { includes => ['cass sink leaf|ADP|ug/g|week 16'] },
+        trait_components     => { includes => ['cass sink leaf', 'ADP', 'ug/g', 'week 16'] },
+        trial_designs        => { includes => ['CRD'] },
+        trial_types          => { includes => ['misc_trial'] },
+        trials               => { includes => ['test_trial'] },
+        # seedlots             => { },
+        years                => { includes => ['2026'] },
+    );
+
+    foreach my $column (sort keys %params) {
+        $t->click_ok("(//div[\@class='panel-heading']/select)[2]//option[\@value='$column']", 'xpath', "select $column");
+        my $unselected = $t->get_attribute_ok('(//div[@class="panel-body"])[2]//ul[contains(@class, "wizard-list-unselected")]', 'xpath', 'innerHTML', "find unselected $column");
+        my $includes = $params{$column}{includes};
+        my $excludes = $params{$column}{excludes};
+        foreach my $value (@$includes){
+            ok($unselected =~ /$value/, "verify $column includes $value");
+        }
+        foreach my $value (@$excludes){
+            ok($unselected !~ /$value/, "verify $column excludes $value");
+        }
+    }
+
+    # -------------------------------------------------------------------------
+    # Test genotyping protocols views
+
+    $t->get_ok('/breeders/search', 'navigate to search wizard');
+
+    # COLUMN 1 WIZARD SEARCH - select genotyping protocols
+    $t->click_ok('(//div[@class="panel-heading"]/select)[1]//option[@value="genotyping_protocols"]', 'xpath', 'select genotyping_protocols');
+    $t->click_ok('(//div[@class="panel-body"])[1]//a[contains(text(), "Test Genotyping Protocol for Tissue Samples")]//preceding-sibling::button' , 'xpath', 'select test genotyping project');
+
+    delete $params{genotyping_protocols};
+    my %expected_genotyping_projects = ( includes => ['Tissue Sample Genotype Test'] );
+    $params{genotyping_projects} = { %expected_genotyping_projects };
+
+    foreach my $column (sort keys %params) {
+        $t->click_ok("(//div[\@class='panel-heading']/select)[2]//option[\@value='$column']", 'xpath', "select $column");
+        my $unselected = $t->get_attribute_ok('(//div[@class="panel-body"])[2]//ul[contains(@class, "wizard-list-unselected")]', 'xpath', 'innerHTML', "find unselected $column");
+        my $includes = $params{$column}{includes};
+        my $excludes = $params{$column}{excludes};
+        foreach my $value (@$includes){
+            ok($unselected =~ /$value/, "verify $column includes $value");
+        }
+        foreach my $value (@$excludes){
+            ok($unselected !~ /$value/, "verify $column excludes $value");
+        }
+    }
+
     }
 );
 $t->driver()->quit();
