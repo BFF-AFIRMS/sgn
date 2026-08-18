@@ -172,8 +172,8 @@ export const useSubmitFieldLayout = () => {
 		trialId, authToken, gridMatrix, invertRows,
 		invertCols, topBorder, leftBorder, rightBorder,
 		bottomBorder, plotLayout, colorVar, labelVar,
-		labelSize, northArrowAngle, fetchObservationUnits,
-		loadNorthArrowAngle, setLoading
+		labelSize, northArrowAngle, secondaryAxis,
+		fetchObservationUnits, loadNorthArrowAngle, loadSecondaryAxis, setLoading
 	]);
 
 	return { submitFieldLayout };
