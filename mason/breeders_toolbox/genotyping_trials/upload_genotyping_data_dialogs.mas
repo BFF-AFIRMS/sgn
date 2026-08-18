@@ -1225,18 +1225,34 @@ jQuery(document).ready(function(){
         'ajax': {
             'url':'/ajax/genotyping_data/projects?select_checkbox_name=upload_genotyping_data_project_select',
         },
+        'scrollX': true
     });
 
     var upload_genotyping_data_protocol_table = jQuery('#upload_genotyping_data_protocol_search_results').DataTable( {
         'ajax': {
             'url':'/ajax/genotyping_data/protocols?select_checkbox_name=upload_genotyping_data_protocol_select',
         },
+        'scrollX': true
     });
 
     var upload_mla_protocol_table = jQuery('#upload_mla_protocol_search_results').DataTable( {
         'ajax': {
             'url':'/ajax/genotyping_data/protocols?select_checkbox_name=upload_mla_protocol_select',
+            'dataSrc': json => {
+                const vcfHeaderIndex = 2;
+                const vcfHeaderMaxLines = 10;
+                return json.data.map(row => {
+                    return {
+                        ...row,
+                        [vcfHeaderIndex]: row[vcfHeaderIndex]
+                            .split(/<br\s*\/?>/)
+                            .splice(0, vcfHeaderMaxLines)
+                            .join('<br/>'),
+                    }
+                });
+            },
         },
+        'scrollX': true
     });
 
     jQuery('#upload_genotyping_data_project_missing_button').click(function(){
