@@ -15,8 +15,11 @@ export const LabelLayer: React.FC<LabelLayerProps> = ({ }) => {
         invertRows,
         invertCols,
         labelVar,
-        labelSize
+        labelSize,
+        secondaryAxis
     } = useLayoutConfig();
+
+    const hasSecondaryAxis = Boolean(secondaryAxis && (secondaryAxis.xLabel || secondaryAxis.yLabel || (secondaryAxis.xValues && secondaryAxis.xValues.length > 0) || (secondaryAxis.yValues && secondaryAxis.yValues.length > 0)));
 
     return (
         <g style={{ pointerEvents: 'none' }}>
@@ -37,6 +40,51 @@ export const LabelLayer: React.FC<LabelLayerProps> = ({ }) => {
                 );
             })}
 
+            {/* Secondary Column Axis Values (Top and Bottom) */}
+            {hasSecondaryAxis && secondaryAxis?.xValues && secondaryAxis.xValues.length > 0 && Array.from({ length: bounds.numCols }).map((_, idx) => {
+                const colCoord = bounds.minCol + idx;
+                const colIdx = colCoord - renderBounds.minCol;
+                const displayX = (invertCols ? renderBounds.numCols - colIdx - 1 : colIdx) * 52 + 25;
+                const secXVal = secondaryAxis.xValues[idx];
+                if (secXVal === undefined || isNaN(secXVal)) return null;
+                return (
+                    <React.Fragment key={`sec-col-lbl-grp-${idx}`}>
+                        <text x={displayX} y={-26} textAnchor="middle" fontSize="11" fontWeight="bold" fill="#000">
+                            {secXVal}
+                        </text>
+                        <text x={displayX} y={renderBounds.numRows * 52 + 36} textAnchor="middle" fontSize="11" fontWeight="bold" fill="#000">
+                            {secXVal}
+                        </text>
+                    </React.Fragment>
+                );
+            })}
+
+            {/* Secondary Column Axis Label / Title */}
+            {hasSecondaryAxis && secondaryAxis?.xLabel && (
+                <>
+                    <text
+                        x={(renderBounds.numCols * 52) / 2}
+                        y={-42}
+                        textAnchor="middle"
+                        fontSize="12"
+                        fontWeight="bold"
+                        fill="#000"
+                    >
+                        {secondaryAxis.xLabel}
+                    </text>
+                    <text
+                        x={(renderBounds.numCols * 52) / 2}
+                        y={renderBounds.numRows * 52 + 52}
+                        textAnchor="middle"
+                        fontSize="12"
+                        fontWeight="bold"
+                        fill="#000"
+                    >
+                        {secondaryAxis.xLabel}
+                    </text>
+                </>
+            )}
+
             {/* Row Axis Labels (Left and Right) */}
             {gridMatrix.map((row, rIdx) => {
                 const rCoord = renderBounds.minRow + rIdx;
@@ -54,6 +102,55 @@ export const LabelLayer: React.FC<LabelLayerProps> = ({ }) => {
                     </React.Fragment>
                 );
             })}
+
+            {/* Secondary Row Axis Values (Left and Right) */}
+            {hasSecondaryAxis && secondaryAxis?.yValues && secondaryAxis.yValues.length > 0 && gridMatrix.map((row, rIdx) => {
+                const rCoord = renderBounds.minRow + rIdx;
+                const isDataRow = rCoord >= bounds.minRow && rCoord <= bounds.maxRow;
+                const displayY = invertRows ? rIdx : renderBounds.numRows - rIdx - 1;
+                if (!isDataRow) return null;
+                const rIdxData = rCoord - bounds.minRow;
+                const secYVal = secondaryAxis.yValues[rIdxData];
+                if (secYVal === undefined || isNaN(secYVal)) return null;
+                return (
+                    <React.Fragment key={`sec-row-lbl-grp-${rIdx}`}>
+                        <text x={-40} y={displayY * 52 + 30} textAnchor="middle" fontSize="11" fontWeight="bold" fill="#000">
+                            {secYVal}
+                        </text>
+                        <text x={renderBounds.numCols * 52 + 40} y={displayY * 52 + 30} textAnchor="middle" fontSize="11" fontWeight="bold" fill="#000">
+                            {secYVal}
+                        </text>
+                    </React.Fragment>
+                );
+            })}
+
+            {/* Secondary Row Axis Label / Title */}
+            {hasSecondaryAxis && secondaryAxis?.yLabel && (
+                <>
+                    <text
+                        x={-60}
+                        y={(renderBounds.numRows * 52) / 2}
+                        transform={`rotate(-90, -60, ${(renderBounds.numRows * 52) / 2})`}
+                        textAnchor="middle"
+                        fontSize="12"
+                        fontWeight="bold"
+                        fill="#000"
+                    >
+                        {secondaryAxis.yLabel}
+                    </text>
+                    <text
+                        x={renderBounds.numCols * 52 + 60}
+                        y={(renderBounds.numRows * 52) / 2}
+                        transform={`rotate(90, ${renderBounds.numCols * 52 + 60}, ${(renderBounds.numRows * 52) / 2})`}
+                        textAnchor="middle"
+                        fontSize="12"
+                        fontWeight="bold"
+                        fill="#000"
+                    >
+                        {secondaryAxis.yLabel}
+                    </text>
+                </>
+            )}
 
             {/* Individual Plot Labels */}
             {gridMatrix.map((row, rIdx) => {

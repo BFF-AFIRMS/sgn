@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useModals } from '../contexts/ModalsContext';
 import { useLayoutConfig } from '../contexts/LayoutConfigContext';
 
@@ -17,16 +17,31 @@ export const SecondaryAxisModal: React.FC<SecondaryAxisModalProps> = ({}) => {
 
     const [secondaryXAxisLabel, setSecondaryXAxisLabel] = useState(secondaryAxis?.xLabel || '');
     const [secondaryYAxisLabel, setSecondaryYAxisLabel] = useState(secondaryAxis?.yLabel || '');
-    const [secondaryXAxisValues, setSecondaryXAxisValues] = useState(secondaryAxis?.xValues.join(',') || '');
-    const [secondaryYAxisValues, setSecondaryYAxisValues] = useState(secondaryAxis?.yValues.join(',') || '');
+    const [secondaryXAxisValues, setSecondaryXAxisValues] = useState(secondaryAxis?.xValues?.join(',') || '');
+    const [secondaryYAxisValues, setSecondaryYAxisValues] = useState(secondaryAxis?.yValues?.join(',') || '');
+
+    useEffect(() => {
+        if (show) {
+            setSecondaryXAxisLabel(secondaryAxis?.xLabel || '');
+            setSecondaryYAxisLabel(secondaryAxis?.yLabel || '');
+            setSecondaryXAxisValues(secondaryAxis?.xValues?.join(',') || '');
+            setSecondaryYAxisValues(secondaryAxis?.yValues?.join(',') || '');
+        }
+    }, [show, secondaryAxis]);
 
     const handleApplyDimensions = async () => {
-        setSecondaryAxis({
-            xLabel: secondaryXAxisLabel,
-            yLabel: secondaryYAxisLabel,
-            xValues: secondaryXAxisValues.split(',').map(Number),
-            yValues: secondaryYAxisValues.split(',').map(Number)
-        });
+        const xVals = secondaryXAxisValues.trim() ? secondaryXAxisValues.split(',').map(v => Number(v.trim())).filter(v => !isNaN(v)) : [];
+        const yVals = secondaryYAxisValues.trim() ? secondaryYAxisValues.split(',').map(v => Number(v.trim())).filter(v => !isNaN(v)) : [];
+        if (secondaryXAxisLabel || secondaryYAxisLabel || xVals.length > 0 || yVals.length > 0) {
+            setSecondaryAxis({
+                xLabel: secondaryXAxisLabel,
+                yLabel: secondaryYAxisLabel,
+                xValues: xVals,
+                yValues: yVals
+            });
+        } else {
+            setSecondaryAxis(undefined);
+        }
         setShow(false);
     };
 

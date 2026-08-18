@@ -96,8 +96,8 @@ export const LayoutConfigProvider: React.FC<FieldMapContextProps> = ({ trialId, 
                 setSecondaryAxis({
                     xLabel,
                     yLabel,
-                    xValues: xValues.split(',').map(Number) || [],
-                    yValues: yValues.split(',').map(Number) || []
+                    xValues: (typeof xValues === 'string' ? xValues.split(',') : (Array.isArray(xValues) ? xValues : [])).map(Number).filter(n => !isNaN(n)),
+                    yValues: (typeof yValues === 'string' ? yValues.split(',') : (Array.isArray(yValues) ? yValues : [])).map(Number).filter(n => !isNaN(n))
                 });
             }
         } catch (e) {
