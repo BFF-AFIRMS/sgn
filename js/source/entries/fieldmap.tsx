@@ -23,6 +23,7 @@ import { ModalsProvider, useModals } from '../include/fieldmap/contexts/ModalsCo
 import { useView, ViewProvider } from '../include/fieldmap/contexts/ViewContext';
 import { HeatmapProvider } from '../include/fieldmap/contexts/HeatmapContext';
 import { GeoFieldMap } from '../include/fieldmap/components/GeoFieldMap';
+import { SecondaryAxisModal } from '../include/fieldmap/modals/SecondaryAxisModal';
 
 declare global {
     interface JQuery {
@@ -123,6 +124,7 @@ const FieldMap: React.FC<FieldMapProps> = ({
             <DeleteTraitModal />
             <DimensionsModal />
             <PlotDetailsModal />
+            <SecondaryAxisModal />
 
             <DownloadPlotOrderPanel
                 hasColAndRowNumbers={hasColAndRowNumbers}

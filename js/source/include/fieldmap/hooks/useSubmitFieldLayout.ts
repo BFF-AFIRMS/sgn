@@ -29,7 +29,9 @@ export const useSubmitFieldLayout = () => {
 		labelVar,
 		labelSize,
 		northArrowAngle,
-		loadNorthArrowAngle
+		loadNorthArrowAngle,
+		secondaryAxis,
+		loadSecondaryAxis
 	} = useLayoutConfig();
 
 	const {
@@ -141,13 +143,25 @@ export const useSubmitFieldLayout = () => {
 			})
 		});
 
+		const secondaryAxisRequest = secondaryAxis ? fetch(`/ajax/breeders/trial/${trialId}/secondary_axis`, {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+			body: new URLSearchParams({
+				secondary_x_axis_label: secondaryAxis.xLabel,
+				secondary_y_axis_label: secondaryAxis.yLabel,
+				secondary_x_axis_values: secondaryAxis.xValues.join(','),
+				secondary_y_axis_values: secondaryAxis.yValues.join(',')
+			})
+		}) : Promise.resolve();
+
 		try {
-			await Promise.all([putRequest, postRequest, northArrowRequest]);
+			await Promise.all([putRequest, postRequest, northArrowRequest, secondaryAxisRequest]);
 			await fetch(`/ajax/breeders/trial/${trialId}/refresh_cache`, { method: 'POST' });
 
 			alert('Field Plot layout submitted successfully!');
 			fetchObservationUnits();
 			loadNorthArrowAngle();
+			loadSecondaryAxis();
 		} catch (e) {
 			console.error('Error submitting layout metadata:', e);
 			alert('Error submitting layout metadata.');
