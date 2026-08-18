@@ -29,13 +29,13 @@ it under the same terms as Perl itself.
 
 =cut
 
-package AddNorthArrowAngleProjectProp;
+package AddSecondaryAxisProjectProp;
 
 use Moose;
 use Bio::Chado::Schema;
 extends 'CXGN::Metadata::Dbpatch';
 
-has '+description' => ( default => 'Adds north_arrow_angle cvterm to project_property cv' );
+has '+description' => ( default => 'Adds secondary_x_axis_label, secondary_y_axis_label, secondary_x_axis_values, and secondary_y_axis_values cvterms to project_property cv' );
 
 sub patch {
     my $self=shift;
