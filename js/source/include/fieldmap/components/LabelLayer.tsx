@@ -33,17 +33,27 @@ export const LabelLayer: React.FC<LabelLayerProps> = ({ }) => {
             values: secondaryAxis.yValues ? [...secondaryAxis.yValues] : []
         };
 
+        const getFill = (axis: 'x' | 'y', values: any[]) => {
+            const countToFill = axis === 'x' ?
+                bounds.numCols - values.length :
+                bounds.numRows - values.length;
+
+            return Array(Math.max(countToFill, 0))
+                .fill('')
+                .concat(values);
+        }
+
         let dispX = curX;
         let dispY = curY;
 
         if (mapRotation === 90) {
             dispX = curY;
-            dispY = { label: curX.label, values: [...curX.values].reverse() };
+            dispY = { label: curX.label, values: getFill('y', [...curX.values].reverse()) };
         } else if (mapRotation === 180) {
-            dispX = { label: curX.label, values: [...curX.values].reverse() };
-            dispY = { label: curY.label, values: [...curY.values].reverse() };
+            dispX = { label: curX.label, values: getFill('x', [...curX.values].reverse()) };
+            dispY = { label: curY.label, values: getFill('y', [...curY.values].reverse()) };
         } else if (mapRotation === 270) {
-            dispX = { label: curY.label, values: [...curY.values].reverse() };
+            dispX = { label: curY.label, values: getFill('x', [...curY.values].reverse()) };
             dispY = curX;
         }
 
