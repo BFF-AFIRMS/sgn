@@ -71,7 +71,12 @@ export const LabelLayer: React.FC<LabelLayerProps> = ({ }) => {
         };
     }, [secondaryAxis, mapRotation, isTransposed]);
 
-    const hasSecondaryAxis = Boolean(displayedSecondaryAxis && (displayedSecondaryAxis.xLabel || displayedSecondaryAxis.yLabel || (displayedSecondaryAxis.xValues && displayedSecondaryAxis.xValues.length > 0) || (displayedSecondaryAxis.yValues && displayedSecondaryAxis.yValues.length > 0)));
+    const hasSecondaryAxis = displayedSecondaryAxis && (
+        displayedSecondaryAxis.xLabel ||
+        displayedSecondaryAxis.yLabel ||
+        (displayedSecondaryAxis.xValues && displayedSecondaryAxis.xValues.length > 0) ||
+        (displayedSecondaryAxis.yValues && displayedSecondaryAxis.yValues.length > 0)
+    );
 
     return (
         <g style={{ pointerEvents: 'none' }}>
