@@ -352,7 +352,7 @@ create view public.genotyping_projectsxsubplots as (
     join stock_relationship on ( stock_id = subject_id and stock_relationship.type_id = $tissue_sample_of_cvterm_id )
     join stock as subplot on ( object_id = subplot.stock_id and subplot.type_id = $subplot_cvterm_id )
 );
-alter view public.genotyping_projectsxplots owner to web_usr;
+alter view public.genotyping_projectsxsubplots owner to web_usr;
 
 
 -------------------------------------------------------------------------------
