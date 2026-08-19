@@ -387,17 +387,24 @@ alter view public.genotyping_projectsxtissue_sample owner to web_usr;
 
 drop view public.genotyping_projectsxtraits;
 create view public.genotyping_projectsxtraits as (
-    select distinct genotyping_project_id, observable_id as trait_id from (
-        select
-            unnest(array_cat(array_agg(project_id),array_agg(project_id))) as genotyping_project_id,
-            unnest(array_cat(array_agg(tissue_sample.stock_id), array_agg(parent.stock_id))) as stock_id
-            from nd_experiment_genotype
-            join nd_experiment_project using (nd_experiment_id)
-            join nd_experiment_stock using (nd_experiment_id)
-            join stock as tissue_sample on (tissue_sample.stock_id = nd_experiment_stock.stock_id and tissue_sample.type_id = $tissue_sample_cvterm_id )
-            join stock_relationship on (tissue_sample.stock_id = subject_id)
-            join stock as parent on (object_id = parent.stock_id)
+    with genotyped_stocks as (
+        -- directly genotyped tissue samples
+        select project_id as genotyping_project_id, tissue_sample.stock_id
+        from nd_experiment_genotype
+        join nd_experiment_project using (nd_experiment_id)
+        join nd_experiment_stock using (nd_experiment_id)
+        join stock as tissue_sample on (tissue_sample.stock_id = nd_experiment_stock.stock_id and tissue_sample.type_id = $tissue_sample_cvterm_id)
+        union
+        -- parents of genotyped tissue samples (plants, plots, accessions, etc.)
+        select project_id as genotyping_project_id, object_id as stock_id
+        from nd_experiment_genotype
+        join nd_experiment_project using (nd_experiment_id)
+        join nd_experiment_stock using (nd_experiment_id)
+        join stock as tissue_sample on (tissue_sample.stock_id = nd_experiment_stock.stock_id and tissue_sample.type_id = $tissue_sample_cvterm_id)
+        join stock_relationship on (tissue_sample.stock_id = subject_id)
     )
+    select distinct genotyping_project_id, phenotype_id as trait_id
+    from genotyped_stocks
     join nd_experiment_stock using (stock_id)
     join nd_experiment_phenotype using (nd_experiment_id)
     join phenotype using (phenotype_id)
@@ -420,17 +427,24 @@ alter view public.genotyping_projectsxtraits owner to web_usr;
 
 drop view public.genotyping_projectsxtrait_components;
 create view public.genotyping_projectsxtrait_components as (
-    select distinct genotyping_project_id, cvterm_relationship.subject_id as trait_component_id from (
-        select
-            unnest(array_cat(array_agg(project_id),array_agg(project_id))) as genotyping_project_id,
-            unnest(array_cat(array_agg(tissue_sample.stock_id), array_agg(parent.stock_id))) as stock_id
-            from nd_experiment_genotype
-            join nd_experiment_project using (nd_experiment_id)
-            join nd_experiment_stock using (nd_experiment_id)
-            join stock as tissue_sample on (tissue_sample.stock_id = nd_experiment_stock.stock_id and tissue_sample.type_id = $tissue_sample_cvterm_id)
-            join stock_relationship on (tissue_sample.stock_id = subject_id)
-            join stock as parent on (object_id = parent.stock_id)
+    with genotyped_stocks as (
+        -- directly genotyped tissue samples
+        select project_id as genotyping_project_id, tissue_sample.stock_id
+        from nd_experiment_genotype
+        join nd_experiment_project using (nd_experiment_id)
+        join nd_experiment_stock using (nd_experiment_id)
+        join stock as tissue_sample on (tissue_sample.stock_id = nd_experiment_stock.stock_id and tissue_sample.type_id = $tissue_sample_cvterm_id)
+        union
+        -- parents of genotyped tissue samples (plants, plots, accessions, etc.)
+        select project_id as genotyping_project_id, object_id as stock_id
+        from nd_experiment_genotype
+        join nd_experiment_project using (nd_experiment_id)
+        join nd_experiment_stock using (nd_experiment_id)
+        join stock as tissue_sample on (tissue_sample.stock_id = nd_experiment_stock.stock_id and tissue_sample.type_id = $tissue_sample_cvterm_id)
+        join stock_relationship on (tissue_sample.stock_id = subject_id)
     )
+    select distinct genotyping_project_id, subject_id as trait_component_id
+    from genotyped_stocks
     join nd_experiment_stock using (stock_id)
     join nd_experiment_phenotype using (nd_experiment_id)
     join phenotype using (phenotype_id)
@@ -736,17 +750,24 @@ alter view public.genotyping_protocolsxtissue_sample owner to web_usr;
 
 drop view public.genotyping_protocolsxtrait_components;
 create view public.genotyping_protocolsxtrait_components as (
-    select distinct genotyping_protocol_id, cvterm_relationship.subject_id as trait_component_id from (
-        select
-            unnest(array_cat(array_agg(nd_protocol_id),array_agg(nd_protocol_id))) as genotyping_protocol_id,
-            unnest(array_cat(array_agg(tissue_sample.stock_id), array_agg(parent.stock_id))) as stock_id
-            from nd_experiment_genotype
-            join nd_experiment_protocol using (nd_experiment_id)
-            join nd_experiment_stock using (nd_experiment_id)
-            join stock as tissue_sample on (tissue_sample.stock_id = nd_experiment_stock.stock_id and tissue_sample.type_id = $tissue_sample_cvterm_id)
-            join stock_relationship on (tissue_sample.stock_id = subject_id)
-            join stock as parent on (object_id = parent.stock_id)
+    with genotyped_stocks as (
+        -- directly genotyped tissue samples
+        select nd_protocol_id as genotyping_protocol_id, tissue_sample.stock_id
+        from nd_experiment_genotype
+        join nd_experiment_protocol using (nd_experiment_id)
+        join nd_experiment_stock using (nd_experiment_id)
+        join stock as tissue_sample on (tissue_sample.stock_id = nd_experiment_stock.stock_id and tissue_sample.type_id = $tissue_sample_cvterm_id)
+        union
+        -- parents of genotyped tissue samples (plants, plots, accessions, etc.)
+        select nd_protocol_id as genotyping_protocol_id, object_id as stock_id
+        from nd_experiment_genotype
+        join nd_experiment_protocol using (nd_experiment_id)
+        join nd_experiment_stock using (nd_experiment_id)
+        join stock as tissue_sample on (tissue_sample.stock_id = nd_experiment_stock.stock_id and tissue_sample.type_id = $tissue_sample_cvterm_id)
+        join stock_relationship on (tissue_sample.stock_id = subject_id)
     )
+    select distinct genotyping_protocol_id, subject_id as trait_component_id
+    from genotyped_stocks
     join nd_experiment_stock using (stock_id)
     join nd_experiment_phenotype using (nd_experiment_id)
     join phenotype using (phenotype_id)
@@ -768,17 +789,24 @@ alter view public.genotyping_protocolsxtrait_components owner to web_usr;
 
 drop view public.genotyping_protocolsxtraits;
 create view public.genotyping_protocolsxtraits as (
-    select distinct genotyping_protocol_id, observable_id as trait_id from (
-        select
-            unnest(array_cat(array_agg(nd_protocol_id),array_agg(nd_protocol_id))) as genotyping_protocol_id,
-            unnest(array_cat(array_agg(tissue_sample.stock_id), array_agg(parent.stock_id))) as stock_id
-            from nd_experiment_genotype
-            join nd_experiment_protocol using (nd_experiment_id)
-            join nd_experiment_stock using (nd_experiment_id)
-            join stock as tissue_sample on (tissue_sample.stock_id = nd_experiment_stock.stock_id and tissue_sample.type_id = $tissue_sample_cvterm_id )
-            join stock_relationship on (tissue_sample.stock_id = subject_id)
-            join stock as parent on (object_id = parent.stock_id)
+    with genotyped_stocks as (
+        -- directly genotyped tissue samples
+        select nd_protocol_id as genotyping_protocol_id, tissue_sample.stock_id
+        from nd_experiment_genotype
+        join nd_experiment_protocol using (nd_experiment_id)
+        join nd_experiment_stock using (nd_experiment_id)
+        join stock as tissue_sample on (tissue_sample.stock_id = nd_experiment_stock.stock_id and tissue_sample.type_id = $tissue_sample_cvterm_id)
+        union
+        -- parents of genotyped tissue samples (plants, plots, accessions, etc.)
+        select nd_protocol_id as genotyping_protocol_id, object_id as stock_id
+        from nd_experiment_genotype
+        join nd_experiment_protocol using (nd_experiment_id)
+        join nd_experiment_stock using (nd_experiment_id)
+        join stock as tissue_sample on (tissue_sample.stock_id = nd_experiment_stock.stock_id and tissue_sample.type_id = $tissue_sample_cvterm_id)
+        join stock_relationship on (tissue_sample.stock_id = subject_id)
     )
+    select distinct genotyping_protocol_id, phenotype_id as trait_id
+    from genotyped_stocks
     join nd_experiment_stock using (stock_id)
     join nd_experiment_phenotype using (nd_experiment_id)
     join phenotype using (phenotype_id)
