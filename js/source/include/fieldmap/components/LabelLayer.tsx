@@ -48,10 +48,13 @@ export const LabelLayer: React.FC<LabelLayerProps> = ({ }) => {
             const countToFill = axis === 'x' ?
                 bounds.numCols - values.length :
                 bounds.numRows - values.length;
+            
+            // Truncate the values to fit within the bounds of the axis before reversing and left-padding
+            const truncated = values.slice(0, axis === 'x' ? bounds.numCols : bounds.numRows);
 
             return Array(Math.max(countToFill, 0))
                 .fill('')
-                .concat([...values].reverse());
+                .concat(truncated.reverse());
         }
 
         let dispX = curX;
