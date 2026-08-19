@@ -25,11 +25,11 @@ export const LabelLayer: React.FC<LabelLayerProps> = ({ }) => {
     const displayedSecondaryAxis = useMemo(() => {
         if (!secondaryAxis) return undefined;
 
-        let curX = {
+        const curX = {
             label: secondaryAxis.xLabel || '',
             values: secondaryAxis.xValues ? [...secondaryAxis.xValues] : []
         };
-        let curY = {
+        const curY = {
             label: secondaryAxis.yLabel || '',
             values: secondaryAxis.yValues ? [...secondaryAxis.yValues] : []
         };
