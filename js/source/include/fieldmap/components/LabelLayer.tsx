@@ -91,13 +91,13 @@ export const LabelLayer: React.FC<LabelLayerProps> = ({ }) => {
 
     return (
         <g style={{ pointerEvents: 'none' }}>
-            {/* Column Axis Labels (Top and Bottom) */}
-            {Array.from({ length: bounds.numCols }).map((_, idx) => {
-                const colCoord = bounds.minCol + idx;
+            {/* Column Axis Values (Top and Bottom) */}
+            {Array.from({ length: bounds.numCols }).map((_, axisIdx) => {
+                const colCoord = bounds.minCol + axisIdx;
                 const colIdx = colCoord - renderBounds.minCol;
                 const displayX = (invertCols ? renderBounds.numCols - colIdx - 1 : colIdx) * 52 + 25;
                 return (
-                    <React.Fragment key={`col-lbl-grp-${idx}`}>
+                    <React.Fragment key={`col-lbl-grp-${colIdx}`}>
                         <text x={displayX} y={-10} textAnchor="middle" fontSize="11" fontWeight="bold" fill="#000">
                             {colCoord}
                         </text>
@@ -109,25 +109,29 @@ export const LabelLayer: React.FC<LabelLayerProps> = ({ }) => {
             })}
 
             {/* Secondary Column Axis Values (Top and Bottom) */}
-            {hasSecondaryAxis && displayedSecondaryAxis?.xValues && displayedSecondaryAxis.xValues.length > 0 && Array.from({ length: bounds.numCols }).map((_, idx) => {
-                const colCoord = bounds.minCol + idx;
+            {hasSecondaryAxis && displayedSecondaryAxis?.xValues && displayedSecondaryAxis.xValues.length > 0 && Array.from({ length: bounds.numCols }).map((_, axisIdx) => {
+                const colCoord = bounds.minCol + axisIdx;
                 const colIdx = colCoord - renderBounds.minCol;
                 const displayX = (invertCols ? renderBounds.numCols - colIdx - 1 : colIdx) * 52 + 25;
-                const secXVal = displayedSecondaryAxis.xValues[idx];
-                if (secXVal === undefined || isNaN(secXVal)) return null;
+
+                const axisValue = displayedSecondaryAxis.xValues[axisIdx];
+                if (axisValue === undefined) {
+                    return null;
+                }
+
                 return (
-                    <React.Fragment key={`sec-col-lbl-grp-${idx}`}>
+                    <React.Fragment key={`sec-col-lbl-grp-${colIdx}`}>
                         <text x={displayX} y={-26} textAnchor="middle" fontSize="11" fontWeight="bold" fill="#000">
-                            {secXVal}
+                            {axisValue}
                         </text>
                         <text x={displayX} y={renderBounds.numRows * 52 + 36} textAnchor="middle" fontSize="11" fontWeight="bold" fill="#000">
-                            {secXVal}
+                            {axisValue}
                         </text>
                     </React.Fragment>
                 );
             })}
 
-            {/* Secondary Column Axis Label / Title */}
+            {/* Secondary Column Axis Label */}
             {hasSecondaryAxis && displayedSecondaryAxis?.xLabel && (
                 <>
                     <text
@@ -153,46 +157,57 @@ export const LabelLayer: React.FC<LabelLayerProps> = ({ }) => {
                 </>
             )}
 
-            {/* Row Axis Labels (Left and Right) */}
-            {gridMatrix.map((row, rIdx) => {
-                const rCoord = renderBounds.minRow + rIdx;
-                const isDataRow = rCoord >= bounds.minRow && rCoord <= bounds.maxRow;
-                const displayY = invertRows ? rIdx : renderBounds.numRows - rIdx - 1;
-                if (!isDataRow) return null;
+            {/* Row Axis Values (Left and Right) */}
+            {gridMatrix.map((_, rowIdx) => {
+                const rowCoord = renderBounds.minRow + rowIdx;
+                const displayY = invertRows ? rowIdx : renderBounds.numRows - rowIdx - 1;
+
+                const isDataRow = rowCoord >= bounds.minRow && rowCoord <= bounds.maxRow;
+                if (!isDataRow) {
+                    return null;
+                }
+
                 return (
-                    <React.Fragment key={`row-lbl-grp-${rIdx}`}>
+                    <React.Fragment key={`row-lbl-grp-${rowIdx}`}>
                         <text x={-20} y={displayY * 52 + 30} textAnchor="middle" fontSize="11" fontWeight="bold" fill="#000">
-                            {rCoord}
+                            {rowCoord}
                         </text>
                         <text x={renderBounds.numCols * 52 + 20} y={displayY * 52 + 30} textAnchor="middle" fontSize="11" fontWeight="bold" fill="#000">
-                            {rCoord}
+                            {rowCoord}
                         </text>
                     </React.Fragment>
                 );
             })}
 
             {/* Secondary Row Axis Values (Left and Right) */}
-            {hasSecondaryAxis && displayedSecondaryAxis?.yValues && displayedSecondaryAxis.yValues.length > 0 && gridMatrix.map((row, rIdx) => {
-                const rCoord = renderBounds.minRow + rIdx;
-                const isDataRow = rCoord >= bounds.minRow && rCoord <= bounds.maxRow;
-                const displayY = invertRows ? rIdx : renderBounds.numRows - rIdx - 1;
-                if (!isDataRow) return null;
-                const rIdxData = rCoord - bounds.minRow;
-                const secYVal = displayedSecondaryAxis.yValues[rIdxData];
-                if (secYVal === undefined || isNaN(secYVal)) return null;
+            {hasSecondaryAxis && displayedSecondaryAxis?.yValues && displayedSecondaryAxis.yValues.length > 0 && gridMatrix.map((_, rowIdx) => {
+                const rowCoord = renderBounds.minRow + rowIdx;
+                const displayY = invertRows ? rowIdx : renderBounds.numRows - rowIdx - 1;
+
+                const isDataRow = rowCoord >= bounds.minRow && rowCoord <= bounds.maxRow;
+                if (!isDataRow) {
+                    return null;
+                }
+
+                const axisIdx = rowCoord - bounds.minRow;
+                const axisValue = displayedSecondaryAxis.yValues[axisIdx];
+                if (axisValue === undefined) {
+                    return null;
+                }
+
                 return (
-                    <React.Fragment key={`sec-row-lbl-grp-${rIdx}`}>
+                    <React.Fragment key={`sec-row-lbl-grp-${rowIdx}`}>
                         <text x={-40} y={displayY * 52 + 30} textAnchor="middle" fontSize="11" fontWeight="bold" fill="#000">
-                            {secYVal}
+                            {axisValue}
                         </text>
                         <text x={renderBounds.numCols * 52 + 40} y={displayY * 52 + 30} textAnchor="middle" fontSize="11" fontWeight="bold" fill="#000">
-                            {secYVal}
+                            {axisValue}
                         </text>
                     </React.Fragment>
                 );
             })}
 
-            {/* Secondary Row Axis Label / Title */}
+            {/* Secondary Row Axis Label */}
             {hasSecondaryAxis && displayedSecondaryAxis?.yLabel && (
                 <>
                     <text

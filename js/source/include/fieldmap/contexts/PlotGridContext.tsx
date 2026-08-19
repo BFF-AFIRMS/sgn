@@ -160,6 +160,9 @@ export const PlotGridProvider: React.FC<FieldMapContextProps> = ({ trialId, auth
         };
     }, [plotList, dimensions]);
 
+    /**
+     * Computed bounds including borders
+     */
     const renderBounds = useMemo(() => {
         const { minCol, maxCol, minRow, maxRow } = bounds;
         const rMinCol = leftBorder ? minCol - 1 : minCol;

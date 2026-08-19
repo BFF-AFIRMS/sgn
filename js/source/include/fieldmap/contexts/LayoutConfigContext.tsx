@@ -10,8 +10,8 @@ export type LabelVar = 'plot_number' | 'germplasm' | 'block' | 'family_name' | '
 export interface SecondaryAxis {
     xLabel?: string;
     yLabel?: string;
-    xValues?: number[];
-    yValues?: number[];
+    xValues?: string[];
+    yValues?: string[];
 }
 
 export interface LayoutConfigContextType {
@@ -95,8 +95,8 @@ export const LayoutConfigProvider: React.FC<FieldMapContextProps> = ({ trialId, 
                 setSecondaryAxis({
                     xLabel,
                     yLabel,
-                    xValues: xValues.split(',').map(Number),
-                    yValues: yValues.split(',').map(Number),
+                    xValues: xValues.split(','),
+                    yValues: yValues.split(','),
                 });
             }
         } catch (e) {
