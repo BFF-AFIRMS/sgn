@@ -239,7 +239,9 @@ export const LabelLayer: React.FC<LabelLayerProps> = ({ }) => {
             {gridMatrix.map((row, rIdx) => {
                 const displayY = invertRows ? rIdx : renderBounds.numRows - rIdx - 1;
                 return row.map((plot, cIdx) => {
-                    if (plot.type !== 'data' || plot.additionalInfo?.isObsolete) return null;
+                    if (plot.type !== 'data' || plot.additionalInfo?.isObsolete) {
+                        return null;
+                    }
 
                     const displayXIdx = invertCols ? renderBounds.numCols - cIdx - 1 : cIdx;
                     const plotX = displayXIdx * 52;
@@ -247,7 +249,9 @@ export const LabelLayer: React.FC<LabelLayerProps> = ({ }) => {
 
                     const coordKey = `${plot.observationUnitPosition?.positionCoordinateX}-${plot.observationUnitPosition?.positionCoordinateY}`;
                     const isOverlapping = !!overlappingPlots[coordKey];
-                    if (isOverlapping) return null;
+                    if (isOverlapping) {
+                        return null;
+                    }
 
                     let labelText = String(plot.observationUnitPosition?.observationLevel?.levelCode || '');
                     if (labelVar === 'germplasm') {
@@ -261,7 +265,9 @@ export const LabelLayer: React.FC<LabelLayerProps> = ({ }) => {
                         labelText = plot.crossName || '';
                     }
 
-                    if (!labelText) return null;
+                    if (!labelText) {
+                        return null;
+                    }
 
                     return (
                         <text
