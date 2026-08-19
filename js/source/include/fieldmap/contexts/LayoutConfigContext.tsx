@@ -8,10 +8,10 @@ export type ColorVar = 'parity' | 'germplasm' | 'block' | 'family_name' | 'cross
 export type LabelVar = 'plot_number' | 'germplasm' | 'block' | 'family_name' | 'cross_name';
 
 export interface SecondaryAxis {
-    xLabel: string;
-    yLabel: string;
-    xValues: number[];
-    yValues: number[];
+    xLabel?: string;
+    yLabel?: string;
+    xValues?: number[];
+    yValues?: number[];
 }
 
 export interface LayoutConfigContextType {
@@ -87,17 +87,16 @@ export const LayoutConfigProvider: React.FC<FieldMapContextProps> = ({ trialId, 
                     secondary_y_axis_values: yValues
                 } = body;
 
-                if (![xLabel, yLabel, xValues, yValues].every(isDefined)) {
-                    console.warn('Incomplete secondary axis data received, clearing secondary axis state.');
-                    setSecondaryAxis(undefined);
+                if (typeof xValues !== 'string' || typeof yValues !== 'string') {
+                    console.error('Secondary axis values are not strings:', { xValues, yValues });
                     return;
                 }
 
                 setSecondaryAxis({
                     xLabel,
                     yLabel,
-                    xValues: (typeof xValues === 'string' ? xValues.split(',') : (Array.isArray(xValues) ? xValues : [])).map(Number).filter(n => !isNaN(n)),
-                    yValues: (typeof yValues === 'string' ? yValues.split(',') : (Array.isArray(yValues) ? yValues : [])).map(Number).filter(n => !isNaN(n))
+                    xValues: xValues.split(',').map(Number),
+                    yValues: yValues.split(',').map(Number),
                 });
             }
         } catch (e) {

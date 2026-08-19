@@ -3,6 +3,7 @@ import { useLayoutConfig } from '../contexts/LayoutConfigContext';
 import { useModals } from '../contexts/ModalsContext';
 import { usePlotGrid } from '../contexts/PlotGridContext';
 import { useView } from '../contexts/ViewContext';
+import { buildParams, isDefined } from '../../functions';
 
 export const useSubmitFieldLayout = () => {
 	const {
@@ -146,11 +147,11 @@ export const useSubmitFieldLayout = () => {
 		const secondaryAxisRequest = secondaryAxis ? fetch(`/ajax/breeders/trial/${trialId}/secondary_axis`, {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-			body: new URLSearchParams({
+			body: buildParams({
 				secondary_x_axis_label: secondaryAxis.xLabel,
 				secondary_y_axis_label: secondaryAxis.yLabel,
-				secondary_x_axis_values: secondaryAxis.xValues.join(','),
-				secondary_y_axis_values: secondaryAxis.yValues.join(',')
+				secondary_x_axis_values: secondaryAxis.xValues?.join(','),
+				secondary_y_axis_values: secondaryAxis.yValues?.join(',')
 			})
 		}) : Promise.resolve();
 
