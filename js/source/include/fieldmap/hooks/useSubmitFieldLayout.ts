@@ -144,16 +144,16 @@ export const useSubmitFieldLayout = () => {
 			})
 		});
 
-		const secondaryAxisRequest = secondaryAxis ? fetch(`/ajax/breeders/trial/${trialId}/secondary_axis`, {
+		const secondaryAxisRequest = fetch(`/ajax/breeders/trial/${trialId}/secondary_axis`, {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
 			body: buildParams({
-				secondary_x_axis_label: secondaryAxis.xLabel,
-				secondary_y_axis_label: secondaryAxis.yLabel,
-				secondary_x_axis_values: secondaryAxis.xValues?.join(','),
-				secondary_y_axis_values: secondaryAxis.yValues?.join(',')
+				secondary_x_axis_label: secondaryAxis?.xLabel,
+				secondary_y_axis_label: secondaryAxis?.yLabel,
+				secondary_x_axis_values: secondaryAxis?.xValues?.join(','),
+				secondary_y_axis_values: secondaryAxis?.yValues?.join(',')
 			})
-		}) : Promise.resolve();
+		});
 
 		try {
 			await Promise.all([putRequest, postRequest, northArrowRequest, secondaryAxisRequest]);

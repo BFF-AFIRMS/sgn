@@ -29,15 +29,20 @@ export const SecondaryAxisModal: React.FC<SecondaryAxisModalProps> = ({}) => {
         }
     }, [show, secondaryAxis]);
 
-    const handleApplyDimensions = async () => {
-        const xVals = secondaryXAxisValues.trim() ? secondaryXAxisValues.split(',').map(v => Number(v.trim())).filter(v => !isNaN(v)) : [];
-        const yVals = secondaryYAxisValues.trim() ? secondaryYAxisValues.split(',').map(v => Number(v.trim())).filter(v => !isNaN(v)) : [];
-        if (secondaryXAxisLabel || secondaryYAxisLabel || xVals.length > 0 || yVals.length > 0) {
+    const handleApply = async () => {
+        const toValueArray = (str: string) => str.split(',')
+            .map(v => v.trim())
+            .filter(v => v !== '');
+
+        const xValues = toValueArray(secondaryXAxisValues);
+        const yValues = toValueArray(secondaryYAxisValues);
+
+        if (secondaryXAxisLabel || secondaryYAxisLabel || xValues.length > 0 || yValues.length > 0) {
             setSecondaryAxis({
                 xLabel: secondaryXAxisLabel,
                 yLabel: secondaryYAxisLabel,
-                xValues: xVals,
-                yValues: yVals
+                xValues,
+                yValues
             });
         } else {
             setSecondaryAxis(undefined);
@@ -75,7 +80,7 @@ export const SecondaryAxisModal: React.FC<SecondaryAxisModalProps> = ({}) => {
                     </div>
                     <div className="modal-footer">
                         <button className="btn btn-default" onClick={() => setShow(false)}>Cancel</button>
-                        <button className="btn btn-primary" onClick={handleApplyDimensions}>Apply</button>
+                        <button className="btn btn-primary" onClick={handleApply}>Apply</button>
                     </div>
                 </div>
             </div>
