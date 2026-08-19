@@ -42,7 +42,7 @@ export const FieldMapSettingsPanel: React.FC<FieldMapSettingsPanelProps> = ({ })
         setShowDownloadCSVModal,
         setShowDimDialog,
         setShowDeleteTraitModal,
-        setShowSecondaryAxisDialog,
+        setShowSecondaryAxisModal,
     } = useModals();
 
     const {
@@ -131,7 +131,7 @@ export const FieldMapSettingsPanel: React.FC<FieldMapSettingsPanelProps> = ({ })
                 <button className="btn btn-default" onClick={transposeLayout} disabled={displayLinkedTrials} title="Transpose Display"><span className="glyphicon glyphicon-random"></span></button>
                 <button className="btn btn-default" onClick={rotateLayout} disabled={displayLinkedTrials} title="Rotate"><span className="glyphicon glyphicon-repeat"></span></button>
                 <button className="btn btn-default" onClick={() => setShowDimDialog(true)} disabled={displayLinkedTrials} title="Change Dimensions"><span className="glyphicon glyphicon-resize-full"></span></button>
-                <button className="btn btn-default" onClick={() => setShowSecondaryAxisDialog(true)} disabled={displayLinkedTrials} title="Change Secondary Axis"><span className="glyphicon glyphicon-indent-left"></span></button>
+                <button className="btn btn-default" onClick={() => setShowSecondaryAxisModal(true)} disabled={displayLinkedTrials} title="Change Secondary Axis"><span className="glyphicon glyphicon-indent-left"></span></button>
                 <button className="btn btn-default" onClick={() => setShowDownloadCSVModal(true)} title="Download Spatial Layout (CSV)"><span className="glyphicon glyphicon-save"></span></button>
                 <button className="btn btn-default" onClick={() => printFieldMap(selectedView, selectedViewLabel)} title="Print Fieldmap"><span className="glyphicon glyphicon-print"></span></button>
                 {selectedView !== 'fieldmap' && selectedView !== 'geofieldmap' && (

@@ -7,8 +7,8 @@ interface SecondaryAxisModalProps {
 
 export const SecondaryAxisModal: React.FC<SecondaryAxisModalProps> = ({}) => {
     const {
-        showSecondaryAxisDialog: show,
-        setShowSecondaryAxisDialog: setShow,
+        showSecondaryAxisModal: show,
+        setShowSecondaryAxisModal: setShow,
     } = useModals();
 
     const {

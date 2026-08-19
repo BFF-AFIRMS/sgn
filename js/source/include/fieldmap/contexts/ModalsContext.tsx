@@ -17,8 +17,8 @@ export interface ModalsContextType {
 	showDownloadCSVModal: boolean;
 	setShowDownloadCSVModal: React.Dispatch<React.SetStateAction<boolean>>;
 
-    showSecondaryAxisDialog: boolean;
-    setShowSecondaryAxisDialog: React.Dispatch<React.SetStateAction<boolean>>;
+    showSecondaryAxisModal: boolean;
+    setShowSecondaryAxisModal: React.Dispatch<React.SetStateAction<boolean>>;
 
 	loading: boolean;
 	setLoading: React.Dispatch<React.SetStateAction<boolean>>;
@@ -32,7 +32,7 @@ export const ModalsProvider: React.FC<FieldMapContextProps> = ({ children }) => 
     const [showDimDialog, setShowDimDialog] = useState(false);
     const [showDeleteTraitModal, setShowDeleteTraitModal] = useState(false);
     const [showDownloadCSVModal, setShowDownloadCSVModal] = useState(false);
-    const [showSecondaryAxisDialog, setShowSecondaryAxisDialog] = useState(false);
+    const [showSecondaryAxisModal, setShowSecondaryAxisModal] = useState(false);
 
     const [loading, setLoading] = useState(false);
 
@@ -43,7 +43,7 @@ export const ModalsProvider: React.FC<FieldMapContextProps> = ({ children }) => 
             showDimDialog, setShowDimDialog,
             showDeleteTraitModal, setShowDeleteTraitModal,
             showDownloadCSVModal, setShowDownloadCSVModal,
-            showSecondaryAxisDialog, setShowSecondaryAxisDialog,
+            showSecondaryAxisModal, setShowSecondaryAxisModal,
             loading, setLoading,
         }}>
             {children}
