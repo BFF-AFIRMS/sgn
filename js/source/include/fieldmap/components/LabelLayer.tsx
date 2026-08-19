@@ -34,17 +34,24 @@ export const LabelLayer: React.FC<LabelLayerProps> = ({ }) => {
             values: secondaryAxis.yValues ? [...secondaryAxis.yValues] : []
         };
 
-        const getFill = (axis: 'x' | 'y', values: any[]) => {
+        /**
+         * Reverse the values for the specified axis, left-padding them to align with the end of the axis.
+         * @param axis 'x' or 'y'
+         * @param values Array of values to reverse
+         * @returns Reversed and left-padded array of values
+         */
+        const reversed = (axis: 'x' | 'y', values: any[]) => {
             if (isTransposed) {
                 axis = axis === 'x' ? 'y' : 'x';
             }
+
             const countToFill = axis === 'x' ?
                 bounds.numCols - values.length :
                 bounds.numRows - values.length;
 
             return Array(Math.max(countToFill, 0))
                 .fill('')
-                .concat(values);
+                .concat([...values].reverse());
         }
 
         let dispX = curX;
@@ -52,12 +59,12 @@ export const LabelLayer: React.FC<LabelLayerProps> = ({ }) => {
 
         if (mapRotation === 90) {
             dispX = curY;
-            dispY = { label: curX.label, values: getFill('y', [...curX.values].reverse()) };
+            dispY = { label: curX.label, values: reversed('y', curX.values) };
         } else if (mapRotation === 180) {
-            dispX = { label: curX.label, values: getFill('x', [...curX.values].reverse()) };
-            dispY = { label: curY.label, values: getFill('y', [...curY.values].reverse()) };
+            dispX = { label: curX.label, values: reversed('x', curX.values) };
+            dispY = { label: curY.label, values: reversed('y', curY.values) };
         } else if (mapRotation === 270) {
-            dispX = { label: curY.label, values: getFill('x', [...curY.values].reverse()) };
+            dispX = { label: curY.label, values: reversed('x', curY.values) };
             dispY = curX;
         }
 
