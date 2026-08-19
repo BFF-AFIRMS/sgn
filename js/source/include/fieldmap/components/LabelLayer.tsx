@@ -21,6 +21,7 @@ export const LabelLayer: React.FC<LabelLayerProps> = ({ }) => {
         secondaryAxis
     } = useLayoutConfig();
 
+    // Compute the displayed secondary axis values and labels based on the layout configuration
     const displayedSecondaryAxis = useMemo(() => {
         if (!secondaryAxis) return undefined;
 
@@ -34,6 +35,9 @@ export const LabelLayer: React.FC<LabelLayerProps> = ({ }) => {
         };
 
         const getFill = (axis: 'x' | 'y', values: any[]) => {
+            if (isTransposed) {
+                axis = axis === 'x' ? 'y' : 'x';
+            }
             const countToFill = axis === 'x' ?
                 bounds.numCols - values.length :
                 bounds.numRows - values.length;
