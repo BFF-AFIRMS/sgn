@@ -68,7 +68,7 @@ export const PlotGridProvider: React.FC<FieldMapContextProps> = ({ trialId, auth
         setColorVar,
         setLabelVar,
         setLabelSize,
-        secondaryAxis
+        hasSecondaryAxis
     } = useLayoutConfig();
 
     const {
@@ -189,8 +189,6 @@ export const PlotGridProvider: React.FC<FieldMapContextProps> = ({ trialId, auth
             numCols: rMaxCol - rMinCol + 1
         };
     }, [bounds, topBorder, bottomBorder, leftBorder, rightBorder]);
-
-    const hasSecondaryAxis = Boolean(secondaryAxis && (secondaryAxis.xLabel || secondaryAxis.yLabel || (secondaryAxis.xValues && secondaryAxis.xValues.length > 0) || (secondaryAxis.yValues && secondaryAxis.yValues.length > 0)));
 
     const svgDimensions = useMemo(() => {
         const extraWidth = hasSecondaryAxis ? 140 : 50;

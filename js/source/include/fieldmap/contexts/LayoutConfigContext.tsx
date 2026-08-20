@@ -1,4 +1,4 @@
-import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
 import { isDefined } from '../../functions';
 import { FieldMapContextProps } from '../types';
@@ -41,6 +41,7 @@ export interface LayoutConfigContextType {
     secondaryAxis: SecondaryAxis | undefined;
     setSecondaryAxis: React.Dispatch<React.SetStateAction<SecondaryAxis | undefined>>;
     loadSecondaryAxis: () => void;
+    hasSecondaryAxis: boolean;
 }
 
 const LayoutConfigContext = createContext<LayoutConfigContextType | undefined>(undefined);
@@ -104,6 +105,14 @@ export const LayoutConfigProvider: React.FC<FieldMapContextProps> = ({ trialId, 
         }
     }, [trialId]);
 
+    const hasSecondaryAxis = useMemo(() => Boolean(
+        secondaryAxis && (
+            secondaryAxis.xLabel || secondaryAxis.yLabel ||
+            (secondaryAxis.xValues && secondaryAxis.xValues.length > 0) ||
+            (secondaryAxis.yValues && secondaryAxis.yValues.length > 0)
+        )
+    ), [secondaryAxis]);
+
     useEffect(() => {
         loadNorthArrowAngle();
         loadSecondaryAxis();
@@ -124,7 +133,8 @@ export const LayoutConfigProvider: React.FC<FieldMapContextProps> = ({ trialId, 
             northArrowAngle, setNorthArrowAngle,
             loadNorthArrowAngle,
             secondaryAxis, setSecondaryAxis,
-            loadSecondaryAxis
+            loadSecondaryAxis,
+            hasSecondaryAxis,
         }}>
             {children}
         </LayoutConfigContext.Provider>
