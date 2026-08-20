@@ -118,7 +118,9 @@ $t->while_logged_in_as("curator", sub {
 	$t->click_ok('//button[@title="Change Dimensions"]', 'xpath', 'Click Change Dimensions button');
 
 	# Set input with sibling label containing "Columns" to 4
-	$t->send_keys_ok('//label[contains(text(),"Columns")]/following-sibling::input', 'xpath', '4', 'Set Columns input to 4');
+	my $columns_xpath = '//label[contains(text(),"Columns")]/following-sibling::input';
+	$t->clear_ok($columns_xpath, 'xpath', 'Clear Columns input');
+	$t->send_keys_ok($columns_xpath, 'xpath', '4', 'Set Columns input to 4');
 
 	# Click "Apply" button inside div with class "show"
 	$t->click_ok('//div[contains(@class,"show")]//button[contains(text(),"Apply")]', 'xpath', 'Click Apply button');
