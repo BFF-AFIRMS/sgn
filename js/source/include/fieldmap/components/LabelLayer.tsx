@@ -11,9 +11,9 @@ export const LabelLayer: React.FC<LabelLayerProps> = ({ }) => {
         dimensions,
         gridMatrix,
         overlappingPlots,
-        isTransposed,
-        mapRotation
+        axisOrientation
     } = usePlotGrid();
+
     const {
         invertRows,
         invertCols,
@@ -26,61 +26,25 @@ export const LabelLayer: React.FC<LabelLayerProps> = ({ }) => {
     const displayedSecondaryAxis = useMemo(() => {
         if (!secondaryAxis) return undefined;
 
-        const curX = {
-            label: secondaryAxis.xLabel || '',
-            values: secondaryAxis.xValues ? [...secondaryAxis.xValues] : []
+        const getAxisDisplay = (
+            orientation: { source: 'x' | 'y'; reversed: boolean },
+            length: number
+        ) => {
+            const [label, configValues] = orientation.source === 'x' ?
+                [secondaryAxis.xLabel, secondaryAxis.xValues ?? []] :
+                [secondaryAxis.yLabel, secondaryAxis.yValues ?? []];
+
+            const values = Array.from({ length }, (_, i) => {
+                const idx = orientation.reversed ? length - 1 - i : i;
+                return configValues[idx] ?? '';
+            });
+
+            return { label, values };
         };
-        const curY = {
-            label: secondaryAxis.yLabel || '',
-            values: secondaryAxis.yValues ? [...secondaryAxis.yValues] : []
-        };
 
-        /**
-         * Reverse the values for the specified axis, left-padding them to align with the end of the axis.
-         * @param axis 'x' or 'y'
-         * @param values Array of values to reverse
-         * @returns Reversed and left-padded array of values
-         */
-        const reversed = (axis: 'x' | 'y', values: any[]) => {
-            if (isTransposed) {
-                axis = axis === 'x' ? 'y' : 'x';
-            }
-
-            const { rows, cols } = dimensions;
-
-            // Truncate the values to fit within the bounds of the axis before reversing and left-padding
-            const truncated = values.slice(0, axis === 'x' ? cols : rows);
-
-            const countToFill = axis === 'x' ?
-                cols - truncated.length :
-                rows - truncated.length;
-
-            const filled = Array(Math.max(countToFill, 0))
-                .fill('')
-                .concat(truncated.reverse());
-
-            return filled;
-        }
-
-        let dispX = curX;
-        let dispY = curY;
-
-        if (mapRotation === 90) {
-            dispX = curY;
-            dispY = { label: curX.label, values: reversed('y', curX.values) };
-        } else if (mapRotation === 180) {
-            dispX = { label: curX.label, values: reversed('x', curX.values) };
-            dispY = { label: curY.label, values: reversed('y', curY.values) };
-        } else if (mapRotation === 270) {
-            dispX = { label: curY.label, values: reversed('x', curY.values) };
-            dispY = curX;
-        }
-
-        if (isTransposed) {
-            const temp = dispX;
-            dispX = dispY;
-            dispY = temp;
-        }
+        const { cols, rows } = dimensions;
+        const dispX = getAxisDisplay(axisOrientation.x, cols || bounds.numCols);
+        const dispY = getAxisDisplay(axisOrientation.y, rows || bounds.numRows);
 
         return {
             xLabel: dispX.label,
@@ -88,7 +52,7 @@ export const LabelLayer: React.FC<LabelLayerProps> = ({ }) => {
             xValues: dispX.values,
             yValues: dispY.values
         };
-    }, [secondaryAxis, mapRotation, isTransposed, dimensions]);
+    }, [secondaryAxis, axisOrientation, dimensions, bounds]);
 
     const hasSecondaryAxis = displayedSecondaryAxis && (
         displayedSecondaryAxis.xLabel ||

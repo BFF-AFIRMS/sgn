@@ -15,6 +15,11 @@ export interface GridBounds {
     numCols: number;
 }
 
+export interface AxisOrientation {
+    x: { source: 'x' | 'y'; reversed: boolean };
+    y: { source: 'x' | 'y'; reversed: boolean };
+}
+
 export interface PlotGridContextType {
     plotList: Plot[];
     overlappingPlots: Record<string, Plot[]>;
@@ -38,6 +43,7 @@ export interface PlotGridContextType {
     transposeLayout: () => void;
     mapRotation: number;
     rotateLayout: () => void;
+    axisOrientation: AxisOrientation;
 
     plotStructure: PlotStructureNode | null;
     setPlotStructure: React.Dispatch<React.SetStateAction<PlotStructureNode | null>>;
@@ -79,6 +85,10 @@ export const PlotGridProvider: React.FC<FieldMapContextProps> = ({ trialId, auth
     const [fillerAccessionName, setFillerAccessionName] = useState<string | undefined>(undefined);
     const [isTransposed, setIsTransposed] = useState<boolean>(false);
     const [mapRotation, setMapRotation] = useState<number>(0);
+    const [axisOrientation, setAxisOrientation] = useState<AxisOrientation>({
+        x: { source: 'x', reversed: false },
+        y: { source: 'y', reversed: false }
+    });
 
     const [plotStructure, setPlotStructure] = useState<PlotStructureNode | null>(null);
     const [plotContentCache, setPlotContentCache] = useState<Record<string, string[]>>({});
@@ -195,6 +205,10 @@ export const PlotGridProvider: React.FC<FieldMapContextProps> = ({ trialId, auth
     const parsePlotData = useCallback((data: any[]) => {
         setIsTransposed(false);
         setMapRotation(0);
+        setAxisOrientation({
+            x: { source: 'x', reversed: false },
+            y: { source: 'y', reversed: false }
+        });
 
         const {
             plotObject,
@@ -246,6 +260,12 @@ export const PlotGridProvider: React.FC<FieldMapContextProps> = ({ trialId, auth
     }, [bounds, renderBounds, plotList, fillerAccessionId]);
 
     const recalculateLayout = useCallback((layout: 'serpentine' | 'zigzag', rows?: number, cols?: number) => {
+        setIsTransposed(false);
+        setMapRotation(0);
+        setAxisOrientation({
+            x: { source: 'x', reversed: false },
+            y: { source: 'y', reversed: false }
+        });
         setPlotObject(currentPlots => {
             rows = rows ?? dimensions.rows ?? bounds.numRows;
             cols = cols ?? dimensions.cols ?? bounds.numCols;
@@ -298,6 +318,10 @@ export const PlotGridProvider: React.FC<FieldMapContextProps> = ({ trialId, auth
 
     const transposeLayout = useCallback(() => {
         setIsTransposed(t => !t);
+        setAxisOrientation(prev => ({
+            x: prev.y,
+            y: prev.x
+        }));
         setPlotObject(current => {
             const transposed: Record<string, Plot> = {};
             for (const [id, plot] of Object.entries(current)) {
@@ -317,6 +341,13 @@ export const PlotGridProvider: React.FC<FieldMapContextProps> = ({ trialId, auth
 
     const rotateLayout = useCallback(() => {
         setMapRotation(r => (r + 90) % 360);
+        setAxisOrientation(prev => ({
+            x: prev.y,
+            y: {
+                source: prev.x.source,
+                reversed: !prev.x.reversed
+            }
+        }));
         const { minCol, maxCol } = bounds;
         setPlotObject(current => {
             const rotated: Record<string, Plot> = {};
@@ -429,6 +460,7 @@ export const PlotGridProvider: React.FC<FieldMapContextProps> = ({ trialId, auth
             recalculateLayout,
             isTransposed,
             mapRotation,
+            axisOrientation,
             plotStructure,
             setPlotStructure,
             plotContentCache,
@@ -436,7 +468,7 @@ export const PlotGridProvider: React.FC<FieldMapContextProps> = ({ trialId, auth
             plotImages,
             setPlotImages,
             fetchObservationUnits,
-            applyDimensions
+            applyDimensions,
         }}>
             {children}
         </PlotGridContext.Provider>
