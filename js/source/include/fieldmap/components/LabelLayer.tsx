@@ -8,6 +8,7 @@ export const LabelLayer: React.FC<LabelLayerProps> = ({ }) => {
     const {
         bounds,
         renderBounds,
+        dimensions,
         gridMatrix,
         overlappingPlots,
         isTransposed,
@@ -45,16 +46,20 @@ export const LabelLayer: React.FC<LabelLayerProps> = ({ }) => {
                 axis = axis === 'x' ? 'y' : 'x';
             }
 
-            const countToFill = axis === 'x' ?
-                bounds.numCols - values.length :
-                bounds.numRows - values.length;
-            
-            // Truncate the values to fit within the bounds of the axis before reversing and left-padding
-            const truncated = values.slice(0, axis === 'x' ? bounds.numCols : bounds.numRows);
+            const { rows, cols } = dimensions;
 
-            return Array(Math.max(countToFill, 0))
+            // Truncate the values to fit within the bounds of the axis before reversing and left-padding
+            const truncated = values.slice(0, axis === 'x' ? cols : rows);
+
+            const countToFill = axis === 'x' ?
+                cols - truncated.length :
+                rows - truncated.length;
+
+            const filled = Array(Math.max(countToFill, 0))
                 .fill('')
                 .concat(truncated.reverse());
+
+            return filled;
         }
 
         let dispX = curX;
@@ -83,7 +88,7 @@ export const LabelLayer: React.FC<LabelLayerProps> = ({ }) => {
             xValues: dispX.values,
             yValues: dispY.values
         };
-    }, [secondaryAxis, mapRotation, isTransposed]);
+    }, [secondaryAxis, mapRotation, isTransposed, dimensions]);
 
     const hasSecondaryAxis = displayedSecondaryAxis && (
         displayedSecondaryAxis.xLabel ||
