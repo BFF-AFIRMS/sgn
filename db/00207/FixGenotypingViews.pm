@@ -403,7 +403,7 @@ create view public.genotyping_projectsxtraits as (
         join stock as tissue_sample on (tissue_sample.stock_id = nd_experiment_stock.stock_id and tissue_sample.type_id = $tissue_sample_cvterm_id)
         join stock_relationship on (tissue_sample.stock_id = subject_id)
     )
-    select distinct genotyping_project_id, phenotype_id as trait_id
+    select distinct genotyping_project_id, observable_id as trait_id
     from genotyped_stocks
     join nd_experiment_stock using (stock_id)
     join nd_experiment_phenotype using (nd_experiment_id)
@@ -805,7 +805,7 @@ create view public.genotyping_protocolsxtraits as (
         join stock as tissue_sample on (tissue_sample.stock_id = nd_experiment_stock.stock_id and tissue_sample.type_id = $tissue_sample_cvterm_id)
         join stock_relationship on (tissue_sample.stock_id = subject_id)
     )
-    select distinct genotyping_protocol_id, phenotype_id as trait_id
+    select distinct genotyping_protocol_id, observable_id as trait_id
     from genotyped_stocks
     join nd_experiment_stock using (stock_id)
     join nd_experiment_phenotype using (nd_experiment_id)
