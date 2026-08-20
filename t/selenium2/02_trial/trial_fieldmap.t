@@ -8,14 +8,6 @@ use SGN::Test::Fixture;
 my $t = SGN::Test::WWW::WebDriver->new();
 my $f = SGN::Test::Fixture->new();
 
-# Context notes:
-# The SVG has ID: fieldmap_chart_svg
-# 
-# Plot squares are positioned with transform="translate(x,y)":
-# <g transform="translate(52, 104)" class="tw:cursor-pointer">
-#   <rect width="50" height="50" rx="4" fill="#41b6c4" stroke="green" stroke-width="1.5"></rect>
-# </g>
-
 my $svg_id = 'fieldmap_chart_svg';
 my $border_fill = '#ecefef';
 
