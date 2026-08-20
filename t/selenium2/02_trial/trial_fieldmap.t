@@ -37,6 +37,28 @@ sub find_svg_square_ok {
 	return $t->find_element_ok($xpath, 'xpath', "Find plot square at ($x,$y)" . (defined $fill ? " with fill '$fill'" : ""));
 }
 
+sub set_dimensions {
+	my ($columns, $rows) = @_;
+	$t->click_ok('//button[@title="Change Dimensions"]', 'xpath', 'Click Change Dimensions button');
+	if (defined $columns) {
+		$t->send_keys_ok('//label[contains(text(),"Columns")]/following-sibling::input', 'xpath', $columns, "Set Columns input to $columns", clear => 1);
+	}
+	if (defined $rows) {
+		$t->send_keys_ok('//label[contains(text(),"Rows")]/following-sibling::input', 'xpath', $rows, "Set Rows input to $rows", clear => 1);
+	}
+	$t->click_ok('//div[contains(@class,"show")]//button[contains(text(),"Apply")]', 'xpath', 'Click Apply button');
+}
+
+sub set_secondary_axis {
+	my ($x_label, $y_label, $x_values, $y_values) = @_;
+	$t->click_ok('//button[@title="Change Secondary Axis"]', 'xpath', 'Click Change Secondary Axis button');
+	$t->send_keys_ok('//label[contains(text(),"Secondary X Axis Label")]/following-sibling::input', 'xpath', $x_label, "Enter new secondary x axis label", clear => 1);
+	$t->send_keys_ok('//label[contains(text(),"Secondary Y Axis Label")]/following-sibling::input', 'xpath', $y_label, "Enter new secondary y axis label", clear => 1);
+	$t->send_keys_ok('//label[contains(text(),"Secondary X Axis Values")]/following-sibling::input', 'xpath', $x_values, "Enter new secondary x axis values", clear => 1);
+	$t->send_keys_ok('//label[contains(text(),"Secondary Y Axis Values")]/following-sibling::input', 'xpath', $y_values, "Enter new secondary y axis values", clear => 1);
+	$t->click_ok('//div[contains(@class,"show")]//button[contains(text(),"Apply")]', 'xpath', 'Click Apply button');
+}
+
 $t->while_logged_in_as("curator", sub {
 	$t->get_ok('/breeders/trial/165', 'Navigate to trial page');
 
@@ -46,23 +68,7 @@ $t->while_logged_in_as("curator", sub {
 	find_svg_square_ok(0, 104);
 	find_svg_square_ok(312, 0);
 
-	# Click "Change Secondary Axis" button
-	$t->click_ok('//button[@title="Change Secondary Axis"]', 'xpath', 'Click Change Secondary Axis button');
-
-	# Fill input with sibling label containing "Secondary X Axis Label"
-	$t->send_keys_ok('//label[contains(text(),"Secondary X Axis Label")]/following-sibling::input', 'xpath', 'Test X Label', 'Enter new secondary x axis label');
-
-	# Fill input with sibling label containing "Secondary Y Axis Label"
-	$t->send_keys_ok('//label[contains(text(),"Secondary Y Axis Label")]/following-sibling::input', 'xpath', 'Test Y Label', 'Enter new secondary y axis label');
-
-	# Fill input with sibling label containing "Secondary X Axis Values"
-	$t->send_keys_ok('//label[contains(text(),"Secondary X Axis Values")]/following-sibling::input', 'xpath', 'tx1,tx2,tx3,tx4', 'Enter new secondary x axis values');
-
-	# Fill input with sibling label containing "Secondary Y Axis Values"
-	$t->send_keys_ok('//label[contains(text(),"Secondary Y Axis Values")]/following-sibling::input', 'xpath', 'ty1,ty2,ty3,ty4', 'Enter new secondary y axis values');
-
-	# Click "Apply" button inside div with class "show"
-	$t->click_ok('//div[contains(@class,"show")]//button[contains(text(),"Apply")]', 'xpath', 'Click Apply button');
+	set_secondary_axis('Test X Label', 'Test Y Label', 'tx1,tx2,tx3,tx4', 'ty1,ty2,ty3,ty4');
 
 	find_svg_text_ok('Test X Label', 182, -42);
 	find_svg_text_ok('Test X Label', 182, 208);
@@ -112,18 +118,9 @@ $t->while_logged_in_as("curator", sub {
 	$t->click_ok('//label[contains(text(),"Right")]/input', 'xpath', 'Click Right checkbox');
 
 	find_svg_square_ok(208, 312, $border_fill);
-	find_svg_text_ok('ty3', 77, -26);
+	find_svg_text_ok('ty3', 181, -26);
 
-	# Click button with title "Change Dimensions"
-	$t->click_ok('//button[@title="Change Dimensions"]', 'xpath', 'Click Change Dimensions button');
-
-	# Set input with sibling label containing "Columns" to 4
-	my $columns_xpath = '//label[contains(text(),"Columns")]/following-sibling::input';
-	$t->clear_ok($columns_xpath, 'xpath', 'Clear Columns input');
-	$t->send_keys_ok($columns_xpath, 'xpath', '4', 'Set Columns input to 4');
-
-	# Click "Apply" button inside div with class "show"
-	$t->click_ok('//div[contains(@class,"show")]//button[contains(text(),"Apply")]', 'xpath', 'Click Apply button');
+	set_dimensions(4, undef);
 
 	find_svg_text_ok('301', 233, 186);
 	find_svg_text_ok('307', 181, 238);
