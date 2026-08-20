@@ -112,7 +112,19 @@ $t->while_logged_in_as("curator", sub {
 	$t->click_ok('//label[contains(text(),"Right")]/input', 'xpath', 'Click Right checkbox');
 
 	find_svg_square_ok(208, 312, $border_fill);
-	find_svg_text_ok('ty3', 181, -26);
+	find_svg_text_ok('ty3', 77, -26);
+
+	# Click button with title "Change Dimensions"
+	$t->click_ok('//button[@title="Change Dimensions"]', 'xpath', 'Click Change Dimensions button');
+
+	# Set input with sibling label containing "Columns" to 4
+	$t->send_keys_ok('//label[contains(text(),"Columns")]/following-sibling::input', 'xpath', '4', 'Set Columns input to 4');
+
+	# Click "Apply" button inside div with class "show"
+	$t->click_ok('//div[contains(@class,"show")]//button[contains(text(),"Apply")]', 'xpath', 'Click Apply button');
+
+	find_svg_text_ok('301', 233, 186);
+	find_svg_text_ok('307', 181, 238);
 });
 
 $t->driver->close();
