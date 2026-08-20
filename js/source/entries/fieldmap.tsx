@@ -37,8 +37,7 @@ const FieldMap: React.FC<FieldMapProps> = ({
     hasSubplotEntries,
     hasPlantEntries,
 }) => {
-    const { secondaryAxis } = useLayoutConfig();
-    const hasSecondaryAxis = Boolean(secondaryAxis && (secondaryAxis.xLabel || secondaryAxis.yLabel || (secondaryAxis.xValues && secondaryAxis.xValues.length > 0) || (secondaryAxis.yValues && secondaryAxis.yValues.length > 0)));
+    const { hasSecondaryAxis } = useLayoutConfig();
     const offsetX = hasSecondaryAxis ? 80 : 50;
     const offsetY = hasSecondaryAxis ? 55 : 25;
 
