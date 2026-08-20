@@ -209,7 +209,7 @@ sub base_url {
 
 sub click {
     my ($self, $name, $method, @args) = @_;
-    my ($timeout, $scrollto) = $self->_extract_basic_args(@args);
+    my $options = $self->_extract_basic_args(@args);
 
     my $action = "click_$name";
     $self->collect_js_logs($action);
@@ -217,24 +217,24 @@ sub click {
     return wait_until {
         $self->screenshot($action);
 
-        my $element = $scrollto
-            ? $self->scroll_into_view($name, $method, timeout => $timeout)
+        my $element = $options->{scrollto}
+            ? $self->scroll_into_view($name, $method, timeout => $options->{timeout})
             : $self->driver->find_element($name, $method);
         $element->click();
-    } timeout => $timeout;
+    } timeout => $options->{timeout};
 }
 
 sub click_ok {
     my ($self, $name, $method, @args) = @_;
-    my ($test_name, $timeout, $scrollto) = $self->_extract_ok_args(@args);
+    my ($test_name, $options) = $self->_extract_ok_args(@args);
 
     $test_name = $test_name || print STDERR "You can provide a test name parameter for click_ok\n";
     ok(
         my $element = $self->click(
             $name,
             $method,
-            timeout  => $timeout,
-            scrollto => $scrollto,
+            timeout  => $options->{timeout},
+            scrollto => $options->{scrollto},
         ),
         $test_name
     );
@@ -243,134 +243,143 @@ sub click_ok {
 
 sub clear {
     my ($self, $name, $method, @args) = @_;
-    my ($timeout) = $self->_extract_basic_args(@args);
+    my $options = $self->_extract_basic_args(@args);
 
     return wait_until {
         $self->screenshot("clear_$name");
         $self->driver->find_element($name, $method)->clear();
-    } timeout => $timeout;
+    } timeout => $options->{timeout};
 }
 
 sub clear_ok {
     my ($self, $name, $method, @args) = @_;
-    my ($test_name, $timeout) = $self->_extract_ok_args(@args);
+    my ($test_name, $options) = $self->_extract_ok_args(@args);
 
     $test_name = $test_name || print STDERR "You can provide a test name parameter for clear_ok\n";
-    ok(my $element = $self->clear($name, $method, timeout => $timeout), $test_name);
+    ok(my $element = $self->clear($name, $method, timeout => $options->{timeout}), $test_name);
     return $element;
 }
 
 sub get { 
     my ($self, $url, @args) = @_;
-    my ($timeout) = $self->_extract_basic_args(@args);
+    my $options = $self->_extract_basic_args(@args);
 
     $self->collect_js_logs("get_$url");
 
     my $ok = wait_until {
         $self->driver->get($url);
-    } timeout => $timeout;
+    } timeout => $options->{timeout};
     $self->wait_for_network_idle();
     return $ok;
 }
 
 sub get_ok { 
     my ($self, $url, @args) = @_;
-    my ($test_name, $timeout) = $self->_extract_ok_args(@args);
+    my ($test_name, $options) = $self->_extract_ok_args(@args);
 
     $test_name ||= "get $url test";
-    ok($self->get($url, timeout => $timeout), $test_name);
+    ok($self->get($url, timeout => $options->{timeout}), $test_name);
 }
     
 sub find_element { 
     my ($self, $name, $method, @args) = @_;
-    my ($timeout) = $self->_extract_basic_args(@args);
+    my $options = $self->_extract_basic_args(@args);
 
     return wait_until {
         $self->screenshot("find_element_$name");
         $self->driver->find_element($name, $method);
-    } timeout => $timeout;
+    } timeout => $options->{timeout};
 }
 
 sub find_element_ok { 
     my ($self, $name, $method, @args) = @_;
-    my ($test_name, $timeout) = $self->_extract_ok_args(@args);
+    my ($test_name, $options) = $self->_extract_ok_args(@args);
 
     $test_name = $test_name || print STDERR "You can provide a test name parameter for find_element_ok\n";
-    ok(my $element = $self->find_element($name, $method, timeout => $timeout), $test_name);
+    ok(my $element = $self->find_element($name, $method, timeout => $options->{timeout}), $test_name);
     return $element;
 }
 
 sub get_attribute {
     my ($self, $name, $method, $attribute, @args) = @_;
-    my ($timeout) = $self->_extract_basic_args(@args);
+    my $options = $self->_extract_basic_args(@args);
 
     return wait_until {
         $self->screenshot("get_attribute_$attribute");
         $self->driver->find_element($name, $method)->get_attribute($attribute);
-    } timeout => $timeout;
+    } timeout => $options->{timeout};
 }
 
 sub get_attribute_ok {
     my ($self, $name, $method, $attribute, @args) = @_;
-    my ($test_name, $timeout) = $self->_extract_ok_args(@args);
+    my ($test_name, $options) = $self->_extract_ok_args(@args);
 
     $test_name = $test_name || print STDERR "You can provide a test name parameter for get_attribute_ok\n";
-    ok( my $element = $self->get_attribute($name, $method, $attribute, timeout => $timeout), $test_name);
+    ok( my $element = $self->get_attribute($name, $method, $attribute, timeout => $options->{timeout}), $test_name);
     return $element;
 }
 
 sub get_text {
     my ($self, $name, $method, @args) = @_;
-    my ($timeout) = $self->_extract_basic_args(@args);
+    my $options = $self->_extract_basic_args(@args);
 
     return wait_until {
         $self->driver->find_element($name, $method)->get_text();
-    } timeout => $timeout;
+    } timeout => $options->{timeout};
 }
 
 sub get_text_ok {
     my ($self, $name, $method, @args) = @_;
-    my ($test_name, $timeout) = $self->_extract_ok_args(@args);
+    my ($test_name, $options) = $self->_extract_ok_args(@args);
 
     $test_name = $test_name || print STDERR "You can provide a test name parameter for get_text_ok\n";
-    ok( my $element = $self->get_text($name, $method, timeout => $timeout), $test_name);
+    ok( my $element = $self->get_text($name, $method, timeout => $options->{timeout}), $test_name);
     return $element;
 }
 
 sub send_keys {
     my ($self, $name, $method, $input, @args) = @_;
-    my ($timeout) = $self->_extract_basic_args(@args);
+    my $options = $self->_extract_basic_args(@args);
+
+    if ($options->{clear}) {
+        $self->clear($name, $method, timeout => $options->{timeout}, scrollto => $options->{scrollto});
+    }
 
     return wait_until {
         $self->screenshot("send_keys_$name");
         $self->driver->find_element($name, $method)->send_keys(_maybe_unwrap($input));
-    } timeout => $timeout;
+    } timeout => $options->{timeout};
 }
 
 sub send_keys_ok {
     my ($self, $name, $method, $input, @args) = @_;
-    my ($test_name, $timeout) = $self->_extract_ok_args(@args);
+    my ($test_name, $options) = $self->_extract_ok_args(@args);
 
     $test_name = $test_name || print STDERR "You can provide a test name parameter for send_keys_ok\n";
-    ok( my $element = $self->send_keys($name, $method, $input, timeout => $timeout), $test_name);
+
+    if ($options->{clear}) {
+        $self->clear_ok($name, $method, $test_name . " (clear)", timeout => $options->{timeout});
+    }
+
+    ok( my $element = $self->send_keys($name, $method, $input, timeout => $options->{timeout}, scrollto => $options->{scrollto}, clear => 0), $test_name);
     return $element;
 }
 
 sub accept_alert {
     my ($self, @args) = @_;
-    my ($timeout) = $self->_extract_basic_args(@args);
+    my $options = $self->_extract_basic_args(@args);
 
     return wait_until {
         $self->screenshot("accept_alert");
         $self->driver->accept_alert();
-    } timeout => $timeout;
+    } timeout => $options->{timeout};
 }
 
 sub accept_alert_ok { 
     my ($self, @args) = @_;
-    my ($test_name, $timeout) = $self->_extract_ok_args(@args);
+    my ($test_name, $options) = $self->_extract_ok_args(@args);
 
-    ok($self->accept_alert(timeout => $timeout), $test_name);
+    ok($self->accept_alert(timeout => $options->{timeout}), $test_name);
 }
 
 sub get_alert_text {
@@ -606,24 +615,32 @@ sub _extract_basic_args {
 
     my $timeout = $self->_extract_timeout(@args);
     my $scrollto = 1;
+    my $clear_before = 0;
 
     if (@args >= 2 && @args % 2 == 0 && !ref($args[0])) {
         my %named = @args;
         if (exists $named{scrollto}) {
             $scrollto = $named{scrollto} ? 1 : 0;
         }
+        if (exists $named{clear}) {
+            $clear_before = $named{clear} ? 1 : 0;
+        }
     }
 
-    return ($timeout, $scrollto);
+    return {
+        timeout => $timeout,
+        scrollto => $scrollto,
+        clear => $clear_before,
+    };
 }
 
 sub _extract_ok_args {
     my ($self, @args) = @_;
 
     my $test_name = @args % 2 ? shift @args : undef;
-    my @basic_args = $self->_extract_basic_args(@args);
+    my $basic_args = $self->_extract_basic_args(@args);
 
-    return ($test_name, @basic_args);
+    return ($test_name, $basic_args);
 }
 
 
