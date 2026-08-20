@@ -15,10 +15,10 @@ export const SecondaryAxisModal: React.FC<SecondaryAxisModalProps> = ({}) => {
         secondaryAxis, setSecondaryAxis,
     } = useLayoutConfig();
 
-    const [secondaryXAxisLabel, setSecondaryXAxisLabel] = useState(secondaryAxis?.xLabel || '');
-    const [secondaryYAxisLabel, setSecondaryYAxisLabel] = useState(secondaryAxis?.yLabel || '');
-    const [secondaryXAxisValues, setSecondaryXAxisValues] = useState(secondaryAxis?.xValues?.join(',') || '');
-    const [secondaryYAxisValues, setSecondaryYAxisValues] = useState(secondaryAxis?.yValues?.join(',') || '');
+    const [secondaryXAxisLabel, setSecondaryXAxisLabel] = useState('');
+    const [secondaryYAxisLabel, setSecondaryYAxisLabel] = useState('');
+    const [secondaryXAxisValues, setSecondaryXAxisValues] = useState('');
+    const [secondaryYAxisValues, setSecondaryYAxisValues] = useState('');
 
     useEffect(() => {
         if (show) {
