@@ -13,6 +13,7 @@ use Try::Tiny;
 use CXGN::List::Transform;
 use Scalar::Util qw(looks_like_number);
 use JSON;
+use List::Compare;
 
 
 extends 'CXGN::BrAPI::v2::Common';
@@ -105,7 +106,7 @@ sub _search {
             accession_list=>$accession_ids_arrayref,
             folder_list=>$folder_ids_arrayref,
             program_list=>$program_ids_arrayref,
-            observation_unit_id_list=>$observation_unit_db_id,
+            observation_unit_db_id_list=>$observation_unit_db_id,
             observation_unit_names_list=>$observation_unit_names_list,
             experiment_type=>'field_layout',
             include_observations=>  lc($include_observations) eq 'true' ? 1 : 0,
@@ -370,211 +371,380 @@ sub observationunits_update {
 
     my $dbh = $self->bcs_schema()->storage()->dbh();
     my $schema = $self->bcs_schema;
+
+    # -------------------------------------------------------------------------
+    # Get cvterm ids from DB
+
+    # stock type cvterms
+    my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'accession', 'stock_type')->cvterm_id();
     my $plot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'plot', 'stock_type')->cvterm_id();
+    my $subplot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'subplot', 'stock_type')->cvterm_id();
     my $plant_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'plant', 'stock_type')->cvterm_id();
-    my $stock_geo_json_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot_geo_json', 'stock_property');
-    my $plot_number_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot number', 'stock_property');
-    my $plant_number_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant number', 'stock_property');
-    my $block_number_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'block', 'stock_property');
-    my $is_a_control_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'is a control', 'stock_property');
-    my $rep_number_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'replicate', 'stock_property');
-    my $range_number_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'range', 'stock_property');
-    my $row_number_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'row_number', 'stock_property');
-    my $col_number_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'col_number', 'stock_property');
-    my $additional_info_cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, 'stock_additional_info', 'stock_property');
+    my $tissue_sample_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'tissue_sample', 'stock_type')->cvterm_id();
 
+    # stock relationship cvterms
+    my $plot_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot_of', 'stock_relationship')->cvterm_id();
+
+    # stock property cvterms
+    my $row_number_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'row_number', 'stock_property')->cvterm_id();
+    my $col_number_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'col_number', 'stock_property')->cvterm_id();
+    my $block_number_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'block', 'stock_property')->cvterm_id();
+    my $rep_number_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'replicate', 'stock_property')->cvterm_id();
+    my $range_number_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'range', 'stock_property')->cvterm_id();
+    my $stake_number_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'stake_number', 'stock_property')->cvterm_id();
+    my $set_number_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'set_number', 'stock_property')->cvterm_id();
+    my $is_a_control_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'is a control', 'stock_property')->cvterm_id();
+    my $plot_geo_json_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot_geo_json', 'stock_property')->cvterm_id();
+    my $additional_info_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'stock_additional_info', 'stock_property')->cvterm_id();
+
+    # stock index number property cvterms
+    my $plot_number_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot number', 'stock_property')->cvterm_id();
+    my $subplot_number_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'subplot_index_number', 'stock_property')->cvterm_id();
+    my $plant_number_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant_index_number', 'stock_property')->cvterm_id();
+    my $tissue_sample_number_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'tissue_sample_index_number', 'stock_property')->cvterm_id();
+
+    # other cvterms
+    my $external_references_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'phenotype_external_references', 'phenotype_property')->cvterm_id();
+
+    # -------------------------------------------------------------------------
+    # Initial Validation
+
+    # Convert data array to hash, so we can more easily locate elements later
+    # also validate that an observationUnitDbId has been provided
+    my $observation_units = {};
     foreach my $params (@$data) {
-        my $observation_unit_db_id = $params->{observationUnitDbId} ? $params->{observationUnitDbId} : undef;
-        my $data_level = $params->{observationUnitLevelName}->[0] || 'all';
-        my $years_arrayref = $params->{seasonDbId} ? $params->{seasonDbId} : undef;
-        my $location_ids_arrayref = $params->{locationDbId} ? $params->{locationDbId} : undef;
-        my $study_ids_arrayref = $params->{studyDbId} ? $params->{studyDbId} : undef;
-        my $accession_id = $params->{germplasmDbId} ? $params->{germplasmDbId} : undef;
-        my $accession_name = $params->{germplasmName} ? $params->{germplasmName}: undef;
-        my $trait_list_arrayref = $params->{observationVariableDbId} ? $params->{observationVariableDbId} : undef;
-        my $program_ids_arrayref = $params->{programDbId} ? $params->{programDbId} : undef;
-        my $folder_ids_arrayref = $params->{trialDbId} ? $params->{trialDbId} : undef;
-        my $observationUnit_name = $params->{observationUnitName} ? $params->{observationUnitName} : undef;
-        my $observationUnit_position_arrayref = $params->{observationUnitPosition} ? $params->{observationUnitPosition} : undef;
-        my $observationUnit_x_ref = $params->{externalReferences} ? $params->{externalReferences} : undef;
+        my $observation_unit_db_id = $params->{observationUnitDbId} || undef;
+        if ( ! defined $observation_unit_db_id ){
+            my $message = "observationUnitDbId is required: " . encode_json ($params) . "\n";
+            print STDERR $message;
+            return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf($message), 400);
+        }
+        $observation_units->{$observation_unit_db_id} = $params;
+    }
+    my @observation_unit_db_ids = (keys %$observation_units);
+
+    # Validate provided observation units are the correct type and level
+    my $stocks = $schema->resultset('Stock::Stock')->search({ stock_id => {-in => \@observation_unit_db_ids}});
+    my @observation_units_found;
+    while (my $record = $stocks->next){
+        my $observation_unit_db_id = $record->stock_id();
+        my $type_id = $record->type_id();
+        my $level_name = $observation_units->{$observation_unit_db_id}->{observationUnitPosition}->{observationLevel}->{levelName};
+        if (
+            ( ! $type_id ~~ [$plot_cvterm_id, $subplot_cvterm_id, $plant_cvterm_id, $tissue_sample_cvterm_id] )
+            || ( ! $level_name ~~ ['plot', 'subplot', 'plant', 'tissue_sample'] )
+        ) {
+            my $message = "observationUnitDbId $observation_unit_db_id has invalid level: type_id=$type_id, level_name=$level_name\n";
+            print STDERR $message;
+            return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf($message), 400);
+        }
+        push @observation_units_found, $observation_unit_db_id;
+    }
+
+    # Validate provided observation units exist in the database
+    my $lc = List::Compare->new(\@observation_unit_db_ids, \@observation_units_found);
+    my @observation_units_missing = $lc->get_Lonly();
+    if (scalar @observation_units_missing > 0){
+        my $message = "observationUnitDbId do not exist in the database:" . join(", ", @observation_units_missing) . "\n";
+        print STDERR $message;
+        return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf($message), 400);
+    }
+
+    # -------------------------------------------------------------------------
+    # Get old/current values stored in the DB to check if we need to update them
+
+    # Get old values of stockprops
+    my $old_stockprops_rs = $schema->resultset('Stock::Stockprop')->search({ stock_id => {-in => \@observation_unit_db_ids}});
+    my $old_stockprops = {};
+    my $new_stockprops = {};
+    while (my $record = $old_stockprops_rs->next){
+        my $stock_id = $record->stock_id();
+        my $type_id = $record->type_id();
+        my $rank = $record->rank();
+        my $value = $record->value();
+        $old_stockprops->{$stock_id}->{$type_id} = { value => $value, rank => $rank };
+    }
+
+    # Get old values of external references
+    my $old_external_references_rs = $schema->resultset('Stock::StockDbxref')->search(
+        { stock_id => {-in => \@observation_unit_db_ids}},
+        {
+            join => { 'dbxref' => 'db' },
+            '+select'=>['me.stock_id', 'db.name', 'dbxref.accession'],
+            '+as'=>['observation_unit_db_id', 'db_name', 'dbxref_accession']
+        }
+    );
+    my $old_external_references = {};
+    my $new_external_references = {};
+    while (my $record = $old_external_references_rs->next){
+        my $observation_unit_db_id = $record->get_column('observation_unit_db_id');
+        my $db_name = $record->get_column('db_name');
+        my $dbxref_accession = $record->get_column('dbxref_accession');
+        # Combine database name and accession to form the full reference
+        # Example: DOI:10.155454/5555
+        my $external_reference = {
+            referenceId => $db_name . ":" . $dbxref_accession,
+            referenceSource =>$db_name,
+        };
+        # Initialize an array to hold multiple external references per stock
+        if (! defined $old_external_references->{$observation_unit_db_id}){
+            $old_external_references->{$observation_unit_db_id} = [];
+        }
+        push @{$old_external_references->{$observation_unit_db_id}}, $external_reference;
+    }
+
+    # Get old values of parent accessions, to check if we need to update them
+    # TBD simplify
+    my $old_accessions_rs = $schema->resultset("Stock::Stock")->search(
+        {
+            'object.type_id'=> $accession_cvterm_id,
+            'me.stock_id' => {-in => \@observation_unit_db_ids},
+            'me.type_id' => {-in => [$plot_cvterm_id, $subplot_cvterm_id, $plant_cvterm_id, $tissue_sample_cvterm_id]}
+        },
+        {
+            join => {'stock_relationship_subjects' => 'object'},
+            '+select'=>['stock_relationship_subjects.subject_id', 'stock_relationship_subjects.object_id'],
+            '+as'=>['observation_unit_db_id', 'accession_id']
+        }
+    );
+    my $old_accessions = {};
+    my $new_accessions = {};
+    my $new_accession_names = {};
+    while (my $record = $old_accessions_rs->next){
+        my $observation_unit_db_id = $record->get_column('observation_unit_db_id');
+        my $accession_id = $record->get_column('accession_id');
+        $old_accessions->{$observation_unit_db_id} = $accession_id;
+    }
+
+    # -------------------------------------------------------------------------
+    # Collect new stockprops from assorted BrAPI fields
+
+    foreach my $observation_unit_db_id (@observation_unit_db_ids) {
+
+        my $params = $observation_units->{$observation_unit_db_id};
+
+        my $observation_unit_db_id = $params->{observationUnitDbId};
+        my $accession_id = $params->{germplasmDbId};
+        my $accession_name = $params->{germplasmName};
+        my $trial_id = $params->{trialDbId};
+
+        my $years_arrayref = $params->{seasonDbId}; #not implemented yet
+        my $location_ids_arrayref = $params->{locationDbId}; #not implemented yet
+        my $study_ids_arrayref = $params->{studyDbId}; #not implemented yet
+        my $trait_list_arrayref = $params->{observationVariableDbId}; #not implemented yet
+        my $program_ids_arrayref = $params->{programDbId}; #not implemented yet
+
+        my $observationUnit_name = $params->{observationUnitName}; #not implemented yet
+        my $observationUnit_position_arrayref = $params->{observationUnitPosition}; #not implemented yet
         my $seedlot_id = $params->{seedLotDbId} || ""; #not implemented yet
-        #my $treatments = $params->{treatments} || ""; #not implemented yet
+        my $treatments = $params->{treatments} || ""; #not implemented yet
 
-        my $row_number = $params->{observationUnitPosition}->{positionCoordinateY} ? $params->{observationUnitPosition}->{positionCoordinateY} : undef;
-        my $col_number = $params->{observationUnitPosition}->{positionCoordinateX} ? $params->{observationUnitPosition}->{positionCoordinateX} : undef;
-        my $plot_geo_json = $params->{observationUnitPosition}->{geoCoordinates} ? $params->{observationUnitPosition}->{geoCoordinates} : undef;
-        my $level_relations = $params->{observationUnitPosition}->{observationLevelRelationships} ? $params->{observationUnitPosition}->{observationLevelRelationships} : undef;
-        my $level_name = $params->{observationUnitPosition}->{observationLevel}->{levelName} || undef;
-        my $level_number = $params->{observationUnitPosition}->{observationLevel}->{levelCode} ? $params->{observationUnitPosition}->{observationLevel}->{levelCode} : undef;
-        my $raw_additional_info = $params->{additionalInfo} || undef;
-        my $is_a_control = $raw_additional_info->{control} ? $raw_additional_info->{control} : undef;
+        # if an accession_id was supplied, save it for later
+        if (defined $accession_id && length $accession_id){
+            # First key level is the trial_id, because that improves performance later
+            $new_accessions->{$trial_id}->{$observation_unit_db_id} = $accession_id;
+        } elsif (defined $accession_name && length $accession_name){
+            # First key level is accession_name, because we will link this to id later
+            $new_accession_names->{$accession_name} = {
+                observation_unit_db_id => $observation_unit_db_id,
+                trial_id => $trial_id,
+            };
+        }
 
-        my $entry_type = $params->{observationUnitPosition}->{entryType} ? $params->{observationUnitPosition}->{entryType} : undef;
-        my $is_a_control = $params->{additionalInfo}->{control} ? $params->{additionalInfo}->{control} : undef;
+        # parse stockprops from BrAPI key: additionalInfo
+        my $range_number = $params->{additionalInfo}->{range};
+        if (defined $range_number && length $range_number){
+            $new_stockprops->{$observation_unit_db_id}->{$range_number_cvterm_id} = { value => $range_number};
+        }
+        my $stake_number = $params->{additionalInfo}->{stakeNumber};
+        if (defined $stake_number && length $stake_number){
+            $new_stockprops->{$observation_unit_db_id}->{$stake_number_cvterm_id} = { value => $stake_number};
+        }
+        my $set_number = $params->{additionalInfo}->{setNumber};
+        if (defined $set_number && length $set_number){
+            $new_stockprops->{$observation_unit_db_id}->{$set_number_cvterm_id} = { value => $set_number};
+        }
 
         # BrAPI entryType overrides additionalinfo.control
-        if ($entry_type) {
+        my $is_a_control = $params->{additionalInfo}->{control};
+        my $entry_type = $params->{observationUnitPosition}->{entryType};
+
+       if (defined $entry_type && length $entry_type){
             $is_a_control = uc($entry_type) eq 'CHECK' ? 1 : 0;
         }
-
-        my $range_number = $raw_additional_info->{range} ? $raw_additional_info->{range} : undef;
-        my %specific_keys = map { $_ => 1 } ("observationUnitParent","control","range");
-        my %additional_info;
-        my $block_number;
-        my $rep_number;
-
-        foreach (@$level_relations){
-            if($_->{levelName} eq 'block'){
-                $block_number = $_->{levelCode} ? $_->{levelCode} : undef;
-            }
-            if($_->{levelName} eq 'rep'){
-                $rep_number = $_->{levelCode} ? $_->{levelCode} : undef;
-                $_->{levelName} = 'rep';
-            }
+        if (defined $is_a_control && length $is_a_control){
+            $new_stockprops->{$observation_unit_db_id}->{$is_a_control_cvterm_id} = { value => $is_a_control};
         }
-        if (defined $raw_additional_info) {
-            foreach my $key (keys %$raw_additional_info) {
-                if (!exists($specific_keys{$key})) {
-                    $additional_info{$key} = $raw_additional_info->{$key};
+
+        # Parse other values from additional info into a hash
+        my $additional_info;
+        if (defined $params->{additionalInfo}) {
+            foreach my $key (keys %{$params->{additionalInfo}}) {
+                if (! $key ~~ ["observationUnitParent","control","range"]){
+                    $additional_info->{$key} = $params->{additionalInfo}->{$key};
                 }
             }
         }
-
-        #Check if observation_unit_db_id is plot or plant and not other stock type
-        my $stock = $self->bcs_schema->resultset('Stock::Stock')->find({stock_id=>$observation_unit_db_id});
-        my $stock_type = $stock->type_id;
-
-        if (( $stock_type ne $plot_cvterm_id && $stock_type ne $plant_cvterm_id ) || ($level_name ne 'plant' && $level_name ne 'plot' && $level_name ne 'tissue_sample')){
-            return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf("Only 'plot', 'plant' or 'tissue_sample' allowed for observation level and observationUnitDbId."), 400);
+        if (defined $additional_info && length $additional_info){
+            $new_stockprops->{$observation_unit_db_id}->{$additional_info_cvterm_id} = { value => encode_json $additional_info};
         }
 
-        #Update: accession
-        # if (! defined $accession_id && ! defined $accession_name) {
-        #     return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Either germplasmDbId or germplasmName is required.'), 400);
-        # }
-        # my $germplasm_search_result = $self->_get_existing_germplasm($schema, $accession_id, $accession_name);
-        # if ($germplasm_search_result->{error}) {
-        #     return $germplasm_search_result->{error};
-        # } else {
-        #     $accession_name = $germplasm_search_result->{name};
-        # }
-
-
-        if(defined $accession_id){
-            # Speed can be improved here by adding a simple query
-            my $layout_accession_search = CXGN::Trial::TrialLayoutSearch->new(
-            {
-                bcs_schema=>$schema,
-                data_level=>'all',
-                observation_unit_id_list=>[$observation_unit_db_id],
-                # experiment_type=>'field_layout',
-                include_observations=>1,
-            });
-
-            my ($data_accession,$data_accession_observations) = $layout_accession_search->search();
-            my $old_accession;
-            my $old_accession_id;
-
-            foreach my $obs_unit (@$data_accession){
-                $old_accession = $obs_unit->{germplasm_uniquename};
-                $old_accession_id = $obs_unit->{germplasm_stock_id};
-            }
-
-            if($accession_id ne $old_accession_id){
-                if (! defined $accession_id && ! defined $accession_name) {
-                    return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Either germplasmDbId or germplasmName is required.'), 400);
-                }
-                my $germplasm_search_result = $self->_get_existing_germplasm($schema, $accession_id, $accession_name);
-                if ($germplasm_search_result->{error}) {
-                    return $germplasm_search_result->{error};
-                } else {
-                    $accession_name = $germplasm_search_result->{name};
-                }
-
-                #update accession
-                my $plot_of_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plot_of', 'stock_relationship')->cvterm_id();
-                if ($old_accession && $accession_id && $old_accession_id ne $accession_id) {
-                    my $replace_plot_accession_fieldmap = CXGN::Trial::FieldMap->new({
-                        bcs_schema => $schema,
-                        trial_id => $study_ids_arrayref,
-                        # new_accession => $accession_name,
-                        # old_accession => $old_accession,
-                        # old_plot_id => $observation_unit_db_id,
-                        # old_plot_name => $observationUnit_name,
-                        experiment_type => 'field_layout'
-                    });
-
-                    my $return_error = $replace_plot_accession_fieldmap->update_fieldmap_precheck();
-                    if ($return_error) {
-                        print STDERR Dumper $return_error;
-                        return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Something went wrong. Accession cannot be replaced.'));
-                    }
-
-                    my $replace_return_error = $replace_plot_accession_fieldmap->replace_plot_accession_fieldMap($observation_unit_db_id, $old_accession_id, $plot_of_type_id);
-                    if ($replace_return_error) {
-                        print STDERR Dumper $replace_return_error;
-                        return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('Something went wrong. Accession cannot be replaced.'));
-                    }
-                }
+        # parse stockprops from BrAPI key: observationLevel
+        my $level_name = $params->{observationUnitPosition}->{observationLevel}->{levelName};
+        my $level_number = $params->{observationUnitPosition}->{observationLevel}->{levelCode};
+        if (defined $level_number && length $level_number){
+            my $cvterm_id;
+            if    ($level_name eq 'plot')         { $cvterm_id = $plot_number_cvterm_id; }
+            elsif ($level_name eq 'subplot')      { $cvterm_id = $subplot_number_cvterm_id; }
+            elsif ($level_name eq 'plant')        { $cvterm_id = $plant_number_cvterm_id; }
+            elsif ($level_name eq 'tissue_sample'){ $cvterm_id = $tissue_sample_number_cvterm_id; }
+            if (defined $cvterm_id && length $cvterm_id){
+                $new_stockprops->{$observation_unit_db_id}->{$cvterm_id} = { value => $level_number};
             }
         }
 
-        #Update: geo coordinates
-        my $geo_coordinates = $observationUnit_position_arrayref->{geoCoordinates} || undef;
-        if($geo_coordinates) {
-
-            my $geno_json_string = encode_json $geo_coordinates;
-
-            #sub upload coordinates
-            my $upload_plot_gps_txn = sub {
-
-                my $plots_rs = $schema->resultset("Stock::Stock")->search({stock_id => {-in=>$observation_unit_db_id}});
-
-                while (my $plot=$plots_rs->next){
-                    my $previous_plot_gps_rs = $schema->resultset("Stock::Stockprop")->search({stock_id=>$plot->stock_id, type_id=>$stock_geo_json_cvterm->cvterm_id});
-                    $previous_plot_gps_rs->delete_all();
-                    $plot->create_stockprops({$stock_geo_json_cvterm->name() => $geno_json_string});
-                }
-            };
-
-            eval {
-                $schema->txn_do($upload_plot_gps_txn);
-            };
-            if ($@) {
-                return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf('An error condition occurred, was not able to upload trial plot GPS coordinates. ($@)'));
+        # parse stockprops from BrAPI key: observationLevelRelationships
+        my $level_relations = $params->{observationUnitPosition}->{observationLevelRelationships};
+        foreach my $level (@$level_relations){
+            my $cvterm_id;
+            if    ($level->{levelName} eq 'block') { $cvterm_id = $block_number_cvterm_id; }
+            elsif ($_->{levelName} eq 'rep')       { $cvterm_id = $rep_number_cvterm_id; }
+            if (defined $cvterm_id && length $cvterm_id){
+                $new_stockprops->{$observation_unit_db_id}->{$cvterm_id} = { value => $level_number};
             }
         }
 
-        #update stockprops
-        if ($level_number){
-            if ($level_name eq 'plot'){ $schema->resultset("Stock::Stockprop")->update_or_create({ type_id=>$plot_number_cvterm->cvterm_id, stock_id=>$observation_unit_db_id, rank=>0, value=>$level_number }, { key=>'stockprop_c1' }); }
-            if ($level_name eq 'plant'){ $schema->resultset("Stock::Stockprop")->update_or_create({ type_id=>$plant_number_cvterm->cvterm_id, stock_id=>$observation_unit_db_id, rank=>0, value=>$level_number }, { key=>'stockprop_c1' }); }
+        # parse stockprops from BrAPI key: observationUnitPosition
+        my $row_number = $params->{observationUnitPosition}->{positionCoordinateY};
+        my $col_number = $params->{observationUnitPosition}->{positionCoordinateX};
+        my $plot_geo_json = $params->{observationUnitPosition}->{geoCoordinates};
+        foreach my $key (keys %{$params->{observationUnitPosition}}) {
+            my $cvterm_id;
+            my $value = $params->{observationUnitPosition}->{$key};
+            if    ($key eq 'positionCoordinateY'){ $cvterm_id = $row_number_cvterm_id; }
+            elsif ($key eq 'positionCoordinateX'){ $cvterm_id = $col_number_cvterm_id; }
+            elsif ($key eq 'geoCoordinates')     { $cvterm_id = $plot_geo_json_cvterm_id; $value = encode_json $value; }
+            if (defined $cvterm_id && length $cvterm_id){
+                $new_stockprops->{$observation_unit_db_id}->{$cvterm_id} = { value => $value};
+            }
         }
-        if ($block_number){ $schema->resultset("Stock::Stockprop")->update_or_create({ type_id=>$block_number_cvterm->cvterm_id, stock_id=>$observation_unit_db_id, rank=>0, value=>$block_number },{ key=>'stockprop_c1' }); }
-        if ($is_a_control){ $schema->resultset("Stock::Stockprop")->update_or_create({ type_id=>$is_a_control_cvterm->cvterm_id, stock_id=>$observation_unit_db_id, rank=>0, value=>$is_a_control },{ key=>'stockprop_c1' }); }
-        if ($rep_number){ $schema->resultset("Stock::Stockprop")->update_or_create({ type_id=>$rep_number_cvterm->cvterm_id, stock_id=>$observation_unit_db_id, rank=>0, value=>$rep_number },{ key=>'stockprop_c1' }); }
-        if ($range_number){ $schema->resultset("Stock::Stockprop")->update_or_create({ type_id=>$range_number_cvterm->cvterm_id, stock_id=>$observation_unit_db_id, rank=>0, value=>$range_number },{ key=>'stockprop_c1' }); }
-        if ($row_number){ $schema->resultset("Stock::Stockprop")->update_or_create({ type_id=>$row_number_cvterm->cvterm_id, stock_id=>$observation_unit_db_id, rank=>0, value=>$row_number },{ key=>'stockprop_c1' }); }
-        if ($col_number){ $schema->resultset("Stock::Stockprop")->update_or_create({ type_id=>$col_number_cvterm->cvterm_id, stock_id=>$observation_unit_db_id, rank=>0, value=>$col_number },{ key=>'stockprop_c1' }); }
-        if (%additional_info){ $schema->resultset("Stock::Stockprop")->update_or_create({ type_id=>$additional_info_cvterm->cvterm_id, stock_id=>$observation_unit_db_id, rank=>0, value=>encode_json \%additional_info },{ key=>'stockprop_c1' }); }
 
-        #store/update external references
-        if ($observationUnit_x_ref){
-            my $references = CXGN::BrAPI::v2::ExternalReferences->new({
-                bcs_schema => $self->bcs_schema,
-                table_name => 'stock',
-                table_id_key => 'stock_id',
-                external_references => $observationUnit_x_ref,
-                id => $observation_unit_db_id
-            });
-            my $reference_result = $references->store();
+        # parse external references from BrAPI key: externalReferences
+        my $external_references = $params->{externalReferences};
+        if (defined $external_references && length $external_references){
+            $new_external_references->{$observation_unit_db_id} = $external_references;
         }
     }
 
-    my @observation_unit_db_ids;
-    foreach my $params (@$data) { push @observation_unit_db_ids, $params->{observationUnitDbId}; }
+    # -------------------------------------------------------------------------
+    # Update stockprops in the database
+
+    # Compare new stockprops values to old ones to check what we need to update
+    my @stockprop_sql_values;
+    foreach my $observation_unit_db_id (keys %$new_stockprops){
+        foreach my $cvterm_id (keys %{$new_stockprops->{$observation_unit_db_id}}){
+            my $old_stockprop_record = $old_stockprops->{$observation_unit_db_id}->{$cvterm_id};
+            my $old_value = $old_stockprop_record->{value};
+            my $rank = $old_stockprop_record->{rank} || 0;
+            my $new_value = $new_stockprops->{$observation_unit_db_id}->{$cvterm_id}->{value};
+            # If the value is new or changed, add it to our upsert sql query values
+            if (!defined $old_value || (defined $old_value && $new_value ne $old_value)){
+                push @stockprop_sql_values, "($observation_unit_db_id, $cvterm_id, $new_value, $rank)";
+            }
+        }
+    }
+
+    # Turn our stockprops into an upsert sql statement
+    if (scalar @stockprop_sql_values > 0){
+        my $stockprop_sql_string = join(', ', @stockprop_sql_values);
+        my $q = "insert into stockprop(stock_id, type_id, value, rank) values $stockprop_sql_string
+        on conflict (stock_id, type_id, rank) do update set value = excluded.value";
+        my $sth = $dbh->prepare($q);
+        $sth->execute();
+    }
+
+    # -------------------------------------------------------------------------
+    # Update external references in the database
+
+    $new_external_references->{41786} = [
+        { referenceSource => 'DOI', referenceId => 'DOI:10.1021/ja101721e' }
+    ];
+    foreach my $observation_unit_db_id (keys %$new_external_references){
+
+        my $old_values= @{$old_external_references->{$observation_unit_db_id}};
+        my @new_values = @{$new_external_references->{$observation_unit_db_id}};
+        my $update_values = 0;
+
+        # if (@old_values !~ @new_values){
+        #     my $references = CXGN::BrAPI::v2::ExternalReferences->new({
+        #         bcs_schema => $schema,
+        #         table_name => 'stock',
+        #         table_id_key => 'stock_id',
+        #         external_references => \@new_values,
+        #         id => $observation_unit_db_id
+        #     });
+        #     my $reference_result = $references->store();
+        #     if ($reference_result->{error}){
+        #         my $message = $reference_result->{error} . "\n";
+        #         print STDERR $message;
+        #         return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf($message), 400);
+        #     }
+        # }
+    }
+
+    # -------------------------------------------------------------------------
+    # Update accessions in the database
+
+    # For records that only supplied a germplasmName, get the correct accession ID
+    if (scalar keys %$new_accession_names > 0){
+        my $accessions_rs = $schema->resultset('Stock::Stock')->search(
+            {stock_id => {-in => (keys %$new_accession_names)}}
+        );
+        while (my $record = $accessions_rs->next){
+            my $accession_id = $record->stock_id();
+            my $accession_name = $record->uniquename();
+            my $observation_unit_db_id = $new_accession_names->{$accession_name}->{observation_unit_db_id};
+            my $trial_id = $new_accession_names->{$accession_name}->{trial_id};
+            $new_accessions->{$trial_id}->{$observation_unit_db_id} = $accession_id;
+        }
+    }
+
+    foreach my $trial_id (keys %$new_accessions){
+        my $replace_plot_accession_fieldmap = CXGN::Trial::FieldMap->new({
+            bcs_schema => $schema,
+            trial_id => $trial_id,
+            experiment_type => 'field_layout'
+        });
+        my $preflight_check_done = 0;
+
+        foreach my $observation_unit_db_id (keys %{$new_accessions->{$trial_id}}){
+            my $old_accession_id = $old_accessions->{$observation_unit_db_id};
+            my $new_accession_id = $new_accessions->{$trial_id}->{$observation_unit_db_id};
+            if ($old_accession_id eq $new_accession_id) { next; }
+
+            if (!$preflight_check_done){
+                my $return_error = $replace_plot_accession_fieldmap->update_fieldmap_precheck();
+                if ($return_error) {
+                    my $message = "Accessions cannot be replaced in trial $trial_id. $return_error\n";
+                    print STDERR Dumper $message;
+                    return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf($message), 400);
+                }
+                $preflight_check_done = 1;
+            }
+
+            my $return_error = $replace_plot_accession_fieldmap->replace_plot_accession_fieldMap(
+                $observation_unit_db_id, $old_accession_id, $new_accession_id, $plot_of_cvterm_id
+            );
+            if ($return_error) {
+                my $message = "Accession cannot be replaced in observationUnitDbId=$observation_unit_db_id. $return_error\n";
+                print STDERR Dumper $message;
+                return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf($message), 400);
+            }
+        }
+    }
 
     my $search_params = {observationUnitDbIds => \@observation_unit_db_ids };
+
     return $self->search($search_params, $c);
 }
 
