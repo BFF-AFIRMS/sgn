@@ -83,7 +83,7 @@ my $all_checkbox_labels = [
 ];
 
 sub download_spatial_layout_ok {
-	my ($filename, $checkboxes) = @_;
+	my ($filename, $expected_filepath, $checkboxes) = @_;
 	$checkboxes ||= $all_checkbox_labels;
 
 	my $file_path = '/selenium/downloads/' . $filename;
@@ -105,6 +105,20 @@ sub download_spatial_layout_ok {
 	# Wait for the file to be downloaded
 	sleep(5);
 	ok(-e $file_path, "Check that file '$filename' was downloaded");
+
+	my $expected_content = do {
+		open my $fh, '<', $expected_filepath or die "Could not open expected file '$expected_filepath': $!";
+		local $/;
+		<$fh>;
+	};
+
+	my $actual_content = do {
+		open my $fh, '<', $file_path or die "Could not open downloaded file '$file_path': $!";
+		local $/;
+		<$fh>;
+	};
+
+	is($actual_content, $expected_content, "Check that downloaded file content matches expected content");
 }
 
 $t->while_logged_in_as("curator", sub {
@@ -179,7 +193,11 @@ $t->while_logged_in_as("curator", sub {
 
 	find_north_arrow_ok(90);
 
-	download_spatial_layout_ok('Trial_165_spatial_layout.csv', ['Accession Name', 'Plot Number', 'Family']);
+	download_spatial_layout_ok(
+		'Trial_165_spatial_layout.csv',
+		't/data/fieldmap/Trial_165_spatial_layout_t1.csv',
+		['Accession Name', 'Plot Number', 'Family']
+	);
 });
 
 $t->driver->close();
