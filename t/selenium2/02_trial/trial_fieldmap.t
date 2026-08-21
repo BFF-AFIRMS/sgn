@@ -8,6 +8,21 @@ use SGN::Test::Fixture;
 my $t = SGN::Test::WWW::WebDriver->new();
 my $f = SGN::Test::Fixture->new();
 
+use Selenium::Firefox::Profile;
+
+# Set up a Firefox profile to download CSV files without prompting
+my $profile = Selenium::Firefox::Profile->new;
+$profile->set_preference( 'browser.download.folderList', 2 );
+$profile->set_preference( 'browser.download.dir', '/downloads' );
+$profile->set_preference( 'browser.helperApps.neverAsk.saveToDisk', 'application/csv;text/csv' );
+
+my $driver = Selenium::Remote::Driver->new(
+    firefox_profile => $profile,
+    base_url => $ENV{SGN_TEST_SERVER},
+    remote_server_addr => $ENV{SGN_REMOTE_SERVER_ADDR} || 'localhost'
+);
+$t->driver($driver);
+
 my $svg_id = 'fieldmap_chart_svg';
 my $border_fill = '#ecefef';
 
@@ -55,6 +70,41 @@ sub find_north_arrow_ok {
 	my ($rotation) = @_;
 	my $xpath = '//*[@id="fieldmap_north_arrow"]//*[local-name()="svg" and contains(@style, "rotate(' . $rotation . 'deg)")]';
 	return $t->find_element_ok($xpath, 'xpath', "Find north arrow with rotation $rotation degrees");
+}
+
+my $all_checkbox_labels = [
+	'Accession Name',
+	'Plot Name',
+	'Seedlot Name',
+	'Plot ID',
+	'Plot Number',
+	'Family',
+	'Cross'
+];
+
+sub download_spatial_layout_ok {
+	my ($filename, $checkboxes) = @_;
+	$checkboxes ||= $all_checkbox_labels;
+
+	my $file_path = '/selenium/downloads/' . $filename;
+	if (-e $file_path) {
+		unlink $file_path or die "Could not delete existing file '$file_path': $!";
+	}
+
+	$t->click_ok('//button[@title="Download Spatial Layout (CSV)"]', 'xpath', 'Click Download Spatial Layout button');
+
+	foreach my $label (@$checkboxes) {
+		my $element = $t->find_element_ok('//div[contains(@class,"show")]//label[contains(text(),"' . $label . '")]/input', 'xpath', "Find checkbox for '$label'");
+
+		next if $element->is_selected();
+		ok($element->click(), "Click checkbox for '$label'");
+	}
+
+	$t->click_ok('//div[contains(@class,"show")]//button[contains(text(),"Download CSV")]', 'xpath', 'Click Download CSV button');
+
+	# Wait for the file to be downloaded
+	sleep(5);
+	ok(-e $file_path, "Check that file '$filename' was downloaded");
 }
 
 $t->while_logged_in_as("curator", sub {
@@ -127,7 +177,9 @@ $t->while_logged_in_as("curator", sub {
 	find_svg_text_ok('301', 233, 186);
 	find_svg_text_ok('307', 181, 238);
 
-	find_north_arrow_ok(180);
+	find_north_arrow_ok(90);
+
+	download_spatial_layout_ok('Trial_165_spatial_layout.csv', ['Accession Name', 'Plot Number', 'Family']);
 });
 
 $t->driver->close();
