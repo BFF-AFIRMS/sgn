@@ -8,10 +8,9 @@ export const LabelLayer: React.FC<LabelLayerProps> = ({ }) => {
     const {
         bounds,
         renderBounds,
-        dimensions,
         gridMatrix,
         overlappingPlots,
-        axisOrientation
+        transformedSecondaryAxis
     } = usePlotGrid();
 
     const {
@@ -19,43 +18,7 @@ export const LabelLayer: React.FC<LabelLayerProps> = ({ }) => {
         invertCols,
         labelVar,
         labelSize,
-        secondaryAxis,
-        hasSecondaryAxis
     } = useLayoutConfig();
-
-    // Compute the displayed secondary axis values and labels based on the layout configuration
-    const displayedSecondaryAxis = useMemo(() => {
-        if (!hasSecondaryAxis || !secondaryAxis) {
-            return undefined;
-        }
-
-        const getAxisDisplay = (
-            orientation: { source: 'x' | 'y'; reversed: boolean },
-            length: number
-        ) => {
-            const [label, configValues] = orientation.source === 'x' ?
-                [secondaryAxis.xLabel, secondaryAxis.xValues ?? []] :
-                [secondaryAxis.yLabel, secondaryAxis.yValues ?? []];
-
-            const values = Array.from({ length }, (_, i) => {
-                const idx = orientation.reversed ? length - 1 - i : i;
-                return configValues[idx] ?? '';
-            });
-
-            return { label, values };
-        };
-
-        const { cols, rows } = dimensions;
-        const dispX = getAxisDisplay(axisOrientation.x, cols || bounds.numCols);
-        const dispY = getAxisDisplay(axisOrientation.y, rows || bounds.numRows);
-
-        return {
-            xLabel: dispX.label,
-            yLabel: dispY.label,
-            xValues: dispX.values,
-            yValues: dispY.values
-        };
-    }, [hasSecondaryAxis, secondaryAxis, axisOrientation, dimensions, bounds]);
 
     return (
         <g style={{ pointerEvents: 'none' }}>
@@ -77,12 +40,12 @@ export const LabelLayer: React.FC<LabelLayerProps> = ({ }) => {
             })}
 
             {/* Secondary Column Axis Values (Top and Bottom) */}
-            {displayedSecondaryAxis?.xValues?.length && Array.from({ length: bounds.numCols }).map((_, axisIdx) => {
+            {transformedSecondaryAxis?.xValues?.length && Array.from({ length: bounds.numCols }).map((_, axisIdx) => {
                 const colCoord = bounds.minCol + axisIdx;
                 const colIdx = colCoord - renderBounds.minCol;
                 const displayX = (invertCols ? renderBounds.numCols - colIdx - 1 : colIdx) * 52 + 25;
 
-                const axisValue = displayedSecondaryAxis.xValues[axisIdx];
+                const axisValue = transformedSecondaryAxis.xValues?.[axisIdx];
                 if (axisValue === undefined) {
                     return null;
                 }
@@ -100,7 +63,7 @@ export const LabelLayer: React.FC<LabelLayerProps> = ({ }) => {
             })}
 
             {/* Secondary Column Axis Label */}
-            {displayedSecondaryAxis?.xLabel && (
+            {transformedSecondaryAxis?.xLabel && (
                 <>
                     <text
                         x={(renderBounds.numCols * 52) / 2}
@@ -110,7 +73,7 @@ export const LabelLayer: React.FC<LabelLayerProps> = ({ }) => {
                         fontWeight="bold"
                         fill="#000"
                     >
-                        {displayedSecondaryAxis.xLabel}
+                        {transformedSecondaryAxis.xLabel}
                     </text>
                     <text
                         x={(renderBounds.numCols * 52) / 2}
@@ -120,7 +83,7 @@ export const LabelLayer: React.FC<LabelLayerProps> = ({ }) => {
                         fontWeight="bold"
                         fill="#000"
                     >
-                        {displayedSecondaryAxis.xLabel}
+                        {transformedSecondaryAxis.xLabel}
                     </text>
                 </>
             )}
@@ -148,7 +111,7 @@ export const LabelLayer: React.FC<LabelLayerProps> = ({ }) => {
             })}
 
             {/* Secondary Row Axis Values (Left and Right) */}
-            {displayedSecondaryAxis?.yValues?.length && gridMatrix.map((_, rowIdx) => {
+            {transformedSecondaryAxis?.yValues?.length && gridMatrix.map((_, rowIdx) => {
                 const rowCoord = renderBounds.minRow + rowIdx;
                 const displayY = invertRows ? rowIdx : renderBounds.numRows - rowIdx - 1;
 
@@ -158,7 +121,7 @@ export const LabelLayer: React.FC<LabelLayerProps> = ({ }) => {
                 }
 
                 const axisIdx = rowCoord - bounds.minRow;
-                const axisValue = displayedSecondaryAxis.yValues[axisIdx];
+                const axisValue = transformedSecondaryAxis.yValues?.[axisIdx];
                 if (axisValue === undefined) {
                     return null;
                 }
@@ -176,7 +139,7 @@ export const LabelLayer: React.FC<LabelLayerProps> = ({ }) => {
             })}
 
             {/* Secondary Row Axis Label */}
-            {displayedSecondaryAxis?.yLabel && (
+            {transformedSecondaryAxis?.yLabel && (
                 <>
                     <text
                         x={-60}
@@ -187,7 +150,7 @@ export const LabelLayer: React.FC<LabelLayerProps> = ({ }) => {
                         fontWeight="bold"
                         fill="#000"
                     >
-                        {displayedSecondaryAxis.yLabel}
+                        {transformedSecondaryAxis.yLabel}
                     </text>
                     <text
                         x={renderBounds.numCols * 52 + 60}
@@ -198,7 +161,7 @@ export const LabelLayer: React.FC<LabelLayerProps> = ({ }) => {
                         fontWeight="bold"
                         fill="#000"
                     >
-                        {displayedSecondaryAxis.yLabel}
+                        {transformedSecondaryAxis.yLabel}
                     </text>
                 </>
             )}

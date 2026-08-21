@@ -1,5 +1,4 @@
 import React, { useMemo } from 'react';
-import { usePlotGrid } from '../contexts/PlotGridContext';
 import { useLayoutConfig } from '../contexts/LayoutConfigContext';
 
 interface NorthArrowProps {
@@ -7,17 +6,12 @@ interface NorthArrowProps {
 
 export const NorthArrow: React.FC<NorthArrowProps> = ({ }) => {
     const {
-        isTransposed,
-        mapRotation
-    } = usePlotGrid();
-    const {
         invertRows,
         invertCols,
-        northArrowAngle
+        northArrowAngle: angle
     } = useLayoutConfig();
 
     const northArrowRotation = useMemo(() => {
-        let angle = northArrowAngle + mapRotation;
         if (invertCols && invertRows) {
             return angle + 180;
         } else if (invertCols) {
@@ -25,10 +19,9 @@ export const NorthArrow: React.FC<NorthArrowProps> = ({ }) => {
         } else if (invertRows) {
             return 180 - angle;
         }
-        return angle;
-    }, [northArrowAngle, mapRotation, invertCols, invertRows]);
 
-    if (isTransposed) return null;
+        return angle;
+    }, [angle, invertCols, invertRows]);
 
     return (
         <div
