@@ -8,6 +8,8 @@ use SGN::Test::Fixture;
 my $t = SGN::Test::WWW::WebDriver->new();
 my $f = SGN::Test::Fixture->new();
 
+use Selenium::Waiter qw(wait_until);
+
 use Selenium::Firefox::Profile;
 
 # Set up a Firefox profile to download CSV files without prompting
@@ -102,9 +104,9 @@ sub download_spatial_layout_ok {
 
 	$t->click_ok('//div[contains(@class,"show")]//button[contains(text(),"Download CSV")]', 'xpath', 'Click Download CSV button');
 
-	# Wait for the file to be downloaded
-	sleep(5);
-	ok(-e $file_path, "Check that file '$filename' was downloaded");
+	ok((wait_until {
+		-e $file_path;
+	} timeout => 15, interval => 1), "Wait for file '$filename' to be downloaded");
 
 	my $expected_content = do {
 		open my $fh, '<', $expected_filepath or die "Could not open expected file '$expected_filepath': $!";
@@ -197,6 +199,11 @@ $t->while_logged_in_as("curator", sub {
 		'Trial_165_spatial_layout.csv',
 		't/data/fieldmap/Trial_165_spatial_layout_t1.csv',
 		['Accession Name', 'Plot Number', 'Family']
+	);
+
+	download_spatial_layout_ok(
+		'Trial_165_spatial_layout.csv',
+		't/data/fieldmap/Trial_165_spatial_layout_t2.csv',
 	);
 });
 
