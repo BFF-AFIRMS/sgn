@@ -51,6 +51,12 @@ sub set_secondary_axis {
 	$t->click_ok('//div[contains(@class,"show")]//button[contains(text(),"Apply")]', 'xpath', 'Click Apply button');
 }
 
+sub find_north_arrow_ok {
+	my ($rotation) = @_;
+	my $xpath = '//*[@id="fieldmap_north_arrow"]//*[local-name()="svg" and contains(@style, "rotate(' . $rotation . 'deg)")]';
+	return $t->find_element_ok($xpath, 'xpath', "Find north arrow with rotation $rotation degrees");
+}
+
 $t->while_logged_in_as("curator", sub {
 	$t->get_ok('/breeders/trial/165', 'Navigate to trial page');
 
@@ -59,6 +65,8 @@ $t->while_logged_in_as("curator", sub {
 
 	find_svg_square_ok(0, 104);
 	find_svg_square_ok(312, 0);
+
+	find_north_arrow_ok(0);
 
 	set_secondary_axis('Test X Label', 'Test Y Label', 'tx1,tx2,tx3,tx4', 'ty1,ty2,ty3,ty4');
 
@@ -78,6 +86,8 @@ $t->while_logged_in_as("curator", sub {
 	find_svg_text_ok('103', 25, 30);
 	find_svg_text_ok('207', 77, 342);
 	find_svg_text_ok('tx3', 196, 134);
+
+	find_north_arrow_ok(90);
 
 	# Click button with title "Transpose Display"
 	$t->click_ok('//button[@title="Transpose Display"]', 'xpath', 'Click Transpose Display button');
@@ -116,6 +126,8 @@ $t->while_logged_in_as("curator", sub {
 
 	find_svg_text_ok('301', 233, 186);
 	find_svg_text_ok('307', 181, 238);
+
+	find_north_arrow_ok(180);
 });
 
 $t->driver->close();
