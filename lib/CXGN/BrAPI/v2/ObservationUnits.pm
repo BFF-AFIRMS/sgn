@@ -42,6 +42,7 @@ sub _search {
 	my $params = shift;
     my $c = shift;
 
+    my $schema = $self->bcs_schema;
     my $page_size = $self->page_size;
     my $page = $self->page;
     my $status = $self->status;
@@ -136,6 +137,40 @@ sub _search {
     if (@plant_ids && scalar @plant_ids > 0) {
         %plant_parents = $self->_get_plants_plot_parent(\@plant_ids);
     }
+
+    # Parse out external references
+    my $external_references_by_dbxref_id;
+    foreach my $obs_unit (@$data){
+        my $obsunit_stock_id = $obs_unit->{obsunit_stock_id};
+        my $dbxref_ids = $obs_unit->{external_references};
+        foreach my $dbxref_id (@$dbxref_ids){
+            $external_references_by_dbxref_id->{$dbxref_id}->{$obsunit_stock_id} = 1;
+        }
+    }
+    my $dbxrefs_rs = $schema->resultset("General::Dbxref")->search(
+        {dbxref_id => {-in => keys %$external_references_by_dbxref_id}},
+        {
+            join => 'db',
+            '+select'=> ['me.dbxref_id', 'db.name', 'me.accession'],
+            '+as' => ['dbxref_id', 'db_name', 'dbxref_accession'],
+        }
+
+    );
+    my $external_references_by_obsunit_id;
+    while (my $record = $dbxrefs_rs->next()){
+        my $dbxref_id = $record->get_column('dbxref_id');
+        my $reference_source = $record->get_column('db_name');
+        my $dbxref_accession = $record->get_column('dbxref_accession');
+        my $reference_id = $reference_source . ":" . $dbxref_accession;
+        my $obsunit_stock_ids = $external_references_by_dbxref_id->{$dbxref_id};
+        foreach my $obsunit_stock_id (keys %$obsunit_stock_ids){
+            $external_references_by_obsunit_id->{$obsunit_stock_id}->{$reference_id} = {
+                referenceId => $reference_id,
+                referenceSource => $reference_source,
+            };
+        }
+    }
+
     print STDERR "ObservationUnits call Checkpoint 3: ".DateTime->now()."\n";
     foreach my $obs_unit (@$data){
 
@@ -266,14 +301,8 @@ sub _search {
         my $brapi_observationUnitPosition = decode_json(encode_json \%observationUnitPosition);
 
         #Get external references
-        my $references = CXGN::BrAPI::v2::ExternalReferences->new({
-            bcs_schema => $self->bcs_schema,
-            table_name => 'stock',
-            table_id_key => 'stock_id',
-            id => qq|$obs_unit->{obsunit_stock_id}|
-        });
-        my $external_references = $references->search();
-        my @formatted_external_references = %{$external_references} ? values %{$external_references} : [];
+        my $external_references = $external_references_by_obsunit_id->{$obs_unit->{obsunit_stock_id}};
+        my @formatted_external_references = $external_references ? values %{$external_references} : [];
 
         if ($obs_unit->{family_stock_id}) {
             $additional_info->{familyDbId} = qq|$obs_unit->{family_stock_id}|;
@@ -733,7 +762,7 @@ sub observationunits_update {
     # For records that only supplied a germplasmName, get the correct accession ID
     if (scalar keys %$new_accession_names > 0){
         my $accessions_rs = $schema->resultset('Stock::Stock')->search(
-            {stock_id => {-in => (keys %$new_accession_names)}}
+            {uniquename => {-in => (keys %$new_accession_names)}}
         );
         while (my $record = $accessions_rs->next){
             my $accession_id = $record->stock_id();
