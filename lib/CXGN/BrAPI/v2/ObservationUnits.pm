@@ -478,19 +478,15 @@ sub observationunits_update {
     my $new_external_references = {};
     while (my $record = $old_external_references_rs->next){
         my $observation_unit_db_id = $record->get_column('observation_unit_db_id');
-        my $db_name = $record->get_column('db_name');
+        my $reference_source = $record->get_column('db_name');
         my $dbxref_accession = $record->get_column('dbxref_accession');
         # Combine database name and accession to form the full reference
         # Example: DOI:10.155454/5555
-        my $external_reference = {
-            referenceId => $db_name . ":" . $dbxref_accession,
-            referenceSource =>$db_name,
+        my $reference_id = $reference_source . ":" . $dbxref_accession;
+        $old_external_references->{$observation_unit_db_id}->{$reference_id} = {
+            referenceId => $reference_id,
+            referenceSource => $reference_source,
         };
-        # Initialize an array to hold multiple external references per stock
-        if (! defined $old_external_references->{$observation_unit_db_id}){
-            $old_external_references->{$observation_unit_db_id} = [];
-        }
-        push @{$old_external_references->{$observation_unit_db_id}}, $external_reference;
     }
 
     # Get old values of parent accessions, to check if we need to update them
@@ -630,9 +626,16 @@ sub observationunits_update {
         }
 
         # parse external references from BrAPI key: externalReferences
+        # convert from an array to a hash based on referenceID key, which
+        # will make it easier to compare to old values in later step
         my $external_references = $params->{externalReferences};
-        if (defined $external_references && length $external_references){
-            $new_external_references->{$observation_unit_db_id} = $external_references;
+        foreach my $record (@$external_references){
+            my $reference_id = $record->{referenceId};
+            my $reference_source = $record->{referenceSource};
+            $new_external_references->{$observation_unit_db_id}->{$reference_id} = {
+                referenceId => $reference_id,
+                referenceSource => $reference_source,
+            };
         }
     }
 
@@ -666,30 +669,62 @@ sub observationunits_update {
     # -------------------------------------------------------------------------
     # Update external references in the database
 
-    $new_external_references->{41786} = [
-        { referenceSource => 'DOI', referenceId => 'DOI:10.1021/ja101721e' }
-    ];
     foreach my $observation_unit_db_id (keys %$new_external_references){
 
-        my $old_values= @{$old_external_references->{$observation_unit_db_id}};
-        my @new_values = @{$new_external_references->{$observation_unit_db_id}};
-        my $update_values = 0;
+        my $new_refs = $new_external_references->{$observation_unit_db_id};
+        my $old_refs = $old_external_references->{$observation_unit_db_id};
+        my $refs_need_updating = 0;
 
-        # if (@old_values !~ @new_values){
-        #     my $references = CXGN::BrAPI::v2::ExternalReferences->new({
-        #         bcs_schema => $schema,
-        #         table_name => 'stock',
-        #         table_id_key => 'stock_id',
-        #         external_references => \@new_values,
-        #         id => $observation_unit_db_id
-        #     });
-        #     my $reference_result = $references->store();
-        #     if ($reference_result->{error}){
-        #         my $message = $reference_result->{error} . "\n";
-        #         print STDERR $message;
-        #         return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf($message), 400);
-        #     }
-        # }
+        # If there aren't any old values, we defintely to update to new ones
+        if (!defined $old_refs || keys %$old_refs == 0) {
+            $refs_need_updating = 1;
+        }
+        # If there are old values, check if different from new ones
+        else {
+            # If the number of keys (referenceIds) is different, we need to update
+            if (%$old_refs != %$new_refs) {
+                $refs_need_updating = 1;
+            }
+            # Check that referenceIds and referenceSources are identical
+            else {
+                foreach my $reference_id (keys %$old_refs) {
+                    my $old_ref_id = $old_refs->{$reference_id}->{referenceId};
+                    my $old_ref_source = $old_refs->{$reference_id}->{referenceSource};
+                    my $new_ref_id = $new_refs->{$reference_id}->{referenceId};
+                    my $new_ref_source = $new_refs->{$reference_id}->{referenceSource};
+                    if ($old_ref_id ne $new_ref_id || $old_ref_source ne $new_ref_source){
+                        $refs_need_updating = 1;
+                        # We don't need to keep checking rest, we know we need to update now
+                        last;
+                    }
+                }
+            }
+        }
+
+        if ($refs_need_updating){
+            # Convert hash of external references to array
+            my @new_values;
+            foreach my $reference_id (keys %$new_refs){
+                push @new_values, $new_refs->{$reference_id};
+            }
+            print STDERR "new_values: " . Dumper(@new_values) . "\n";
+
+            my $references = CXGN::BrAPI::v2::ExternalReferences->new({
+                bcs_schema => $schema,
+                table_name => 'stock',
+                table_id_key => 'stock_id',
+                external_references => \@new_values,
+                id => $observation_unit_db_id
+            });
+            # The store function does 3 sql transactions: 2 selects, 1 insert
+            # I think we would need to write a store_bulk function to avoid this
+            my $reference_result = $references->store();
+            if ($reference_result->{error}){
+                my $message = $reference_result->{error} . "\n";
+                print STDERR $message;
+                return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf($message), 400);
+            }
+        }
     }
 
     # -------------------------------------------------------------------------
@@ -709,6 +744,7 @@ sub observationunits_update {
         }
     }
 
+    # Replace accessions in plots, propagating new relationships and naming down to child stocks
     foreach my $trial_id (keys %$new_accessions){
         my $replace_plot_accession_fieldmap = CXGN::Trial::FieldMap->new({
             bcs_schema => $schema,
