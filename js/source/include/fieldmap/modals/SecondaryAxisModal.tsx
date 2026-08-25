@@ -31,8 +31,7 @@ export const SecondaryAxisModal: React.FC<SecondaryAxisModalProps> = ({}) => {
 
     const handleApply = async () => {
         const toValueArray = (str: string) => str.split(',')
-            .map(v => v.trim())
-            .filter(v => v !== '');
+            .map(v => v.trim());
 
         const xValues = toValueArray(secondaryXAxisValues);
         const yValues = toValueArray(secondaryYAxisValues);
