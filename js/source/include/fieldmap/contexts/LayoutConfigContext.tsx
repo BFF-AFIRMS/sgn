@@ -88,16 +88,11 @@ export const LayoutConfigProvider: React.FC<FieldMapContextProps> = ({ trialId, 
                     secondary_y_axis_values: yValues
                 } = body;
 
-                if (typeof xValues !== 'string' || typeof yValues !== 'string') {
-                    console.error('Secondary axis values are not strings:', { xValues, yValues });
-                    return;
-                }
-
                 setSecondaryAxis({
                     xLabel,
                     yLabel,
-                    xValues: xValues.split(','),
-                    yValues: yValues.split(','),
+                    xValues: xValues?.split(',') || [],
+                    yValues: yValues?.split(',') || [],
                 });
             }
         } catch (e) {
