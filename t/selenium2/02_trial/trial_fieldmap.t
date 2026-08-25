@@ -46,6 +46,12 @@ sub find_svg_square_ok {
 	return $t->find_element_ok($xpath, 'xpath', "Find plot square at ($x,$y)" . (defined $fill ? " with fill '$fill'" : ""));
 }
 
+sub click_svg_square_ok {
+	my ($x, $y) = @_;
+	my $xpath = '//*[local-name()="svg" and @id="' . $svg_id . '"]//*[local-name()="g" and @transform="translate(' . $x . ', ' . $y . ')"]/*[local-name()="rect"]';
+	return $t->click_ok($xpath, 'xpath', "Click plot square at ($x,$y)");
+}
+
 sub set_dimensions {
 	my ($columns, $rows) = @_;
 	$t->click_ok('//button[@title="Change Dimensions"]', 'xpath', 'Click Change Dimensions button');
