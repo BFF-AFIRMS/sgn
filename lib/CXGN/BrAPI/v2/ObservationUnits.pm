@@ -107,7 +107,7 @@ sub _search {
             accession_list=>$accession_ids_arrayref,
             folder_list=>$folder_ids_arrayref,
             program_list=>$program_ids_arrayref,
-            observation_unit_db_id_list=>$observation_unit_db_id,
+            observation_unit_id_list=>$observation_unit_db_id,
             observation_unit_names_list=>$observation_unit_names_list,
             experiment_type=>'field_layout',
             include_observations=>  lc($include_observations) eq 'true' ? 1 : 0,
