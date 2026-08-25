@@ -183,10 +183,11 @@ sub search {
         left join stock_relationship r_cross on (germplasm.stock_id = r_cross.subject_id and r_cross.type_id = $offspring_of_type_id)
         left join stock stock_cross on (stock_cross.stock_id = r_cross.object_id)
         left join stock_relationship r_family on (r_family.subject_id = r_cross.object_id and r_family.type_id = $cross_member_of_type_id)
-        left join stock stock_family on (stock_family.stock_id = r_family.object_id) ";
+        left join stock stock_family on (stock_family.stock_id = r_family.object_id)
+        left join stock_dbxref on (observationunit.stock_id = stock_dbxref.stock_id) ";
 
 
-    my $select_clause = "SELECT observationunit.stock_id, observationunit.uniquename, observationunit_type.name, germplasm.uniquename, germplasm.stock_id, germplasm_type.name, stock_cross.uniquename, stock_cross.stock_id, stock_family.uniquename, stock_family.stock_id, project.project_id, project.name, project.description, breeding_program.project_id, breeding_program.name, breeding_program.description, folder.project_id, folder.name, folder.description,rep.value, block_number.value, plot_number.value, is_a_control.value, row_number.value, col_number.value, plant_number.value, location.value, seedlot.stock_id, seedlot.uniquename, count(observationunit.stock_id) OVER() AS full_count, min(additional_info.value) as additional_info, min(plot_geo_json.value) as plot_geo_json, array_agg(distinct stock_image.image_id) as image_ids, STRING_AGG(DISTINCT(istock.stock_id::text), '|'), STRING_AGG(DISTINCT(istock.uniquename), ',') ";
+    my $select_clause = "SELECT observationunit.stock_id, observationunit.uniquename, observationunit_type.name, germplasm.uniquename, germplasm.stock_id, germplasm_type.name, stock_cross.uniquename, stock_cross.stock_id, stock_family.uniquename, stock_family.stock_id, project.project_id, project.name, project.description, breeding_program.project_id, breeding_program.name, breeding_program.description, folder.project_id, folder.name, folder.description,rep.value, block_number.value, plot_number.value, is_a_control.value, row_number.value, col_number.value, plant_number.value, location.value, seedlot.stock_id, seedlot.uniquename, count(observationunit.stock_id) OVER() AS full_count, min(additional_info.value) as additional_info, min(plot_geo_json.value) as plot_geo_json, array_agg(distinct stock_image.image_id) as image_ids, STRING_AGG(DISTINCT(istock.stock_id::text), '|'), STRING_AGG(DISTINCT(istock.uniquename), ','), ARRAY_REMOVE(ARRAY_AGG(stock_dbxref.dbxref_id ORDER BY stock_dbxref.dbxref_id), NULL) ";
 
     my $order_clause = $self->order_by ? " ORDER BY ".$self->order_by : " ORDER BY project.name, observationunit.uniquename";
 
@@ -263,7 +264,7 @@ sub search {
     my @observation_units;
 
     while (my ($observationunit_stock_id, $observationunit_uniquename, $observationunit_type_name, $germplasm_uniquename, $germplasm_stock_id, $germplasm_type_name, $cross_name, $cross_stock_id, $family_name, $family_stock_id, $project_project_id, $project_name, $project_description, $breeding_program_project_id, $breeding_program_name, $breeding_program_description,
-    $folder_id, $folder_name, $folder_description, $rep, $block_number, $plot_number, $is_a_control, $row_number, $col_number, $plant_number, $location_id, $seedlot_id, $seedlot_name, $full_count, $additional_info, $plot_geo_json, $image_ids, $intercrop_stock_id, $intercrop_stock_name) = $h->fetchrow_array()) {
+    $folder_id, $folder_name, $folder_description, $rep, $block_number, $plot_number, $is_a_control, $row_number, $col_number, $plant_number, $location_id, $seedlot_id, $seedlot_name, $full_count, $additional_info, $plot_geo_json, $image_ids, $intercrop_stock_id, $intercrop_stock_name, $external_references) = $h->fetchrow_array()) {
 
         my $location_name = $location_id ? $location_id_lookup{$location_id} : undef;
 
@@ -311,6 +312,11 @@ sub search {
             push @intercrop_stocks, { id => $id, name => $name };
         }
 
+        my @external_references;
+        foreach my $dbxref_id (@$external_references){
+            push @external_references, $dbxref_id;
+        }
+
         push @result, {
             obsunit_stock_id => $observationunit_stock_id,
             obsunit_uniquename => $observationunit_uniquename,
@@ -346,7 +352,8 @@ sub search {
             additional_info => $additional_info,
             plot_geo_json => $plot_geo_json,
             image_ids => \@image_ids_parsed,
-            intercrop_stocks => \@intercrop_stocks
+            intercrop_stocks => \@intercrop_stocks,
+            external_references => \@external_references,
         };
     }
 
