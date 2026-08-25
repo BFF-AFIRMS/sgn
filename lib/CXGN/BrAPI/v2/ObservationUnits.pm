@@ -140,6 +140,7 @@ sub _search {
 
     # Parse out external references
     my $external_references_by_dbxref_id;
+    my $external_references_by_obsunit_id;
     foreach my $obs_unit (@$data){
         my $obsunit_stock_id = $obs_unit->{obsunit_stock_id};
         my $dbxref_ids = $obs_unit->{external_references};
@@ -147,27 +148,28 @@ sub _search {
             $external_references_by_dbxref_id->{$dbxref_id}->{$obsunit_stock_id} = 1;
         }
     }
-    my $dbxrefs_rs = $schema->resultset("General::Dbxref")->search(
-        {dbxref_id => {-in => keys %$external_references_by_dbxref_id}},
-        {
-            join => 'db',
-            '+select'=> ['me.dbxref_id', 'db.name', 'me.accession'],
-            '+as' => ['dbxref_id', 'db_name', 'dbxref_accession'],
-        }
+    if (keys %$external_references_by_dbxref_id){
+        my $dbxrefs_rs = $schema->resultset("General::Dbxref")->search(
+            {dbxref_id => {-in => keys %$external_references_by_dbxref_id}},
+            {
+                join => 'db',
+                '+select'=> ['me.dbxref_id', 'db.name', 'me.accession'],
+                '+as' => ['dbxref_id', 'db_name', 'dbxref_accession'],
+            }
 
-    );
-    my $external_references_by_obsunit_id;
-    while (my $record = $dbxrefs_rs->next()){
-        my $dbxref_id = $record->get_column('dbxref_id');
-        my $reference_source = $record->get_column('db_name');
-        my $dbxref_accession = $record->get_column('dbxref_accession');
-        my $reference_id = $reference_source . ":" . $dbxref_accession;
-        my $obsunit_stock_ids = $external_references_by_dbxref_id->{$dbxref_id};
-        foreach my $obsunit_stock_id (keys %$obsunit_stock_ids){
-            $external_references_by_obsunit_id->{$obsunit_stock_id}->{$reference_id} = {
-                referenceId => $reference_id,
-                referenceSource => $reference_source,
-            };
+        );
+        while (my $record = $dbxrefs_rs->next()){
+            my $dbxref_id = $record->get_column('dbxref_id');
+            my $reference_source = $record->get_column('db_name');
+            my $dbxref_accession = $record->get_column('dbxref_accession');
+            my $reference_id = $reference_source . ":" . $dbxref_accession;
+            my $obsunit_stock_ids = $external_references_by_dbxref_id->{$dbxref_id};
+            foreach my $obsunit_stock_id (keys %$obsunit_stock_ids){
+                $external_references_by_obsunit_id->{$obsunit_stock_id}->{$reference_id} = {
+                    referenceId => $reference_id,
+                    referenceSource => $reference_source,
+                };
+            }
         }
     }
 
