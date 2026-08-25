@@ -3,6 +3,7 @@ import { useLayoutConfig } from '../contexts/LayoutConfigContext';
 import { useModals } from '../contexts/ModalsContext';
 import { usePlotGrid } from '../contexts/PlotGridContext';
 import { useView } from '../contexts/ViewContext';
+import { buildParams, isDefined } from '../../functions';
 
 export const useSubmitFieldLayout = () => {
 	const {
@@ -29,7 +30,9 @@ export const useSubmitFieldLayout = () => {
 		labelVar,
 		labelSize,
 		northArrowAngle,
-		loadNorthArrowAngle
+		loadNorthArrowAngle,
+		secondaryAxis,
+		loadSecondaryAxis
 	} = useLayoutConfig();
 
 	const {
@@ -141,13 +144,25 @@ export const useSubmitFieldLayout = () => {
 			})
 		});
 
+		const secondaryAxisRequest = fetch(`/ajax/breeders/trial/${trialId}/secondary_axis`, {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+			body: buildParams({
+				secondary_x_axis_label: secondaryAxis?.xLabel || '',
+				secondary_y_axis_label: secondaryAxis?.yLabel || '',
+				secondary_x_axis_values: secondaryAxis?.xValues?.join(',') || '',
+				secondary_y_axis_values: secondaryAxis?.yValues?.join(',') || ''
+			})
+		});
+
 		try {
-			await Promise.all([putRequest, postRequest, northArrowRequest]);
+			await Promise.all([putRequest, postRequest, northArrowRequest, secondaryAxisRequest]);
 			await fetch(`/ajax/breeders/trial/${trialId}/refresh_cache`, { method: 'POST' });
 
 			alert('Field Plot layout submitted successfully!');
 			fetchObservationUnits();
 			loadNorthArrowAngle();
+			loadSecondaryAxis();
 		} catch (e) {
 			console.error('Error submitting layout metadata:', e);
 			alert('Error submitting layout metadata.');
@@ -158,8 +173,8 @@ export const useSubmitFieldLayout = () => {
 		trialId, authToken, gridMatrix, invertRows,
 		invertCols, topBorder, leftBorder, rightBorder,
 		bottomBorder, plotLayout, colorVar, labelVar,
-		labelSize, northArrowAngle, fetchObservationUnits,
-		loadNorthArrowAngle, setLoading
+		labelSize, northArrowAngle, secondaryAxis,
+		fetchObservationUnits, loadNorthArrowAngle, loadSecondaryAxis, setLoading
 	]);
 
 	return { submitFieldLayout };

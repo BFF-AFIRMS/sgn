@@ -1,9 +1,18 @@
-import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+
+import { isDefined } from '../../functions';
 import { FieldMapContextProps } from '../types';
 
 export type PlotLayout = 'serpentine' | 'zigzag';
 export type ColorVar = 'parity' | 'germplasm' | 'block' | 'family_name' | 'cross_name';
 export type LabelVar = 'plot_number' | 'germplasm' | 'block' | 'family_name' | 'cross_name';
+
+export interface SecondaryAxis {
+    xLabel?: string;
+    yLabel?: string;
+    xValues?: string[];
+    yValues?: string[];
+}
 
 export interface LayoutConfigContextType {
     plotLayout: PlotLayout;
@@ -29,6 +38,10 @@ export interface LayoutConfigContextType {
     northArrowAngle: number;
     setNorthArrowAngle: React.Dispatch<React.SetStateAction<number>>;
     loadNorthArrowAngle: () => void;
+    secondaryAxis: SecondaryAxis | undefined;
+    setSecondaryAxis: React.Dispatch<React.SetStateAction<SecondaryAxis | undefined>>;
+    loadSecondaryAxis: () => void;
+    hasSecondaryAxis: boolean;
 }
 
 const LayoutConfigContext = createContext<LayoutConfigContextType | undefined>(undefined);
@@ -49,6 +62,7 @@ export const LayoutConfigProvider: React.FC<FieldMapContextProps> = ({ trialId, 
     const [labelSize, setLabelSize] = useState(10);
 
     const [northArrowAngle, setNorthArrowAngle] = useState<number>(0);
+    const [secondaryAxis, setSecondaryAxis] = useState<SecondaryAxis | undefined>();
 
     const loadNorthArrowAngle = useCallback(async () => {
         try {
@@ -62,9 +76,42 @@ export const LayoutConfigProvider: React.FC<FieldMapContextProps> = ({ trialId, 
         }
     }, [trialId]);
 
+    const loadSecondaryAxis = useCallback(async () => {
+        try {
+            const response = await fetch(`/ajax/breeders/trial/${trialId}/secondary_axis`);
+            const body = await response.json();
+            if (body) {
+                const {
+                    secondary_x_axis_label: xLabel,
+                    secondary_y_axis_label: yLabel,
+                    secondary_x_axis_values: xValues,
+                    secondary_y_axis_values: yValues
+                } = body;
+
+                setSecondaryAxis({
+                    xLabel,
+                    yLabel,
+                    xValues: xValues?.split(',') || [],
+                    yValues: yValues?.split(',') || [],
+                });
+            }
+        } catch (e) {
+            console.error('Error loading secondary axis labels and values:', e);
+        }
+    }, [trialId]);
+
+    const hasSecondaryAxis = useMemo(() => Boolean(
+        secondaryAxis && (
+            secondaryAxis.xLabel || secondaryAxis.yLabel ||
+            (secondaryAxis.xValues && secondaryAxis.xValues.length > 0) ||
+            (secondaryAxis.yValues && secondaryAxis.yValues.length > 0)
+        )
+    ), [secondaryAxis]);
+
     useEffect(() => {
         loadNorthArrowAngle();
-    }, [loadNorthArrowAngle]);
+        loadSecondaryAxis();
+    }, [loadNorthArrowAngle, loadSecondaryAxis]);
 
     return (
         <LayoutConfigContext.Provider value={{
@@ -79,7 +126,10 @@ export const LayoutConfigProvider: React.FC<FieldMapContextProps> = ({ trialId, 
             labelVar, setLabelVar,
             labelSize, setLabelSize,
             northArrowAngle, setNorthArrowAngle,
-            loadNorthArrowAngle
+            loadNorthArrowAngle,
+            secondaryAxis, setSecondaryAxis,
+            loadSecondaryAxis,
+            hasSecondaryAxis,
         }}>
             {children}
         </LayoutConfigContext.Provider>

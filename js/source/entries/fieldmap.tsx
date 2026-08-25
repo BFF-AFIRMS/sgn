@@ -23,6 +23,8 @@ import { ModalsProvider, useModals } from '../include/fieldmap/contexts/ModalsCo
 import { useView, ViewProvider } from '../include/fieldmap/contexts/ViewContext';
 import { HeatmapProvider } from '../include/fieldmap/contexts/HeatmapContext';
 import { GeoFieldMap } from '../include/fieldmap/components/GeoFieldMap';
+import { SecondaryAxisModal } from '../include/fieldmap/modals/SecondaryAxisModal';
+import { useLayoutConfig } from '../include/fieldmap/contexts/LayoutConfigContext';
 
 declare global {
     interface JQuery {
@@ -35,6 +37,10 @@ const FieldMap: React.FC<FieldMapProps> = ({
     hasSubplotEntries,
     hasPlantEntries,
 }) => {
+    const { hasSecondaryAxis } = useLayoutConfig();
+    const offsetX = hasSecondaryAxis ? 80 : 50;
+    const offsetY = hasSecondaryAxis ? 55 : 25;
+
     const {
         svgDimensions: { width: svgWidth, height: svgHeight },
     } = usePlotGrid();
@@ -105,7 +111,7 @@ const FieldMap: React.FC<FieldMapProps> = ({
                                 viewBox={`0 0 ${svgWidth} ${svgHeight}`}
                                 style={{ transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`, transformOrigin: '0 0' }}
                             >
-                                <g transform="translate(50, 25)">
+                                <g transform={`translate(${offsetX}, ${offsetY})`}>
                                     <PlotLayer />
                                     <LabelLayer />
                                 </g>
@@ -123,6 +129,7 @@ const FieldMap: React.FC<FieldMapProps> = ({
             <DeleteTraitModal />
             <DimensionsModal />
             <PlotDetailsModal />
+            <SecondaryAxisModal />
 
             <DownloadPlotOrderPanel
                 hasColAndRowNumbers={hasColAndRowNumbers}

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { AccessionAutocomplete } from '../components/AccessionAutocomplete';
 import { useModals } from '../contexts/ModalsContext';
 import { usePlotGrid } from '../contexts/PlotGridContext';
@@ -12,13 +12,20 @@ export const DimensionsModal: React.FC<DimensionsModalProps> = ({}) => {
         setShowDimDialog: setShow,
     } = useModals();
 
+    const {
+        dimensions,
+        applyDimensions,
+        bounds
+    } = usePlotGrid();
+
     const [dimRowsInput, setDimRowsInput] = useState('');
     const [dimColsInput, setDimColsInput] = useState('');
     const [fillerAccessionInput, setFillerAccessionInput] = useState('');
 
-    const {
-        applyDimensions
-    } = usePlotGrid();
+    useEffect(() => {
+        setDimRowsInput((dimensions?.rows || bounds.numRows || '').toString());
+        setDimColsInput((dimensions?.cols || bounds.numCols || '').toString());
+    }, [dimensions, bounds]);
 
     const handleApplyDimensions = async () => {
         await applyDimensions(dimRowsInput, dimColsInput, fillerAccessionInput);
