@@ -175,30 +175,22 @@ $t->while_logged_in_as("curator", sub {
 	find_svg_text_ok('ty3', 404, 134);
 	find_svg_text_ok('tx4', 181, 192);
 
-	# Click checkbox with label containing "Top"
-	$t->click_ok('//label[contains(text(),"Top")]/input', 'xpath', 'Click Top checkbox');
+	find_north_arrow_ok(180);
 
+	$t->click_ok('//label[contains(text(),"Top")]/input', 'xpath', 'Click Top checkbox');
 	find_svg_square_ok(156, 156, $border_fill);
 
-	# Click checkbox with label containing "Left"
 	$t->click_ok('//label[contains(text(),"Left")]/input', 'xpath', 'Click Left checkbox');
-
 	find_svg_square_ok(0, 52, $border_fill);
 
-	# Click button with title "Rotate"
 	$t->click_ok('//button[@title="Rotate"]', 'xpath', 'Click Rotate button');
-
-	# Click checkbox with label containing "Right"
 	$t->click_ok('//label[contains(text(),"Right")]/input', 'xpath', 'Click Right checkbox');
-
 	find_svg_square_ok(208, 312, $border_fill);
 	find_svg_text_ok('ty3', 181, -26);
 
 	set_dimensions(4, undef);
-
 	find_svg_text_ok('301', 233, 186);
 	find_svg_text_ok('307', 181, 238);
-
 	find_north_arrow_ok(90);
 
 	download_spatial_layout_ok(
@@ -215,7 +207,7 @@ $t->while_logged_in_as("curator", sub {
 	click_svg_square_ok(156, 104);
 	$t->find_element_ok('//div[contains(@class,"show")]//tr[td[contains(text(),"Accession")]]/td[2][contains(text(),"IITA-TMS-IBA30572")]', 'xpath', 'Verify accession name IITA-TMS-IBA30572 is displayed in the details modal');
 	$t->find_element_ok('//tr[td[contains(text(),"Plot Number")]]/td[2][contains(text(),"206")]', 'xpath', 'Verify plot number 206 is displayed in the details modal');
-	my $coords = $t->find_element_ok('//tr[td[contains(text(),"Coordinates")]]/td[2][contains(normalize-space(),"3 / 3")]', 'xpath', 'Verify coordinates are 3 / 3');
+	$t->find_element_ok('//tr[td[contains(text(),"Coordinates")]]/td[2][contains(normalize-space(),"3 / 3")]', 'xpath', 'Verify coordinates are 3 / 3');
 	$t->find_element_ok('//h5[contains(text(),"Plot Contents & Structure Hierarchy:")]/following-sibling::div/pre[contains(text(),"CASS_6Genotypes_206")]', 'xpath', 'Verify plot contents and structure hierarchy is displayed in the details modal');
 
 	$t->click_ok('//div[contains(@class,"show")]//a[contains(text(),"Replace")]', 'xpath', 'Click Replace Accession tab');
@@ -231,8 +223,13 @@ $t->while_logged_in_as("curator", sub {
 
 	$t->click_ok('//label[contains(text(),"Invert Columns")]/input', 'xpath', 'Click Invert Columns checkbox');
 	find_svg_text_ok('207', 77, 82);
+	find_north_arrow_ok(270);
+
 	$t->click_ok('//button[@title="Rotate"]', 'xpath', 'Click Rotate button');
 	find_svg_text_ok('207', 129, 30);
+	find_north_arrow_ok(0);
+
+
 });
 
 $t->driver->quit();
