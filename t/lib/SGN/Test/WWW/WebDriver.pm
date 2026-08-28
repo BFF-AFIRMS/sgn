@@ -62,6 +62,7 @@ use Test::More;
 use File::Spec::Functions;
 use Selenium::Remote::Driver;
 use Selenium::Waiter qw(wait_until);
+use Selenium::Remote::WDKeys 'KEYS';
 use Time::HiRes qw(time);
 
 has 'host' => ( is => 'rw',
@@ -341,13 +342,15 @@ sub send_keys {
     my ($self, $name, $method, $input, @args) = @_;
     my $options = $self->_extract_basic_args(@args);
 
-    if ($options->{clear}) {
-        $self->clear($name, $method, timeout => $options->{timeout}, scrollto => $options->{scrollto});
-    }
-
     return wait_until {
         $self->screenshot("send_keys_$name");
-        $self->driver->find_element($name, $method)->send_keys(_maybe_unwrap($input));
+        my $el = $self->driver->find_element($name, $method);
+        if ($options->{clear}) {
+            # Send Ctrl-A: this works better than a separate clear() on number inputs
+            $el->send_keys(KEYS->{'control'}, 'a');
+        }
+
+        $el->send_keys(_maybe_unwrap($input));
     } timeout => $options->{timeout};
 }
 
@@ -357,11 +360,7 @@ sub send_keys_ok {
 
     $test_name = $test_name || print STDERR "You can provide a test name parameter for send_keys_ok\n";
 
-    if ($options->{clear}) {
-        $self->clear_ok($name, $method, $test_name . " (clear)", timeout => $options->{timeout});
-    }
-
-    ok( my $element = $self->send_keys($name, $method, $input, timeout => $options->{timeout}, scrollto => $options->{scrollto}, clear => 0), $test_name);
+    ok( my $element = $self->send_keys($name, $method, $input, timeout => $options->{timeout}, clear => $options->{clear}), $test_name);
     return $element;
 }
 
