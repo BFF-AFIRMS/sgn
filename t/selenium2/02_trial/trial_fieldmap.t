@@ -347,6 +347,10 @@ $t->while_logged_in_as("curator", sub {
 	$t->click_ok('//label[contains(text(),"Left")]/input', 'xpath', 'Click Left checkbox');
 	find_plot_cell_ok(0, 1, $border_fill);
 
+	$t->click_ok('//label[contains(text(),"Bottom")]/input', 'xpath', 'Click Bottom checkbox');
+	find_plot_cell_ok(2, 0, $border_fill);
+	$t->click_ok('//label[contains(text(),"Bottom")]/input', 'xpath', 'Click Bottom checkbox');
+
 	$t->click_ok('//button[@title="Rotate"]', 'xpath', 'Click Rotate button');
 	$t->click_ok('//label[contains(text(),"Right")]/input', 'xpath', 'Click Right checkbox');
 	find_plot_cell_ok(4, 6, $border_fill);
