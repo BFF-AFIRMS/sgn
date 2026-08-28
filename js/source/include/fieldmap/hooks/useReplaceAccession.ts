@@ -3,12 +3,18 @@ import { useModals } from '../contexts/ModalsContext';
 import { usePlotGrid } from '../contexts/PlotGridContext';
 import { useView } from '../contexts/ViewContext';
 import { Plot } from '../types';
+import { isDefined } from '../../functions';
 
 export enum ReplaceAccessionResult {
 	Success = 'success',
 	Warning = 'warning',
 	Error = 'error'
 }
+
+type ReplaceAccessionResponseBody =
+    { error: string } |
+    { warning: string } |
+    { success: 1, new_accession_id: string };
 
 export const useReplaceAccession = () => {
 	const {
@@ -20,7 +26,7 @@ export const useReplaceAccession = () => {
 	} = useModals();
 
 	const {
-		fetchObservationUnits
+        mutatePlot
 	} = usePlotGrid();
 
     const replaceAccession = useCallback(async (override: 'check' | 'override', selectedPlot: Plot | null, newAccession: string, newPlotName: string) => {
@@ -39,14 +45,18 @@ export const useReplaceAccession = () => {
                     override: override
                 })
             });
-            const body = await response.json();
-            if (body.warning) {
+            const body: ReplaceAccessionResponseBody = await response.json();
+            if ('warning' in body) {
 				return ReplaceAccessionResult.Warning;
-            } else if (body.error) {
+            } else if ('error' in body) {
                 alert(body.error);
             } else {
                 alert('Plot Accession Replaced successfully!');
-                fetchObservationUnits();
+                mutatePlot(selectedPlot, {
+                    germplasmName: newAccession,
+                    germplasmDbId: body.new_accession_id,
+                    observationUnitName: newPlotName || selectedPlot.observationUnitName,
+                });
 				return ReplaceAccessionResult.Success;
             }
         } catch (e) {
@@ -56,7 +66,7 @@ export const useReplaceAccession = () => {
         }
 
 		return ReplaceAccessionResult.Error;
-    }, [trialId, setLoading, fetchObservationUnits]);
+    }, [trialId, setLoading, mutatePlot]);
 
     return { replaceAccession };
 };

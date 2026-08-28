@@ -30,6 +30,7 @@ export interface PlotGridContextType {
 
     fetchObservationUnits: () => Promise<void>;
     recalculateLayout: (layout: 'serpentine' | 'zigzag') => void;
+    mutatePlot: (plotId: string | Plot, updatedFields: Partial<Plot>) => void;
 
     dimensions: { rows: number; cols: number };
     applyDimensions: (rowsInput: string, colsInput: string, fillerAccessionInput?: string) => Promise<void>;
@@ -354,6 +355,30 @@ export const PlotGridProvider: React.FC<FieldMapContextProps> = ({ trialId, auth
         }
     }, [activeTrialIds, authToken, setTopBorder, setLeftBorder, setRightBorder, setBottomBorder, setInvertRows, setInvertCols, setPlotLayout, setColorVar, setLabelVar, setLabelSize]);
 
+    const mutatePlot = useCallback((plotRef: string | Plot, updatedFields: Partial<Plot>) => {
+        setPlotObject(current => {
+            const plotId = typeof plotRef === 'string'
+                ? plotRef
+                : plotRef.observationUnitDbId;
+            if (!plotId) {
+                return current;
+            }
+
+            const existingPlot = current[plotId];
+            if (!existingPlot) {
+                return current;
+            }
+
+            return {
+                ...current,
+                [plotId]: {
+                    ...existingPlot,
+                    ...updatedFields
+                }
+            };
+        });
+    }, []);
+
     const applyDimensions = useCallback(async (rowsInput: string, colsInput: string, fillerAccessionInput?: string) => {
         const rows = parseInt(rowsInput) || 0;
         const cols = parseInt(colsInput) || 0;
@@ -450,6 +475,7 @@ export const PlotGridProvider: React.FC<FieldMapContextProps> = ({ trialId, auth
             plotImages,
             setPlotImages,
             fetchObservationUnits,
+            mutatePlot,
             applyDimensions,
             transformedSecondaryAxis,
         }}>
