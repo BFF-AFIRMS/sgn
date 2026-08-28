@@ -217,16 +217,16 @@ $t->while_logged_in_as("curator", sub {
 	$t->accept_alert_ok('Accept alert after updating accession');
 
 	$t->wait_for_network_idle();
-	click_svg_square_ok(312, 52);
+	click_svg_square_ok(156, 104);
 	$t->find_element_ok('//div[contains(@class,"show")]//tr[td[contains(text(),"Accession")]]/td[2][contains(text(),"XG120015")]', 'xpath', 'Verify accession name XG120015 is displayed in the details modal');
 	$t->click_ok('//div[contains(@class,"show")]//button[contains(text(),"Close")]', 'xpath', 'Click Close button in details modal');
 
 	$t->click_ok('//label[contains(text(),"Invert Columns")]/input', 'xpath', 'Click Invert Columns checkbox');
-	find_svg_text_ok('207', 77, 82);
+	find_svg_text_ok('207', 77, 134);
 	find_north_arrow_ok(270);
 
 	$t->click_ok('//button[@title="Rotate"]', 'xpath', 'Click Rotate button');
-	find_svg_text_ok('207', 129, 30);
+	find_svg_text_ok('207', 285, 30);
 	find_north_arrow_ok(0);
 
 
