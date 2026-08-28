@@ -150,7 +150,6 @@ $t->while_logged_in_as("curator", sub {
 	find_svg_square_ok(0, 104);
 	find_svg_square_ok(312, 0);
 
-	# Test Color By options
 	find_svg_square_ok(0, 104, $odd_block_fill);
 	find_svg_square_ok(0, 52, $even_block_fill);
 	find_svg_square_ok(0, 0, $odd_block_fill);
@@ -192,29 +191,21 @@ $t->while_logged_in_as("curator", sub {
 	find_svg_text_ok('ty3', -40, 30);
 	find_svg_text_ok('ty3', 404, 30);
 
-	# Click button with title "Rotate"
 	$t->click_ok('//button[@title="Rotate"]', 'xpath', 'Click Rotate button');
-
 	find_svg_text_ok('103', 25, 30);
 	find_svg_text_ok('207', 77, 342);
 	find_svg_text_ok('tx3', 196, 134);
-
 	find_north_arrow_ok(90);
 
-	# Click button with title "Transpose Display"
 	$t->click_ok('//button[@title="Transpose Display"]', 'xpath', 'Click Transpose Display button');
-
 	find_svg_text_ok('103', 337, 134);
 	find_svg_text_ok('307', 25, 30);
 
-	# Click checkbox with label containing "Invert Rows"
 	$t->click_ok('//label[contains(text(),"Invert Rows")]/input', 'xpath', 'Click Invert Rows checkbox');
-
 	find_svg_text_ok('104', 285, 30);
 	find_svg_text_ok('205', 129, 82);
 	find_svg_text_ok('ty3', 404, 134);
 	find_svg_text_ok('tx4', 181, 192);
-
 	find_north_arrow_ok(180);
 
 	$t->click_ok('//label[contains(text(),"Top")]/input', 'xpath', 'Click Top checkbox');
