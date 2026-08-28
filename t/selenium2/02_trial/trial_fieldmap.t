@@ -185,6 +185,11 @@ sub find_north_arrow_ok {
 	return $t->find_element_ok($xpath, 'xpath', "Find north arrow with rotation $rotation degrees");
 }
 
+sub set_north_arrow_angle {
+	my ($angle) = @_;
+	$t->send_keys_ok('//label[contains(text(),"North Angle")]/following-sibling::input', 'xpath', $angle, "Set North Angle to $angle degrees", clear => 1);
+}
+
 my $all_checkbox_labels = [
 	'Accession Name',
 	'Plot Name',
@@ -296,6 +301,15 @@ $t->while_logged_in_as("curator", sub {
 	find_plot_label_ok('201', 0, 1);
 	find_plot_label_ok('301', 0, 0);
 
+	find_north_arrow_ok(0);
+
+	set_north_arrow_angle(45);
+	find_north_arrow_ok(45);
+
+	set_north_arrow_angle(135);
+	find_north_arrow_ok(135);
+
+	set_north_arrow_angle(0);
 	find_north_arrow_ok(0);
 
 	set_secondary_axis('Test X Label', 'Test Y Label', 'tx1,tx2,tx3,tx4', 'ty1,ty2,ty3,ty4');
