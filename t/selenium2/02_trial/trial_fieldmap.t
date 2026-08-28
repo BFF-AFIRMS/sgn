@@ -292,7 +292,7 @@ $t->while_logged_in_as("curator", sub {
 
 	set_label_size(10);
 	set_label_by('plot_number');
-	find_plot_label_ok('101', 0, 2);
+	find_plot_label_ok('103', 0, 2);
 	find_plot_label_ok('201', 0, 1);
 	find_plot_label_ok('301', 0, 0);
 
