@@ -30,6 +30,16 @@ my $CELL_SIZE = 52;
 my $CELL_HALF = 25;
 my $LABEL_Y_OFFSET = 30;
 
+# Secondary axis layout offsets
+my $SEC_X_LABEL_TOP_OFFSET_Y    = -42;
+my $SEC_X_LABEL_BOTTOM_OFFSET_Y = 52;
+my $SEC_Y_LABEL_LEFT_OFFSET_X   = -60;
+my $SEC_Y_LABEL_RIGHT_OFFSET_X  = 60;
+my $SEC_X_VAL_TOP_OFFSET_Y      = -26;
+my $SEC_X_VAL_BOTTOM_OFFSET_Y   = 36;
+my $SEC_Y_VAL_LEFT_OFFSET_X     = -40;
+my $SEC_Y_VAL_RIGHT_OFFSET_X    = 40;
+
 my $border_fill = '#ecefef';
 my $even_block_fill = '#c7e9b4';
 my $odd_block_fill = '#41b6c4';
@@ -89,28 +99,34 @@ sub find_plot_label_ok {
 
 sub find_sec_x_label_ok {
 	my ($text, $num_cols, $num_rows, $side) = @_;
-	my $x = ($num_cols * $CELL_SIZE) / 2;
-	my $y = ($side eq 'top') ? -42 : ($num_rows * $CELL_SIZE + 52);
+	my $grid_w = $num_cols * $CELL_SIZE;
+	my $grid_h = $num_rows * $CELL_SIZE;
+	my $x = $grid_w / 2;
+	my $y = ($side eq 'top') ? $SEC_X_LABEL_TOP_OFFSET_Y : ($grid_h + $SEC_X_LABEL_BOTTOM_OFFSET_Y);
 	return find_svg_text_ok($text, $x, $y);
 }
 
 sub find_sec_y_label_ok {
 	my ($text, $num_cols, $num_rows, $side) = @_;
-	my $x = ($side eq 'left') ? -60 : ($num_cols * $CELL_SIZE + 60);
-	my $y = ($num_rows * $CELL_SIZE) / 2;
+	my $grid_w = $num_cols * $CELL_SIZE;
+	my $grid_h = $num_rows * $CELL_SIZE;
+	my $x = ($side eq 'left') ? $SEC_Y_LABEL_LEFT_OFFSET_X : ($grid_w + $SEC_Y_LABEL_RIGHT_OFFSET_X);
+	my $y = $grid_h / 2;
 	return find_svg_text_ok($text, $x, $y);
 }
 
 sub find_sec_x_val_ok {
 	my ($text, $col, $num_rows, $side) = @_;
 	my $x = $col * $CELL_SIZE + $CELL_HALF;
-	my $y = ($side eq 'top') ? -26 : ($num_rows * $CELL_SIZE + 36);
+	my $grid_h = defined $num_rows ? $num_rows * $CELL_SIZE : 0;
+	my $y = ($side eq 'top') ? $SEC_X_VAL_TOP_OFFSET_Y : ($grid_h + $SEC_X_VAL_BOTTOM_OFFSET_Y);
 	return find_svg_text_ok($text, $x, $y);
 }
 
 sub find_sec_y_val_ok {
 	my ($text, $row, $num_cols, $side) = @_;
-	my $x = ($side eq 'left') ? -40 : ($num_cols * $CELL_SIZE + 40);
+	my $grid_w = defined $num_cols ? $num_cols * $CELL_SIZE : 0;
+	my $x = ($side eq 'left') ? $SEC_Y_VAL_LEFT_OFFSET_X : ($grid_w + $SEC_Y_VAL_RIGHT_OFFSET_X);
 	my $y = $row * $CELL_SIZE + $LABEL_Y_OFFSET;
 	return find_svg_text_ok($text, $x, $y);
 }
