@@ -26,6 +26,10 @@ my $driver = Selenium::Remote::Driver->new(
 $t->driver($driver);
 
 my $svg_id = 'fieldmap_chart_svg';
+my $CELL_SIZE = 52;
+my $CELL_HALF = 25;
+my $LABEL_Y_OFFSET = 30;
+
 my $border_fill = '#ecefef';
 my $even_block_fill = '#c7e9b4';
 my $odd_block_fill = '#41b6c4';
@@ -57,6 +61,58 @@ sub click_svg_square_ok {
 	my ($x, $y) = @_;
 	my $xpath = '//*[local-name()="svg" and @id="' . $svg_id . '"]//*[local-name()="g" and @transform="translate(' . $x . ', ' . $y . ')"]/*[local-name()="rect"]';
 	return $t->click_ok($xpath, 'xpath', "Click plot square at ($x,$y)");
+}
+
+sub cell_pos {
+	my ($col, $row) = @_;
+	return ($col * $CELL_SIZE, $row * $CELL_SIZE);
+}
+
+sub find_plot_cell_ok {
+	my ($col, $row, $fill) = @_;
+	my ($x, $y) = cell_pos($col, $row);
+	return find_svg_square_ok($x, $y, $fill);
+}
+
+sub click_plot_cell_ok {
+	my ($col, $row) = @_;
+	my ($x, $y) = cell_pos($col, $row);
+	return click_svg_square_ok($x, $y);
+}
+
+sub find_plot_label_ok {
+	my ($text, $col, $row) = @_;
+	my $x = $col * $CELL_SIZE + $CELL_HALF;
+	my $y = $row * $CELL_SIZE + $LABEL_Y_OFFSET;
+	return find_svg_text_ok($text, $x, $y);
+}
+
+sub find_sec_x_label_ok {
+	my ($text, $num_cols, $num_rows, $side) = @_;
+	my $x = ($num_cols * $CELL_SIZE) / 2;
+	my $y = ($side eq 'top') ? -42 : ($num_rows * $CELL_SIZE + 52);
+	return find_svg_text_ok($text, $x, $y);
+}
+
+sub find_sec_y_label_ok {
+	my ($text, $num_cols, $num_rows, $side) = @_;
+	my $x = ($side eq 'left') ? -60 : ($num_cols * $CELL_SIZE + 60);
+	my $y = ($num_rows * $CELL_SIZE) / 2;
+	return find_svg_text_ok($text, $x, $y);
+}
+
+sub find_sec_x_val_ok {
+	my ($text, $col, $num_rows, $side) = @_;
+	my $x = $col * $CELL_SIZE + $CELL_HALF;
+	my $y = ($side eq 'top') ? -26 : ($num_rows * $CELL_SIZE + 36);
+	return find_svg_text_ok($text, $x, $y);
+}
+
+sub find_sec_y_val_ok {
+	my ($text, $row, $num_cols, $side) = @_;
+	my $x = ($side eq 'left') ? -40 : ($num_cols * $CELL_SIZE + 40);
+	my $y = $row * $CELL_SIZE + $LABEL_Y_OFFSET;
+	return find_svg_text_ok($text, $x, $y);
 }
 
 sub set_dimensions {
@@ -147,81 +203,81 @@ $t->while_logged_in_as("curator", sub {
 	$t->click_ok('pheno_heatmap_onswitch', 'id', 'Open fieldmap section');
 	$t->wait_for_working_dialog();
 
-	find_svg_square_ok(0, 104);
-	find_svg_square_ok(312, 0);
+	find_plot_cell_ok(0, 2);
+	find_plot_cell_ok(6, 0);
 
-	find_svg_square_ok(0, 104, $odd_block_fill);
-	find_svg_square_ok(0, 52, $even_block_fill);
-	find_svg_square_ok(0, 0, $odd_block_fill);
+	find_plot_cell_ok(0, 2, $odd_block_fill);
+	find_plot_cell_ok(0, 1, $even_block_fill);
+	find_plot_cell_ok(0, 0, $odd_block_fill);
 
 	set_color_by('block');
-	find_svg_square_ok(0, 104, $palette[0]);
-	find_svg_square_ok(52, 104, $palette[0]);
-	find_svg_square_ok(0, 52, $palette[1]);
-	find_svg_square_ok(0, 0, $palette[2]);
+	find_plot_cell_ok(0, 2, $palette[0]);
+	find_plot_cell_ok(1, 2, $palette[0]);
+	find_plot_cell_ok(0, 1, $palette[1]);
+	find_plot_cell_ok(0, 0, $palette[2]);
 
 	set_color_by('germplasm');
-	find_svg_square_ok(0, 104, $palette[4]);
-	find_svg_square_ok(52, 104, $palette[3]);
-	find_svg_square_ok(104, 104, $palette[2]);
-	find_svg_square_ok(156, 104, $palette[1]);
-	find_svg_square_ok(0, 52, $palette[0]);
+	find_plot_cell_ok(0, 2, $palette[4]);
+	find_plot_cell_ok(1, 2, $palette[3]);
+	find_plot_cell_ok(2, 2, $palette[2]);
+	find_plot_cell_ok(3, 2, $palette[1]);
+	find_plot_cell_ok(0, 1, $palette[0]);
 
 	set_color_by('family_name');
-	find_svg_square_ok(0, 104, $even_block_fill);
+	find_plot_cell_ok(0, 2, $even_block_fill);
 
 	set_color_by('cross_name');
-	find_svg_square_ok(0, 104, $even_block_fill);
+	find_plot_cell_ok(0, 2, $even_block_fill);
 
 	set_color_by('parity');
-	find_svg_square_ok(0, 104, $odd_block_fill);
-	find_svg_square_ok(0, 52, $even_block_fill);
+	find_plot_cell_ok(0, 2, $odd_block_fill);
+	find_plot_cell_ok(0, 1, $even_block_fill);
 
 	find_north_arrow_ok(0);
 
 	set_secondary_axis('Test X Label', 'Test Y Label', 'tx1,tx2,tx3,tx4', 'ty1,ty2,ty3,ty4');
 
-	find_svg_text_ok('Test X Label', 182, -42);
-	find_svg_text_ok('Test X Label', 182, 208);
-	find_svg_text_ok('Test Y Label', -60, 78);
-	find_svg_text_ok('Test Y Label', 424, 78);
+	find_sec_x_label_ok('Test X Label', 7, 3, 'top');
+	find_sec_x_label_ok('Test X Label', 7, 3, 'bottom');
+	find_sec_y_label_ok('Test Y Label', 7, 3, 'left');
+	find_sec_y_label_ok('Test Y Label', 7, 3, 'right');
 
-	find_svg_text_ok('tx1', 25, -26);
-	find_svg_text_ok('tx1', 25, 192);
-	find_svg_text_ok('ty3', -40, 30);
-	find_svg_text_ok('ty3', 404, 30);
+	find_sec_x_val_ok('tx1', 0, 3, 'top');
+	find_sec_x_val_ok('tx1', 0, 3, 'bottom');
+	find_sec_y_val_ok('ty3', 0, 7, 'left');
+	find_sec_y_val_ok('ty3', 0, 7, 'right');
 
 	$t->click_ok('//button[@title="Rotate"]', 'xpath', 'Click Rotate button');
-	find_svg_text_ok('103', 25, 30);
-	find_svg_text_ok('207', 77, 342);
-	find_svg_text_ok('tx3', 196, 134);
+	find_plot_label_ok('103', 0, 0);
+	find_plot_label_ok('207', 1, 6);
+	find_sec_y_val_ok('tx3', 2, 3, 'right');
 	find_north_arrow_ok(90);
 
 	$t->click_ok('//button[@title="Transpose Display"]', 'xpath', 'Click Transpose Display button');
-	find_svg_text_ok('103', 337, 134);
-	find_svg_text_ok('307', 25, 30);
+	find_plot_label_ok('103', 6, 2);
+	find_plot_label_ok('307', 0, 0);
 
 	$t->click_ok('//label[contains(text(),"Invert Rows")]/input', 'xpath', 'Click Invert Rows checkbox');
-	find_svg_text_ok('104', 285, 30);
-	find_svg_text_ok('205', 129, 82);
-	find_svg_text_ok('ty3', 404, 134);
-	find_svg_text_ok('tx4', 181, 192);
+	find_plot_label_ok('104', 5, 0);
+	find_plot_label_ok('205', 2, 1);
+	find_sec_y_val_ok('ty3', 2, 7, 'right');
+	find_sec_x_val_ok('tx4', 3, 3, 'bottom');
 	find_north_arrow_ok(180);
 
 	$t->click_ok('//label[contains(text(),"Top")]/input', 'xpath', 'Click Top checkbox');
-	find_svg_square_ok(156, 156, $border_fill);
+	find_plot_cell_ok(3, 3, $border_fill);
 
 	$t->click_ok('//label[contains(text(),"Left")]/input', 'xpath', 'Click Left checkbox');
-	find_svg_square_ok(0, 52, $border_fill);
+	find_plot_cell_ok(0, 1, $border_fill);
 
 	$t->click_ok('//button[@title="Rotate"]', 'xpath', 'Click Rotate button');
 	$t->click_ok('//label[contains(text(),"Right")]/input', 'xpath', 'Click Right checkbox');
-	find_svg_square_ok(208, 312, $border_fill);
-	find_svg_text_ok('ty3', 181, -26);
+	find_plot_cell_ok(4, 6, $border_fill);
+	find_sec_x_val_ok('ty3', 3, undef, 'top');
 
 	set_dimensions(4, undef);
-	find_svg_text_ok('301', 233, 186);
-	find_svg_text_ok('307', 181, 238);
+	find_plot_label_ok('301', 4, 3);
+	find_plot_label_ok('307', 3, 4);
 	find_north_arrow_ok(90);
 
 	download_spatial_layout_ok(
@@ -235,7 +291,7 @@ $t->while_logged_in_as("curator", sub {
 		't/data/fieldmap/Trial_165_spatial_layout_t2.csv',
 	);
 
-	click_svg_square_ok(156, 104);
+	click_plot_cell_ok(3, 2);
 	$t->find_element_ok('//div[contains(@class,"show")]//tr[td[contains(text(),"Accession")]]/td[2][contains(text(),"IITA-TMS-IBA30572")]', 'xpath', 'Verify accession name IITA-TMS-IBA30572 is displayed in the details modal');
 	$t->find_element_ok('//tr[td[contains(text(),"Plot Number")]]/td[2][contains(text(),"206")]', 'xpath', 'Verify plot number 206 is displayed in the details modal');
 	$t->find_element_ok('//tr[td[contains(text(),"Coordinates")]]/td[2][contains(normalize-space(),"3 / 3")]', 'xpath', 'Verify coordinates are 3 / 3');
@@ -248,16 +304,16 @@ $t->while_logged_in_as("curator", sub {
 	$t->accept_alert_ok('Accept alert after updating accession');
 
 	$t->wait_for_network_idle();
-	click_svg_square_ok(156, 104);
+	click_plot_cell_ok(3, 2);
 	$t->find_element_ok('//div[contains(@class,"show")]//tr[td[contains(text(),"Accession")]]/td[2][contains(text(),"XG120015")]', 'xpath', 'Verify accession name XG120015 is displayed in the details modal');
 	$t->click_ok('//div[contains(@class,"show")]//button[contains(text(),"Close")]', 'xpath', 'Click Close button in details modal');
 
 	$t->click_ok('//label[contains(text(),"Invert Columns")]/input', 'xpath', 'Click Invert Columns checkbox');
-	find_svg_text_ok('207', 77, 134);
+	find_plot_label_ok('207', 1, 2);
 	find_north_arrow_ok(270);
 
 	$t->click_ok('//button[@title="Rotate"]', 'xpath', 'Click Rotate button');
-	find_svg_text_ok('207', 285, 30);
+	find_plot_label_ok('207', 5, 0);
 	find_north_arrow_ok(0);
 
 
