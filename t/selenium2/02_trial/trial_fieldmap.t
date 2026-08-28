@@ -27,6 +27,13 @@ $t->driver($driver);
 
 my $svg_id = 'fieldmap_chart_svg';
 my $border_fill = '#ecefef';
+my $even_block_fill = '#c7e9b4';
+my $odd_block_fill = '#41b6c4';
+my @palette = (
+	'#8dd3c7', '#ffffb3', '#bebada', '#fb8072', '#80b1d3',
+	'#fdb462', '#b3de69', '#fccde5', '#d9d9d9', '#bc80bd',
+	'#ccebc5', '#ffed6f'
+);
 
 sub find_svg_text_ok {
 	my ($text, $x, $y) = @_;
@@ -72,6 +79,11 @@ sub set_secondary_axis {
 	$t->send_keys_ok('//label[contains(text(),"Secondary X Axis Values")]/following-sibling::input', 'xpath', $x_values, "Enter new secondary x axis values", clear => 1);
 	$t->send_keys_ok('//label[contains(text(),"Secondary Y Axis Values")]/following-sibling::input', 'xpath', $y_values, "Enter new secondary y axis values", clear => 1);
 	$t->click_ok('//div[contains(@class,"show")]//button[contains(text(),"Apply")]', 'xpath', 'Click Apply button');
+}
+
+sub set_color_by {
+	my ($color_by) = @_;
+	$t->click_ok('//label[contains(text(),"Color By:")]/following-sibling::select/option[@value="' . $color_by . '"]', 'xpath', "Select Color By '$color_by'");
 }
 
 sub find_north_arrow_ok {
@@ -137,6 +149,34 @@ $t->while_logged_in_as("curator", sub {
 
 	find_svg_square_ok(0, 104);
 	find_svg_square_ok(312, 0);
+
+	# Test Color By options
+	find_svg_square_ok(0, 104, $odd_block_fill);
+	find_svg_square_ok(0, 52, $even_block_fill);
+	find_svg_square_ok(0, 0, $odd_block_fill);
+
+	set_color_by('block');
+	find_svg_square_ok(0, 104, $palette[0]);
+	find_svg_square_ok(52, 104, $palette[0]);
+	find_svg_square_ok(0, 52, $palette[1]);
+	find_svg_square_ok(0, 0, $palette[2]);
+
+	set_color_by('germplasm');
+	find_svg_square_ok(0, 104, $palette[4]);
+	find_svg_square_ok(52, 104, $palette[3]);
+	find_svg_square_ok(104, 104, $palette[2]);
+	find_svg_square_ok(156, 104, $palette[1]);
+	find_svg_square_ok(0, 52, $palette[0]);
+
+	set_color_by('family_name');
+	find_svg_square_ok(0, 104, $even_block_fill);
+
+	set_color_by('cross_name');
+	find_svg_square_ok(0, 104, $even_block_fill);
+
+	set_color_by('parity');
+	find_svg_square_ok(0, 104, $odd_block_fill);
+	find_svg_square_ok(0, 52, $even_block_fill);
 
 	find_north_arrow_ok(0);
 
