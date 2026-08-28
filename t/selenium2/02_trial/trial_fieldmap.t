@@ -29,6 +29,8 @@ my $svg_id = 'fieldmap_chart_svg';
 my $CELL_SIZE = 52;
 my $CELL_HALF = 25;
 my $LABEL_Y_OFFSET = 30;
+my $LABEL_Y_OFFSET_STAGGERED_TOP    = 20;
+my $LABEL_Y_OFFSET_STAGGERED_BOTTOM = 40;
 
 # Secondary axis layout offsets
 my $SEC_X_LABEL_TOP_OFFSET_Y    = -42;
@@ -50,13 +52,18 @@ my @palette = (
 );
 
 sub find_svg_text_ok {
-	my ($text, $x, $y) = @_;
+	my ($text, $x, $y, $font_size) = @_;
 
-	my $xpath = (defined $x && defined $y) ?
-		'//*[local-name()="svg" and @id="' . $svg_id . '"]//*[local-name()="text" and text()="' . $text . '" and @x="' . $x . '" and @y="' . $y . '"]' :
-		'//*[local-name()="svg" and @id="' . $svg_id . '"]//*[local-name()="text" and text()="' . $text . '"]';
+	my $xpath = '//*[local-name()="svg" and @id="' . $svg_id . '"]//*[local-name()="text" and text()="' . $text . '"';
+	$xpath .= ' and @x="' . $x . '" and @y="' . $y . '"' if (defined $x && defined $y);
+	$xpath .= ' and @font-size="' . $font_size . '"' if defined $font_size;
+	$xpath .= ']';
 
-	return $t->find_element_ok($xpath, 'xpath', "Find text element '$text' at ($x,$y)");
+	my $desc = "Find text element '$text'";
+	$desc .= " at ($x,$y)" if (defined $x && defined $y);
+	$desc .= " with font size $font_size" if defined $font_size;
+
+	return $t->find_element_ok($xpath, 'xpath', $desc);
 }
 
 sub find_svg_square_ok {
@@ -91,10 +98,14 @@ sub click_plot_cell_ok {
 }
 
 sub find_plot_label_ok {
-	my ($text, $col, $row) = @_;
+	my ($text, $col, $row, %opts) = @_;
+	my $font_size = $opts{font_size};
+	my $y_offset = $opts{staggered} ?
+		($col % 2 == 0 ? $LABEL_Y_OFFSET_STAGGERED_TOP : $LABEL_Y_OFFSET_STAGGERED_BOTTOM) :
+		$LABEL_Y_OFFSET;
 	my $x = $col * $CELL_SIZE + $CELL_HALF;
-	my $y = $row * $CELL_SIZE + $LABEL_Y_OFFSET;
-	return find_svg_text_ok($text, $x, $y);
+	my $y = $row * $CELL_SIZE + $y_offset;
+	return find_svg_text_ok($text, $x, $y, $font_size);
 }
 
 sub find_sec_x_label_ok {
@@ -156,6 +167,16 @@ sub set_secondary_axis {
 sub set_color_by {
 	my ($color_by) = @_;
 	$t->click_ok('//label[contains(text(),"Color By:")]/following-sibling::select/option[@value="' . $color_by . '"]', 'xpath', "Select Color By '$color_by'");
+}
+
+sub set_label_by {
+	my ($label_by) = @_;
+	$t->click_ok('//label[contains(text(),"Label By:")]/following-sibling::select/option[@value="' . $label_by . '"]', 'xpath', "Select Label By '$label_by'");
+}
+
+sub set_label_size {
+	my ($size) = @_;
+	$t->send_keys_ok('//label[contains(text(),"Label Size:")]/following-sibling::input', 'xpath', $size, "Set Label Size to $size", clear => 1);
 }
 
 sub find_north_arrow_ok {
@@ -248,6 +269,32 @@ $t->while_logged_in_as("curator", sub {
 	set_color_by('parity');
 	find_plot_cell_ok(0, 2, $odd_block_fill);
 	find_plot_cell_ok(0, 1, $even_block_fill);
+
+	set_label_by('germplasm');
+	set_label_size(14);
+	find_plot_label_ok('IITA-TMS-IBA980581', 0, 2, font_size => 14, staggered => 1);
+	find_plot_label_ok('IITA-TMS-IBA980002', 1, 2, font_size => 14, staggered => 1);
+	find_plot_label_ok('IITA-TMS-IBA30572', 2, 2, font_size => 14, staggered => 1);
+	find_plot_label_ok('BLANK', 0, 1, font_size => 14, staggered => 1);
+
+	set_label_by('block');
+	find_plot_label_ok('1', 0, 2, font_size => 14);
+	find_plot_label_ok('2', 0, 1, font_size => 14);
+	find_plot_label_ok('3', 0, 0, font_size => 14);
+
+	set_label_by('family_name');
+	ok(!scalar(@{$t->driver->find_elements('//*[local-name()="svg" and @id="' . $svg_id . '"]//*[local-name()="text" and text()="IITA-TMS-IBA980581"]', 'xpath')}), 'No accession labels found when labeled by family');
+	ok(!scalar(@{$t->driver->find_elements('//*[local-name()="svg" and @id="' . $svg_id . '"]//*[local-name()="text" and text()="101"]', 'xpath')}), 'No plot number labels found when labeled by family');
+
+	set_label_by('cross_name');
+	ok(!scalar(@{$t->driver->find_elements('//*[local-name()="svg" and @id="' . $svg_id . '"]//*[local-name()="text" and text()="IITA-TMS-IBA980581"]', 'xpath')}), 'No accession labels found when labeled by cross');
+	ok(!scalar(@{$t->driver->find_elements('//*[local-name()="svg" and @id="' . $svg_id . '"]//*[local-name()="text" and text()="101"]', 'xpath')}), 'No plot number labels found when labeled by cross');
+
+	set_label_size(10);
+	set_label_by('plot_number');
+	find_plot_label_ok('101', 0, 2);
+	find_plot_label_ok('201', 0, 1);
+	find_plot_label_ok('301', 0, 0);
 
 	find_north_arrow_ok(0);
 
