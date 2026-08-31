@@ -100,9 +100,6 @@ const FieldMap: React.FC<FieldMapProps> = ({
                             onMouseUp={handleMouseUpOrLeave}
                             onMouseLeave={handleMouseUpOrLeave}
                         >
-                            <NorthArrow />
-                            <ZoomControls />
-
                             <svg
                                 id="fieldmap_chart_svg"
                                 className="tw:max-w-none tw:shrink-0"
@@ -116,6 +113,9 @@ const FieldMap: React.FC<FieldMapProps> = ({
                                     <LabelLayer />
                                 </g>
                             </svg>
+
+                            <NorthArrow />
+                            <ZoomControls />
 
                             <FieldMapTooltip />
                         </div>
