@@ -190,6 +190,65 @@ sub set_north_arrow_angle {
 	$t->send_keys_ok('//label[contains(text(),"North Angle")]/following-sibling::input', 'xpath', $angle, "Set North Angle to $angle degrees", clear => 1);
 }
 
+sub get_svg_transform {
+	return $t->driver->execute_script(q{
+		const el = document.getElementById(arguments[0]);
+		if (!el) return null;
+		const style = el.style.transform || el.getAttribute('style') || '';
+
+		let x = 0;
+		let y = 0;
+		const translateMatch = style.match(/translate\(\s*([-\d\.]+)(?:px)?(?:\s*,\s*([-\d\.]+)(?:px)?)?\s*\)/i);
+		if (translateMatch) {
+			x = parseFloat(translateMatch[1]) || 0;
+			y = translateMatch[2] !== undefined ? (parseFloat(translateMatch[2]) || 0) : 0;
+		}
+
+		let zoom = 1;
+		const scaleMatch = style.match(/scale\(\s*([-\d\.]+)\s*\)/i);
+		if (scaleMatch) {
+			zoom = parseFloat(scaleMatch[1]) || 1;
+		}
+
+		if (translateMatch || scaleMatch) {
+			return { x: x, y: y, zoom: zoom };
+		}
+		return null;
+	}, $svg_id);
+}
+
+sub mouse_wheel_zoom {
+	my ($delta_y) = @_;
+	$t->driver->execute_script(q{
+		const el = document.getElementById('fieldmap_chart_svg').parentElement;
+		const rect = el.getBoundingClientRect();
+		const evt = new WheelEvent('wheel', {
+			deltaY: arguments[0],
+			clientX: rect.left + rect.width / 2,
+			clientY: rect.top + rect.height / 2,
+			bubbles: true,
+			cancelable: true
+		});
+		el.dispatchEvent(evt);
+	}, $delta_y);
+}
+
+sub drag_svg {
+	my ($dx, $dy) = @_;
+	$t->driver->execute_script(q{
+		const el = document.getElementById('fieldmap_chart_svg').parentElement;
+		const rect = el.getBoundingClientRect();
+		const startX = rect.left + 100;
+		const startY = rect.top + 100;
+		const endX = startX + arguments[0];
+		const endY = startY + arguments[1];
+
+		el.dispatchEvent(new MouseEvent('mousedown', { clientX: startX, clientY: startY, button: 0, buttons: 1, bubbles: true }));
+		el.dispatchEvent(new MouseEvent('mousemove', { clientX: endX, clientY: endY, button: 0, buttons: 1, bubbles: true }));
+		el.dispatchEvent(new MouseEvent('mouseup', { clientX: endX, clientY: endY, button: 0, buttons: 0, bubbles: true }));
+	}, $dx, $dy);
+}
+
 my $all_checkbox_labels = [
 	'Accession Name',
 	'Plot Name',
@@ -244,6 +303,59 @@ $t->while_logged_in_as("curator", sub {
 
 	$t->click_ok('pheno_heatmap_onswitch', 'id', 'Open fieldmap section');
 	$t->wait_for_working_dialog();
+	$t->find_element_ok('//*[@id="' . $svg_id . '"]', 'xpath', 'Find fieldmap SVG');
+
+	# Test Zoom & Pan Controls
+	my $tf = get_svg_transform();
+	is($tf->{zoom}, 1, 'Initial zoom is 1');
+	is($tf->{x}, 0, 'Initial pan X is 0');
+	is($tf->{y}, 0, 'Initial pan Y is 0');
+
+	$t->click_ok('//button[@title="Zoom In"]', 'xpath', 'Click Zoom In button');
+	$tf = get_svg_transform();
+	cmp_ok(abs($tf->{zoom} - 1.2), '<', 0.05, 'Zoom level is ~1.2 after Zoom In');
+
+	$t->click_ok('//button[@title="Zoom In"]', 'xpath', 'Click Zoom In button again');
+	$tf = get_svg_transform();
+	cmp_ok(abs($tf->{zoom} - 1.44), '<', 0.05, 'Zoom level is ~1.44 after second Zoom In');
+
+	$t->click_ok('//button[@title="Zoom Out"]', 'xpath', 'Click Zoom Out button');
+	$tf = get_svg_transform();
+	cmp_ok(abs($tf->{zoom} - 1.2), '<', 0.05, 'Zoom level is ~1.2 after Zoom Out');
+
+	$t->click_ok('//button[@title="Reset View"]', 'xpath', 'Click Reset View button');
+	$tf = get_svg_transform();
+	is($tf->{zoom}, 1, 'Zoom reset to 1');
+	is($tf->{x}, 0, 'Pan X reset to 0');
+	is($tf->{y}, 0, 'Pan Y reset to 0');
+
+	# Mouse wheel zoom in (negative deltaY)
+	mouse_wheel_zoom(-100);
+	$tf = get_svg_transform();
+	cmp_ok(abs($tf->{zoom} - 1.1), '<', 0.05, 'Zoom level is ~1.1 after wheel zoom in');
+
+	# Mouse wheel zoom out (positive deltaY)
+	mouse_wheel_zoom(100);
+	$tf = get_svg_transform();
+	cmp_ok(abs($tf->{zoom} - 1.0), '<', 0.05, 'Zoom level is ~1.0 after wheel zoom out');
+
+	$t->click_ok('//button[@title="Reset View"]', 'xpath', 'Click Reset View button after wheel zoom');
+	$tf = get_svg_transform();
+	is($tf->{zoom}, 1, 'Zoom reset to 1 after wheel zoom');
+	is($tf->{x}, 0, 'Pan X reset to 0 after wheel zoom');
+	is($tf->{y}, 0, 'Pan Y reset to 0 after wheel zoom');
+
+	# Click and drag panning
+	drag_svg(60, 40);
+	$tf = get_svg_transform();
+	cmp_ok(abs($tf->{x} - 60), '<', 2, 'Pan X moved by ~60px after drag');
+	cmp_ok(abs($tf->{y} - 40), '<', 2, 'Pan Y moved by ~40px after drag');
+
+	$t->click_ok('//button[@title="Reset View"]', 'xpath', 'Click Reset View button after drag');
+	$tf = get_svg_transform();
+	is($tf->{zoom}, 1, 'Zoom reset to 1 after drag');
+	is($tf->{x}, 0, 'Pan X reset to 0 after drag');
+	is($tf->{y}, 0, 'Pan Y reset to 0 after drag');
 
 	find_plot_cell_ok(0, 2);
 	find_plot_cell_ok(6, 0);
