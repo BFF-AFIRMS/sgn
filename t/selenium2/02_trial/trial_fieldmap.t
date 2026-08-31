@@ -191,6 +191,7 @@ sub set_north_arrow_angle {
 }
 
 sub get_svg_transform {
+	# SVG attributes are not read correctly by Selenium, so we need to use JavaScript to get the transform values
 	return $t->driver->execute_script(q{
 		const el = document.getElementById(arguments[0]);
 		if (!el) return null;
