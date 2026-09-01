@@ -64,7 +64,7 @@ export const ViewProvider: React.FC<FieldMapContextProps> = ({ trialId, authToke
                         };
                     });
                     setLinkedTrialsList(list);
-                    setActiveTrialIds([trialId, ...list.map((l: any) => l.id)]);
+                    setActiveTrialIds(Array.from(new Set([trialId, ...list.map((l: any) => String(l.id))])));
                 } else {
                     alert(body?.error || 'Could not load linked trials.');
                     setDisplayLinkedTrials(false);
