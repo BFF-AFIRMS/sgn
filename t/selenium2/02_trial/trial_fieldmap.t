@@ -561,6 +561,60 @@ $t->while_logged_in_as("curator", sub {
 	find_plot_label_ok('207', 5, 0);
 	find_north_arrow_ok(0);
 
+	# Test "Submit Layout Changes" workflow
+	# 1. Test canceling the submission confirm prompt
+	$t->click_ok('//button[contains(text(),"Submit Layout Changes")]', 'xpath', 'Click Submit Layout Changes button to test cancellation');
+	my $confirm_prompt = $t->get_alert_text();
+	like($confirm_prompt, qr/save this plot layout to the database/i, 'Verify layout submission confirmation prompt text');
+	$t->driver->dismiss_alert();
+
+	# 2. Configure distinct settings and submit layout
+	set_color_by('germplasm');
+	set_label_by('germplasm');
+	set_label_size(12);
+	set_north_arrow_angle(60);
+	set_secondary_axis('Saved Sec X', 'Saved Sec Y', 'sx1,sx2,sx3,sx4', 'sy1,sy2,sy3,sy4');
+
+	# Ensure Invert Rows and Invert Columns are checked
+	my $invert_rows_elem = $t->driver->find_element('//label[contains(text(),"Invert Rows")]/input', 'xpath');
+	$t->click_ok('//label[contains(text(),"Invert Rows")]/input', 'xpath', 'Check Invert Rows') unless $invert_rows_elem->is_selected();
+	my $invert_cols_elem = $t->driver->find_element('//label[contains(text(),"Invert Columns")]/input', 'xpath');
+	$t->click_ok('//label[contains(text(),"Invert Columns")]/input', 'xpath', 'Check Invert Columns') unless $invert_cols_elem->is_selected();
+
+	# Ensure Top and Left borders are checked, Bottom and Right unchecked
+	my $top_border_elem = $t->driver->find_element('//label[contains(text(),"Top")]/input', 'xpath');
+	$t->click_ok('//label[contains(text(),"Top")]/input', 'xpath', 'Check Top border') unless $top_border_elem->is_selected();
+	my $left_border_elem = $t->driver->find_element('//label[contains(text(),"Left")]/input', 'xpath');
+	$t->click_ok('//label[contains(text(),"Left")]/input', 'xpath', 'Check Left border') unless $left_border_elem->is_selected();
+	my $right_border_elem = $t->driver->find_element('//label[contains(text(),"Right")]/input', 'xpath');
+	$t->click_ok('//label[contains(text(),"Right")]/input', 'xpath', 'Uncheck Right border') if $right_border_elem->is_selected();
+
+	$t->click_ok('//button[contains(text(),"Submit Layout Changes")]', 'xpath', 'Click Submit Layout Changes button');
+	$confirm_prompt = $t->get_alert_text();
+	like($confirm_prompt, qr/save this plot layout to the database/i, 'Verify confirmation prompt before submitting');
+	$t->accept_alert_ok('Accept layout submission confirmation prompt');
+	my $success_alert = $t->get_alert_text();
+	is($success_alert, 'Field Plot layout submitted successfully!', 'Verify alert text for successful layout submission');
+	$t->accept_alert_ok('Accept layout submission success alert');
+
+	$t->wait_for_network_idle();
+
+	# 3. Reload page and verify all submitted changes were persisted to database
+	$t->get_ok('/breeders/trial/165', 'Reload trial 165 page to verify persistence');
+	$t->click_ok('pheno_heatmap_onswitch', 'id', 'Open fieldmap section on reloaded page');
+	$t->wait_for_working_dialog();
+	$t->find_element_ok('//*[@id="' . $svg_id . '"]', 'xpath', 'Find fieldmap SVG on reloaded page');
+
+	is($t->driver->find_element('//label[contains(text(),"Color By:")]/following-sibling::select', 'xpath')->get_attribute('value'), 'germplasm', 'Persisted Color By is germplasm');
+	is($t->driver->find_element('//label[contains(text(),"Label By:")]/following-sibling::select', 'xpath')->get_attribute('value'), 'germplasm', 'Persisted Label By is germplasm');
+	is($t->driver->find_element('//label[contains(text(),"Label Size:")]/following-sibling::input', 'xpath')->get_attribute('value'), '12', 'Persisted Label Size is 12');
+	is($t->driver->find_element('//label[contains(text(),"North Angle")]/following-sibling::input', 'xpath')->get_attribute('value'), '60', 'Persisted North Angle input is 60');
+	ok($t->driver->find_element('//label[contains(text(),"Invert Rows")]/input', 'xpath')->is_selected(), 'Persisted Invert Rows is checked');
+	ok($t->driver->find_element('//label[contains(text(),"Invert Columns")]/input', 'xpath')->is_selected(), 'Persisted Invert Columns is checked');
+	ok($t->driver->find_element('//label[contains(text(),"Top")]/input', 'xpath')->is_selected(), 'Persisted Top border is checked');
+	ok($t->driver->find_element('//label[contains(text(),"Left")]/input', 'xpath')->is_selected(), 'Persisted Left border is checked');
+	find_north_arrow_ok(240);
+
 	# Test "Display Trials in Same Field" on trial 139
 	$f->dbh->do(<<'EOSQL');
 INSERT INTO public.nd_geolocationprop (nd_geolocation_id, type_id, value, rank)
