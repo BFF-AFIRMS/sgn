@@ -45,6 +45,7 @@ my $build = SGN::Build->new(
         'Cache::File'                              => '== 2.11',
         'CAM::PDF'                                 => '== 1.60',
         'Captcha::reCAPTCHA'                       => '== 0.99',
+        'Carp::Always'                             => '== 0.16',
         'Catalyst::Action::RenderView'             => '== 0.17',
         'Catalyst::Controller::CGIBin'             => '== 0.039',
         'Catalyst::Controller::HTML::FormFu'       => '== 2.04',
