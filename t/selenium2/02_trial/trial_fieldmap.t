@@ -433,6 +433,31 @@ $t->while_logged_in_as("curator", sub {
 	find_plot_cell_ok(0, 1, '#a9afaf');
 	find_plot_cell_ok(5, 0, '#ffffff');
 
+	# Test Suppress Phenotype workflow
+	click_plot_cell_ok(0, 2);
+	$t->find_element_ok('//div[contains(@class,"show")]//h4[contains(@class,"modal-title") and contains(text(),"Plot Details")]', 'xpath', 'Plot details modal is open');
+	$t->click_ok('//div[contains(@class,"show")]//a[contains(text(),"Replace")]', 'xpath', 'Click Replace tab in plot details modal');
+	$t->click_ok('//div[contains(@class,"show")]//button[contains(text(),"Suppress Current Trait Value")]', 'xpath', 'Click Suppress Current Trait Value button');
+	$t->find_element_ok('//div[contains(@class,"show")]//h4[contains(@class,"modal-title") and contains(text(),"Suppress Plot Phenotype Measurement")]', 'xpath', 'Suppress phenotype modal is open');
+	$t->find_element_ok('//div[contains(@class,"show")]//div[strong[contains(text(),"Plot Name:")]]', 'xpath', 'Verify plot name in suppress modal');
+	$t->click_ok('//div[contains(@class,"show")]//button[contains(@class,"btn-danger") and contains(text(),"Suppress Phenotype")]', 'xpath', 'Click Suppress Phenotype button');
+	my $alert_text = $t->get_alert_text();
+	$t->accept_alert_ok('Accept alert after suppressing phenotype');
+	is($alert_text, 'Phenotype was suppressed successfully!', 'Verify alert text for successful suppression');
+	$t->wait_for_network_idle();
+	click_plot_cell_ok(0, 2);
+	$t->find_element_ok('//div[contains(@class,"show")]//h4[contains(@class,"modal-title") and contains(text(),"Plot Details")]', 'xpath', 'Plot details modal is open');
+	$t->click_ok('//div[contains(@class,"show")]//a[contains(text(),"Replace")]', 'xpath', 'Click Replace tab in plot details modal');
+	$t->click_ok('//div[contains(@class,"show")]//button[contains(text(),"Suppress Current Trait Value")]', 'xpath', 'Click Suppress Current Trait Value button');
+	$t->find_element_ok('//div[contains(@class,"show")]//h4[contains(@class,"modal-title") and contains(text(),"Suppress Plot Phenotype Measurement")]', 'xpath', 'Suppress phenotype modal is open');
+	$t->find_element_ok('//div[contains(@class,"show")]//div[strong[contains(text(),"Plot Name:")]]', 'xpath', 'Verify plot name in suppress modal');
+	$t->click_ok('//div[contains(@class,"show")]//button[contains(@class,"btn-danger") and contains(text(),"Suppress Phenotype")]', 'xpath', 'Click Suppress Phenotype button');
+	$alert_text = $t->get_alert_text();
+	$t->accept_alert_ok('Accept alert after suppressing phenotype');
+	is($alert_text, 'This plot phenotype has already been suppressed.', 'Verify alert text for already suppressed phenotype');
+	$t->click_ok('//div[contains(@class,"show")]//button[contains(@class,"btn-danger") and contains(text(),"Suppress Phenotype")]/preceding-sibling::button[contains(text(),"Close")]', 'xpath', 'Click Close button in suppress modal');
+	$t->click_ok('//div[contains(@class,"show")]//button[contains(text(),"Close")]', 'xpath', 'Click Close button in plot details modal');
+
 	set_layout_view('View Field Layout');
 	ok(!scalar(@{$t->driver->find_elements('//div[@id="legend_list"]//span[contains(.,"Low trait value")]', 'xpath')}), 'Low trait value legend not present in Field Map view');
 	ok(!scalar(@{$t->driver->find_elements('//div[@id="legend_list"]//div[contains(@style,"linear-gradient")]', 'xpath')}), 'Gradient bar not present in Field Map view');
