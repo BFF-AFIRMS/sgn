@@ -1,5 +1,6 @@
 use lib 't/lib';
 use strict;
+use warnings;
 
 use Test::More;
 
@@ -9,30 +10,36 @@ my $t = SGN::Test::WWW::WebDriver->new();
 my $f = SGN::Test::Fixture->new();
 
 use Selenium::Waiter qw(wait_until);
-
 use Selenium::Firefox::Profile;
 
-# Set up a Firefox profile to download CSV files without prompting
+# -----------------------------------------------------------------------------
+# Browser Profile Setup: Automatically save CSV downloads to /downloads directory
+# -----------------------------------------------------------------------------
 my $profile = Selenium::Firefox::Profile->new;
 $profile->set_preference( 'browser.download.folderList', 2 );
 $profile->set_preference( 'browser.download.dir', '/downloads' );
 $profile->set_preference( 'browser.helperApps.neverAsk.saveToDisk', 'application/csv;text/csv' );
 
 my $driver = Selenium::Remote::Driver->new(
-    firefox_profile => $profile,
-    base_url => $ENV{SGN_TEST_SERVER},
+    firefox_profile    => $profile,
+    base_url           => $ENV{SGN_TEST_SERVER},
     remote_server_addr => $ENV{SGN_REMOTE_SERVER_ADDR} || 'localhost'
 );
 $t->driver($driver);
 
+# -----------------------------------------------------------------------------
+# Field Map Layout Constants & Color Definitions
+# -----------------------------------------------------------------------------
 my $svg_id = 'fieldmap_chart_svg';
-my $CELL_SIZE = 52;
-my $CELL_HALF = 25;
-my $LABEL_Y_OFFSET = 30;
+
+# Grid cell dimensions and label positioning offsets (in SVG units/pixels)
+my $CELL_SIZE                       = 52;
+my $CELL_HALF                       = 25;
+my $LABEL_Y_OFFSET                  = 30;
 my $LABEL_Y_OFFSET_STAGGERED_TOP    = 20;
 my $LABEL_Y_OFFSET_STAGGERED_BOTTOM = 40;
 
-# Secondary axis layout offsets
+# Secondary axis layout offsets relative to grid bounds
 my $SEC_X_LABEL_TOP_OFFSET_Y    = -42;
 my $SEC_X_LABEL_BOTTOM_OFFSET_Y = 52;
 my $SEC_Y_LABEL_LEFT_OFFSET_X   = -60;
@@ -42,15 +49,21 @@ my $SEC_X_VAL_BOTTOM_OFFSET_Y   = 36;
 my $SEC_Y_VAL_LEFT_OFFSET_X     = -40;
 my $SEC_Y_VAL_RIGHT_OFFSET_X    = 40;
 
-my $border_fill = '#ecefef';
+# Plot fill colors
+my $border_fill     = '#ecefef';
 my $even_block_fill = '#c7e9b4';
-my $odd_block_fill = '#41b6c4';
+my $odd_block_fill  = '#41b6c4';
 my @palette = (
 	'#8dd3c7', '#ffffb3', '#bebada', '#fb8072', '#80b1d3',
 	'#fdb462', '#b3de69', '#fccde5', '#d9d9d9', '#bc80bd',
 	'#ccebc5', '#ffed6f'
 );
 
+# -----------------------------------------------------------------------------
+# SVG & Field Map Helper Functions
+# -----------------------------------------------------------------------------
+
+# Find an SVG <text> element matching the given text, optional (x, y) coordinates, and font-size
 sub find_svg_text_ok {
 	my ($text, $x, $y, $font_size) = @_;
 
@@ -66,6 +79,7 @@ sub find_svg_text_ok {
 	return $t->find_element_ok($xpath, 'xpath', $desc);
 }
 
+# Find a plot cell <rect> in the SVG by translated pixel coordinates and optional fill color
 sub find_svg_square_ok {
 	my ($x, $y, $fill) = @_;
 	my $xpath = defined $fill ? 
@@ -74,29 +88,34 @@ sub find_svg_square_ok {
 	return $t->find_element_ok($xpath, 'xpath', "Find plot square at ($x,$y)" . (defined $fill ? " with fill '$fill'" : ""));
 }
 
+# Click a plot cell <rect> in the SVG by translated pixel coordinates
 sub click_svg_square_ok {
 	my ($x, $y) = @_;
 	my $xpath = '//*[local-name()="svg" and @id="' . $svg_id . '"]//*[local-name()="g" and @transform="translate(' . $x . ', ' . $y . ')"]/*[local-name()="rect"]';
 	return $t->click_ok($xpath, 'xpath', "Click plot square at ($x,$y)");
 }
 
+# Convert grid (col, row) 0-indexed column and row positions into SVG pixel offsets
 sub cell_pos {
 	my ($col, $row) = @_;
 	return ($col * $CELL_SIZE, $row * $CELL_SIZE);
 }
 
+# Convenience wrapper to verify a plot cell at grid (col, row) with optional fill color
 sub find_plot_cell_ok {
 	my ($col, $row, $fill) = @_;
 	my ($x, $y) = cell_pos($col, $row);
 	return find_svg_square_ok($x, $y, $fill);
 }
 
+# Convenience wrapper to click a plot cell at grid (col, row)
 sub click_plot_cell_ok {
 	my ($col, $row) = @_;
 	my ($x, $y) = cell_pos($col, $row);
 	return click_svg_square_ok($x, $y);
 }
 
+# Verify plot label text at grid (col, row), handling standard or staggered (even/odd col) vertical offsets
 sub find_plot_label_ok {
 	my ($text, $col, $row, %opts) = @_;
 	my $font_size = $opts{font_size};
@@ -108,6 +127,7 @@ sub find_plot_label_ok {
 	return find_svg_text_ok($text, $x, $y, $font_size);
 }
 
+# Verify secondary X axis label text (centered horizontally at top or bottom)
 sub find_sec_x_label_ok {
 	my ($text, $num_cols, $num_rows, $side) = @_;
 	my $grid_w = $num_cols * $CELL_SIZE;
@@ -117,6 +137,7 @@ sub find_sec_x_label_ok {
 	return find_svg_text_ok($text, $x, $y);
 }
 
+# Verify secondary Y axis label text (centered vertically at left or right)
 sub find_sec_y_label_ok {
 	my ($text, $num_cols, $num_rows, $side) = @_;
 	my $grid_w = $num_cols * $CELL_SIZE;
@@ -126,6 +147,7 @@ sub find_sec_y_label_ok {
 	return find_svg_text_ok($text, $x, $y);
 }
 
+# Verify secondary X axis column tick value text at top or bottom
 sub find_sec_x_val_ok {
 	my ($text, $col, $num_rows, $side) = @_;
 	my $x = $col * $CELL_SIZE + $CELL_HALF;
@@ -134,6 +156,7 @@ sub find_sec_x_val_ok {
 	return find_svg_text_ok($text, $x, $y);
 }
 
+# Verify secondary Y axis row tick value text at left or right
 sub find_sec_y_val_ok {
 	my ($text, $row, $num_cols, $side) = @_;
 	my $grid_w = defined $num_cols ? $num_cols * $CELL_SIZE : 0;
@@ -142,6 +165,7 @@ sub find_sec_y_val_ok {
 	return find_svg_text_ok($text, $x, $y);
 }
 
+# Open the Change Dimensions modal and apply new column and row dimensions
 sub set_dimensions {
 	my ($columns, $rows) = @_;
 	$t->click_ok('//button[@title="Change Dimensions"]', 'xpath', 'Click Change Dimensions button');
@@ -154,6 +178,7 @@ sub set_dimensions {
 	$t->click_ok('//div[contains(@class,"show")]//button[contains(text(),"Apply")]', 'xpath', 'Click Apply button');
 }
 
+# Open the Change Secondary Axis modal and configure labels and comma-separated axis values
 sub set_secondary_axis {
 	my ($x_label, $y_label, $x_values, $y_values) = @_;
 	$t->click_ok('//button[@title="Change Secondary Axis"]', 'xpath', 'Click Change Secondary Axis button');
@@ -164,40 +189,46 @@ sub set_secondary_axis {
 	$t->click_ok('//div[contains(@class,"show")]//button[contains(text(),"Apply")]', 'xpath', 'Click Apply button');
 }
 
+# Select a view from the "Select Layout View" dropdown (e.g. Field Layout or Assayed Trait)
 sub set_layout_view {
 	my ($view_option_text) = @_;
 	$t->click_ok('//label[contains(text(),"Select Layout View:")]/following-sibling::select//option[contains(text(),"' . $view_option_text . '")]', 'xpath', "Select Layout View '$view_option_text'");
 	$t->wait_for_working_dialog();
 }
 
+# Select a coloring option from the "Color By:" dropdown
 sub set_color_by {
 	my ($color_by) = @_;
 	$t->click_ok('//label[contains(text(),"Color By:")]/following-sibling::select/option[@value="' . $color_by . '"]', 'xpath', "Select Color By '$color_by'");
 }
 
+# Select a labeling option from the "Label By:" dropdown
 sub set_label_by {
 	my ($label_by) = @_;
 	$t->click_ok('//label[contains(text(),"Label By:")]/following-sibling::select/option[@value="' . $label_by . '"]', 'xpath', "Select Label By '$label_by'");
 }
 
+# Set the plot label font size
 sub set_label_size {
 	my ($size) = @_;
 	$t->send_keys_ok('//label[contains(text(),"Label Size:")]/following-sibling::input', 'xpath', $size, "Set Label Size to $size", clear => 1);
 }
 
+# Verify that the north arrow compass SVG has the expected rotation angle (in degrees)
 sub find_north_arrow_ok {
 	my ($rotation) = @_;
 	my $xpath = '//*[@id="fieldmap_north_arrow"]//*[local-name()="svg" and contains(@style, "rotate(' . $rotation . 'deg)")]';
 	return $t->find_element_ok($xpath, 'xpath', "Find north arrow with rotation $rotation degrees");
 }
 
+# Enter a custom north arrow angle (in degrees)
 sub set_north_arrow_angle {
 	my ($angle) = @_;
 	$t->send_keys_ok('//label[contains(text(),"North Angle")]/following-sibling::input', 'xpath', $angle, "Set North Angle to $angle degrees", clear => 1);
 }
 
+# Retrieve the current SVG pan (x, y) and zoom scale via browser execution
 sub get_svg_transform {
-	# SVG attributes are not read correctly by Selenium, so we need to use JavaScript to get the transform values
 	return $t->driver->execute_script(q{
 		const el = document.getElementById(arguments[0]);
 		if (!el) return null;
@@ -224,6 +255,7 @@ sub get_svg_transform {
 	}, $svg_id);
 }
 
+# Dispatch a synthetic mouse wheel event on the SVG container to simulate zooming
 sub mouse_wheel_zoom {
 	my ($delta_y) = @_;
 	$t->driver->execute_script(q{
@@ -240,6 +272,7 @@ sub mouse_wheel_zoom {
 	}, $delta_y);
 }
 
+# Dispatch synthetic mousedown, mousemove, and mouseup events to simulate panning
 sub drag_svg {
 	my ($dx, $dy) = @_;
 	$t->driver->execute_script(q{
@@ -266,6 +299,7 @@ my $all_checkbox_labels = [
 	'Cross'
 ];
 
+# Open the CSV download modal, select requested columns, trigger download, and verify CSV content
 sub download_spatial_layout_ok {
 	my ($filename, $expected_filepath, $checkboxes) = @_;
 	$checkboxes ||= $all_checkbox_labels;
@@ -305,19 +339,30 @@ sub download_spatial_layout_ok {
 	is($actual_content, $expected_content, "Check that downloaded file content matches expected content");
 }
 
+# -----------------------------------------------------------------------------
+# Test Suite
+# -----------------------------------------------------------------------------
+
 $t->while_logged_in_as("curator", sub {
+
+	# =========================================================================
+	# Navigation & Initial Field Map Loading
+	# =========================================================================
 	$t->get_ok('/breeders/trial/165', 'Navigate to trial page');
 
 	$t->click_ok('pheno_heatmap_onswitch', 'id', 'Open fieldmap section');
 	$t->wait_for_working_dialog();
 	$t->find_element_ok('//*[@id="' . $svg_id . '"]', 'xpath', 'Find fieldmap SVG');
 
-	# Test Zoom & Pan Controls
+	# =========================================================================
+	# Zoom & Pan Controls (Buttons, Mouse Wheel, Mouse Drag)
+	# =========================================================================
 	my $tf = get_svg_transform();
 	is($tf->{zoom}, 1, 'Initial zoom is 1');
 	is($tf->{x}, 0, 'Initial pan X is 0');
 	is($tf->{y}, 0, 'Initial pan Y is 0');
 
+	# Test Zoom In button (scale by 1.2x each click)
 	$t->click_ok('//button[@title="Zoom In"]', 'xpath', 'Click Zoom In button');
 	$tf = get_svg_transform();
 	cmp_ok(abs($tf->{zoom} - 1.2), '<', 0.05, 'Zoom level is ~1.2 after Zoom In');
@@ -326,22 +371,23 @@ $t->while_logged_in_as("curator", sub {
 	$tf = get_svg_transform();
 	cmp_ok(abs($tf->{zoom} - 1.44), '<', 0.05, 'Zoom level is ~1.44 after second Zoom In');
 
+	# Test Zoom Out button (scale down by 1.2x)
 	$t->click_ok('//button[@title="Zoom Out"]', 'xpath', 'Click Zoom Out button');
 	$tf = get_svg_transform();
 	cmp_ok(abs($tf->{zoom} - 1.2), '<', 0.05, 'Zoom level is ~1.2 after Zoom Out');
 
+	# Test Reset View button
 	$t->click_ok('//button[@title="Reset View"]', 'xpath', 'Click Reset View button');
 	$tf = get_svg_transform();
 	is($tf->{zoom}, 1, 'Zoom reset to 1');
 	is($tf->{x}, 0, 'Pan X reset to 0');
 	is($tf->{y}, 0, 'Pan Y reset to 0');
 
-	# Mouse wheel zoom in (negative deltaY)
+	# Test mouse wheel zooming (negative deltaY zooms in, positive zooms out)
 	mouse_wheel_zoom(-100);
 	$tf = get_svg_transform();
 	cmp_ok(abs($tf->{zoom} - 1.1), '<', 0.05, 'Zoom level is ~1.1 after wheel zoom in');
 
-	# Mouse wheel zoom out (positive deltaY)
 	mouse_wheel_zoom(100);
 	$tf = get_svg_transform();
 	cmp_ok(abs($tf->{zoom} - 1.0), '<', 0.05, 'Zoom level is ~1.0 after wheel zoom out');
@@ -352,7 +398,7 @@ $t->while_logged_in_as("curator", sub {
 	is($tf->{x}, 0, 'Pan X reset to 0 after wheel zoom');
 	is($tf->{y}, 0, 'Pan Y reset to 0 after wheel zoom');
 
-	# Click and drag panning
+	# Test mouse click-and-drag panning
 	drag_svg(60, 40);
 	$tf = get_svg_transform();
 	cmp_ok(abs($tf->{x} - 60), '<', 2, 'Pan X moved by ~60px after drag');
@@ -364,19 +410,25 @@ $t->while_logged_in_as("curator", sub {
 	is($tf->{x}, 0, 'Pan X reset to 0 after drag');
 	is($tf->{y}, 0, 'Pan Y reset to 0 after drag');
 
+	# =========================================================================
+	# Plot Cell Coloring ("Color By" Options)
+	# =========================================================================
 	find_plot_cell_ok(0, 2);
 	find_plot_cell_ok(6, 0);
 
+	# Default parity coloring (even block vs odd block fills)
 	find_plot_cell_ok(0, 2, $odd_block_fill);
 	find_plot_cell_ok(0, 1, $even_block_fill);
 	find_plot_cell_ok(0, 0, $odd_block_fill);
 
+	# Color by Block
 	set_color_by('block');
 	find_plot_cell_ok(0, 2, $palette[0]);
 	find_plot_cell_ok(1, 2, $palette[0]);
 	find_plot_cell_ok(0, 1, $palette[1]);
 	find_plot_cell_ok(0, 0, $palette[2]);
 
+	# Color by Germplasm (Accession)
 	set_color_by('germplasm');
 	find_plot_cell_ok(0, 2, $palette[4]);
 	find_plot_cell_ok(1, 2, $palette[3]);
@@ -384,16 +436,22 @@ $t->while_logged_in_as("curator", sub {
 	find_plot_cell_ok(3, 2, $palette[1]);
 	find_plot_cell_ok(0, 1, $palette[0]);
 
+	# Color by Family Name & Cross Name (falls back to even_block_fill when not set)
 	set_color_by('family_name');
 	find_plot_cell_ok(0, 2, $even_block_fill);
 
 	set_color_by('cross_name');
 	find_plot_cell_ok(0, 2, $even_block_fill);
 
+	# Reset back to Parity
 	set_color_by('parity');
 	find_plot_cell_ok(0, 2, $odd_block_fill);
 	find_plot_cell_ok(0, 1, $even_block_fill);
 
+	# =========================================================================
+	# Plot Cell Labeling ("Label By" Options & Font Size)
+	# =========================================================================
+	# Label by Germplasm (Accession) with staggered vertical text positioning
 	set_label_by('germplasm');
 	set_label_size(14);
 	find_plot_label_ok('IITA-TMS-IBA980581', 0, 2, font_size => 14, staggered => 1);
@@ -401,11 +459,13 @@ $t->while_logged_in_as("curator", sub {
 	find_plot_label_ok('IITA-TMS-IBA30572', 2, 2, font_size => 14, staggered => 1);
 	find_plot_label_ok('BLANK', 0, 1, font_size => 14, staggered => 1);
 
+	# Label by Block
 	set_label_by('block');
 	find_plot_label_ok('1', 0, 2, font_size => 14);
 	find_plot_label_ok('2', 0, 1, font_size => 14);
 	find_plot_label_ok('3', 0, 0, font_size => 14);
 
+	# Label by Family Name & Cross Name (verify no inappropriate labels rendered)
 	set_label_by('family_name');
 	ok(!scalar(@{$t->driver->find_elements('//*[local-name()="svg" and @id="' . $svg_id . '"]//*[local-name()="text" and text()="IITA-TMS-IBA980581"]', 'xpath')}), 'No accession labels found when labeled by family');
 	ok(!scalar(@{$t->driver->find_elements('//*[local-name()="svg" and @id="' . $svg_id . '"]//*[local-name()="text" and text()="101"]', 'xpath')}), 'No plot number labels found when labeled by family');
@@ -414,13 +474,16 @@ $t->while_logged_in_as("curator", sub {
 	ok(!scalar(@{$t->driver->find_elements('//*[local-name()="svg" and @id="' . $svg_id . '"]//*[local-name()="text" and text()="IITA-TMS-IBA980581"]', 'xpath')}), 'No accession labels found when labeled by cross');
 	ok(!scalar(@{$t->driver->find_elements('//*[local-name()="svg" and @id="' . $svg_id . '"]//*[local-name()="text" and text()="101"]', 'xpath')}), 'No plot number labels found when labeled by cross');
 
+	# Reset back to Plot Number labeling
 	set_label_size(10);
 	set_label_by('plot_number');
 	find_plot_label_ok('103', 0, 2);
 	find_plot_label_ok('201', 0, 1);
 	find_plot_label_ok('301', 0, 0);
 
-	# Test Assayed Trait Views & Heatmap rendering
+	# =========================================================================
+	# Assayed Trait Heatmap View
+	# =========================================================================
 	set_layout_view('cass sink leaf|3-phosphoglyceric acid|ug/g|week 16|COMP:0000013');
 	$t->find_element_ok('//div[@id="legend_list"]//span[contains(.,"Low trait value (cass sink leaf|3-phosphoglyceric acid|ug/g|week 16|COMP:0000013)")]', 'xpath', 'Find low trait value text in legend');
 	$t->find_element_ok('//div[@id="legend_list"]//span[contains(text(),"High trait value")]', 'xpath', 'Find high trait value text in legend');
@@ -428,12 +491,16 @@ $t->while_logged_in_as("curator", sub {
 	$t->find_element_ok('//button[contains(text(),"Download Heatmap Image")]', 'xpath', 'Find Download Heatmap Image button');
 	$t->find_element_ok('//button[contains(text(),"Delete Selected Trait")]', 'xpath', 'Find Delete Selected Trait button');
 
+	# Verify plot fill colors match heatmap gradient values
 	find_plot_cell_ok(0, 2, '#910d0d');
 	find_plot_cell_ok(2, 2, '#8b0000');
 	find_plot_cell_ok(0, 1, '#a9afaf');
 	find_plot_cell_ok(5, 0, '#ffffff');
 
-	# Test Suppress Phenotype workflow
+	# =========================================================================
+	# Phenotype Measurement Suppression Workflow
+	# =========================================================================
+	# Open plot details modal and suppress phenotype value
 	click_plot_cell_ok(0, 2);
 	$t->find_element_ok('//div[contains(@class,"show")]//h4[contains(@class,"modal-title") and contains(text(),"Plot Details")]', 'xpath', 'Plot details modal is open');
 	$t->click_ok('//div[contains(@class,"show")]//a[contains(text(),"Replace")]', 'xpath', 'Click Replace tab in plot details modal');
@@ -445,6 +512,9 @@ $t->while_logged_in_as("curator", sub {
 	$t->accept_alert_ok('Accept alert after suppressing phenotype');
 	is($alert_text, 'Phenotype was suppressed successfully!', 'Verify alert text for successful suppression');
 	$t->wait_for_network_idle();
+
+	# Attempt re-suppression on already-suppressed plot to verify the server has recorded our change
+	# and prevents duplicate suppression
 	click_plot_cell_ok(0, 2);
 	$t->find_element_ok('//div[contains(@class,"show")]//h4[contains(@class,"modal-title") and contains(text(),"Plot Details")]', 'xpath', 'Plot details modal is open');
 	$t->click_ok('//div[contains(@class,"show")]//a[contains(text(),"Replace")]', 'xpath', 'Click Replace tab in plot details modal');
@@ -458,15 +528,17 @@ $t->while_logged_in_as("curator", sub {
 	$t->click_ok('//div[contains(@class,"show")]//button[contains(@class,"btn-danger") and contains(text(),"Suppress Phenotype")]/preceding-sibling::button[contains(text(),"Close")]', 'xpath', 'Click Close button in suppress modal');
 	$t->click_ok('//div[contains(@class,"show")]//button[contains(text(),"Close")]', 'xpath', 'Click Close button in plot details modal');
 
-	# Test Delete Assayed Trait workflow
-	# 1. Open modal and test cancel/close
+	# =========================================================================
+	# Assayed Trait Deletion Workflow
+	# =========================================================================
+	# Open modal and test cancel/close
 	$t->click_ok('//button[contains(text(),"Delete Selected Trait")]', 'xpath', 'Click Delete Selected Trait button to test cancel');
 	$t->find_element_ok('//div[contains(@class,"show")]//h4[contains(@class,"modal-title") and contains(text(),"Assayed Trait Deletion")]', 'xpath', 'Assayed Trait Deletion modal is open');
 	$t->find_element_ok('//div[contains(@class,"show")]//p[contains(text(),"Are you sure you want to delete this assayed trait?")]', 'xpath', 'Verify delete trait warning text');
 	$t->click_ok('//div[contains(@class,"show")]//button[contains(text(),"Close")]', 'xpath', 'Click Close button in Delete Trait modal');
 	ok(!scalar(@{$t->driver->find_elements('//div[contains(@class,"show")]//h4[contains(text(),"Assayed Trait Deletion")]', 'xpath')}), 'Delete Trait modal is closed');
 
-	# 2. Open modal and confirm deletion
+	# Open modal and confirm deletion
 	$t->click_ok('//button[contains(text(),"Delete Selected Trait")]', 'xpath', 'Click Delete Selected Trait button to confirm deletion');
 	$t->find_element_ok('//div[contains(@class,"show")]//h4[contains(@class,"modal-title") and contains(text(),"Assayed Trait Deletion")]', 'xpath', 'Assayed Trait Deletion modal is open again');
 	$t->click_ok('//div[contains(@class,"show")]//button[contains(@class,"btn-danger") and contains(text(),"Delete Trait")]', 'xpath', 'Click Delete Trait confirm button in modal');
@@ -475,7 +547,7 @@ $t->while_logged_in_as("curator", sub {
 	is($alert_text, 'Trait deleted successfully!', 'Verify alert text for successful trait deletion');
 	$t->wait_for_network_idle();
 
-	# 3. Verify trait is removed and layout view resets to fieldmap
+	# Verify trait is removed and layout view resets to fieldmap
 	ok(!scalar(@{$t->driver->find_elements('//label[contains(text(),"Select Layout View:")]/following-sibling::select//option[contains(text(),"cass sink leaf|3-phosphoglyceric acid")]', 'xpath')}), 'Deleted trait option is no longer in Select Layout View dropdown');
 	ok(!scalar(@{$t->driver->find_elements('//div[@id="legend_list"]//span[contains(.,"Low trait value")]', 'xpath')}), 'Low trait value legend not present after trait deletion');
 	ok(!scalar(@{$t->driver->find_elements('//div[@id="legend_list"]//div[contains(@style,"linear-gradient")]', 'xpath')}), 'Gradient bar not present after trait deletion');
@@ -483,6 +555,9 @@ $t->while_logged_in_as("curator", sub {
 	find_plot_cell_ok(0, 2, $odd_block_fill);
 	find_plot_cell_ok(0, 1, $even_block_fill);
 
+	# =========================================================================
+	# North Arrow Orientation Configuration
+	# =========================================================================
 	find_north_arrow_ok(0);
 
 	set_north_arrow_angle(45);
@@ -494,6 +569,9 @@ $t->while_logged_in_as("curator", sub {
 	set_north_arrow_angle(0);
 	find_north_arrow_ok(0);
 
+	# =========================================================================
+	# Secondary Axis Configuration & Rendering
+	# =========================================================================
 	set_secondary_axis('Test X Label', 'Test Y Label', 'tx1,tx2,tx3,tx4', 'ty1,ty2,ty3,ty4');
 
 	find_sec_x_label_ok('Test X Label', 7, 3, 'top');
@@ -506,16 +584,22 @@ $t->while_logged_in_as("curator", sub {
 	find_sec_y_val_ok('ty3', 0, 7, 'left');
 	find_sec_y_val_ok('ty3', 0, 7, 'right');
 
+	# =========================================================================
+	# Layout Transformations & Border Inset Layers
+	# =========================================================================
+	# Rotate layout 90 degrees clockwise
 	$t->click_ok('//button[@title="Rotate"]', 'xpath', 'Click Rotate button');
 	find_plot_label_ok('103', 0, 0);
 	find_plot_label_ok('207', 1, 6);
 	find_sec_y_val_ok('tx3', 2, 3, 'right');
 	find_north_arrow_ok(90);
 
+	# Transpose layout across diagonal axis
 	$t->click_ok('//button[@title="Transpose Display"]', 'xpath', 'Click Transpose Display button');
 	find_plot_label_ok('103', 6, 2);
 	find_plot_label_ok('307', 0, 0);
 
+	# Invert Rows
 	$t->click_ok('//label[contains(text(),"Invert Rows")]/input', 'xpath', 'Click Invert Rows checkbox');
 	find_plot_label_ok('104', 5, 0);
 	find_plot_label_ok('205', 2, 1);
@@ -523,6 +607,7 @@ $t->while_logged_in_as("curator", sub {
 	find_sec_x_val_ok('tx4', 3, 3, 'bottom');
 	find_north_arrow_ok(180);
 
+	# Toggle top, left, and bottom border layers
 	$t->click_ok('//label[contains(text(),"Top")]/input', 'xpath', 'Click Top checkbox');
 	find_plot_cell_ok(3, 3, $border_fill);
 
@@ -538,39 +623,55 @@ $t->while_logged_in_as("curator", sub {
 	find_plot_cell_ok(4, 6, $border_fill);
 	find_sec_x_val_ok('ty3', 3, undef, 'top');
 
+	# =========================================================================
+	# Dimension Adjustments & Grid Layout Recalculation
+	# =========================================================================
 	set_dimensions(4, undef);
 	find_plot_label_ok('301', 4, 3);
 	find_plot_label_ok('307', 3, 4);
 	find_north_arrow_ok(90);
 
+	# =========================================================================
+	# Spatial Layout CSV Export Customization
+	# =========================================================================
+	# Test CSV download with specific subset of metadata columns
 	download_spatial_layout_ok(
 		'Trial_165_spatial_layout.csv',
 		't/data/fieldmap/Trial_165_spatial_layout_t1.csv',
 		['Accession Name', 'Plot Number', 'Family']
 	);
 
+	# Test CSV download with all metadata columns enabled
 	download_spatial_layout_ok(
 		'Trial_165_spatial_layout.csv',
 		't/data/fieldmap/Trial_165_spatial_layout_t2.csv',
 	);
 
+	# =========================================================================
+	# Plot Details Modal & Accession Replacement (Curator Override)
+	# =========================================================================
 	click_plot_cell_ok(3, 2);
 	$t->find_element_ok('//div[contains(@class,"show")]//tr[td[contains(text(),"Accession")]]/td[2][contains(text(),"IITA-TMS-IBA30572")]', 'xpath', 'Verify accession name IITA-TMS-IBA30572 is displayed in the details modal');
 	$t->find_element_ok('//tr[td[contains(text(),"Plot Number")]]/td[2][contains(text(),"206")]', 'xpath', 'Verify plot number 206 is displayed in the details modal');
 	$t->find_element_ok('//tr[td[contains(text(),"Coordinates")]]/td[2][contains(normalize-space(),"3 / 3")]', 'xpath', 'Verify coordinates are 3 / 3');
 	$t->find_element_ok('//h5[contains(text(),"Plot Contents & Structure Hierarchy:")]/following-sibling::div/pre[contains(text(),"CASS_6Genotypes_206")]', 'xpath', 'Verify plot contents and structure hierarchy is displayed in the details modal');
 
+	# Replace accession and confirm curator override dialog
 	$t->click_ok('//div[contains(@class,"show")]//a[contains(text(),"Replace")]', 'xpath', 'Click Replace Accession tab');
 	$t->send_keys_ok('//div[contains(@class,"show")]//label[contains(normalize-space(),"Accession")]/following-sibling::div//input', 'xpath', 'XG120015', 'Set New Accession Name input to XG120015');
 	$t->click_ok('//div[contains(@class,"show")]//button[contains(text(),"Update")]', 'xpath', 'Click Update Accession button');
 	$t->click_ok('//div[contains(@class,"show")]//button[contains(text(),"Override")]', 'xpath', 'Click override button in modal');
 	$t->accept_alert_ok('Accept alert after updating accession');
 
+	# Verify updated accession in plot details
 	$t->wait_for_network_idle();
 	click_plot_cell_ok(3, 2);
 	$t->find_element_ok('//div[contains(@class,"show")]//tr[td[contains(text(),"Accession")]]/td[2][contains(text(),"XG120015")]', 'xpath', 'Verify accession name XG120015 is displayed in the details modal');
 	$t->click_ok('//div[contains(@class,"show")]//button[contains(text(),"Close")]', 'xpath', 'Click Close button in details modal');
 
+	# =========================================================================
+	# Column Inversion, Layout Rotation, & North Arrow Tracking
+	# =========================================================================
 	$t->click_ok('//label[contains(text(),"Invert Columns")]/input', 'xpath', 'Click Invert Columns checkbox');
 	find_plot_label_ok('207', 1, 2);
 	find_north_arrow_ok(270);
@@ -579,14 +680,16 @@ $t->while_logged_in_as("curator", sub {
 	find_plot_label_ok('207', 5, 0);
 	find_north_arrow_ok(0);
 
-	# Test "Submit Layout Changes" workflow
-	# 1. Test canceling the submission confirm prompt
+	# =========================================================================
+	# Submit Layout Changes & Verify Persistence on Page Reload
+	# =========================================================================
+	# Test canceling the submission confirm prompt
 	$t->click_ok('//button[contains(text(),"Submit Layout Changes")]', 'xpath', 'Click Submit Layout Changes button to test cancellation');
 	my $confirm_prompt = $t->get_alert_text();
 	like($confirm_prompt, qr/save this plot layout to the database/i, 'Verify layout submission confirmation prompt text');
 	$t->driver->dismiss_alert();
 
-	# 2. Configure distinct settings and submit layout
+	# Configure distinct layout settings and submit
 	set_color_by('germplasm');
 	set_label_by('germplasm');
 	set_label_size(12);
@@ -607,6 +710,7 @@ $t->while_logged_in_as("curator", sub {
 	my $right_border_elem = $t->driver->find_element('//label[contains(text(),"Right")]/input', 'xpath');
 	$t->click_ok('//label[contains(text(),"Right")]/input', 'xpath', 'Uncheck Right border') if $right_border_elem->is_selected();
 
+	# Confirm and submit layout
 	$t->click_ok('//button[contains(text(),"Submit Layout Changes")]', 'xpath', 'Click Submit Layout Changes button');
 	$confirm_prompt = $t->get_alert_text();
 	like($confirm_prompt, qr/save this plot layout to the database/i, 'Verify confirmation prompt before submitting');
@@ -614,10 +718,9 @@ $t->while_logged_in_as("curator", sub {
 	my $success_alert = $t->get_alert_text();
 	is($success_alert, 'Field Plot layout submitted successfully!', 'Verify alert text for successful layout submission');
 	$t->accept_alert_ok('Accept layout submission success alert');
-
 	$t->wait_for_network_idle();
 
-	# 3. Reload page and verify all submitted changes were persisted to database
+	# Reload page and verify all submitted changes were persisted to database
 	$t->get_ok('/breeders/trial/165', 'Reload trial 165 page to verify persistence');
 	$t->click_ok('pheno_heatmap_onswitch', 'id', 'Open fieldmap section on reloaded page');
 	$t->wait_for_working_dialog();
@@ -633,7 +736,10 @@ $t->while_logged_in_as("curator", sub {
 	ok($t->driver->find_element('//label[contains(text(),"Left")]/input', 'xpath')->is_selected(), 'Persisted Left border is checked');
 	find_north_arrow_ok(240);
 
-	# Test "Display Trials in Same Field" on trial 139
+	# =========================================================================
+	# "Display Trials in Same Field" Multi-Trial Visualization
+	# =========================================================================
+	# Mark geolocation as a "Field" to link co-located trials
 	$f->dbh->do(<<'EOSQL');
 INSERT INTO public.nd_geolocationprop (nd_geolocation_id, type_id, value, rank)
 VALUES (23, 77158, 'Field', 0)
@@ -676,11 +782,10 @@ EOSQL
 	$t->find_element_ok('//button[@title="Change Secondary Axis" and @disabled]', 'xpath', 'Change Secondary Axis button is disabled');
 	$t->find_element_ok('//button[contains(text(),"Submit Layout Changes") and @disabled]', 'xpath', 'Submit Layout Changes button is disabled');
 
-	# Disable "Display Trials in Same Field"
+	# Disable "Display Trials in Same Field" and verify re-enabled controls
 	$t->click_ok('//label[contains(text(),"Display Trials in Same Field")]/input', 'xpath', 'Uncheck Display Trials in Same Field checkbox');
 	$t->wait_for_working_dialog();
 
-	# Verify reset state
 	ok(!scalar(@{$t->driver->find_elements('//strong[contains(text(),"Trials in Same Field:")]', 'xpath')}), 'Trials in Same Field header is hidden after unchecking');
 	ok(!scalar(@{$t->driver->find_elements('//*[local-name()="svg" and @id="' . $svg_id . '"]//*[local-name()="rect" and @fill="#ff8c00" and @height="4"]', 'xpath')}), 'Plot bands for other trials are removed');
 	$t->find_element_ok('//label[contains(text(),"Plot Layout:")]/following-sibling::select[not(@disabled)]', 'xpath', 'Plot Layout select is re-enabled');
@@ -693,7 +798,6 @@ EOSQL
 	$t->find_element_ok('//button[@title="Change Dimensions" and not(@disabled)]', 'xpath', 'Change Dimensions button is re-enabled');
 	$t->find_element_ok('//button[@title="Change Secondary Axis" and not(@disabled)]', 'xpath', 'Change Secondary Axis button is re-enabled');
 	$t->find_element_ok('//button[contains(text(),"Submit Layout Changes") and not(@disabled)]', 'xpath', 'Submit Layout Changes button is re-enabled');
-
 
 });
 
