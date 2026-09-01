@@ -164,6 +164,12 @@ sub set_secondary_axis {
 	$t->click_ok('//div[contains(@class,"show")]//button[contains(text(),"Apply")]', 'xpath', 'Click Apply button');
 }
 
+sub set_layout_view {
+	my ($view_option_text) = @_;
+	$t->click_ok('//label[contains(text(),"Select Layout View:")]/following-sibling::select//option[contains(text(),"' . $view_option_text . '")]', 'xpath', "Select Layout View '$view_option_text'");
+	$t->wait_for_working_dialog();
+}
+
 sub set_color_by {
 	my ($color_by) = @_;
 	$t->click_ok('//label[contains(text(),"Color By:")]/following-sibling::select/option[@value="' . $color_by . '"]', 'xpath', "Select Color By '$color_by'");
@@ -413,6 +419,26 @@ $t->while_logged_in_as("curator", sub {
 	find_plot_label_ok('103', 0, 2);
 	find_plot_label_ok('201', 0, 1);
 	find_plot_label_ok('301', 0, 0);
+
+	# Test Assayed Trait Views & Heatmap rendering
+	set_layout_view('cass sink leaf|3-phosphoglyceric acid|ug/g|week 16|COMP:0000013');
+	$t->find_element_ok('//div[@id="legend_list"]//span[contains(.,"Low trait value (cass sink leaf|3-phosphoglyceric acid|ug/g|week 16|COMP:0000013)")]', 'xpath', 'Find low trait value text in legend');
+	$t->find_element_ok('//div[@id="legend_list"]//span[contains(text(),"High trait value")]', 'xpath', 'Find high trait value text in legend');
+	$t->find_element_ok('//div[@id="legend_list"]//div[contains(@style,"linear-gradient")]', 'xpath', 'Find color gradient bar in legend');
+	$t->find_element_ok('//button[contains(text(),"Download Heatmap Image")]', 'xpath', 'Find Download Heatmap Image button');
+	$t->find_element_ok('//button[contains(text(),"Delete Selected Trait")]', 'xpath', 'Find Delete Selected Trait button');
+
+	find_plot_cell_ok(0, 2, '#910d0d');
+	find_plot_cell_ok(2, 2, '#8b0000');
+	find_plot_cell_ok(0, 1, '#a9afaf');
+	find_plot_cell_ok(5, 0, '#ffffff');
+
+	set_layout_view('View Field Layout');
+	ok(!scalar(@{$t->driver->find_elements('//div[@id="legend_list"]//span[contains(.,"Low trait value")]', 'xpath')}), 'Low trait value legend not present in Field Map view');
+	ok(!scalar(@{$t->driver->find_elements('//div[@id="legend_list"]//div[contains(@style,"linear-gradient")]', 'xpath')}), 'Gradient bar not present in Field Map view');
+	ok(!scalar(@{$t->driver->find_elements('//button[contains(text(),"Delete Selected Trait")]', 'xpath')}), 'Delete Selected Trait button not present in Field Map view');
+	find_plot_cell_ok(0, 2, $odd_block_fill);
+	find_plot_cell_ok(0, 1, $even_block_fill);
 
 	find_north_arrow_ok(0);
 
