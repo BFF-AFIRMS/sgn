@@ -561,6 +561,67 @@ $t->while_logged_in_as("curator", sub {
 	find_plot_label_ok('207', 5, 0);
 	find_north_arrow_ok(0);
 
+	# Test "Display Trials in Same Field" on trial 139
+	$f->dbh->do(<<'EOSQL');
+INSERT INTO public.nd_geolocationprop (nd_geolocation_id, type_id, value, rank)
+VALUES (23, 77158, 'Field', 0)
+EOSQL
+
+	$t->get_ok('/breeders/trial/139', 'Navigate to trial 139 page');
+	$t->click_ok('pheno_heatmap_onswitch', 'id', 'Open fieldmap section for trial 139');
+	$t->wait_for_working_dialog();
+	$t->find_element_ok('//*[@id="' . $svg_id . '"]', 'xpath', 'Find fieldmap SVG on trial 139');
+
+	# Verify initial state of "Display Trials in Same Field"
+	$t->find_element_ok('//label[contains(text(),"Display Trials in Same Field")]/input', 'xpath', 'Find Display Trials in Same Field checkbox');
+	ok(!$t->driver->find_element('//label[contains(text(),"Display Trials in Same Field")]/input', 'xpath')->is_selected(), 'Display Trials in Same Field checkbox is initially unchecked');
+	ok(!scalar(@{$t->driver->find_elements('//strong[contains(text(),"Trials in Same Field:")]', 'xpath')}), 'Trials in Same Field header is not displayed initially');
+
+	# Enable "Display Trials in Same Field"
+	$t->click_ok('//label[contains(text(),"Display Trials in Same Field")]/input', 'xpath', 'Check Display Trials in Same Field checkbox');
+	$t->wait_for_working_dialog();
+
+	# Verify linked trial badges in header panel
+	$t->find_element_ok('//strong[contains(text(),"Trials in Same Field:")]', 'xpath', 'Find Trials in Same Field header');
+	$t->find_element_ok('//span[contains(text(),"Kasese solgs trial")]', 'xpath', 'Find badge for Kasese solgs trial');
+	$t->find_element_ok('//span[contains(text(),"test_trial")]', 'xpath', 'Find badge for test_trial');
+	$t->find_element_ok('//span[contains(text(),"trial2 NaCRRI")]', 'xpath', 'Find badge for trial2 NaCRRI');
+
+	# Verify multiple trial colored bands in the SVG plots
+	$t->find_element_ok('//*[local-name()="svg" and @id="' . $svg_id . '"]//*[local-name()="rect" and @fill="#2f4f4f" and @height="4"]', 'xpath', 'Find plot band for Kasese solgs trial (#2f4f4f)');
+	$t->find_element_ok('//*[local-name()="svg" and @id="' . $svg_id . '"]//*[local-name()="rect" and @fill="#ff8c00" and @height="4"]', 'xpath', 'Find plot band for test_trial (#ff8c00)');
+	$t->find_element_ok('//*[local-name()="svg" and @id="' . $svg_id . '"]//*[local-name()="rect" and @fill="#ffff00" and @height="4"]', 'xpath', 'Find plot band for trial2 NaCRRI (#ffff00)');
+
+	# Verify controls disabled while linked trials are displayed
+	$t->find_element_ok('//label[contains(text(),"Plot Layout:")]/following-sibling::select[@disabled]', 'xpath', 'Plot Layout select is disabled');
+	$t->find_element_ok('//label[contains(text(),"Top")]/input[@disabled]', 'xpath', 'Top border checkbox is disabled');
+	$t->find_element_ok('//label[contains(text(),"Bottom")]/input[@disabled]', 'xpath', 'Bottom border checkbox is disabled');
+	$t->find_element_ok('//label[contains(text(),"Left")]/input[@disabled]', 'xpath', 'Left border checkbox is disabled');
+	$t->find_element_ok('//label[contains(text(),"Right")]/input[@disabled]', 'xpath', 'Right border checkbox is disabled');
+	$t->find_element_ok('//button[@title="Transpose Display" and @disabled]', 'xpath', 'Transpose button is disabled');
+	$t->find_element_ok('//button[@title="Rotate" and @disabled]', 'xpath', 'Rotate button is disabled');
+	$t->find_element_ok('//button[@title="Change Dimensions" and @disabled]', 'xpath', 'Change Dimensions button is disabled');
+	$t->find_element_ok('//button[@title="Change Secondary Axis" and @disabled]', 'xpath', 'Change Secondary Axis button is disabled');
+	$t->find_element_ok('//button[contains(text(),"Submit Layout Changes") and @disabled]', 'xpath', 'Submit Layout Changes button is disabled');
+
+	# Disable "Display Trials in Same Field"
+	$t->click_ok('//label[contains(text(),"Display Trials in Same Field")]/input', 'xpath', 'Uncheck Display Trials in Same Field checkbox');
+	$t->wait_for_working_dialog();
+
+	# Verify reset state
+	ok(!scalar(@{$t->driver->find_elements('//strong[contains(text(),"Trials in Same Field:")]', 'xpath')}), 'Trials in Same Field header is hidden after unchecking');
+	ok(!scalar(@{$t->driver->find_elements('//*[local-name()="svg" and @id="' . $svg_id . '"]//*[local-name()="rect" and @fill="#ff8c00" and @height="4"]', 'xpath')}), 'Plot bands for other trials are removed');
+	$t->find_element_ok('//label[contains(text(),"Plot Layout:")]/following-sibling::select[not(@disabled)]', 'xpath', 'Plot Layout select is re-enabled');
+	$t->find_element_ok('//label[contains(text(),"Top")]/input[not(@disabled)]', 'xpath', 'Top border checkbox is re-enabled');
+	$t->find_element_ok('//label[contains(text(),"Bottom")]/input[not(@disabled)]', 'xpath', 'Bottom border checkbox is re-enabled');
+	$t->find_element_ok('//label[contains(text(),"Left")]/input[not(@disabled)]', 'xpath', 'Left border checkbox is re-enabled');
+	$t->find_element_ok('//label[contains(text(),"Right")]/input[not(@disabled)]', 'xpath', 'Right border checkbox is re-enabled');
+	$t->find_element_ok('//button[@title="Transpose Display" and not(@disabled)]', 'xpath', 'Transpose button is re-enabled');
+	$t->find_element_ok('//button[@title="Rotate" and not(@disabled)]', 'xpath', 'Rotate button is re-enabled');
+	$t->find_element_ok('//button[@title="Change Dimensions" and not(@disabled)]', 'xpath', 'Change Dimensions button is re-enabled');
+	$t->find_element_ok('//button[@title="Change Secondary Axis" and not(@disabled)]', 'xpath', 'Change Secondary Axis button is re-enabled');
+	$t->find_element_ok('//button[contains(text(),"Submit Layout Changes") and not(@disabled)]', 'xpath', 'Submit Layout Changes button is re-enabled');
+
 
 });
 
