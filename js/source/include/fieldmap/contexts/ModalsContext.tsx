@@ -5,9 +5,6 @@ export interface ModalsContextType {
 	showPlotDetails: boolean;
 	setShowPlotDetails: React.Dispatch<React.SetStateAction<boolean>>;
 
-	showEditAccession: boolean;
-	setShowEditAccession: React.Dispatch<React.SetStateAction<boolean>>;
-
 	showDimDialog: boolean;
 	setShowDimDialog: React.Dispatch<React.SetStateAction<boolean>>;
 
@@ -28,7 +25,6 @@ const ModalsContext = createContext<ModalsContextType | undefined>(undefined);
 
 export const ModalsProvider: React.FC<FieldMapContextProps> = ({ children }) => {
     const [showPlotDetails, setShowPlotDetails] = useState(false);
-    const [showEditAccession, setShowEditAccession] = useState(false);
     const [showDimDialog, setShowDimDialog] = useState(false);
     const [showDeleteTraitModal, setShowDeleteTraitModal] = useState(false);
     const [showDownloadCSVModal, setShowDownloadCSVModal] = useState(false);
@@ -39,7 +35,6 @@ export const ModalsProvider: React.FC<FieldMapContextProps> = ({ children }) => 
     return (
         <ModalsContext.Provider value={{
             showPlotDetails, setShowPlotDetails,
-            showEditAccession, setShowEditAccession,
             showDimDialog, setShowDimDialog,
             showDeleteTraitModal, setShowDeleteTraitModal,
             showDownloadCSVModal, setShowDownloadCSVModal,
