@@ -458,10 +458,28 @@ $t->while_logged_in_as("curator", sub {
 	$t->click_ok('//div[contains(@class,"show")]//button[contains(@class,"btn-danger") and contains(text(),"Suppress Phenotype")]/preceding-sibling::button[contains(text(),"Close")]', 'xpath', 'Click Close button in suppress modal');
 	$t->click_ok('//div[contains(@class,"show")]//button[contains(text(),"Close")]', 'xpath', 'Click Close button in plot details modal');
 
-	set_layout_view('View Field Layout');
-	ok(!scalar(@{$t->driver->find_elements('//div[@id="legend_list"]//span[contains(.,"Low trait value")]', 'xpath')}), 'Low trait value legend not present in Field Map view');
-	ok(!scalar(@{$t->driver->find_elements('//div[@id="legend_list"]//div[contains(@style,"linear-gradient")]', 'xpath')}), 'Gradient bar not present in Field Map view');
-	ok(!scalar(@{$t->driver->find_elements('//button[contains(text(),"Delete Selected Trait")]', 'xpath')}), 'Delete Selected Trait button not present in Field Map view');
+	# Test Delete Assayed Trait workflow
+	# 1. Open modal and test cancel/close
+	$t->click_ok('//button[contains(text(),"Delete Selected Trait")]', 'xpath', 'Click Delete Selected Trait button to test cancel');
+	$t->find_element_ok('//div[contains(@class,"show")]//h4[contains(@class,"modal-title") and contains(text(),"Assayed Trait Deletion")]', 'xpath', 'Assayed Trait Deletion modal is open');
+	$t->find_element_ok('//div[contains(@class,"show")]//p[contains(text(),"Are you sure you want to delete this assayed trait?")]', 'xpath', 'Verify delete trait warning text');
+	$t->click_ok('//div[contains(@class,"show")]//button[contains(text(),"Close")]', 'xpath', 'Click Close button in Delete Trait modal');
+	ok(!scalar(@{$t->driver->find_elements('//div[contains(@class,"show")]//h4[contains(text(),"Assayed Trait Deletion")]', 'xpath')}), 'Delete Trait modal is closed');
+
+	# 2. Open modal and confirm deletion
+	$t->click_ok('//button[contains(text(),"Delete Selected Trait")]', 'xpath', 'Click Delete Selected Trait button to confirm deletion');
+	$t->find_element_ok('//div[contains(@class,"show")]//h4[contains(@class,"modal-title") and contains(text(),"Assayed Trait Deletion")]', 'xpath', 'Assayed Trait Deletion modal is open again');
+	$t->click_ok('//div[contains(@class,"show")]//button[contains(@class,"btn-danger") and contains(text(),"Delete Trait")]', 'xpath', 'Click Delete Trait confirm button in modal');
+	$alert_text = $t->get_alert_text();
+	$t->accept_alert_ok('Accept alert after deleting trait');
+	is($alert_text, 'Trait deleted successfully!', 'Verify alert text for successful trait deletion');
+	$t->wait_for_network_idle();
+
+	# 3. Verify trait is removed and layout view resets to fieldmap
+	ok(!scalar(@{$t->driver->find_elements('//label[contains(text(),"Select Layout View:")]/following-sibling::select//option[contains(text(),"cass sink leaf|3-phosphoglyceric acid")]', 'xpath')}), 'Deleted trait option is no longer in Select Layout View dropdown');
+	ok(!scalar(@{$t->driver->find_elements('//div[@id="legend_list"]//span[contains(.,"Low trait value")]', 'xpath')}), 'Low trait value legend not present after trait deletion');
+	ok(!scalar(@{$t->driver->find_elements('//div[@id="legend_list"]//div[contains(@style,"linear-gradient")]', 'xpath')}), 'Gradient bar not present after trait deletion');
+	ok(!scalar(@{$t->driver->find_elements('//button[contains(text(),"Delete Selected Trait")]', 'xpath')}), 'Delete Selected Trait button not present after trait deletion');
 	find_plot_cell_ok(0, 2, $odd_block_fill);
 	find_plot_cell_ok(0, 1, $even_block_fill);
 
