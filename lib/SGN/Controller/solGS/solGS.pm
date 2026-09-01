@@ -3,7 +3,7 @@ package SGN::Controller::solGS::solGS;
 use Moose;
 use namespace::autoclean;
 
-use String::CRC;
+use String::CRC32;
 use URI::FromHash 'uri';
 use File::Path qw / mkpath  /;
 use File::Spec::Functions qw / catfile catdir/;
