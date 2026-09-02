@@ -161,7 +161,10 @@ my $build = SGN::Build->new(
         'Statistics::Descriptive'                  => '== 3.0801',
         'Storable'                                 => '== 3.32',
         'String::Approx'                           => '== 3.28',
-        'String::CRC32'                            => '== 2.100',
+        # For perl >= 5.40, String::CRC must be patched with https://github.com/pld-linux/perl-String-CRC/blob/master/types.patch
+        # I did this manually by downloading and then editing the source files:
+        # https://fastapi.metacpan.org/source/MUIR/String-CRC-1.0
+        'String::CRC'                              => 0,
         'SVG'                                      => '== 2.89',
         'Sys::Hostname'                            => '== 1.25',
         'Test::Class'                              => '== 0.52',

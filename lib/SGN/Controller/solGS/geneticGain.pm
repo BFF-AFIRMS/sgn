@@ -26,7 +26,7 @@ use File::Spec::Functions;
 use File::Slurp qw /write_file read_file/;
 use JSON;
 use List::MoreUtils qw /uniq/;
-use String::CRC32;
+use String::CRC;
 use URI::FromHash 'uri';
 
 BEGIN { extends 'Catalyst::Controller::REST' }
@@ -183,7 +183,7 @@ sub boxplot_id {
 
     my $multi_traits = $c->stash->{training_traits_ids};
     if ($multi_traits && scalar(@$multi_traits) > 1 ) {
-        $trait_id = crc32( join( '', @$multi_traits ) );
+        $trait_id = crc( join( '', @$multi_traits ) );
     }
 
     $c->stash->{boxplot_id} =

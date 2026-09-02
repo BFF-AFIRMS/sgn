@@ -30,7 +30,7 @@ use List::MoreUtils qw /uniq firstidx/;
 use CXGN::People::Person;
 use POSIX qw(strftime);
 use Storable qw/ nstore retrieve /;
-use String::CRC32;
+use String::CRC;
 use Try::Tiny;
 
 use solGS::queryJobs;
@@ -41,7 +41,7 @@ sub generate_check_value : Path('/solgs/generate/checkvalue') Args(0) {
     my ( $self, $c ) = @_;
 
     my $file_name   = $c->req->param('string');
-    my $check_value = crc32($file_name);
+    my $check_value = crc($file_name);
 
     my $ret->{status} = 'failed';
 
