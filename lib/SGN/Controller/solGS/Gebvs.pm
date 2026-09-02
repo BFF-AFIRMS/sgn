@@ -14,7 +14,7 @@ use File::Basename;
 use JSON;
 use List::MoreUtils qw /uniq/;
 use Scalar::Util qw /weaken reftype/;
-use String::CRC32;
+use String::CRC;
 use Try::Tiny;
 
 
@@ -289,7 +289,7 @@ sub create_traits_selection_id {
     my ($self, $traits_ids) = @_;
 
     if ($traits_ids) {
-        return  crc32(join('', sort(uniq(@$traits_ids))));
+        return  crc(join('', sort(uniq(@$traits_ids))));
     } else {
         return 0;
     }
