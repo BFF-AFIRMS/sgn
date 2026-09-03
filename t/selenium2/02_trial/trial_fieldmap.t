@@ -670,6 +670,7 @@ $t->while_logged_in_as("curator", sub {
 	# Plot Details Modal & Accession Replacement (Curator Override)
 	# =========================================================================
 	click_plot_cell_ok(3, 2);
+	$t->find_element_ok('//div[contains(@class,"show")]//h4[contains(@class,"modal-title") and contains(.,"CASS_6Genotypes_206")]', 'xpath', 'Verify initial plot name CASS_6Genotypes_206 in modal header');
 	$t->find_element_ok('//div[contains(@class,"show")]//tr[td[contains(text(),"Accession")]]/td[2][contains(text(),"IITA-TMS-IBA30572")]', 'xpath', 'Verify accession name IITA-TMS-IBA30572 is displayed in the details modal');
 	$t->find_element_ok('//tr[td[contains(text(),"Plot Number")]]/td[2][contains(text(),"206")]', 'xpath', 'Verify plot number 206 is displayed in the details modal');
 	$t->find_element_ok('//tr[td[contains(text(),"Coordinates")]]/td[2][contains(normalize-space(),"3 / 3")]', 'xpath', 'Verify coordinates are 3 / 3');
@@ -686,6 +687,26 @@ $t->while_logged_in_as("curator", sub {
 	$t->wait_for_network_idle();
 	click_plot_cell_ok(3, 2);
 	$t->find_element_ok('//div[contains(@class,"show")]//tr[td[contains(text(),"Accession")]]/td[2][contains(text(),"XG120015")]', 'xpath', 'Verify accession name XG120015 is displayed in the details modal');
+	$t->find_element_ok('//div[contains(@class,"show")]//h4[contains(@class,"modal-title") and contains(.,"CASS_6Genotypes_206")]', 'xpath', 'Verify plot name remains CASS_6Genotypes_206 when new plot name is omitted');
+	$t->click_ok('//div[contains(@class,"show")]//button[contains(text(),"Close")]', 'xpath', 'Click Close button in details modal');
+
+	# =========================================================================
+	# Custom Plot Renaming on Accession Change
+	# =========================================================================
+	click_plot_cell_ok(3, 2);
+	$t->find_element_ok('//div[contains(@class,"show")]//h4[contains(@class,"modal-title") and contains(.,"CASS_6Genotypes_206")]', 'xpath', 'Verify plot name before custom renaming');
+	$t->click_ok('//div[contains(@class,"show")]//a[contains(text(),"Replace")]', 'xpath', 'Click Replace Accession tab for custom renaming');
+	$t->send_keys_ok('//div[contains(@class,"show")]//label[contains(normalize-space(),"Accession")]/following-sibling::div//input', 'xpath', 'IITA-TMS-IBA30572', 'Set New Accession Name input to IITA-TMS-IBA30572', clear => 1);
+	$t->send_keys_ok('//div[contains(@class,"show")]//label[contains(text(),"New Plot Name")]/following-sibling::input', 'xpath', 'CASS_6Genotypes_206_renamed', 'Set New Plot Name input to CASS_6Genotypes_206_renamed', clear => 1);
+	$t->click_ok('//div[contains(@class,"show")]//button[contains(text(),"Update")]', 'xpath', 'Click Update Accession button with custom plot name');
+	$t->click_ok('//div[contains(@class,"show")]//button[contains(text(),"Override")]', 'xpath', 'Click override button in modal');
+	$t->accept_alert_ok('Accept alert after updating accession and plot name');
+	$t->wait_for_network_idle();
+
+	# Verify updated plot name and accession in plot details
+	click_plot_cell_ok(3, 2);
+	$t->find_element_ok('//div[contains(@class,"show")]//h4[contains(@class,"modal-title") and contains(.,"CASS_6Genotypes_206_renamed")]', 'xpath', 'Verify updated plot name CASS_6Genotypes_206_renamed in modal header');
+	$t->find_element_ok('//div[contains(@class,"show")]//tr[td[contains(text(),"Accession")]]/td[2][contains(text(),"IITA-TMS-IBA30572")]', 'xpath', 'Verify accession name IITA-TMS-IBA30572 in details modal');
 	$t->click_ok('//div[contains(@class,"show")]//button[contains(text(),"Close")]', 'xpath', 'Click Close button in details modal');
 
 	# =========================================================================
