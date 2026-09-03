@@ -52,6 +52,16 @@ if (!require(devtools, lib.loc=rLibsSgn, quietly=TRUE, warn.conflicts=FALSE)) {
   library(devtools)
 }
 
+if (!require(remotes, lib.loc=rLibsSgn, quietly=TRUE, warn.conflicts=FALSE)) {
+  install.packages('remotes', repos=cranSite)
+  library(remotes)
+}
+
+if (!require(BiocManager, lib.loc=rLibsSgn, quietly=TRUE, warn.conflicts=FALSE)) {
+  install.packages('BiocManager', repos=cranSite)
+  library(BiocManager)
+}
+
 
 installedPackages <- function (..., lib.loc=NULL) {
 
@@ -178,7 +188,7 @@ newBioc <- biocPacks[!biocPacks %in% insPacksUni]
 if (length(newCran) > 0) {
   install.packages(newCran,
                    repos=cranSite,
-                   quiet=TRUE,
+                   quiet=FALSE,
                    verbose=FALSE,
                    dependencies=TRUE)
 } else {
@@ -198,7 +208,7 @@ if (length(newGitPaths) > 0) {
     withr::with_libpaths(new=rLibsSgn,
                          install_github(newGitPaths,
                                         force=TRUE,
-                                        quiet=TRUE,
+                                        quiet=FALSE,
                                         verbose=FALSE,
                                         dependencies=TRUE))
 } else {
@@ -207,12 +217,11 @@ if (length(newGitPaths) > 0) {
 
 
 if (length(newBioc) > 0 ) {
-    source('http://bioconductor.org/biocLite.R')
-    biocLite(newBioc,
+    BiocManager::install(newBioc,
              suppressUpdates=TRUE,
              suppressAutoUpdate=TRUE,
              ask=FALSE,
-             quiet=TRUE,
+             quiet=FALSE,
              verbose=FALSE,
              siteRepos=cranSite)
 } else {
