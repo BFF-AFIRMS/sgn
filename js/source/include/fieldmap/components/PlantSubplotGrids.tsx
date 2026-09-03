@@ -33,7 +33,7 @@ export const RenderPlantGrid: React.FC<{ node: PlotStructureNode }> = ({ node })
                     const key = `${r},${c}`;
                     const plantName = coordMap[key];
                     cols.push(
-                        <td key={key} className="tw:border tw:border-black tw:p-1 tw:rounded tw:text-center tw:align-middle tw:text-[11px] tw:min-w-15 tw:h-8">
+                        <td key={key} className="plant-grid-cell tw:border tw:border-black tw:p-1 tw:rounded tw:text-center tw:align-middle tw:text-[11px] tw:min-w-15 tw:h-8">
                             {plantName || <span className="tw:text-gray-300">empty</span>}
                         </td>
                     );
@@ -42,9 +42,9 @@ export const RenderPlantGrid: React.FC<{ node: PlotStructureNode }> = ({ node })
         }
         rows.push(<tr key={`row-${r}`}>{cols}</tr>);
     }
-    
+
     return (
-        <table className="tw:border-separate tw:border-spacing-1 tw:overflow-hidden tw:mx-auto tw:mt-2" style={{ aspectRatio: `${maxCol + 1} / ${maxRow + 1}` }}>
+        <table className="plant-grid-table tw:border-separate tw:border-spacing-1 tw:overflow-hidden tw:mx-auto tw:mt-2" style={{ aspectRatio: `${maxCol + 1} / ${maxRow + 1}` }}>
             <tbody>{rows}</tbody>
         </table>
     );
