@@ -167,13 +167,16 @@ sub find_sec_y_val_ok {
 
 # Open the Change Dimensions modal and apply new column and row dimensions
 sub set_dimensions {
-	my ($columns, $rows) = @_;
+	my ($columns, $rows, $filler_accession) = @_;
 	$t->click_ok('//button[@title="Change Dimensions"]', 'xpath', 'Click Change Dimensions button');
 	if (defined $columns) {
 		$t->send_keys_ok('//label[contains(text(),"Columns")]/following-sibling::input', 'xpath', $columns, "Set Columns input to $columns", clear => 1);
 	}
 	if (defined $rows) {
 		$t->send_keys_ok('//label[contains(text(),"Rows")]/following-sibling::input', 'xpath', $rows, "Set Rows input to $rows", clear => 1);
+	}
+	if (defined $filler_accession) {
+		$t->send_keys_ok('//div[contains(@class,"show")]//label[contains(text(),"Filler Accession")]/following-sibling::div//input', 'xpath', $filler_accession, "Set Filler Accession input to $filler_accession", clear => 1);
 	}
 	$t->click_ok('//div[contains(@class,"show")]//button[contains(text(),"Apply")]', 'xpath', 'Click Apply button');
 }
@@ -838,6 +841,78 @@ EOSQL
 	$t->find_element_ok('//button[@title="Change Dimensions" and not(@disabled)]', 'xpath', 'Change Dimensions button is re-enabled');
 	$t->find_element_ok('//button[@title="Change Secondary Axis" and not(@disabled)]', 'xpath', 'Change Secondary Axis button is re-enabled');
 	$t->find_element_ok('//button[contains(text(),"Submit Layout Changes") and not(@disabled)]', 'xpath', 'Submit Layout Changes button is re-enabled');
+
+	# =========================================================================
+	# Filler Accession Validation & Creation
+	# =========================================================================
+	$t->get_ok('/breeders/trial/165', 'Navigate to trial 165 for filler accession tests');
+	$t->click_ok('pheno_heatmap_onswitch', 'id', 'Open fieldmap section');
+	$t->wait_for_working_dialog();
+	$t->find_element_ok('//*[@id="' . $svg_id . '"]', 'xpath', 'Find fieldmap SVG');
+
+	# Reset invert flags and borders to establish standard orientation
+	my $inv_rows = $t->driver->find_element('//label[contains(text(),"Invert Rows")]/input', 'xpath');
+	$t->click_ok('//label[contains(text(),"Invert Rows")]/input', 'xpath', 'Uncheck Invert Rows') if $inv_rows->is_selected();
+	my $inv_cols = $t->driver->find_element('//label[contains(text(),"Invert Columns")]/input', 'xpath');
+	$t->click_ok('//label[contains(text(),"Invert Columns")]/input', 'xpath', 'Uncheck Invert Columns') if $inv_cols->is_selected();
+	my $top_b = $t->driver->find_element('//label[contains(text(),"Top")]/input', 'xpath');
+	$t->click_ok('//label[contains(text(),"Top")]/input', 'xpath', 'Uncheck Top border') if $top_b->is_selected();
+	my $left_b = $t->driver->find_element('//label[contains(text(),"Left")]/input', 'xpath');
+	$t->click_ok('//label[contains(text(),"Left")]/input', 'xpath', 'Uncheck Left border') if $left_b->is_selected();
+	my $bottom_b = $t->driver->find_element('//label[contains(text(),"Bottom")]/input', 'xpath');
+	$t->click_ok('//label[contains(text(),"Bottom")]/input', 'xpath', 'Uncheck Bottom border') if $bottom_b->is_selected();
+	my $right_b = $t->driver->find_element('//label[contains(text(),"Right")]/input', 'xpath');
+	$t->click_ok('//label[contains(text(),"Right")]/input', 'xpath', 'Uncheck Right border') if $right_b->is_selected();
+	$t->click_ok('//label[contains(text(),"Plot Layout:")]/following-sibling::select/option[@value="serpentine"]', 'xpath', 'Select Serpentine plot layout');
+
+	# Expand dimensions to 6 columns x 4 rows (24 cells total for 21 plots = 3 empty slots)
+	set_dimensions(6, 4);
+	ok(!scalar(@{$t->driver->find_elements('//*[local-name()="svg" and @id="' . $svg_id . '"]//*[local-name()="g" and @transform="translate(0, 0)"]/*[local-name()="rect"]', 'xpath')}), 'Empty space cell (0, 0) has no rect');
+
+	# Test invalid filler accession error handling
+	set_dimensions(6, 4, 'NONEXISTENT_FILLER_ACCESSION_XYZ');
+	my $invalid_filler_alert = $t->get_alert_text();
+	like($invalid_filler_alert, qr/(?:not exist|not found|error)/i, 'Verify alert text when filler accession does not exist');
+	$t->accept_alert_ok('Accept invalid filler accession alert');
+	ok(!scalar(@{$t->driver->find_elements('//*[local-name()="svg" and @id="' . $svg_id . '"]//*[local-name()="g" and @transform="translate(0, 0)"]/*[local-name()="rect"]', 'xpath')}), 'Empty space cell (0, 0) still has no rect after invalid filler accession');
+
+	# Apply valid filler accession and verify filler plots rendered
+	set_dimensions(6, 4, 'IITA-TMS-IBA980581');
+	find_plot_cell_ok(0, 0, $border_fill);
+	find_plot_cell_ok(1, 0, $border_fill);
+	find_plot_cell_ok(2, 0, $border_fill);
+
+	# Verify details modal for unsaved filler plot
+	click_plot_cell_ok(0, 0);
+	$t->find_element_ok('//div[contains(@class,"show")]//h4[contains(@class,"modal-title") and contains(.,"Filler")]', 'xpath', 'Plot details modal opens for unsaved filler plot');
+	$t->click_ok('//div[contains(@class,"show")]//button[contains(text(),"Close")]', 'xpath', 'Close plot details modal');
+
+	# Submit layout changes to create filler plots in the database
+	$t->click_ok('//button[contains(text(),"Submit Layout Changes")]', 'xpath', 'Click Submit Layout Changes button to create filler plots');
+	my $confirm_filler_prompt = $t->get_alert_text();
+	like($confirm_filler_prompt, qr/save this plot layout to the database/i, 'Verify confirmation prompt before submitting filler plots');
+	$t->accept_alert_ok('Accept layout submission confirmation prompt');
+	my $filler_success_alert = $t->get_alert_text();
+	is($filler_success_alert, 'Field Plot layout submitted successfully!', 'Verify alert text for successful layout submission with filler plots');
+	$t->accept_alert_ok('Accept layout submission success alert');
+	$t->wait_for_network_idle();
+
+	# Verify newly created filler plot details
+	click_plot_cell_ok(0, 0);
+	$t->find_element_ok('//div[contains(@class,"show")]//h4[contains(@class,"modal-title") and contains(.,"165 filler")]', 'xpath', 'Verify saved filler plot name in modal header');
+	$t->find_element_ok('//div[contains(@class,"show")]//tr[td[contains(text(),"Accession")]]/td[2][contains(text(),"IITA-TMS-IBA980581")]', 'xpath', 'Verify filler accession name IITA-TMS-IBA980581 in details modal');
+	$t->click_ok('//div[contains(@class,"show")]//button[contains(text(),"Close")]', 'xpath', 'Close plot details modal');
+
+	# Verify persistence across page reload
+	$t->get_ok('/breeders/trial/165', 'Reload trial 165 page to verify persistence of filler plots');
+	$t->click_ok('pheno_heatmap_onswitch', 'id', 'Open fieldmap section on reloaded page');
+	$t->wait_for_working_dialog();
+	$t->find_element_ok('//*[@id="' . $svg_id . '"]', 'xpath', 'Find fieldmap SVG on reloaded page');
+	find_plot_cell_ok(0, 0, $palette[4]);
+	click_plot_cell_ok(0, 0);
+	$t->find_element_ok('//div[contains(@class,"show")]//h4[contains(@class,"modal-title") and contains(.,"165 filler")]', 'xpath', 'Verify persisted filler plot name in modal header after reload');
+	$t->find_element_ok('//div[contains(@class,"show")]//tr[td[contains(text(),"Accession")]]/td[2][contains(text(),"IITA-TMS-IBA980581")]', 'xpath', 'Verify persisted filler accession name in details modal after reload');
+	$t->click_ok('//div[contains(@class,"show")]//button[contains(text(),"Close")]', 'xpath', 'Close plot details modal');
 
 });
 
