@@ -914,6 +914,48 @@ EOSQL
 	$t->find_element_ok('//div[contains(@class,"show")]//tr[td[contains(text(),"Accession")]]/td[2][contains(text(),"IITA-TMS-IBA980581")]', 'xpath', 'Verify persisted filler accession name in details modal after reload');
 	$t->click_ok('//div[contains(@class,"show")]//button[contains(text(),"Close")]', 'xpath', 'Close plot details modal');
 
+	# =========================================================================
+	# Details Modal with Subplots
+	# =========================================================================
+	# Configure trial with subplots (1 subplot per plot)
+	$t->click_ok('trial_design_section_onswitch', 'id', 'Open trial design section');
+	$t->click_ok('trial_subplots_onswitch', 'id', 'Open subplots section');
+	$t->click_ok('create_subplot_entries_button', 'id', 'Click Add subplot entries button');
+	$t->send_keys_ok('add_subplots_per_plot_num', 'id', '1', 'Set number of subplots per plot to 1');
+	$t->click_ok('add_subplots_save_button', 'id', 'Click Save button to create subplots');
+	$t->accept_alert_ok('Accept alert after creating subplots');
+	$t->wait_for_network_idle();
+
+	# Configure subplots with plants (3 rows x 3 columns = 9 plants per subplot)
+	$t->click_ok('trial_design_section_onswitch', 'id', 'Re-open trial design section');
+	$t->click_ok('trial_plants_onswitch', 'id', 'Open plants section');
+	$t->click_ok('create_plant_entries_subplots_button', 'id', 'Click Add plant entries button for subplots');
+	$t->send_keys_ok('add_plants_per_subplot_num', 'id', '9', 'Set number of plants per subplot to 9');
+	$t->click_ok('add_rows_and_columns_to_subplot_plants', 'id', 'Click Assign row and column data checkbox');
+	$t->send_keys_ok('rows_per_subplot', 'id', '3', 'Set number of rows per subplot to 3');
+	$t->send_keys_ok('cols_per_subplot', 'id', '3', 'Set number of columns per subplot to 3');
+	$t->click_ok('add_plants_subplot_save_button', 'id', 'Click Save button to create plants for subplots');
+	$t->accept_alert_ok('Accept alert after creating plants for subplots');
+	$t->wait_for_network_idle();
+
+	# Open fieldmap to verify plot details modal with subplots
+	$t->click_ok('pheno_heatmap_onswitch', 'id', 'Open fieldmap section');
+	$t->wait_for_working_dialog();
+	$t->find_element_ok('//*[@id="' . $svg_id . '"]', 'xpath', 'Find fieldmap SVG');
+
+	# Click plot cell to open details modal
+	click_plot_cell_ok(3, 2);
+	$t->find_element_ok('//div[contains(@class,"show")]//h4[contains(@class,"modal-title") and contains(text(),"Plot Details")]', 'xpath', 'Plot details modal is open');
+	$t->find_element_ok('//h5[contains(text(),"Plot Contents & Structure Hierarchy:")]', 'xpath', 'Verify Plot Contents & Structure Hierarchy heading');
+
+	# Verify subplot structure and 3x3 plant coordinate grid
+	$t->find_element_ok('//div[contains(@class,"show")]//table[contains(@class,"plant-grid-table")]', 'xpath', 'Find subplot plant grid table');
+	$t->find_element_ok('//div[contains(@class,"show")]//table[contains(@class,"plant-grid-table")]//th[text()="3"]', 'xpath', 'Find plant grid row/column header 3');
+	my $plant_cells = $t->driver->find_elements('//div[contains(@class,"show")]//td[contains(@class,"plant-grid-cell")]', 'xpath');
+	is(scalar(@$plant_cells), 9, 'Subplot grid contains 9 plant cells');
+	$t->find_element_ok('//div[contains(@class,"show")]//pre[contains(text(),"subplot")]', 'xpath', 'Verify subplot hierarchy in JSON pre block');
+
+	$t->click_ok('//div[contains(@class,"show")]//button[contains(text(),"Close")]', 'xpath', 'Close plot details modal');
 });
 
 $t->driver->quit();
