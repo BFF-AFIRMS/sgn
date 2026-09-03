@@ -155,6 +155,7 @@ my $build = SGN::Build->new(
         'Sort::Naturally'                          => '== 1.03',
         'Sort::Versions'                           => '== 1.62',
         'Spreadsheet::ParseExcel'                  => '== 0.66',
+        'Spreadsheet::ParseODS'                    => '== 0.39',
         'Spreadsheet::ParseXLSX'                   => '== 0.37',
         'Spreadsheet::Read'                        => '== 0.95',
         'Spreadsheet::WriteExcel'                  => '== 2.40',
