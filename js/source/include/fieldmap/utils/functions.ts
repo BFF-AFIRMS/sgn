@@ -59,3 +59,6 @@ export const pearsonSkewness = (arr: number[]): number => {
     const stdDev = Math.sqrt(variance);
     return stdDev === 0 ? 0 : (3 * (mean - median)) / stdDev;
 };
+
+export const modulo = (n: number, m: number): number =>
+    ((n % m) + m) % m;
