@@ -325,7 +325,12 @@ export const PlotGridProvider: React.FC<FieldMapContextProps> = ({ trialId, auth
             headers['Authorization'] = `Bearer ${authToken}`;
         }
 
-        const url = `/brapi/v2/observationunits?studyDbIds=${activeTrialIds.join(',')}&observationUnitLevelName=plot&pageSize=10000`;
+        const params = new URLSearchParams({
+            observationUnitLevelName: 'plot',
+            pageSize: '10000',
+        });
+        activeTrialIds.forEach(id => params.append('studyDbIds', id));
+        const url = `/brapi/v2/observationunits?${params.toString()}`;
         try {
             const response = await fetch(url, { headers });
             const body = await response.json();
