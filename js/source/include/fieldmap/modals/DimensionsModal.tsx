@@ -25,7 +25,7 @@ export const DimensionsModal: React.FC<DimensionsModalProps> = ({}) => {
     useEffect(() => {
         setDimRowsInput((dimensions?.rows || bounds.numRows || '').toString());
         setDimColsInput((dimensions?.cols || bounds.numCols || '').toString());
-    }, [dimensions, bounds]);
+    }, [dimensions, bounds, show]);
 
     const handleApplyDimensions = async () => {
         await applyDimensions(dimRowsInput, dimColsInput, fillerAccessionInput);
