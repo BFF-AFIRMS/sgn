@@ -80,6 +80,7 @@ sub create_tissue_sample_genotypes {
     my $tissue_sample_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'tissue_sample', 'stock_type')->cvterm_id();
     my $tissue_type_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'tissue_type', 'stock_property')->cvterm_id();
     my $tissue_sample_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'tissue_sample_of', 'stock_relationship')->cvterm_id();
+    my $plant_index_number_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'plant_index_number', 'stock_property')->cvterm_id();
 
     my $location_rs = $schema->resultset('NaturalDiversity::NdGeolocation')->search({description => $location});
     my $location_id = $location_rs->first->nd_geolocation_id;
@@ -131,6 +132,12 @@ sub create_tissue_sample_genotypes {
                 organism_id => $organism->organism_id,
             });
             my $plant_id = $plant->stock_id();
+            # Create plant stock properties
+            $schema->resultset("Stock::Stockprop")->find_or_create( {
+                stock_id => $plant_id,
+                type_id => $plant_index_number_cvterm_id,
+                value => 1,
+            });
             # Create plant stock relationships
             $schema->resultset("Stock::StockRelationship")->find_or_create({
                 subject_id => $plant_id,
