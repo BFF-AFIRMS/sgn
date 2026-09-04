@@ -282,6 +282,10 @@ export const PlotLayer: React.FC<PlotLayerProps> = ({
                 setPlotStructure(null);
                 setPlotImages('');
 
+                if (!plot.observationUnitDbId) {
+                    return;
+                }
+
                 fetch(`/stock/get_child_stocks/${plot.observationUnitDbId}`)
                     .then(res => res.json())
                     .then(response => {
