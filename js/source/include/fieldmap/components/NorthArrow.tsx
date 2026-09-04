@@ -26,6 +26,7 @@ export const NorthArrow: React.FC<NorthArrowProps> = ({ }) => {
 
     return (
         <div
+            id="fieldmap_north_arrow"
             className="tw:absolute tw:top-4 tw:right-4 tw:z-50 tw:flex tw:items-center tw:justify-center tw:pointer-events-none tw:bg-white/85 tw:rounded-full tw:border tw:border-[#ccc] tw:shadow-sm"
             style={{ width: '70px', height: '70px' }}
         >
