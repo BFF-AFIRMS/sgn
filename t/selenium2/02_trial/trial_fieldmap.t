@@ -4,6 +4,7 @@ use warnings;
 
 use Test::More;
 
+use File::Copy;
 use SGN::Test::WWW::WebDriver;
 use SGN::Test::Fixture;
 my $t = SGN::Test::WWW::WebDriver->new();
@@ -965,6 +966,85 @@ EOSQL
 	$t->find_element_ok('//div[contains(@class,"show")]//pre[contains(text(),"subplot")]', 'xpath', 'Verify subplot hierarchy in JSON pre block');
 
 	$t->click_ok('//div[contains(@class,"show")]//button[contains(text(),"Close")]', 'xpath', 'Close plot details modal');
+
+	# =========================================================================
+	# Plot Camera Icon & Images
+	# =========================================================================
+	# Verify legend displays "Plot Has Image" item
+	$t->find_element_ok('//div[@id="legend_list"]//span[contains(normalize-space(),"Plot Has Image")]', 'xpath', 'Find "Plot Has Image" item in legend');
+	$t->find_element_ok('//div[@id="legend_list"]//span[contains(normalize-space(),"Plot Has Image")]//img[contains(@src,"plot_images.png")]', 'xpath', 'Find camera icon image in legend');
+
+	# Verify no camera icon exists on plot cells before image upload
+	ok(!scalar(@{$t->driver->find_elements('//*[local-name()="svg" and @id="' . $svg_id . '"]//*[local-name()="rect" and @fill="#ff8c00"]', 'xpath')}), 'No camera icons on plots initially');
+
+	# Prepare test image using Fieldbook App naming pattern: <observationUnitName>_<traitname>_<number>_<timestamp>.jpg
+	my $image_filename = 'CASS_6Genotypes_103_rootquality_1_2024-01-01-12-00-00.jpg';
+	my $source_image   = $f->config->{basepath} . '/t/data/cassava_image.jpg';
+	my $temp_image     = "/tmp/$image_filename";
+	copy($source_image, $temp_image) or die "Could not copy $source_image to $temp_image: $!";
+
+	# Open the image upload dialog via trial images section button
+	$t->click_ok('trial_images_section_onswitch', 'id', 'Open trial images section');
+	$t->wait_for_working_dialog();
+	$t->click_ok('upload_images_link', 'id', 'Click Add New Image button to open upload modal');
+
+	# Upload and verify image file
+	my $upload_path = eval { $t->driver->upload_file($temp_image) } || $temp_image;
+	$t->send_keys_ok('upload_images_file_input', 'id', $upload_path, 'Input image filename');
+	$t->driver->execute_script(q{
+		document.getElementById('upload_images_file_input').dispatchEvent(new Event('input', { bubbles: true }));
+	});
+
+	$t->click_ok('upload_images_submit_verify', 'id', 'Click Verify button in upload modal');
+	$t->wait_for_working_dialog();
+
+	$t->find_element_ok('//div[@id="upload_images_status"]//li[contains(@class,"list-group-item-success")]', 'xpath', 'Image verification success message displayed');
+	$t->find_element_ok('//button[@id="upload_images_submit_store" and not(@disabled)]', 'xpath', 'Store button is enabled after verification');
+
+	# Store the verified image
+	$t->click_ok('upload_images_submit_store', 'id', 'Click Store button in upload modal');
+	ok((wait_until {
+		scalar(@{$t->driver->find_elements('//div[@id="upload_images_status"]//li[contains(@class,"list-group-item-success") and contains(.,"uploaded image")]', 'xpath')}) > 0;
+	} timeout => 30, interval => 1), 'Wait for image upload and store to complete');
+
+	$t->click_ok('//div[@id="upload_images_dialog"]//button[contains(text(),"Close")]', 'xpath', 'Close upload images modal');
+	unlink $temp_image if -e $temp_image;
+
+	# Refresh cache and reload trial page to view updated fieldmap with image
+	$t->driver->execute_script(q{
+		jQuery.ajax({
+			url: '/ajax/breeders/trial/165/refresh_cache',
+			type: 'POST',
+			async: false
+		});
+	});
+
+	$t->get_ok('/breeders/trial/165', 'Reload trial 165 page to view updated fieldmap with image');
+	$t->click_ok('pheno_heatmap_onswitch', 'id', 'Open fieldmap section');
+	$t->wait_for_working_dialog();
+	$t->find_element_ok('//*[@id="' . $svg_id . '"]', 'xpath', 'Find fieldmap SVG on reloaded page');
+
+	# Verify orange camera icon badge rendered on plot tile CASS_6Genotypes_103
+	$t->find_element_ok('//*[local-name()="svg" and @id="' . $svg_id . '"]//*[local-name()="rect" and @fill="#ff8c00"]', 'xpath', 'Find orange camera icon on plot tile');
+	$t->find_element_ok('//*[local-name()="svg" and @id="' . $svg_id . '"]//*[local-name()="g" and @transform="translate(5, 5) scale(0.6)"]/*[local-name()="circle" and @fill="#ffffff"]', 'xpath', 'Find white lens circle of camera icon');
+
+	# Click the plot tile with the camera icon and verify image display in Plot Details modal
+	$t->click_ok('//*[local-name()="svg" and @id="' . $svg_id . '"]//*[local-name()="g"][./*[local-name()="rect" and @fill="#ff8c00"]]/*[local-name()="rect" and @width="50"]', 'xpath', 'Click plot square that has camera icon');
+	$t->find_element_ok('//div[contains(@class,"show")]//h4[contains(@class,"modal-title") and contains(.,"CASS_6Genotypes_103")]', 'xpath', 'Verify plot details modal opened for CASS_6Genotypes_103');
+
+	ok((wait_until {
+		scalar(@{$t->driver->find_elements('//div[contains(@class,"show")]//h5[strong[contains(text(),"Plot Images:")]]', 'xpath')}) > 0;
+	} timeout => 15, interval => 1), 'Wait for Plot Images section to appear in details modal');
+	$t->find_element_ok('//div[contains(@class,"show")]//h5[strong[contains(text(),"Plot Images:")]]', 'xpath', 'Verify Plot Images heading displayed');
+	$t->find_element_ok('//div[contains(@class,"show")]//h5[strong[contains(text(),"Plot Images:")]]/following-sibling::div//img', 'xpath', 'Verify plot image thumbnail rendered in details modal');
+	$t->click_ok('//div[contains(@class,"show")]//button[contains(text(),"Close")]', 'xpath', 'Close plot details modal');
+
+	# Verify uploaded image is also listed in Trial Images section table
+	$t->click_ok('trial_images_section_onswitch', 'id', 'Open trial images section to verify image table');
+	$t->wait_for_working_dialog();
+	ok((wait_until {
+		scalar(@{$t->driver->find_elements('//table[@id="plot_images_results"]//td[contains(.,"CASS_6Genotypes_103")]', 'xpath')}) > 0;
+	} timeout => 15, interval => 1), 'Verify uploaded image listed in Trial Images table');
 });
 
 $t->driver->quit();
