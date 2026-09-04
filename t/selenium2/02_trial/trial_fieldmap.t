@@ -658,10 +658,10 @@ $t->while_logged_in_as("curator", sub {
 	# =========================================================================
 	# Spatial Layout CSV Export Customization
 	# =========================================================================
-	# Verify opening and closing modal via external header button (#trial_fieldmap_download_layout_button)
-	$t->click_ok('trial_fieldmap_download_layout_button', 'id', 'Click external Download Spatial Layout button in section header');
-	$t->find_element_ok('//div[contains(@class,"show")]//h4[contains(@class,"modal-title") and contains(text(),"Download Spatial Layout Customizer")]', 'xpath', 'Download Spatial Layout Customizer modal is open via external header button');
-	$t->click_ok('//div[contains(@class,"show")]//button[contains(text(),"Close")]', 'xpath', 'Click Close button in Download CSV modal opened via external button');
+	# Verify opening and closing modal via toolbar button
+	$t->click_ok('//button[@title="Download Spatial Layout (CSV)"]', 'xpath', 'Click Download Spatial Layout toolbar button to test open/close');
+	$t->find_element_ok('//div[contains(@class,"show")]//h4[contains(@class,"modal-title") and contains(text(),"Download Spatial Layout Customizer")]', 'xpath', 'Download Spatial Layout Customizer modal is open');
+	$t->click_ok('//div[contains(@class,"show")]//button[contains(text(),"Close")]', 'xpath', 'Click Close button in Download CSV modal');
 	ok(!scalar(@{$t->driver->find_elements('//div[contains(@class,"show")]//h4[contains(text(),"Download Spatial Layout Customizer")]', 'xpath')}), 'Download CSV modal is closed after clicking Close');
 
 	# Test CSV download with specific subset of metadata columns (opened via toolbar button)
@@ -671,12 +671,11 @@ $t->while_logged_in_as("curator", sub {
 		['Accession Name', 'Plot Number', 'Family']
 	);
 
-	# Test CSV download with all metadata columns enabled (opened via external header button)
+	# Test CSV download with all metadata columns enabled (opened via toolbar button)
 	download_spatial_layout_ok(
 		'Trial_165_spatial_layout.csv',
 		't/data/fieldmap/Trial_165_spatial_layout_t2.csv',
-		undef,
-		'//*[@id="trial_fieldmap_download_layout_button"]'
+		undef
 	);
 
 	# =========================================================================
@@ -788,6 +787,12 @@ $t->while_logged_in_as("curator", sub {
 	ok($t->driver->find_element('//label[contains(text(),"Top")]/input', 'xpath')->is_selected(), 'Persisted Top border is checked');
 	ok($t->driver->find_element('//label[contains(text(),"Left")]/input', 'xpath')->is_selected(), 'Persisted Left border is checked');
 	find_north_arrow_ok(240);
+
+	# Verify external header button (#trial_fieldmap_download_layout_button) opens Download CSV modal now that layout has coordinates
+	$t->click_ok('trial_fieldmap_download_layout_button', 'id', 'Click external Download Spatial Layout button in section header');
+	$t->find_element_ok('//div[contains(@class,"show")]//h4[contains(@class,"modal-title") and contains(text(),"Download Spatial Layout Customizer")]', 'xpath', 'Download Spatial Layout Customizer modal is open via external header button');
+	$t->click_ok('//div[contains(@class,"show")]//button[contains(text(),"Close")]', 'xpath', 'Click Close button in Download CSV modal opened via external button');
+	ok(!scalar(@{$t->driver->find_elements('//div[contains(@class,"show")]//h4[contains(text(),"Download Spatial Layout Customizer")]', 'xpath')}), 'Download CSV modal is closed after clicking Close');
 
 	# =========================================================================
 	# "Display Trials in Same Field" Multi-Trial Visualization
@@ -1029,7 +1034,7 @@ EOSQL
 	$t->find_element_ok('//*[local-name()="svg" and @id="' . $svg_id . '"]//*[local-name()="g" and @transform="translate(5, 5) scale(0.6)"]/*[local-name()="circle" and @fill="#ffffff"]', 'xpath', 'Find white lens circle of camera icon');
 
 	# Click the plot tile with the camera icon and verify image display in Plot Details modal
-	$t->click_ok('//*[local-name()="svg" and @id="' . $svg_id . '"]//*[local-name()="g"][./*[local-name()="rect" and @fill="#ff8c00"]]/*[local-name()="rect" and @width="50"]', 'xpath', 'Click plot square that has camera icon');
+	$t->click_ok('//*[local-name()="svg" and @id="' . $svg_id . '"]//*[local-name()="g"][.//*[local-name()="rect" and @fill="#ff8c00"]]/*[local-name()="rect" and @width="50"]', 'xpath', 'Click plot square that has camera icon');
 	$t->find_element_ok('//div[contains(@class,"show")]//h4[contains(@class,"modal-title") and contains(.,"CASS_6Genotypes_103")]', 'xpath', 'Verify plot details modal opened for CASS_6Genotypes_103');
 
 	ok((wait_until {
