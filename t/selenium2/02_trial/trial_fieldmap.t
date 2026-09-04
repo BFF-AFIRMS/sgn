@@ -304,15 +304,16 @@ my $all_checkbox_labels = [
 
 # Open the CSV download modal, select requested columns, trigger download, and verify CSV content
 sub download_spatial_layout_ok {
-	my ($filename, $expected_filepath, $checkboxes) = @_;
+	my ($filename, $expected_filepath, $checkboxes, $trigger_xpath) = @_;
 	$checkboxes ||= $all_checkbox_labels;
+	$trigger_xpath ||= '//button[@title="Download Spatial Layout (CSV)"]';
 
 	my $file_path = '/selenium/downloads/' . $filename;
 	if (-e $file_path) {
 		unlink $file_path or die "Could not delete existing file '$file_path': $!";
 	}
 
-	$t->click_ok('//button[@title="Download Spatial Layout (CSV)"]', 'xpath', 'Click Download Spatial Layout button');
+	$t->click_ok($trigger_xpath, 'xpath', 'Click Download Spatial Layout button');
 
 	foreach my $label (@$checkboxes) {
 		my $element = $t->find_element_ok('//div[contains(@class,"show")]//label[contains(text(),"' . $label . '")]/input', 'xpath', "Find checkbox for '$label'");
@@ -656,17 +657,25 @@ $t->while_logged_in_as("curator", sub {
 	# =========================================================================
 	# Spatial Layout CSV Export Customization
 	# =========================================================================
-	# Test CSV download with specific subset of metadata columns
+	# Verify opening and closing modal via external header button (#trial_fieldmap_download_layout_button)
+	$t->click_ok('trial_fieldmap_download_layout_button', 'id', 'Click external Download Spatial Layout button in section header');
+	$t->find_element_ok('//div[contains(@class,"show")]//h4[contains(@class,"modal-title") and contains(text(),"Download Spatial Layout Customizer")]', 'xpath', 'Download Spatial Layout Customizer modal is open via external header button');
+	$t->click_ok('//div[contains(@class,"show")]//button[contains(text(),"Close")]', 'xpath', 'Click Close button in Download CSV modal opened via external button');
+	ok(!scalar(@{$t->driver->find_elements('//div[contains(@class,"show")]//h4[contains(text(),"Download Spatial Layout Customizer")]', 'xpath')}), 'Download CSV modal is closed after clicking Close');
+
+	# Test CSV download with specific subset of metadata columns (opened via toolbar button)
 	download_spatial_layout_ok(
 		'Trial_165_spatial_layout.csv',
 		't/data/fieldmap/Trial_165_spatial_layout_t1.csv',
 		['Accession Name', 'Plot Number', 'Family']
 	);
 
-	# Test CSV download with all metadata columns enabled
+	# Test CSV download with all metadata columns enabled (opened via external header button)
 	download_spatial_layout_ok(
 		'Trial_165_spatial_layout.csv',
 		't/data/fieldmap/Trial_165_spatial_layout_t2.csv',
+		undef,
+		'//*[@id="trial_fieldmap_download_layout_button"]'
 	);
 
 	# =========================================================================
@@ -782,7 +791,7 @@ $t->while_logged_in_as("curator", sub {
 	# =========================================================================
 	# "Display Trials in Same Field" Multi-Trial Visualization
 	# =========================================================================
-	# Mark geolocation as a "Field" to link co-located trials
+	# Mark test_location as a "Field" to link co-located trials
 	$f->dbh->do(<<'EOSQL');
 INSERT INTO public.nd_geolocationprop (nd_geolocation_id, type_id, value, rank)
 VALUES (23, 77158, 'Field', 0)
