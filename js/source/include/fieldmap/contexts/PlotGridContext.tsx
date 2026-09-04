@@ -1,23 +1,23 @@
 import React, { createContext, useContext, useState, useMemo, useCallback, useEffect } from 'react';
 import { Plot, PlotStructureNode } from '../types';
-import { useLayoutConfig } from './LayoutConfigContext';
+import { SecondaryAxis, useLayoutConfig } from './LayoutConfigContext';
 import { FieldMapContextProps } from '../types';
 import { useModals } from './ModalsContext';
 import { useView } from './ViewContext';
 import { derivePlotGrid } from '../utils/derivePlotGrid';
 
 export interface GridBounds {
-    minCol: number;
-    maxCol: number;
-    minRow: number;
-    maxRow: number;
-    numRows: number;
-    numCols: number;
+    readonly minCol: number;
+    readonly maxCol: number;
+    readonly minRow: number;
+    readonly maxRow: number;
+    readonly numRows: number;
+    readonly numCols: number;
 }
 
 export interface AxisOrientation {
-    x: { source: 'x' | 'y'; reversed: boolean };
-    y: { source: 'x' | 'y'; reversed: boolean };
+    readonly x: { source: 'x' | 'y'; reversed: boolean };
+    readonly y: { source: 'x' | 'y'; reversed: boolean };
 }
 
 export interface PlotGridContextType {
@@ -30,6 +30,7 @@ export interface PlotGridContextType {
 
     fetchObservationUnits: () => Promise<void>;
     recalculateLayout: (layout: 'serpentine' | 'zigzag') => void;
+    mutatePlot: (plotId: string | Plot, updatedFields: Partial<Plot>) => void;
 
     dimensions: { rows: number; cols: number };
     applyDimensions: (rowsInput: string, colsInput: string, fillerAccessionInput?: string) => Promise<void>;
@@ -39,9 +40,7 @@ export interface PlotGridContextType {
     fillerAccessionName: string | undefined;
     setFillerAccessionName: React.Dispatch<React.SetStateAction<string | undefined>>;
 
-    isTransposed: boolean;
     transposeLayout: () => void;
-    mapRotation: number;
     rotateLayout: () => void;
     axisOrientation: AxisOrientation;
 
@@ -51,6 +50,8 @@ export interface PlotGridContextType {
     setPlotContentCache: React.Dispatch<React.SetStateAction<Record<string, string[]>>>;
     plotImages: string;
     setPlotImages: React.Dispatch<React.SetStateAction<string>>;
+
+    transformedSecondaryAxis: SecondaryAxis | undefined;
 }
 
 const PlotGridContext = createContext<PlotGridContextType | undefined>(undefined);
@@ -68,6 +69,8 @@ export const PlotGridProvider: React.FC<FieldMapContextProps> = ({ trialId, auth
         setColorVar,
         setLabelVar,
         setLabelSize,
+        setNorthArrowAngle,
+        secondaryAxis,
         hasSecondaryAxis
     } = useLayoutConfig();
 
@@ -83,8 +86,6 @@ export const PlotGridProvider: React.FC<FieldMapContextProps> = ({ trialId, auth
     const [dimensions, setDimensions] = useState({ rows: 0, cols: 0 });
     const [fillerAccessionId, setFillerAccessionId] = useState<string | undefined>(undefined);
     const [fillerAccessionName, setFillerAccessionName] = useState<string | undefined>(undefined);
-    const [isTransposed, setIsTransposed] = useState<boolean>(false);
-    const [mapRotation, setMapRotation] = useState<number>(0);
     const [axisOrientation, setAxisOrientation] = useState<AxisOrientation>({
         x: { source: 'x', reversed: false },
         y: { source: 'y', reversed: false }
@@ -158,8 +159,6 @@ export const PlotGridProvider: React.FC<FieldMapContextProps> = ({ trialId, auth
 
 
     const parsePlotData = useCallback((data: any[]) => {
-        setIsTransposed(false);
-        setMapRotation(0);
         setAxisOrientation({
             x: { source: 'x', reversed: false },
             y: { source: 'y', reversed: false }
@@ -215,12 +214,6 @@ export const PlotGridProvider: React.FC<FieldMapContextProps> = ({ trialId, auth
     }, [bounds, renderBounds, plotList, fillerAccessionId]);
 
     const recalculateLayout = useCallback((layout: 'serpentine' | 'zigzag', rows?: number, cols?: number) => {
-        setIsTransposed(false);
-        setMapRotation(0);
-        setAxisOrientation({
-            x: { source: 'x', reversed: false },
-            y: { source: 'y', reversed: false }
-        });
         setPlotObject(currentPlots => {
             rows = rows ?? dimensions.rows ?? bounds.numRows;
             cols = cols ?? dimensions.cols ?? bounds.numCols;
@@ -272,7 +265,8 @@ export const PlotGridProvider: React.FC<FieldMapContextProps> = ({ trialId, auth
     }, [dimensions, bounds]);
 
     const transposeLayout = useCallback(() => {
-        setIsTransposed(t => !t);
+        // Reflection over diagonal (α′ = 2(θ_line) - α) = 2(45) - α = 90 - α
+        setNorthArrowAngle(prev => (90 - prev) % 360);
         setAxisOrientation(prev => ({
             x: prev.y,
             y: prev.x
@@ -295,7 +289,6 @@ export const PlotGridProvider: React.FC<FieldMapContextProps> = ({ trialId, auth
     }, []);
 
     const rotateLayout = useCallback(() => {
-        setMapRotation(r => (r + 90) % 360);
         setAxisOrientation(prev => ({
             x: prev.y,
             y: {
@@ -303,6 +296,7 @@ export const PlotGridProvider: React.FC<FieldMapContextProps> = ({ trialId, auth
                 reversed: !prev.x.reversed
             }
         }));
+        setNorthArrowAngle(prev => (prev + 90) % 360);
         const { minCol, maxCol } = bounds;
         setPlotObject(current => {
             const rotated: Record<string, Plot> = {};
@@ -361,6 +355,30 @@ export const PlotGridProvider: React.FC<FieldMapContextProps> = ({ trialId, auth
         }
     }, [activeTrialIds, authToken, setTopBorder, setLeftBorder, setRightBorder, setBottomBorder, setInvertRows, setInvertCols, setPlotLayout, setColorVar, setLabelVar, setLabelSize]);
 
+    const mutatePlot = useCallback((plotRef: string | Plot, updatedFields: Partial<Plot>) => {
+        setPlotObject(current => {
+            const plotId = typeof plotRef === 'string'
+                ? plotRef
+                : plotRef.observationUnitDbId;
+            if (!plotId) {
+                return current;
+            }
+
+            const existingPlot = current[plotId];
+            if (!existingPlot) {
+                return current;
+            }
+
+            return {
+                ...current,
+                [plotId]: {
+                    ...existingPlot,
+                    ...updatedFields
+                }
+            };
+        });
+    }, []);
+
     const applyDimensions = useCallback(async (rowsInput: string, colsInput: string, fillerAccessionInput?: string) => {
         const rows = parseInt(rowsInput) || 0;
         const cols = parseInt(colsInput) || 0;
@@ -393,6 +411,42 @@ export const PlotGridProvider: React.FC<FieldMapContextProps> = ({ trialId, auth
         recalculateLayout(plotLayout, rows, cols);
     }, [trialId, plotList]);
 
+    const transformedSecondaryAxis = useMemo(() => {
+        if (!hasSecondaryAxis || !secondaryAxis) {
+            return undefined;
+        }
+
+        const getAxisDisplay = (
+            { source, reversed }: { source: 'x' | 'y'; reversed: boolean },
+            length: number
+        ) => {
+            const [label, configValues] = source === 'x' ?
+                [secondaryAxis.xLabel, secondaryAxis.xValues ?? []] :
+                [secondaryAxis.yLabel, secondaryAxis.yValues ?? []];
+
+            if (!reversed) {
+                return { label, values: configValues };
+            }
+
+            const values = Array.from({ length }, (_, i) => {
+                return configValues[length - 1 - i] ?? '';
+            });
+
+            return { label, values };
+        };
+
+        const { cols, rows } = dimensions;
+        const dispX = getAxisDisplay(axisOrientation.x, cols || bounds.numCols);
+        const dispY = getAxisDisplay(axisOrientation.y, rows || bounds.numRows);
+
+        return {
+            xLabel: dispX.label,
+            yLabel: dispY.label,
+            xValues: dispX.values,
+            yValues: dispY.values
+        };
+    }, [hasSecondaryAxis, secondaryAxis, axisOrientation, dimensions, bounds]);
+
     useEffect(() => {
         fetchObservationUnits();
     }, [activeTrialIds]);
@@ -413,8 +467,6 @@ export const PlotGridProvider: React.FC<FieldMapContextProps> = ({ trialId, auth
             transposeLayout,
             rotateLayout,
             recalculateLayout,
-            isTransposed,
-            mapRotation,
             axisOrientation,
             plotStructure,
             setPlotStructure,
@@ -423,7 +475,9 @@ export const PlotGridProvider: React.FC<FieldMapContextProps> = ({ trialId, auth
             plotImages,
             setPlotImages,
             fetchObservationUnits,
+            mutatePlot,
             applyDimensions,
+            transformedSecondaryAxis,
         }}>
             {children}
         </PlotGridContext.Provider>

@@ -3,7 +3,7 @@ import { useLayoutConfig } from '../contexts/LayoutConfigContext';
 import { useModals } from '../contexts/ModalsContext';
 import { usePlotGrid } from '../contexts/PlotGridContext';
 import { useView } from '../contexts/ViewContext';
-import { buildParams, isDefined } from '../../functions';
+import { buildParams } from '../../functions';
 
 export const useSubmitFieldLayout = () => {
 	const {
@@ -16,6 +16,7 @@ export const useSubmitFieldLayout = () => {
 		fillerAccessionId,
 		fillerAccessionName,
 		fetchObservationUnits,
+		transformedSecondaryAxis: secondaryAxis
 	} = usePlotGrid();
 
 	const {
@@ -31,7 +32,6 @@ export const useSubmitFieldLayout = () => {
 		labelSize,
 		northArrowAngle,
 		loadNorthArrowAngle,
-		secondaryAxis,
 		loadSecondaryAxis
 	} = useLayoutConfig();
 
@@ -173,7 +173,7 @@ export const useSubmitFieldLayout = () => {
 		trialId, authToken, gridMatrix, invertRows,
 		invertCols, topBorder, leftBorder, rightBorder,
 		bottomBorder, plotLayout, colorVar, labelVar,
-		labelSize, northArrowAngle, secondaryAxis,
+		labelSize, northArrowAngle, secondaryAxis, maxLevelCode,
 		fetchObservationUnits, loadNorthArrowAngle, loadSecondaryAxis, setLoading
 	]);
 

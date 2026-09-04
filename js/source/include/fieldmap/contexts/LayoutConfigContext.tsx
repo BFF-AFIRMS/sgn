@@ -8,10 +8,10 @@ export type ColorVar = 'parity' | 'germplasm' | 'block' | 'family_name' | 'cross
 export type LabelVar = 'plot_number' | 'germplasm' | 'block' | 'family_name' | 'cross_name';
 
 export interface SecondaryAxis {
-    xLabel?: string;
-    yLabel?: string;
-    xValues?: string[];
-    yValues?: string[];
+    readonly xLabel?: string;
+    readonly yLabel?: string;
+    readonly xValues?: string[];
+    readonly yValues?: string[];
 }
 
 export interface LayoutConfigContextType {

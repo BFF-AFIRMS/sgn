@@ -190,7 +190,7 @@ is_deeply($response, {'success' => 1}, "get add management factor page");
 
 $mech->post_ok('http://localhost:3010/ajax/breeders/trial/'.$trial_id.'/replace_plot_accessions', ['old_accession' => 'test_accession3', 'new_accession' => 'test_accession1', 'old_plot_id' => '38866', 'old_plot_name' => 'test_trial210', 'new_plot_name' => "test_trial210_afterchange", 'override' => 'check']);
 $response = decode_json $mech->content;
-is_deeply($response, {success => 1});
+is_deeply($response, {success => 1, new_accession_id => 38840});
 
 $mech->get_ok('http://localhost:3010/ajax/breeders/trial/'.$trial_id.'/plots');
 $response = decode_json $mech->content;
@@ -199,7 +199,7 @@ is_deeply($response, {'plots' => [[[38857,'test_trial21'],[38858,'test_trial22']
 
 $mech->post_ok('http://localhost:3010/ajax/breeders/trial/'.$trial_id.'/replace_plot_accessions', ['old_accession' => 'test_accession1', 'new_accession' => 'test_accession3', 'old_plot_id' => '38866', 'old_plot_name' => 'test_trial210_afterchange', 'new_plot_name' => "test_trial210", 'override' => 'check']);
 $response = decode_json $mech->content;
-is_deeply($response, {success => 1});
+is_deeply($response, {success => 1, new_accession_id => 38842});
 
 $mech->get_ok('http://localhost:3010/ajax/breeders/trial/'.$trial_id.'/get_management_regime');
 $response = decode_json $mech->content;

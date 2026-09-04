@@ -3173,7 +3173,7 @@ sub replace_plot_accession : Chained('trial') PathPart('replace_plot_accessions'
     my $refresh = $bs->refresh_matviews($c->config->{dbhost}, $c->config->{dbname}, $c->config->{dbuser}, $c->config->{dbpass}, 'phenotypes', 'concurrent', $c->config->{basepath});
 
     print STDERR "OldAccession: $old_accession, NewAcc: $new_accession, OldPlotName: $old_plot_name, NewPlotName: $new_plot_name OldPlotId: $plot_id\n";
-    $c->stash->{rest} = { success => 1};
+    $c->stash->{rest} = { success => 1, new_accession_id => $new_accession_id };
 }
 
 sub accession_exists : Chained('trial') PathPart('accession_exists') Args(0) {
