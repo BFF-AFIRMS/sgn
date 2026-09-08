@@ -27,7 +27,7 @@ export const FieldMapHeaderPanel: React.FC<FieldMapHeaderPanelProps> = ({
             setHeatmapData({});
         } else if (val) {
             const variableId = val.replace(' (corrected)', '').replace(' (adjustment)', '');
-            fetchHeatmapObservations(variableId);
+            fetchHeatmapObservations(variableId, val);
         }
     }, [setSelectedView, setHeatmapData, fetchHeatmapObservations]);
 

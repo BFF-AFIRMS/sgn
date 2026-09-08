@@ -18,7 +18,7 @@ export interface HeatmapContextType {
 		scale: (val: number) => string;
 		colors?: string[];
 	};
-	fetchHeatmapObservations: (variableId: string) => void;
+	fetchHeatmapObservations: (variableId: string, currentView?: string) => void;
 	loadVariables: () => Promise<void>;
 	loadSpatialAdjustments: () => Promise<void>;
 }
@@ -74,8 +74,9 @@ export const HeatmapProvider: React.FC<FieldMapContextProps> = ({ trialId, authT
 		loadSpatialAdjustments();
 	}, [activeTrialIds]);
 
-    const fetchHeatmapObservations = useCallback(async (variableId: string) => {
+    const fetchHeatmapObservations = useCallback(async (variableId: string, currentView?: string) => {
         setLoading(true);
+        const activeView = currentView ?? selectedView;
         const headers: Record<string, string> = {};
         if (authToken) {
             headers['Authorization'] = `Bearer ${authToken}`;
@@ -95,9 +96,9 @@ export const HeatmapProvider: React.FC<FieldMapContextProps> = ({ trialId, authT
                 const plotName = obs.observationUnitName;
 
                 // Apply Spatial adjustments if viewing Corrected or Adjustments
-                if (selectedView.includes(' (corrected)') && spatialAdjustments[plotName]?.[variableId] !== undefined) {
+                if (activeView.includes(' (corrected)') && spatialAdjustments[plotName]?.[variableId] !== undefined) {
                     finalVal += Number(spatialAdjustments[plotName][variableId]);
-                } else if (selectedView.includes(' (adjustment)') && spatialAdjustments[plotName]?.[variableId] !== undefined) {
+                } else if (activeView.includes(' (adjustment)') && spatialAdjustments[plotName]?.[variableId] !== undefined) {
                     finalVal = Number(spatialAdjustments[plotName][variableId]);
                 }
 
