@@ -242,6 +242,51 @@ sub click_ok {
     return $element;
 }
 
+sub click_option {
+    my ($self, $name, $method, @args) = @_;
+    my $options = $self->_extract_basic_args(@args);
+
+    my $action = "click_option_$name";
+    $self->collect_js_logs($action);
+
+    return wait_until {
+        $self->screenshot($action);
+
+        my $element = $self->driver->find_element($name, $method);
+        $self->driver->execute_script(q{
+            const el = arguments[0];
+            if (!el) return;
+            const select = el.closest('select');
+            if (select) {
+                select.scrollIntoView({ block: 'center' });
+                el.selected = true;
+                select.value = el.value;
+                select.dispatchEvent(new Event('input', { bubbles: true }));
+                select.dispatchEvent(new Event('change', { bubbles: true }));
+            } else {
+                el.click();
+            }
+        }, $element);
+        return $element;
+    } timeout => $options->{timeout};
+}
+
+sub click_option_ok {
+    my ($self, $name, $method, @args) = @_;
+    my ($test_name, $options) = $self->_extract_ok_args(@args);
+
+    $test_name = $test_name || print STDERR "You can provide a test name parameter for click_option_ok\n";
+    ok(
+        my $element = $self->click_option(
+            $name,
+            $method,
+            timeout => $options->{timeout},
+        ),
+        $test_name
+    );
+    return $element;
+}
+
 sub clear {
     my ($self, $name, $method, @args) = @_;
     my $options = $self->_extract_basic_args(@args);
