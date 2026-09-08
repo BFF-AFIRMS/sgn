@@ -9,6 +9,8 @@ use JSON;
 use SGN::Model::Cvterm;
 use SGN::Test::WWW::WebDriver;
 use SGN::Test::Fixture;
+use CXGN::Trial::TrialCreate;
+use CXGN::Trial::TrialLayout;
 my $t = SGN::Test::WWW::WebDriver->new();
 my $f = SGN::Test::Fixture->new();
 
@@ -346,6 +348,112 @@ sub download_spatial_layout_ok {
 	};
 
 	is($actual_content, $expected_content, "Check that downloaded file content matches expected content");
+}
+
+# Programmatically create a trial with specific stock type (cross or family_name) using CXGN::Trial::TrialCreate
+sub create_trial_with_stock_type {
+	my ($trial_name, $stock_type, $stock_names_aref) = @_;
+
+	my $stock_type_cvterm = SGN::Model::Cvterm->get_cvterm_row($f->bcs_schema, $stock_type, 'stock_type');
+	my $organism = $f->bcs_schema->resultset('Organism::Organism')->first();
+
+	for my $sname (@$stock_names_aref) {
+		$f->bcs_schema->resultset('Stock::Stock')->find_or_create({
+			uniquename  => $sname,
+			name        => $sname,
+			type_id     => $stock_type_cvterm->cvterm_id,
+			organism_id => $organism->organism_id,
+		});
+	}
+
+	my %design = (
+		1 => {
+			plot_name    => "${trial_name}_Plot_101",
+			stock_name   => $stock_names_aref->[0],
+			plot_number  => 101,
+			block_number => 1,
+			rep_number   => 1,
+			row_number   => 1,
+			col_number   => 1,
+			is_a_control => 0,
+		},
+		2 => {
+			plot_name    => "${trial_name}_Plot_102",
+			stock_name   => $stock_names_aref->[1],
+			plot_number  => 102,
+			block_number => 1,
+			rep_number   => 1,
+			row_number   => 1,
+			col_number   => 2,
+			is_a_control => 0,
+		},
+		3 => {
+			plot_name    => "${trial_name}_Plot_201",
+			stock_name   => $stock_names_aref->[2],
+			plot_number  => 201,
+			block_number => 2,
+			rep_number   => 1,
+			row_number   => 2,
+			col_number   => 1,
+			is_a_control => 0,
+		},
+		4 => {
+			plot_name    => "${trial_name}_Plot_202",
+			stock_name   => $stock_names_aref->[3],
+			plot_number  => 202,
+			block_number => 2,
+			rep_number   => 1,
+			row_number   => 2,
+			col_number   => 2,
+			is_a_control => 0,
+		},
+	);
+
+	my ($user_id) = eval { $f->dbh->selectrow_array("SELECT sp_person_id FROM sgn_people.sp_person WHERE username = 'janedoe'") };
+	if (!defined $user_id) {
+		die "User 'janedoe' not found in fixture database";
+	}
+
+	my $trial_type_cvterm = eval { SGN::Model::Cvterm->get_cvterm_row($f->bcs_schema, 'phenotyping_trial', 'project_type') }
+		|| $f->bcs_schema->resultset('Cv::Cvterm')->search({ name => 'phenotyping_trial' })->first;
+	my $trial_type_id = $trial_type_cvterm ? $trial_type_cvterm->cvterm_id : undef;
+
+	my $trial_create = CXGN::Trial::TrialCreate->new({
+		chado_schema      => $f->bcs_schema,
+		dbh               => $f->dbh,
+		owner_id          => $user_id,
+		operator          => 'janedoe',
+		trial_year        => '2024',
+		trial_description => "Fieldmap test trial for $stock_type",
+		trial_location    => 'test_location',
+		program           => 'test',
+		trial_name        => $trial_name,
+		design_type       => 'CRD',
+		trial_type        => $trial_type_id,
+		trial_stock_type  => $stock_type,
+		design            => \%design,
+	});
+
+	my $save = $trial_create->save_trial();
+	die "Error creating $stock_type trial: " . ($save->{error} || 'unknown error') if $save->{error} || !$save->{trial_id};
+	my $trial_id = $save->{trial_id};
+
+	my $trial_stock_type_cvterm = SGN::Model::Cvterm->get_cvterm_row($f->bcs_schema, 'trial_stock_type', 'project_property');
+	$f->bcs_schema->resultset('Project::Projectprop')->update_or_create({
+		project_id => $trial_id,
+		type_id    => $trial_stock_type_cvterm->cvterm_id,
+		value      => $stock_type,
+		rank       => 0,
+	});
+
+	my $trial_layout = CXGN::Trial::TrialLayout->new({
+		schema          => $f->bcs_schema,
+		trial_id        => $trial_id,
+		experiment_type => 'field_layout',
+	});
+	$trial_layout->generate_and_cache_layout();
+
+	return $trial_id;
 }
 
 
@@ -1168,6 +1276,84 @@ EOSQL
 	ok((wait_until {
 		scalar(@{$t->driver->find_elements('//table[@id="plot_images_results"]//td[contains(.,"CASS_6Genotypes_103")]', 'xpath')}) > 0;
 	} timeout => 15, interval => 1), 'Verify uploaded image listed in Trial Images table');
+
+	# =========================================================================
+	# Alternative Stock Type: Cross
+	# =========================================================================
+	my $cross_trial_id = create_trial_with_stock_type(
+		'Test_Cross_Fieldmap_Trial',
+		'cross',
+		['TEST_CROSS_01', 'TEST_CROSS_02', 'TEST_CROSS_03', 'TEST_CROSS_04']
+	);
+
+	$t->get_ok("/breeders/trial/$cross_trial_id", 'Navigate to created cross trial page');
+	$t->click_ok('pheno_heatmap_onswitch', 'id', 'Open fieldmap section on cross trial');
+	$t->wait_for_working_dialog();
+	$t->find_element_ok('//*[@id="' . $svg_id . '"]', 'xpath', 'Find fieldmap SVG on cross trial');
+
+	# Verify "Cross" in Color By dropdown
+	$t->find_element_ok('//label[contains(text(),"Color By:")]/following-sibling::select/option[@value="germplasm" and text()="Cross"]', 'xpath', 'Find "Cross" option in Color By select');
+
+	# Verify "Cross Name" in Label By dropdown
+	$t->find_element_ok('//label[contains(text(),"Label By:")]/following-sibling::select/option[@value="germplasm" and normalize-space()="Cross Name"]', 'xpath', 'Find "Cross Name" option in Label By select');
+
+	# Label by Cross Name and verify labels in SVG
+	set_label_by('germplasm');
+	find_plot_label_ok('TEST_CROSS_01', 0, 1, staggered => 1);
+	find_plot_label_ok('TEST_CROSS_02', 1, 1, staggered => 1);
+	find_plot_label_ok('TEST_CROSS_03', 0, 0, staggered => 1);
+	find_plot_label_ok('TEST_CROSS_04', 1, 0, staggered => 1);
+
+	# Click plot cell to open details modal
+	click_plot_cell_ok(0, 1);
+	$t->find_element_ok('//div[contains(@class,"show")]//h4[contains(@class,"modal-title") and contains(text(),"Plot Details")]', 'xpath', 'Plot details modal is open for cross plot');
+	$t->find_element_ok('//div[contains(@class,"show")]//tr[td[contains(normalize-space(),"Cross Name:")]]/td[2][contains(normalize-space(),"TEST_CROSS_01")]', 'xpath', 'Verify Cross Name displayed in summary table');
+	$t->find_element_ok('//div[contains(@class,"show")]//a[contains(normalize-space(),"Replace Cross")]', 'xpath', 'Verify "Replace Cross" tab title');
+
+	# Switch to Replace Cross tab and verify labels
+	$t->click_ok('//div[contains(@class,"show")]//a[contains(normalize-space(),"Replace Cross")]', 'xpath', 'Click Replace Cross tab');
+	$t->find_element_ok('//div[contains(@class,"show")]//label[contains(normalize-space(),"New Cross Name:")]', 'xpath', 'Verify "New Cross Name:" label');
+	$t->find_element_ok('//div[contains(@class,"show")]//button[contains(normalize-space(),"Update Cross")]', 'xpath', 'Verify "Update Cross" button');
+	$t->click_ok('//div[contains(@class,"show")]//button[contains(text(),"Close")]', 'xpath', 'Close plot details modal for cross plot');
+
+	# =========================================================================
+	# Alternative Stock Type: Family
+	# =========================================================================
+	my $family_trial_id = create_trial_with_stock_type(
+		'Test_Family_Fieldmap_Trial',
+		'family_name',
+		['TEST_FAMILY_01', 'TEST_FAMILY_02', 'TEST_FAMILY_03', 'TEST_FAMILY_04']
+	);
+
+	$t->get_ok("/breeders/trial/$family_trial_id", 'Navigate to created family trial page');
+	$t->click_ok('pheno_heatmap_onswitch', 'id', 'Open fieldmap section on family trial');
+	$t->wait_for_working_dialog();
+	$t->find_element_ok('//*[@id="' . $svg_id . '"]', 'xpath', 'Find fieldmap SVG on family trial');
+
+	# Verify "Family" in Color By dropdown
+	$t->find_element_ok('//label[contains(text(),"Color By:")]/following-sibling::select/option[@value="germplasm" and text()="Family"]', 'xpath', 'Find "Family" option in Color By select');
+
+	# Verify "Family Name" in Label By dropdown
+	$t->find_element_ok('//label[contains(text(),"Label By:")]/following-sibling::select/option[@value="germplasm" and normalize-space()="Family Name"]', 'xpath', 'Find "Family Name" option in Label By select');
+
+	# Label by Family Name and verify labels in SVG
+	set_label_by('germplasm');
+	find_plot_label_ok('TEST_FAMILY_01', 0, 1, staggered => 1);
+	find_plot_label_ok('TEST_FAMILY_02', 1, 1, staggered => 1);
+	find_plot_label_ok('TEST_FAMILY_03', 0, 0, staggered => 1);
+	find_plot_label_ok('TEST_FAMILY_04', 1, 0, staggered => 1);
+
+	# Click plot cell to open details modal
+	click_plot_cell_ok(0, 1);
+	$t->find_element_ok('//div[contains(@class,"show")]//h4[contains(@class,"modal-title") and contains(text(),"Plot Details")]', 'xpath', 'Plot details modal is open for family plot');
+	$t->find_element_ok('//div[contains(@class,"show")]//tr[td[contains(normalize-space(),"Family Name:")]]/td[2][contains(normalize-space(),"TEST_FAMILY_01")]', 'xpath', 'Verify Family Name displayed in summary table');
+	$t->find_element_ok('//div[contains(@class,"show")]//a[contains(normalize-space(),"Replace Family")]', 'xpath', 'Verify "Replace Family" tab title');
+
+	# Switch to Replace Family tab and verify labels
+	$t->click_ok('//div[contains(@class,"show")]//a[contains(normalize-space(),"Replace Family")]', 'xpath', 'Click Replace Family tab');
+	$t->find_element_ok('//div[contains(@class,"show")]//label[contains(normalize-space(),"New Family Name:")]', 'xpath', 'Verify "New Family Name:" label');
+	$t->find_element_ok('//div[contains(@class,"show")]//button[contains(normalize-space(),"Update Family")]', 'xpath', 'Verify "Update Family" button');
+	$t->click_ok('//div[contains(@class,"show")]//button[contains(text(),"Close")]', 'xpath', 'Close plot details modal for family plot');
 });
 
 $t->driver->quit();
