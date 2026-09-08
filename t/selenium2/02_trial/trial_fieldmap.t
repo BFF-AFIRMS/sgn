@@ -5,6 +5,8 @@ use warnings;
 use Test::More;
 
 use File::Copy;
+use JSON;
+use SGN::Model::Cvterm;
 use SGN::Test::WWW::WebDriver;
 use SGN::Test::Fixture;
 my $t = SGN::Test::WWW::WebDriver->new();
@@ -196,21 +198,22 @@ sub set_secondary_axis {
 
 # Select a view from the "Select Layout View" dropdown (e.g. Field Layout or Assayed Trait)
 sub set_layout_view {
-	my ($view_option_text) = @_;
-	$t->click_ok('//label[contains(text(),"Select Layout View:")]/following-sibling::select//option[contains(text(),"' . $view_option_text . '")]', 'xpath', "Select Layout View '$view_option_text'");
+	my ($view_option_text_or_value) = @_;
+	my $xpath = '//label[contains(text(),"Select Layout View:")]/following-sibling::select//option[normalize-space(text())="' . $view_option_text_or_value . '" or @value="' . $view_option_text_or_value . '"]';
+	$t->click_option_ok($xpath, 'xpath', "Select Layout View '$view_option_text_or_value'");
 	$t->wait_for_working_dialog();
 }
 
 # Select a coloring option from the "Color By:" dropdown
 sub set_color_by {
 	my ($color_by) = @_;
-	$t->click_ok('//label[contains(text(),"Color By:")]/following-sibling::select/option[@value="' . $color_by . '"]', 'xpath', "Select Color By '$color_by'");
+	$t->click_option_ok('//label[contains(text(),"Color By:")]/following-sibling::select/option[@value="' . $color_by . '"]', 'xpath', "Select Color By '$color_by'");
 }
 
 # Select a labeling option from the "Label By:" dropdown
 sub set_label_by {
 	my ($label_by) = @_;
-	$t->click_ok('//label[contains(text(),"Label By:")]/following-sibling::select/option[@value="' . $label_by . '"]', 'xpath', "Select Label By '$label_by'");
+	$t->click_option_ok('//label[contains(text(),"Label By:")]/following-sibling::select/option[@value="' . $label_by . '"]', 'xpath', "Select Label By '$label_by'");
 }
 
 # Set the plot label font size
@@ -345,21 +348,71 @@ sub download_spatial_layout_ok {
 	is($actual_content, $expected_content, "Check that downloaded file content matches expected content");
 }
 
+
+# -----------------------------------------------------------------------------
+# Fixture Setup: Mark plot CASS_6Genotypes_107 as a control
+# -----------------------------------------------------------------------------
+my $plot = $f->bcs_schema->resultset('Stock::Stock')->find({ uniquename => 'CASS_6Genotypes_107' });
+$plot->create_stockprops({
+	'is a control'          => 1,
+	'stock_additional_info' => '{"is_a_control": 1}',
+});
+
+# -----------------------------------------------------------------------------
+# Fixture Setup: Create spatial adjustments for trial 165
+# -----------------------------------------------------------------------------
+# Get an assayed trait ID
+my $trait_sth = $f->dbh->prepare(<<'EOSQL');
+	SELECT DISTINCT pheno.observable_id
+	FROM project p
+	JOIN nd_experiment_project nep ON p.project_id = nep.project_id
+	JOIN nd_experiment_phenotype nep2 ON nep.nd_experiment_id = nep2.nd_experiment_id
+	JOIN phenotype pheno ON nep2.phenotype_id = pheno.phenotype_id
+	JOIN cvterm ON pheno.observable_id = cvterm.cvterm_id
+	WHERE p.project_id = 165 AND cvterm.name LIKE 'cass sink leaf%3-phosphoglyceric acid%'
+	LIMIT 1;
+EOSQL
+$trait_sth->execute();
+my ($spatial_trait_id) = $trait_sth->fetchrow_array();
+die "No assayed trait matching 'cass sink leaf%3-phosphoglyceric acid%' found for trial 165 in fixture database" unless $spatial_trait_id;
+
+# Get all plot uniquenames
+my $plot_sth = $f->dbh->prepare(<<'EOSQL');
+	SELECT DISTINCT s.uniquename
+	FROM project p
+	JOIN nd_experiment_project nep ON p.project_id = nep.project_id
+	JOIN nd_experiment_stock nes ON nep.nd_experiment_id = nes.nd_experiment_id
+	JOIN stock s ON nes.stock_id = s.stock_id
+	JOIN cvterm t ON s.type_id = t.cvterm_id
+	WHERE p.project_id = 165 AND t.name = 'plot';
+EOSQL
+$plot_sth->execute();
+
+# Assign spatial adjustments to each plot
+my %spatial_adj;
+while (my ($plot_uniquename) = $plot_sth->fetchrow_array()) {
+	$spatial_adj{$plot_uniquename} = { "$spatial_trait_id" => 5.0 };
+}
+$spatial_adj{'CASS_6Genotypes_103'} = { "$spatial_trait_id" => -5.0 };
+
+# Store spatial adjustments for trial 165
+my $spatial_cvterm = SGN::Model::Cvterm->get_cvterm_row($f->bcs_schema, 'spatially_corrected_trait_adjustments_json', 'project_property');
+$f->bcs_schema->resultset('Project::Projectprop')->search({
+	project_id => 165,
+	type_id    => $spatial_cvterm->cvterm_id,
+})->delete_all();
+$f->bcs_schema->resultset('Project::Projectprop')->create({
+	project_id => 165,
+	type_id    => $spatial_cvterm->cvterm_id,
+	value      => encode_json(\%spatial_adj),
+	rank       => 0,
+});
+
 # -----------------------------------------------------------------------------
 # Test Suite
 # -----------------------------------------------------------------------------
 
 $t->while_logged_in_as("curator", sub {
-
-	# -------------------------------------------------------------------------
-	# Fixture Setup: Mark plot CASS_6Genotypes_107 as a control
-	# -------------------------------------------------------------------------
-	my $plot = $f->bcs_schema->resultset('Stock::Stock')->find({ uniquename => 'CASS_6Genotypes_107' });
-	$plot->create_stockprops({
-		'is a control'          => 1,
-		'stock_additional_info' => '{"is_a_control": 1}',
-	});
-
 	# =========================================================================
 	# Navigation & Initial Field Map Loading
 	# =========================================================================
@@ -518,6 +571,28 @@ $t->while_logged_in_as("curator", sub {
 	find_plot_cell_ok(5, 0, '#ffffff');
 
 	# =========================================================================
+	# Spatial Corrections Heatmap Views
+	# =========================================================================
+	# Verify Spatial Corrections optgroup and options exist
+	$t->find_element_ok('//optgroup[@label="Spatial Corrections"]', 'xpath', 'Find Spatial Corrections optgroup');
+	$t->find_element_ok('//optgroup[@label="Spatial Corrections"]/option[@value="' . $spatial_trait_id . ' (corrected)"]', 'xpath', 'Find corrected option');
+	$t->find_element_ok('//optgroup[@label="Spatial Corrections"]/option[@value="' . $spatial_trait_id . ' (adjustment)"]', 'xpath', 'Find adjustment option');
+
+	# Select (adjustment) view
+	set_layout_view("$spatial_trait_id (adjustment)");
+	$t->find_element_ok('//div[@id="legend_list"]//span[contains(text(),"Low trait value") and contains(.,"(adjustment)")]', 'xpath', 'Verify legend displays adjustment view label');
+	$t->find_element_ok('//div[@id="legend_list"]//div[contains(@style,"linear-gradient")]', 'xpath', 'Verify heatmap gradient bar in adjustment view');
+	find_plot_cell_ok(0, 2, '#00008b');
+
+	# Select (corrected) view
+	set_layout_view("$spatial_trait_id (corrected)");
+	$t->find_element_ok('//div[@id="legend_list"]//span[contains(text(),"Low trait value") and contains(.,"(corrected)")]', 'xpath', 'Verify legend displays corrected view label');
+
+	# Switch back to raw Assayed Trait view
+	set_layout_view($spatial_trait_id);
+	find_plot_cell_ok(0, 2, '#910d0d');
+
+	# =========================================================================
 	# Controls & Check Plots Panel
 	# =========================================================================
 	$t->find_element_ok('//button[contains(text(),"View Controls")]', 'xpath', 'Find View Controls button in heatmap view');
@@ -527,17 +602,17 @@ $t->while_logged_in_as("curator", sub {
 	$t->find_element_ok('//select[option[contains(text(),"checks and plot numbers")]]', 'xpath', 'Find control plots dropdown');
 
 	# Select the control plot
-	$t->click_ok('//select[option[contains(.,"checks and plot numbers")]]/option[contains(.,"CASS_6Genotypes_107")]', 'xpath', 'Select CASS_6Genotypes_107 control plot');
+	$t->click_option_ok('//select[option[contains(.,"checks and plot numbers")]]/option[contains(.,"CASS_6Genotypes_107")]', 'xpath', 'Select CASS_6Genotypes_107 control plot');
 
 	# Verify relationship text
 	$t->find_element_ok('//span[contains(.,"Plot: CASS_6Genotypes_107 contains Check: TMEB693")]', 'xpath', 'Verify control relationship text displayed');
 
 	# Deselect control plot and verify relationship text clears
-	$t->click_ok('//select[option[contains(text(),"checks and plot numbers")]]/option[@value=""]', 'xpath', 'Select default checks and plot numbers option');
+	$t->click_option_ok('//select[option[contains(text(),"checks and plot numbers")]]/option[@value=""]', 'xpath', 'Select default checks and plot numbers option');
 	ok(!scalar(@{$t->driver->find_elements('//span[contains(text(),"contains Check:")]', 'xpath')}), 'Control relationship text is cleared');
 
 	# Re-select and test Hide button
-	$t->click_ok('//select[option[contains(.,"checks and plot numbers")]]/option[contains(.,"CASS_6Genotypes_107")]', 'xpath', 'Re-select CASS_6Genotypes_107 control plot');
+	$t->click_option_ok('//select[option[contains(.,"checks and plot numbers")]]/option[contains(.,"CASS_6Genotypes_107")]', 'xpath', 'Re-select CASS_6Genotypes_107 control plot');
 	$t->find_element_ok('//span[contains(.,"Plot: CASS_6Genotypes_107 contains Check: TMEB693")]', 'xpath', 'Verify control relationship text displayed again');
 	$t->click_ok('//button[contains(@class,"btn-default") and text()="Hide"]', 'xpath', 'Click Hide controls button');
 	$t->find_element_ok('//button[contains(text(),"View Controls")]', 'xpath', 'Verify View Controls button reappears');
@@ -921,7 +996,7 @@ EOSQL
 	$t->click_ok('//label[contains(text(),"Bottom")]/input', 'xpath', 'Uncheck Bottom border') if $bottom_b->is_selected();
 	my $right_b = $t->driver->find_element('//label[contains(text(),"Right")]/input', 'xpath');
 	$t->click_ok('//label[contains(text(),"Right")]/input', 'xpath', 'Uncheck Right border') if $right_b->is_selected();
-	$t->click_ok('//label[contains(text(),"Plot Layout:")]/following-sibling::select/option[@value="serpentine"]', 'xpath', 'Select Serpentine plot layout');
+	$t->click_option_ok('//label[contains(text(),"Plot Layout:")]/following-sibling::select/option[@value="serpentine"]', 'xpath', 'Select Serpentine plot layout');
 
 	# Expand dimensions to 6 columns x 4 rows (24 cells total for 21 plots = 3 empty slots)
 	set_dimensions(6, 4);
