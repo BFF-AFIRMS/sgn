@@ -162,7 +162,14 @@ sub _search {
             my $dbxref_id = $record->get_column('dbxref_id');
             my $reference_source = $record->get_column('db_name');
             my $dbxref_accession = $record->get_column('dbxref_accession');
-            my $reference_id = $reference_source . ":" . $dbxref_accession;
+            # Use parsing CXGN::BrAPI::v2::ExternalReferences::search to handle
+            # casing of DOI references
+            my $reference_id;
+            if($reference_source eq 'DOI') {
+                $reference_id = "doi:" . $dbxref_accession;
+            } else {
+                $reference_id = $reference_source . ":" . $dbxref_accession;
+            }
             my $obsunit_stock_ids = $external_references_by_dbxref_id->{$dbxref_id};
             foreach my $obsunit_stock_id (keys %$obsunit_stock_ids){
                 $external_references_by_obsunit_id->{$obsunit_stock_id}->{$reference_id} = {
@@ -302,10 +309,14 @@ sub _search {
 
         my $brapi_observationUnitPosition = decode_json(encode_json \%observationUnitPosition);
 
-        #Get external references
-        my $external_references = $external_references_by_obsunit_id->{$obs_unit->{obsunit_stock_id}};
-        my @formatted_external_references = $external_references ? values %{$external_references} : [];
-
+        # Convert external references from hash to array
+        # Note: Downstream function will want this to be undef rather than an empty array
+        #       if no external references are found
+        my $external_references = $external_references_by_obsunit_id->{$obs_unit->{obsunit_stock_id}} || {};
+        my @formatted_external_references;
+        foreach my $reference_id (keys %$external_references){
+            push @formatted_external_references, $external_references->{$reference_id};
+        }
         if ($obs_unit->{family_stock_id}) {
             $additional_info->{familyDbId} = qq|$obs_unit->{family_stock_id}|;
             $additional_info->{familyName} = $obs_unit->{family_uniquename};
@@ -321,7 +332,7 @@ sub _search {
         }
 
         push @data_window, {
-            externalReferences => @formatted_external_references,
+            externalReferences => \@formatted_external_references,
             additionalInfo => $additional_info,
             germplasmDbId => $obs_unit->{germplasm_stock_id} ? qq|$obs_unit->{germplasm_stock_id}| : undef,
             germplasmName => $obs_unit->{germplasm_uniquename} ? qq|$obs_unit->{germplasm_uniquename}| : undef,
@@ -511,9 +522,17 @@ sub observationunits_update {
         my $observation_unit_db_id = $record->get_column('observation_unit_db_id');
         my $reference_source = $record->get_column('db_name');
         my $dbxref_accession = $record->get_column('dbxref_accession');
+
         # Combine database name and accession to form the full reference
         # Example: DOI:10.155454/5555
-        my $reference_id = $reference_source . ":" . $dbxref_accession;
+        # Use parsing CXGN::BrAPI::v2::ExternalReferences::search to handle
+        # casing of DOI references
+        my $reference_id;
+        if($reference_source eq 'DOI') {
+            $reference_id = "doi:" . $dbxref_accession;
+        } else {
+            $reference_id = $reference_source . ":" . $dbxref_accession;
+        }
         $old_external_references->{$observation_unit_db_id}->{$reference_id} = {
             referenceId => $reference_id,
             referenceSource => $reference_source,
@@ -670,6 +689,13 @@ sub observationunits_update {
         foreach my $record (@$external_references){
             my $reference_id = $record->{referenceId} || $record->{referenceID};
             my $reference_source = $record->{referenceSource};
+
+            # Use parsing CXGN::BrAPI::v2::ExternalReferences::search to handle
+            # casing of DOI references
+            if($reference_source eq 'DOI') {
+                $reference_id =~ s/DOI:/doi:/;
+            }
+
             $new_external_references->{$observation_unit_db_id}->{$reference_id} = {
                 referenceId => $reference_id,
                 referenceSource => $reference_source,
