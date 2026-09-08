@@ -54,6 +54,7 @@ my $SEC_Y_VAL_RIGHT_OFFSET_X    = 40;
 my $border_fill     = '#ecefef';
 my $even_block_fill = '#c7e9b4';
 my $odd_block_fill  = '#41b6c4';
+my $check_fill      = '#6a5acd';
 my @palette = (
 	'#8dd3c7', '#ffffb3', '#bebada', '#fb8072', '#80b1d3',
 	'#fdb462', '#b3de69', '#fccde5', '#d9d9d9', '#bc80bd',
@@ -350,6 +351,15 @@ sub download_spatial_layout_ok {
 
 $t->while_logged_in_as("curator", sub {
 
+	# -------------------------------------------------------------------------
+	# Fixture Setup: Mark plot CASS_6Genotypes_107 as a control
+	# -------------------------------------------------------------------------
+	my $plot = $f->bcs_schema->resultset('Stock::Stock')->find({ uniquename => 'CASS_6Genotypes_107' });
+	$plot->create_stockprops({
+		'is a control'          => 1,
+		'stock_additional_info' => '{"is_a_control": 1}',
+	});
+
 	# =========================================================================
 	# Navigation & Initial Field Map Loading
 	# =========================================================================
@@ -358,6 +368,8 @@ $t->while_logged_in_as("curator", sub {
 	$t->click_ok('pheno_heatmap_onswitch', 'id', 'Open fieldmap section');
 	$t->wait_for_working_dialog();
 	$t->find_element_ok('//*[@id="' . $svg_id . '"]', 'xpath', 'Find fieldmap SVG');
+	$t->find_element_ok('//div[@id="legend_list"]//span[contains(normalize-space(),"Checks")]', 'xpath', 'Find Checks item in legend');
+	$t->find_element_ok('//div[@id="legend_list"]//span[contains(normalize-space(),"Checks")]//span[contains(@class,"tw:bg-[#6a5acd]")]', 'xpath', 'Find purple swatch for Checks in legend');
 
 	# =========================================================================
 	# Zoom & Pan Controls (Buttons, Mouse Wheel, Mouse Drag)
@@ -425,6 +437,7 @@ $t->while_logged_in_as("curator", sub {
 	find_plot_cell_ok(0, 2, $odd_block_fill);
 	find_plot_cell_ok(0, 1, $even_block_fill);
 	find_plot_cell_ok(0, 0, $odd_block_fill);
+	find_plot_cell_ok(4, 2, $check_fill);
 
 	# Color by Block
 	set_color_by('block');
@@ -432,6 +445,7 @@ $t->while_logged_in_as("curator", sub {
 	find_plot_cell_ok(1, 2, $palette[0]);
 	find_plot_cell_ok(0, 1, $palette[1]);
 	find_plot_cell_ok(0, 0, $palette[2]);
+	find_plot_cell_ok(4, 2, $check_fill);
 
 	# Color by Germplasm (Accession)
 	set_color_by('germplasm');
@@ -440,6 +454,7 @@ $t->while_logged_in_as("curator", sub {
 	find_plot_cell_ok(2, 2, $palette[2]);
 	find_plot_cell_ok(3, 2, $palette[1]);
 	find_plot_cell_ok(0, 1, $palette[0]);
+	find_plot_cell_ok(4, 2, $check_fill);
 
 	# Color by Family Name & Cross Name (falls back to even_block_fill when not set)
 	set_color_by('family_name');
@@ -503,6 +518,32 @@ $t->while_logged_in_as("curator", sub {
 	find_plot_cell_ok(5, 0, '#ffffff');
 
 	# =========================================================================
+	# Controls & Check Plots Panel
+	# =========================================================================
+	$t->find_element_ok('//button[contains(text(),"View Controls")]', 'xpath', 'Find View Controls button in heatmap view');
+	$t->click_ok('//button[contains(text(),"View Controls")]', 'xpath', 'Click View Controls button');
+
+	# Verify control dropdown is displayed
+	$t->find_element_ok('//select[option[contains(text(),"checks and plot numbers")]]', 'xpath', 'Find control plots dropdown');
+
+	# Select the control plot
+	$t->click_ok('//select[option[contains(.,"checks and plot numbers")]]/option[contains(.,"CASS_6Genotypes_107")]', 'xpath', 'Select CASS_6Genotypes_107 control plot');
+
+	# Verify relationship text
+	$t->find_element_ok('//span[contains(.,"Plot: CASS_6Genotypes_107 contains Check: TMEB693")]', 'xpath', 'Verify control relationship text displayed');
+
+	# Deselect control plot and verify relationship text clears
+	$t->click_ok('//select[option[contains(text(),"checks and plot numbers")]]/option[@value=""]', 'xpath', 'Select default checks and plot numbers option');
+	ok(!scalar(@{$t->driver->find_elements('//span[contains(text(),"contains Check:")]', 'xpath')}), 'Control relationship text is cleared');
+
+	# Re-select and test Hide button
+	$t->click_ok('//select[option[contains(.,"checks and plot numbers")]]/option[contains(.,"CASS_6Genotypes_107")]', 'xpath', 'Re-select CASS_6Genotypes_107 control plot');
+	$t->find_element_ok('//span[contains(.,"Plot: CASS_6Genotypes_107 contains Check: TMEB693")]', 'xpath', 'Verify control relationship text displayed again');
+	$t->click_ok('//button[contains(@class,"btn-default") and text()="Hide"]', 'xpath', 'Click Hide controls button');
+	$t->find_element_ok('//button[contains(text(),"View Controls")]', 'xpath', 'Verify View Controls button reappears');
+	ok(!scalar(@{$t->driver->find_elements('//select[option[contains(text(),"checks and plot numbers")]]', 'xpath')}), 'Control dropdown is hidden after clicking Hide');
+
+	# =========================================================================
 	# Phenotype Measurement Suppression Workflow
 	# =========================================================================
 	# Open plot details modal and suppress phenotype value
@@ -557,8 +598,10 @@ $t->while_logged_in_as("curator", sub {
 	ok(!scalar(@{$t->driver->find_elements('//div[@id="legend_list"]//span[contains(.,"Low trait value")]', 'xpath')}), 'Low trait value legend not present after trait deletion');
 	ok(!scalar(@{$t->driver->find_elements('//div[@id="legend_list"]//div[contains(@style,"linear-gradient")]', 'xpath')}), 'Gradient bar not present after trait deletion');
 	ok(!scalar(@{$t->driver->find_elements('//button[contains(text(),"Delete Selected Trait")]', 'xpath')}), 'Delete Selected Trait button not present after trait deletion');
+	ok(!scalar(@{$t->driver->find_elements('//button[contains(text(),"View Controls")]', 'xpath')}), 'View Controls button not present in Field Layout view');
 	find_plot_cell_ok(0, 2, $odd_block_fill);
 	find_plot_cell_ok(0, 1, $even_block_fill);
+	find_plot_cell_ok(4, 2, $check_fill);
 
 	# =========================================================================
 	# North Arrow Orientation Configuration
