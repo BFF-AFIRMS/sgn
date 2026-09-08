@@ -553,7 +553,13 @@ sub observationunits_update {
         my $observation_unit_db_id = $params->{observationUnitDbId};
         my $accession_id = $params->{germplasmDbId};
         my $accession_name = $params->{germplasmName};
-        my $trial_id = $params->{trialDbId};
+        my $trial_id = $params->{trialDbId} || $params->{studyDbId};
+
+        if (! defined $trial_id){
+            my $message = "trialDbId or studyDbId is not defined for params:" . Dumper($params) . "\n";
+            print STDERR $message;
+            return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf($message), 400);
+        }
 
         my $years_arrayref = $params->{seasonDbId}; #not implemented yet
         my $location_ids_arrayref = $params->{locationDbId}; #not implemented yet
@@ -632,12 +638,13 @@ sub observationunits_update {
 
         # parse stockprops from BrAPI key: observationLevelRelationships
         my $level_relations = $params->{observationUnitPosition}->{observationLevelRelationships};
+
         foreach my $level (@$level_relations){
             my $cvterm_id;
             if    ($level->{levelName} eq 'block') { $cvterm_id = $block_number_cvterm_id; }
-            elsif ($_->{levelName} eq 'rep')       { $cvterm_id = $rep_number_cvterm_id; }
+            elsif ($level->{levelName} eq 'rep')   { $cvterm_id = $rep_number_cvterm_id; }
             if (defined $cvterm_id && length $cvterm_id){
-                $new_stockprops->{$observation_unit_db_id}->{$cvterm_id} = { value => $level_number};
+                $new_stockprops->{$observation_unit_db_id}->{$cvterm_id} = { value => $level->{levelCode}};
             }
         }
 
@@ -661,7 +668,7 @@ sub observationunits_update {
         # will make it easier to compare to old values in later step
         my $external_references = $params->{externalReferences};
         foreach my $record (@$external_references){
-            my $reference_id = $record->{referenceId};
+            my $reference_id = $record->{referenceId} || $record->{referenceID};
             my $reference_source = $record->{referenceSource};
             $new_external_references->{$observation_unit_db_id}->{$reference_id} = {
                 referenceId => $reference_id,
@@ -681,9 +688,11 @@ sub observationunits_update {
             my $old_value = $old_stockprop_record->{value};
             my $rank = $old_stockprop_record->{rank} || 0;
             my $new_value = $new_stockprops->{$observation_unit_db_id}->{$cvterm_id}->{value};
+            # Escape single quotes for SQL
+            $new_value =~ s/'/\\'/g;
             # If the value is new or changed, add it to our upsert sql query values
             if (!defined $old_value || (defined $old_value && $new_value ne $old_value)){
-                push @stockprop_sql_values, "($observation_unit_db_id, $cvterm_id, $new_value, $rank)";
+                push @stockprop_sql_values, "($observation_unit_db_id, $cvterm_id, '$new_value', $rank)";
             }
         }
     }
@@ -738,8 +747,6 @@ sub observationunits_update {
             foreach my $reference_id (keys %$new_refs){
                 push @new_values, $new_refs->{$reference_id};
             }
-            print STDERR "new_values: " . Dumper(@new_values) . "\n";
-
             my $references = CXGN::BrAPI::v2::ExternalReferences->new({
                 bcs_schema => $schema,
                 table_name => 'stock',
