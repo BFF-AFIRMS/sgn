@@ -589,10 +589,10 @@ sub retrieve_plot_info_bulk {
     my $query = "
     select plot.stock_id, plant.stock_id, plant.uniquename, plant_parent.parent_id, index_number.value, tissue_sample.uniquename
     from stock as plot
-    left join stock_relationship as plot_to_plant on (plot.stock_id = plot_to_plant.subject_id and plot_to_plant.type_id = $plant_of_cvterm_id)
-    left join stock as plant on (plant.stock_id = plot_to_plant.object_id)
-    left join stockprop as index_number on (index_number.stock_id = plant.stock_id and index_number.type_id = $plant_index_number_cvterm_id)
-    left join (
+    join stock_relationship as plot_to_plant on (plot.stock_id = plot_to_plant.subject_id and plot_to_plant.type_id = $plant_of_cvterm_id)
+    join stock as plant on (plant.stock_id = plot_to_plant.object_id)
+    join stockprop as index_number on (index_number.stock_id = plant.stock_id and index_number.type_id = $plant_index_number_cvterm_id)
+    join (
         select subject_id as plant_id, stock_id as parent_id
         from stock_relationship
         join stock on (object_id = stock_id and stock.type_id = $accession_cvterm_id)
