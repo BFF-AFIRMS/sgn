@@ -131,36 +131,51 @@ sub find_overlapping_cell_ok {
 	return $t->find_element_ok($xpath, 'xpath', "Find overlapping plot square at grid ($col,$row) translated ($x,$y) with black fill and red stroke");
 }
 
-# Dispatch synthetic mouseover and mouseenter events on a plot cell at grid (col, row)
-sub hover_plot_cell {
+# Construct the XPath expression locating the SVG plot cell group at grid (col, row)
+sub plot_cell_xpath {
 	my ($col, $row) = @_;
 	my ($x, $y) = cell_pos($col, $row);
-	$t->driver->execute_script(q{
-		const g = document.querySelector('#fieldmap_chart_svg g[transform="translate(' + arguments[0] + ', ' + arguments[1] + ')"]');
-		if (!g) return;
-		const rectEl = g.querySelector('rect') || g;
-		const b = rectEl.getBoundingClientRect();
-		const clientX = b.left + b.width / 2;
-		const clientY = b.top + b.height / 2;
-		rectEl.dispatchEvent(new MouseEvent('mouseover', { clientX: clientX, clientY: clientY, bubbles: true }));
-		rectEl.dispatchEvent(new MouseEvent('mouseenter', { clientX: clientX, clientY: clientY, bubbles: true }));
-	}, $x, $y);
+	return '//*[local-name()="svg" and @id="' . $svg_id . '"]//*[local-name()="g" and @transform="translate(' . $x . ', ' . $y . ')"]';
 }
 
-# Dispatch synthetic mouseout and mouseleave events on a plot cell at grid (col, row)
-sub unhover_plot_cell {
-	my ($col, $row) = @_;
-	my ($x, $y) = cell_pos($col, $row);
+# Dispatch synthetic MouseEvents with client coordinates to an element found via XPath
+sub _dispatch_mouse_events {
+	my ($xpath, @events) = @_;
 	$t->driver->execute_script(q{
-		const g = document.querySelector('#fieldmap_chart_svg g[transform="translate(' + arguments[0] + ', ' + arguments[1] + ')"]');
-		if (!g) return;
-		const rectEl = g.querySelector('rect') || g;
-		const b = rectEl.getBoundingClientRect();
+		const el = document.evaluate(arguments[0], document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+		if (!el) return;
+		const target = el.querySelector('rect') || el;
+		const b = target.getBoundingClientRect();
 		const clientX = b.left + b.width / 2;
 		const clientY = b.top + b.height / 2;
-		rectEl.dispatchEvent(new MouseEvent('mouseout', { clientX: clientX, clientY: clientY, bubbles: true }));
-		rectEl.dispatchEvent(new MouseEvent('mouseleave', { clientX: clientX, clientY: clientY, bubbles: true }));
-	}, $x, $y);
+		for (const evt of arguments[1]) {
+			target.dispatchEvent(new MouseEvent(evt, { clientX: clientX, clientY: clientY, bubbles: true }));
+		}
+	}, $xpath, \@events);
+}
+
+# Trigger mouse hover events (mouseover, mouseenter) on an element found via XPath
+sub hover_element {
+	my ($xpath) = @_;
+	_dispatch_mouse_events($xpath, 'mouseover', 'mouseenter');
+}
+
+# Trigger mouse leave events (mouseout, mouseleave) on an element found via XPath
+sub unhover_element {
+	my ($xpath) = @_;
+	_dispatch_mouse_events($xpath, 'mouseout', 'mouseleave');
+}
+
+# Convenience wrapper to trigger mouse hover events on a plot cell at grid (col, row)
+sub hover_plot_cell {
+	my ($col, $row) = @_;
+	hover_element(plot_cell_xpath($col, $row));
+}
+
+# Convenience wrapper to trigger mouse leave events on a plot cell at grid (col, row)
+sub unhover_plot_cell {
+	my ($col, $row) = @_;
+	unhover_element(plot_cell_xpath($col, $row));
 }
 
 # Verify plot label text at grid (col, row), handling standard or staggered (even/odd col) vertical offsets
@@ -746,6 +761,27 @@ $t->while_logged_in_as("curator", sub {
 	is($tf->{y}, 0, 'Pan Y reset to 0 after drag');
 
 	# =========================================================================
+	# Interactive Hover Tooltip (Field Layout View)
+	# =========================================================================
+	hover_plot_cell(0, 2);
+	$t->find_element_ok('//div[contains(@class,"fieldmap-tooltip")]', 'xpath', 'Tooltip is visible on plot hover');
+	$t->find_element_ok('//div[contains(@class,"fieldmap-tooltip")]//strong[contains(text(),"Plot Name:")]/parent::div[contains(.,"CASS_6Genotypes_103")]', 'xpath', 'Tooltip displays Plot Name');
+	$t->find_element_ok('//div[contains(@class,"fieldmap-tooltip")]//strong[contains(text(),"Plot Number:")]/parent::div[contains(.,"103")]', 'xpath', 'Tooltip displays Plot Number');
+	$t->find_element_ok('//div[contains(@class,"fieldmap-tooltip")]//strong[contains(text(),"Block Number:")]/parent::div[contains(.,"1")]', 'xpath', 'Tooltip displays Block Number');
+	$t->find_element_ok('//div[contains(@class,"fieldmap-tooltip")]//strong[contains(text(),"Rep Number:")]/parent::div[contains(.,"1")]', 'xpath', 'Tooltip displays Rep Number');
+	$t->find_element_ok('//div[contains(@class,"fieldmap-tooltip")]//strong[contains(text(),"Accession Name:")]/parent::div[contains(.,"IITA-TMS-IBA980581")]', 'xpath', 'Tooltip displays Accession Name');
+
+	# Hover over check plot and verify updated tooltip contents
+	hover_plot_cell(4, 2);
+	$t->find_element_ok('//div[contains(@class,"fieldmap-tooltip")]//strong[contains(text(),"Plot Name:")]/parent::div[contains(.,"CASS_6Genotypes_107")]', 'xpath', 'Tooltip displays check Plot Name');
+	$t->find_element_ok('//div[contains(@class,"fieldmap-tooltip")]//strong[contains(text(),"Plot Number:")]/parent::div[contains(.,"107")]', 'xpath', 'Tooltip displays check Plot Number');
+	$t->find_element_ok('//div[contains(@class,"fieldmap-tooltip")]//strong[contains(text(),"Accession Name:")]/parent::div[contains(.,"TMEB693")]', 'xpath', 'Tooltip displays check Accession Name');
+
+	# Unhover dismisses tooltip
+	unhover_plot_cell(4, 2);
+	ok(!scalar(@{$t->driver->find_elements('//div[contains(@class,"fieldmap-tooltip")]', 'xpath')}), 'Tooltip dismissed after unhover');
+
+	# =========================================================================
 	# Plot Cell Coloring ("Color By" Options)
 	# =========================================================================
 	find_plot_cell_ok(0, 2);
@@ -834,6 +870,14 @@ $t->while_logged_in_as("curator", sub {
 	find_plot_cell_ok(2, 2, '#8b0000');
 	find_plot_cell_ok(0, 1, '#a9afaf');
 	find_plot_cell_ok(5, 0, '#ffffff');
+
+	# Interactive Hover Tooltip in Heatmap View
+	hover_plot_cell(0, 2);
+	$t->find_element_ok('//div[contains(@class,"fieldmap-tooltip")]//strong[contains(text(),"Trait Name:")]', 'xpath', 'Tooltip displays Trait Name header in heatmap view');
+	$t->find_element_ok('//div[contains(@class,"fieldmap-tooltip")]//strong[contains(text(),"Trait Name:")]/parent::div[contains(.,"cass sink leaf|3-phosphoglyceric acid")]', 'xpath', 'Tooltip displays Trait Name in heatmap view');
+	$t->find_element_ok('//div[contains(@class,"fieldmap-tooltip")]//strong[contains(text(),"Trait Value:")]', 'xpath', 'Tooltip displays Trait Value in heatmap view');
+	unhover_plot_cell(0, 2);
+	ok(!scalar(@{$t->driver->find_elements('//div[contains(@class,"fieldmap-tooltip")]', 'xpath')}), 'Tooltip dismissed after unhover in heatmap view');
 
 	# =========================================================================
 	# Spatial Corrections Heatmap Views
@@ -1211,6 +1255,14 @@ EOSQL
 	$t->find_element_ok('//*[local-name()="svg" and @id="' . $svg_id . '"]//*[local-name()="rect" and @fill="#ff8c00" and @height="4"]', 'xpath', 'Find plot band for test_trial (#ff8c00)');
 	$t->find_element_ok('//*[local-name()="svg" and @id="' . $svg_id . '"]//*[local-name()="rect" and @fill="#ffff00" and @height="4"]', 'xpath', 'Find plot band for trial2 NaCRRI (#ffff00)');
 
+	# Interactive Hover Tooltip in Multi-Trial View
+	my $multi_trial_plot_xpath = '//*[local-name()="svg" and @id="' . $svg_id . '"]//*[local-name()="g"][.//*[local-name()="rect" and @height="4"]]';
+	hover_element($multi_trial_plot_xpath);
+	$t->find_element_ok('//div[contains(@class,"fieldmap-tooltip")]//strong[contains(text(),"Trial Name:")]', 'xpath', 'Tooltip displays Trial Name header in multi-trial view');
+	$t->find_element_ok('//div[contains(@class,"fieldmap-tooltip")]//strong[contains(text(),"Trial Name:")]/following-sibling::span', 'xpath', 'Tooltip displays colored Trial Name badge');
+	unhover_element($multi_trial_plot_xpath);
+	ok(!scalar(@{$t->driver->find_elements('//div[contains(@class,"fieldmap-tooltip")]', 'xpath')}), 'Tooltip dismissed after unhover in multi-trial view');
+
 	# Verify controls disabled while linked trials are displayed
 	$t->find_element_ok('//label[contains(text(),"Plot Layout:")]/following-sibling::select[@disabled]', 'xpath', 'Plot Layout select is disabled');
 	$t->find_element_ok('//label[contains(text(),"Top")]/input[@disabled]', 'xpath', 'Top border checkbox is disabled');
@@ -1473,6 +1525,12 @@ EOSQL
 	$t->find_element_ok('//div[contains(@class,"show")]//button[contains(normalize-space(),"Update Cross")]', 'xpath', 'Verify "Update Cross" button');
 	$t->click_ok('//div[contains(@class,"show")]//button[contains(text(),"Close")]', 'xpath', 'Close plot details modal for cross plot');
 
+	# Interactive Hover Tooltip for Cross Plot
+	hover_plot_cell(0, 1);
+	$t->find_element_ok('//div[contains(@class,"fieldmap-tooltip") and contains(.,"TEST_CROSS_01")]', 'xpath', 'Tooltip displays cross name on hover');
+	unhover_plot_cell(0, 1);
+	ok(!scalar(@{$t->driver->find_elements('//div[contains(@class,"fieldmap-tooltip")]', 'xpath')}), 'Tooltip dismissed after unhover from cross plot');
+
 	# =========================================================================
 	# Alternative Stock Type: Family
 	# =========================================================================
@@ -1512,6 +1570,12 @@ EOSQL
 	$t->find_element_ok('//div[contains(@class,"show")]//button[contains(normalize-space(),"Update Family")]', 'xpath', 'Verify "Update Family" button');
 	$t->click_ok('//div[contains(@class,"show")]//button[contains(text(),"Close")]', 'xpath', 'Close plot details modal for family plot');
 
+	# Interactive Hover Tooltip for Family Plot
+	hover_plot_cell(0, 1);
+	$t->find_element_ok('//div[contains(@class,"fieldmap-tooltip") and contains(.,"TEST_FAMILY_01")]', 'xpath', 'Tooltip displays family name on hover');
+	unhover_plot_cell(0, 1);
+	ok(!scalar(@{$t->driver->find_elements('//div[contains(@class,"fieldmap-tooltip")]', 'xpath')}), 'Tooltip dismissed after unhover from family plot');
+
 	# =========================================================================
 	# Overlapping Plots Handling & Interactive Hover Tooltip
 	# =========================================================================
@@ -1547,23 +1611,26 @@ EOSQL
 
 	# Interactive Hover Tooltip on Overlapping Plot
 	hover_plot_cell(0, 1);
-	$t->find_element_ok('//div[contains(@class,"tw:fixed") and contains(@class,"tw:bg-black/85")]//strong[contains(text(),"Overlapping Plots:")]', 'xpath', 'Find Overlapping Plots header in tooltip on hover');
-	$t->find_element_ok('//div[contains(@class,"tw:fixed") and contains(@class,"tw:bg-black/85") and contains(.,"101") and contains(.,"102")]', 'xpath', 'Find overlapping plot numbers 101 and 102 in tooltip');
+	$t->find_element_ok('//div[contains(@class,"fieldmap-tooltip")]//strong[contains(text(),"Overlapping Plots:")]', 'xpath', 'Find Overlapping Plots header in tooltip on hover');
+	$t->find_element_ok('//div[contains(@class,"fieldmap-tooltip") and contains(.,"101") and contains(.,"102")]', 'xpath', 'Find overlapping plot numbers 101 and 102 in tooltip');
 
 	# Unhover dismisses tooltip
 	unhover_plot_cell(0, 1);
-	ok(!scalar(@{$t->driver->find_elements('//div[contains(@class,"tw:fixed") and contains(@class,"tw:bg-black/85")]', 'xpath')}), 'Tooltip dismissed after mouse leave from overlapping plot');
+	ok(!scalar(@{$t->driver->find_elements('//div[contains(@class,"fieldmap-tooltip")]', 'xpath')}), 'Tooltip dismissed after mouse leave from overlapping plot');
 
 	# Interactive Hover Tooltip on Non-Overlapping Plot (Plot 103)
 	hover_plot_cell(1, 1);
-	$t->find_element_ok('//div[contains(@class,"tw:fixed") and contains(@class,"tw:bg-black/85")]//strong[contains(text(),"Plot Name:")]', 'xpath', 'Find Plot Name header in tooltip on non-overlapping plot');
-	$t->find_element_ok('//div[contains(@class,"tw:fixed") and contains(@class,"tw:bg-black/85")]//strong[contains(text(),"Plot Number:")]', 'xpath', 'Find Plot Number header in tooltip on non-overlapping plot');
-	$t->find_element_ok('//div[contains(@class,"tw:fixed") and contains(@class,"tw:bg-black/85") and contains(.,"103")]', 'xpath', 'Find plot number 103 in tooltip');
-	ok(!scalar(@{$t->driver->find_elements('//div[contains(@class,"tw:fixed") and contains(@class,"tw:bg-black/85")]//strong[contains(text(),"Overlapping Plots:")]', 'xpath')}), 'No Overlapping Plots header in tooltip for non-overlapping plot');
+	$t->find_element_ok('//div[contains(@class,"fieldmap-tooltip")]//strong[contains(text(),"Plot Name:")]', 'xpath', 'Find Plot Name header in tooltip on non-overlapping plot');
+	$t->find_element_ok('//div[contains(@class,"fieldmap-tooltip")]//strong[contains(text(),"Plot Number:")]', 'xpath', 'Find Plot Number header in tooltip on non-overlapping plot');
+	$t->find_element_ok('//div[contains(@class,"fieldmap-tooltip") and contains(.,"103")]', 'xpath', 'Find plot number 103 in tooltip');
+	$t->find_element_ok('//div[contains(@class,"fieldmap-tooltip")]//strong[contains(text(),"Block Number:")]/parent::div[contains(.,"1")]', 'xpath', 'Find Block Number in tooltip on non-overlapping plot');
+	$t->find_element_ok('//div[contains(@class,"fieldmap-tooltip")]//strong[contains(text(),"Rep Number:")]/parent::div[contains(.,"1")]', 'xpath', 'Find Rep Number in tooltip on non-overlapping plot');
+	$t->find_element_ok('//div[contains(@class,"fieldmap-tooltip")]//strong[contains(text(),"Accession Name:")]/parent::div[contains(.,"TEST_OVERLAP_03")]', 'xpath', 'Find Accession Name in tooltip on non-overlapping plot');
+	ok(!scalar(@{$t->driver->find_elements('//div[contains(@class,"fieldmap-tooltip")]//strong[contains(text(),"Overlapping Plots:")]', 'xpath')}), 'No Overlapping Plots header in tooltip for non-overlapping plot');
 
 	# Unhover dismisses tooltip
 	unhover_plot_cell(1, 1);
-	ok(!scalar(@{$t->driver->find_elements('//div[contains(@class,"tw:fixed") and contains(@class,"tw:bg-black/85")]', 'xpath')}), 'Tooltip dismissed after mouse leave from non-overlapping plot');
+	ok(!scalar(@{$t->driver->find_elements('//div[contains(@class,"fieldmap-tooltip")]', 'xpath')}), 'Tooltip dismissed after mouse leave from non-overlapping plot');
 
 	# Click Overlapping Plot opens Details Modal
 	click_plot_cell_ok(0, 1);
