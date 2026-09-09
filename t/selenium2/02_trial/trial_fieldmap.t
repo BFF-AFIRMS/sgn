@@ -629,6 +629,143 @@ sub create_trial_with_overlapping_plots {
 	return $trial_id;
 }
 
+# Programmatically create a trial with intercropped plots
+sub create_trial_with_intercrop_plots {
+	my ($trial_name, $primary_accessions_aref, $intercrop_accessions_aref) = @_;
+
+	my $stock_type_cvterm = SGN::Model::Cvterm->get_cvterm_row($f->bcs_schema, 'accession', 'stock_type');
+	my $organism = $f->bcs_schema->resultset('Organism::Organism')->first();
+
+	my %all_accession_stocks;
+	for my $sname (@$primary_accessions_aref, @$intercrop_accessions_aref) {
+		$all_accession_stocks{$sname} = $f->bcs_schema->resultset('Stock::Stock')->find_or_create({
+			uniquename  => $sname,
+			name        => $sname,
+			type_id     => $stock_type_cvterm->cvterm_id,
+			organism_id => $organism->organism_id,
+		});
+	}
+
+	my %design = (
+		1 => {
+			plot_name    => "${trial_name}_Plot_101",
+			stock_name   => $primary_accessions_aref->[0],
+			plot_number  => 101,
+			block_number => 1,
+			rep_number   => 1,
+			row_number   => 1,
+			col_number   => 1,
+			is_a_control => 0,
+		},
+		2 => {
+			plot_name    => "${trial_name}_Plot_102",
+			stock_name   => $primary_accessions_aref->[1],
+			plot_number  => 102,
+			block_number => 1,
+			rep_number   => 1,
+			row_number   => 1,
+			col_number   => 2,
+			is_a_control => 0,
+		},
+		3 => {
+			plot_name    => "${trial_name}_Plot_201",
+			stock_name   => $primary_accessions_aref->[2],
+			plot_number  => 201,
+			block_number => 2,
+			rep_number   => 1,
+			row_number   => 2,
+			col_number   => 1,
+			is_a_control => 0,
+		},
+		4 => {
+			plot_name    => "${trial_name}_Plot_202",
+			stock_name   => $primary_accessions_aref->[3],
+			plot_number  => 202,
+			block_number => 2,
+			rep_number   => 1,
+			row_number   => 2,
+			col_number   => 2,
+			is_a_control => 0,
+		},
+	);
+
+	my ($user_id) = eval { $f->dbh->selectrow_array("SELECT sp_person_id FROM sgn_people.sp_person WHERE username = 'janedoe'") };
+	if (!defined $user_id) {
+		die "User 'janedoe' not found in fixture database";
+	}
+
+	my $trial_type_cvterm = eval { SGN::Model::Cvterm->get_cvterm_row($f->bcs_schema, 'phenotyping_trial', 'project_type') }
+		|| $f->bcs_schema->resultset('Cv::Cvterm')->search({ name => 'phenotyping_trial' })->first;
+	my $trial_type_id = $trial_type_cvterm ? $trial_type_cvterm->cvterm_id : undef;
+
+	my $trial_create = CXGN::Trial::TrialCreate->new({
+		chado_schema      => $f->bcs_schema,
+		dbh               => $f->dbh,
+		owner_id          => $user_id,
+		operator          => 'janedoe',
+		trial_year        => '2024',
+		trial_description => "Fieldmap test trial for intercrop",
+		trial_location    => 'test_location',
+		program           => 'test',
+		trial_name        => $trial_name,
+		design_type       => 'CRD',
+		trial_type        => $trial_type_id,
+		trial_stock_type  => 'accessions',
+		design            => \%design,
+	});
+
+	my $save = $trial_create->save_trial();
+	die "Error creating intercrop trial: " . ($save->{error} || 'unknown error') if $save->{error} || !$save->{trial_id};
+	my $trial_id = $save->{trial_id};
+
+	my $trial_stock_type_cvterm = SGN::Model::Cvterm->get_cvterm_row($f->bcs_schema, 'trial_stock_type', 'project_property');
+	$f->bcs_schema->resultset('Project::Projectprop')->update_or_create({
+		project_id => $trial_id,
+		type_id    => $trial_stock_type_cvterm->cvterm_id,
+		value      => 'accessions',
+		rank       => 0,
+	});
+
+	my %intercrop_mapping = (
+		"${trial_name}_Plot_101" => [ $intercrop_accessions_aref->[0] ],
+		"${trial_name}_Plot_202" => [ $intercrop_accessions_aref->[0], $intercrop_accessions_aref->[1] ],
+	);
+
+	my $additional_info_cvterm = SGN::Model::Cvterm->get_cvterm_row($f->bcs_schema, 'stock_additional_info', 'stock_property');
+
+	for my $plot_name (keys %intercrop_mapping) {
+		my $plot_stock = $f->bcs_schema->resultset('Stock::Stock')->find({ uniquename => $plot_name });
+		next unless $plot_stock;
+
+		my @intercrop_list;
+		for my $iname (@{$intercrop_mapping{$plot_name}}) {
+			my $istock = $all_accession_stocks{$iname};
+			push @intercrop_list, {
+				germplasmName => $iname,
+				germplasmDbId => $istock->stock_id . "",
+			};
+		}
+
+		$f->bcs_schema->resultset('Stock::Stockprop')->update_or_create({
+			type_id  => $additional_info_cvterm->cvterm_id,
+			stock_id => $plot_stock->stock_id,
+			rank     => 0,
+			value    => encode_json({
+				intercropGermplasm => \@intercrop_list,
+			}),
+		}, { key => 'stockprop_c1' });
+	}
+
+	my $trial_layout = CXGN::Trial::TrialLayout->new({
+		schema          => $f->bcs_schema,
+		trial_id        => $trial_id,
+		experiment_type => 'field_layout',
+	});
+	$trial_layout->generate_and_cache_layout();
+
+	return $trial_id;
+}
+
 # -----------------------------------------------------------------------------
 # Fixture Setup: Mark plot CASS_6Genotypes_107 as a control
 # -----------------------------------------------------------------------------
@@ -1643,6 +1780,58 @@ EOSQL
 	click_plot_cell_ok(0, 1);
 	$t->find_element_ok('//div[contains(@class,"show")]//h4[contains(@class,"modal-title") and contains(text(),"Plot Details")]', 'xpath', 'Plot details modal opens when clicking overlapping plot');
 	$t->click_ok('//div[contains(@class,"show")]//button[contains(text(),"Close")]', 'xpath', 'Close plot details modal');
+
+	# =========================================================================
+	# Intercrop Accession Display in Tooltip & Spatial Layout CSV
+	# =========================================================================
+	my $intercrop_trial_id = create_trial_with_intercrop_plots(
+		'Test_Intercrop_Fieldmap_Trial',
+		['TEST_PRIMARY_01', 'TEST_PRIMARY_02', 'TEST_PRIMARY_03', 'TEST_PRIMARY_04'],
+		['TEST_INTERCROP_01', 'TEST_INTERCROP_02']
+	);
+
+	$t->wait_for_network_idle();
+	$t->get_ok("/breeders/trial/$intercrop_trial_id", 'Navigate to created intercrop trial page');
+	$t->click_ok('pheno_heatmap_onswitch', 'id', 'Open fieldmap section on intercrop trial');
+	$t->wait_for_working_dialog();
+	$t->find_element_ok('//*[@id="' . $svg_id . '"]', 'xpath', 'Find fieldmap SVG on intercrop trial');
+
+	# Interactive Hover Tooltip on Plot 101 with single intercrop (col 0, row 1)
+	hover_plot_cell(0, 1);
+	$t->find_element_ok('//div[contains(@class,"fieldmap-tooltip")]//div[strong[contains(text(),"Accession Name:")] and contains(.,"TEST_PRIMARY_01")]', 'xpath', 'Tooltip displays primary accession for Plot 101');
+	$t->find_element_ok('//div[contains(@class,"fieldmap-tooltip")]//div[strong[contains(text(),"Accession Name:")] and contains(.,"TEST_INTERCROP_01")]', 'xpath', 'Tooltip displays intercrop accession for Plot 101');
+	unhover_plot_cell(0, 1);
+	ok(!scalar(@{$t->driver->find_elements('//div[contains(@class,"fieldmap-tooltip")]', 'xpath')}), 'Tooltip dismissed after unhover from Plot 101');
+
+	# Interactive Hover Tooltip on Plot 201 with NO intercrop (col 0, row 0)
+	hover_plot_cell(0, 0);
+	$t->find_element_ok('//div[contains(@class,"fieldmap-tooltip")]//div[strong[contains(text(),"Accession Name:")] and contains(.,"TEST_PRIMARY_03")]', 'xpath', 'Tooltip displays primary accession for Plot 201');
+	ok(!scalar(@{$t->driver->find_elements('//div[contains(@class,"fieldmap-tooltip")]//div[strong[contains(text(),"Accession Name:")] and contains(.,"TEST_INTERCROP")]', 'xpath')}), 'Tooltip on non-intercropped plot has no intercrop accessions');
+	unhover_plot_cell(0, 0);
+	ok(!scalar(@{$t->driver->find_elements('//div[contains(@class,"fieldmap-tooltip")]', 'xpath')}), 'Tooltip dismissed after unhover from Plot 201');
+
+	# Interactive Hover Tooltip on Plot 202 with multiple intercrops (col 1, row 0)
+	hover_plot_cell(1, 0);
+	$t->find_element_ok('//div[contains(@class,"fieldmap-tooltip")]//div[strong[contains(text(),"Accession Name:")] and contains(.,"TEST_PRIMARY_04")]', 'xpath', 'Tooltip displays primary accession for Plot 202');
+	$t->find_element_ok('//div[contains(@class,"fieldmap-tooltip")]//div[strong[contains(text(),"Accession Name:")] and contains(.,"TEST_INTERCROP_01")]', 'xpath', 'Tooltip displays first intercrop accession for Plot 202');
+	$t->find_element_ok('//div[contains(@class,"fieldmap-tooltip")]//div[strong[contains(text(),"Accession Name:")] and contains(.,"TEST_INTERCROP_02")]', 'xpath', 'Tooltip displays second intercrop accession for Plot 202');
+	unhover_plot_cell(1, 0);
+	ok(!scalar(@{$t->driver->find_elements('//div[contains(@class,"fieldmap-tooltip")]', 'xpath')}), 'Tooltip dismissed after unhover from Plot 202');
+
+	# Spatial Layout CSV Download with Intercropped Accessions
+	my $expected_intercrop_csv = "/tmp/Trial_${intercrop_trial_id}_spatial_layout_expected.csv";
+	open my $efh, '>', $expected_intercrop_csv or die "Could not open '$expected_intercrop_csv': $!";
+	print $efh "Rows/Columns,1,2\n";
+	print $efh "2,\"TEST_PRIMARY_03\",\"TEST_PRIMARY_04, TEST_INTERCROP_01, TEST_INTERCROP_02\"\n";
+	print $efh "1,\"TEST_PRIMARY_01, TEST_INTERCROP_01\",\"TEST_PRIMARY_02\"\n";
+	close $efh;
+
+	download_spatial_layout_ok(
+		"Trial_${intercrop_trial_id}_spatial_layout.csv",
+		$expected_intercrop_csv,
+		['Accession Name']
+	);
+	unlink $expected_intercrop_csv if -e $expected_intercrop_csv;
 });
 
 $t->driver->quit();
