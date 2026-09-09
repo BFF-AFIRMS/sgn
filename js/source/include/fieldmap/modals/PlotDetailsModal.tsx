@@ -8,6 +8,7 @@ import { useView } from '../contexts/ViewContext';
 import { usePlotGrid } from '../contexts/PlotGridContext';
 import { ReplaceAccessionResult, useReplaceAccession } from '../hooks/useReplaceAccession';
 import { useSubmitSuppressPhenotype } from '../hooks/useSubmitSuppressPhenotype';
+import { plotAccessionName } from '../utils/plot';
 
 interface PlotDetailsModalProps {
 }
@@ -113,7 +114,7 @@ export const PlotDetailsModal: React.FC<PlotDetailsModalProps> = ({ }) => {
                                         </tr>
                                         <tr>
                                             <td className="tw:font-bold">{stockLabel} Name:</td>
-                                            <td>{selectedPlot.germplasmName}</td>
+                                            <td>{plotAccessionName(selectedPlot)}</td>
                                         </tr>
                                         <tr>
                                             <td className="tw:font-bold">Plot Number:</td>

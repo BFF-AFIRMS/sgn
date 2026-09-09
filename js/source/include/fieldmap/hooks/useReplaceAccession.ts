@@ -4,6 +4,7 @@ import { usePlotGrid } from '../contexts/PlotGridContext';
 import { useView } from '../contexts/ViewContext';
 import { Plot } from '../types';
 import { isDefined } from '../../functions';
+import { plotAccessionMutation, plotAccessionName } from '../utils/plot';
 
 export enum ReplaceAccessionResult {
 	Success = 'success',
@@ -39,7 +40,7 @@ export const useReplaceAccession = () => {
                 body: new URLSearchParams({
                     new_accession: newAccession,
                     new_plot_name: newPlotName,
-                    old_accession: selectedPlot.germplasmName || '',
+                    old_accession: plotAccessionName(selectedPlot),
                     old_plot_id: selectedPlot.observationUnitDbId || '',
                     old_plot_name: selectedPlot.observationUnitName,
                     override: override
@@ -53,8 +54,7 @@ export const useReplaceAccession = () => {
             } else {
                 alert('Plot Accession Replaced successfully!');
                 mutatePlot(selectedPlot, {
-                    germplasmName: newAccession,
-                    germplasmDbId: body.new_accession_id,
+                    ...plotAccessionMutation(selectedPlot, newAccession, body.new_accession_id),
                     observationUnitName: newPlotName || selectedPlot.observationUnitName,
                 });
 				return ReplaceAccessionResult.Success;
