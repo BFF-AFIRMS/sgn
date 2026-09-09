@@ -255,6 +255,16 @@ sub set_secondary_axis {
 	$t->click_ok('//div[contains(@class,"show")]//button[contains(text(),"Apply")]', 'xpath', 'Click Apply button');
 }
 
+# Open the Change Secondary Axis modal, clear all inputs using clear_ok, and apply
+sub clear_secondary_axis {
+	$t->click_ok('//button[@title="Change Secondary Axis"]', 'xpath', 'Click Change Secondary Axis button');
+	$t->clear_ok('//label[contains(text(),"Secondary X Axis Label")]/following-sibling::input', 'xpath', 'Clear secondary x axis label');
+	$t->clear_ok('//label[contains(text(),"Secondary Y Axis Label")]/following-sibling::input', 'xpath', 'Clear secondary y axis label');
+	$t->clear_ok('//label[contains(text(),"Secondary X Axis Values")]/following-sibling::input', 'xpath', 'Clear secondary x axis values');
+	$t->clear_ok('//label[contains(text(),"Secondary Y Axis Values")]/following-sibling::input', 'xpath', 'Clear secondary y axis values');
+	$t->click_ok('//div[contains(@class,"show")]//button[contains(text(),"Apply")]', 'xpath', 'Click Apply button to clear secondary axis');
+}
+
 # Select a view from the "Select Layout View" dropdown (e.g. Field Layout or Assayed Trait)
 sub set_layout_view {
 	my ($view_option_text_or_value) = @_;
@@ -1128,6 +1138,49 @@ $t->while_logged_in_as("curator", sub {
 	ok($t->driver->find_element('//label[contains(text(),"Top")]/input', 'xpath')->is_selected(), 'Persisted Top border is checked');
 	ok($t->driver->find_element('//label[contains(text(),"Left")]/input', 'xpath')->is_selected(), 'Persisted Left border is checked');
 	find_north_arrow_ok(240);
+
+	# Verify persisted secondary axis labels and active offset
+	$t->find_element_ok('//*[local-name()="svg" and @id="' . $svg_id . '"]//*[local-name()="text" and text()="Saved Sec X"]', 'xpath', 'Find persisted secondary x axis label Saved Sec X');
+	$t->find_element_ok('//*[local-name()="svg" and @id="' . $svg_id . '"]//*[local-name()="text" and text()="Saved Sec Y"]', 'xpath', 'Find persisted secondary y axis label Saved Sec Y');
+	$t->find_element_ok('//*[local-name()="svg" and @id="' . $svg_id . '"]/*[local-name()="g" and @transform="translate(80, 55)"]', 'xpath', 'Grid group transform offset is (80, 55) when secondary axis is active');
+
+	# =========================================================================
+	# Clear Secondary Axis & Verify Persistence
+	# =========================================================================
+	clear_secondary_axis();
+
+	# Verify secondary axis elements removed from SVG
+	ok(!scalar(@{$t->driver->find_elements('//*[local-name()="svg" and @id="' . $svg_id . '"]//*[local-name()="text" and text()="Saved Sec X"]', 'xpath')}), 'No secondary X label in SVG after clearing');
+	ok(!scalar(@{$t->driver->find_elements('//*[local-name()="svg" and @id="' . $svg_id . '"]//*[local-name()="text" and text()="Saved Sec Y"]', 'xpath')}), 'No secondary Y label in SVG after clearing');
+	ok(!scalar(@{$t->driver->find_elements('//*[local-name()="svg" and @id="' . $svg_id . '"]//*[local-name()="text" and text()="sx1"]', 'xpath')}), 'No secondary X value sx1 in SVG after clearing');
+	ok(!scalar(@{$t->driver->find_elements('//*[local-name()="svg" and @id="' . $svg_id . '"]//*[local-name()="text" and text()="sy1"]', 'xpath')}), 'No secondary Y value sy1 in SVG after clearing');
+	$t->find_element_ok('//*[local-name()="svg" and @id="' . $svg_id . '"]/*[local-name()="g" and @transform="translate(50, 25)"]', 'xpath', 'Grid group transform offset reset to (50, 25) after clearing secondary axis');
+
+	# Re-open Change Secondary Axis modal to verify inputs are empty
+	$t->click_ok('//button[@title="Change Secondary Axis"]', 'xpath', 'Re-open Change Secondary Axis modal');
+	is($t->driver->find_element('//label[contains(text(),"Secondary X Axis Label")]/following-sibling::input', 'xpath')->get_attribute('value'), '', 'Secondary X Axis Label input is empty');
+	is($t->driver->find_element('//label[contains(text(),"Secondary Y Axis Label")]/following-sibling::input', 'xpath')->get_attribute('value'), '', 'Secondary Y Axis Label input is empty');
+	is($t->driver->find_element('//label[contains(text(),"Secondary X Axis Values")]/following-sibling::input', 'xpath')->get_attribute('value'), '', 'Secondary X Axis Values input is empty');
+	is($t->driver->find_element('//label[contains(text(),"Secondary Y Axis Values")]/following-sibling::input', 'xpath')->get_attribute('value'), '', 'Secondary Y Axis Values input is empty');
+	$t->click_ok('//div[contains(@class,"show")]//button[contains(text(),"Cancel")]', 'xpath', 'Close Change Secondary Axis modal');
+
+	# Submit layout changes to persist cleared secondary axis to database
+	$t->click_ok('//button[contains(text(),"Submit Layout Changes")]', 'xpath', 'Click Submit Layout Changes to save cleared secondary axis');
+	$t->accept_alert_ok('Accept layout submission confirmation prompt');
+	my $clear_sec_alert = $t->get_alert_text();
+	is($clear_sec_alert, 'Field Plot layout submitted successfully!', 'Verify alert text for successful layout submission with cleared secondary axis');
+	$t->accept_alert_ok('Accept layout submission success alert');
+	$t->wait_for_network_idle();
+
+	# Reload page and verify secondary axis remains cleared in database and UI
+	$t->get_ok('/breeders/trial/165', 'Reload trial 165 page to verify persistence of cleared secondary axis');
+	$t->click_ok('pheno_heatmap_onswitch', 'id', 'Open fieldmap section on reloaded page');
+	$t->wait_for_working_dialog();
+	$t->find_element_ok('//*[@id="' . $svg_id . '"]', 'xpath', 'Find fieldmap SVG on reloaded page');
+
+	ok(!scalar(@{$t->driver->find_elements('//*[local-name()="svg" and @id="' . $svg_id . '"]//*[local-name()="text" and text()="Saved Sec X"]', 'xpath')}), 'No secondary X label after reload');
+	ok(!scalar(@{$t->driver->find_elements('//*[local-name()="svg" and @id="' . $svg_id . '"]//*[local-name()="text" and text()="Saved Sec Y"]', 'xpath')}), 'No secondary Y label after reload');
+	$t->find_element_ok('//*[local-name()="svg" and @id="' . $svg_id . '"]/*[local-name()="g" and @transform="translate(50, 25)"]', 'xpath', 'Grid group transform offset remains (50, 25) after reload');
 
 	# Verify external header button (#trial_fieldmap_download_layout_button) opens Download CSV modal now that layout has coordinates
 	$t->click_ok('trial_fieldmap_download_layout_button', 'id', 'Click external Download Spatial Layout button in section header');
