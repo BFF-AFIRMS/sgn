@@ -59,6 +59,8 @@ my $border_fill     = '#ecefef';
 my $even_block_fill = '#c7e9b4';
 my $odd_block_fill  = '#41b6c4';
 my $check_fill      = '#6a5acd';
+my $overlap_fill    = '#000000';
+my $overlap_stroke  = '#ff0000';
 my @palette = (
 	'#8dd3c7', '#ffffb3', '#bebada', '#fb8072', '#80b1d3',
 	'#fdb462', '#b3de69', '#fccde5', '#d9d9d9', '#bc80bd',
@@ -119,6 +121,46 @@ sub click_plot_cell_ok {
 	my ($col, $row) = @_;
 	my ($x, $y) = cell_pos($col, $row);
 	return click_svg_square_ok($x, $y);
+}
+
+# Convenience wrapper to verify an overlapping plot cell at grid (col, row)
+sub find_overlapping_cell_ok {
+	my ($col, $row) = @_;
+	my ($x, $y) = cell_pos($col, $row);
+	my $xpath = '//*[local-name()="svg" and @id="' . $svg_id . '"]//*[local-name()="g" and @transform="translate(' . $x . ', ' . $y . ')"]/*[local-name()="rect" and @fill="' . $overlap_fill . '" and @stroke="' . $overlap_stroke . '"]';
+	return $t->find_element_ok($xpath, 'xpath', "Find overlapping plot square at grid ($col,$row) translated ($x,$y) with black fill and red stroke");
+}
+
+# Dispatch synthetic mouseover and mouseenter events on a plot cell at grid (col, row)
+sub hover_plot_cell {
+	my ($col, $row) = @_;
+	my ($x, $y) = cell_pos($col, $row);
+	$t->driver->execute_script(q{
+		const g = document.querySelector('#fieldmap_chart_svg g[transform="translate(' + arguments[0] + ', ' + arguments[1] + ')"]');
+		if (!g) return;
+		const rectEl = g.querySelector('rect') || g;
+		const b = rectEl.getBoundingClientRect();
+		const clientX = b.left + b.width / 2;
+		const clientY = b.top + b.height / 2;
+		rectEl.dispatchEvent(new MouseEvent('mouseover', { clientX: clientX, clientY: clientY, bubbles: true }));
+		rectEl.dispatchEvent(new MouseEvent('mouseenter', { clientX: clientX, clientY: clientY, bubbles: true }));
+	}, $x, $y);
+}
+
+# Dispatch synthetic mouseout and mouseleave events on a plot cell at grid (col, row)
+sub unhover_plot_cell {
+	my ($col, $row) = @_;
+	my ($x, $y) = cell_pos($col, $row);
+	$t->driver->execute_script(q{
+		const g = document.querySelector('#fieldmap_chart_svg g[transform="translate(' + arguments[0] + ', ' + arguments[1] + ')"]');
+		if (!g) return;
+		const rectEl = g.querySelector('rect') || g;
+		const b = rectEl.getBoundingClientRect();
+		const clientX = b.left + b.width / 2;
+		const clientY = b.top + b.height / 2;
+		rectEl.dispatchEvent(new MouseEvent('mouseout', { clientX: clientX, clientY: clientY, bubbles: true }));
+		rectEl.dispatchEvent(new MouseEvent('mouseleave', { clientX: clientX, clientY: clientY, bubbles: true }));
+	}, $x, $y);
 }
 
 # Verify plot label text at grid (col, row), handling standard or staggered (even/odd col) vertical offsets
@@ -456,6 +498,121 @@ sub create_trial_with_stock_type {
 	return $trial_id;
 }
 
+# Programmatically create a trial with overlapping plot coordinates (two plots at row 1, col 1)
+sub create_trial_with_overlapping_plots {
+	my ($trial_name, $stock_names_aref) = @_;
+
+	my $stock_type_cvterm = SGN::Model::Cvterm->get_cvterm_row($f->bcs_schema, 'accession', 'stock_type');
+	my $organism = $f->bcs_schema->resultset('Organism::Organism')->first();
+
+	for my $sname (@$stock_names_aref) {
+		$f->bcs_schema->resultset('Stock::Stock')->find_or_create({
+			uniquename  => $sname,
+			name        => $sname,
+			type_id     => $stock_type_cvterm->cvterm_id,
+			organism_id => $organism->organism_id,
+		});
+	}
+
+	my %design = (
+		1 => {
+			plot_name    => "${trial_name}_Plot_101",
+			stock_name   => $stock_names_aref->[0],
+			plot_number  => 101,
+			block_number => 1,
+			rep_number   => 1,
+			row_number   => 1,
+			col_number   => 1,
+			is_a_control => 0,
+		},
+		2 => {
+			plot_name    => "${trial_name}_Plot_102",
+			stock_name   => $stock_names_aref->[1],
+			plot_number  => 102,
+			block_number => 1,
+			rep_number   => 1,
+			row_number   => 1,
+			col_number   => 1, # OVERLAPPING WITH PLOT 101 AT (row 1, col 1)
+			is_a_control => 0,
+		},
+		3 => {
+			plot_name    => "${trial_name}_Plot_103",
+			stock_name   => $stock_names_aref->[2],
+			plot_number  => 103,
+			block_number => 1,
+			rep_number   => 1,
+			row_number   => 1,
+			col_number   => 2,
+			is_a_control => 0,
+		},
+		4 => {
+			plot_name    => "${trial_name}_Plot_201",
+			stock_name   => $stock_names_aref->[3],
+			plot_number  => 201,
+			block_number => 2,
+			rep_number   => 1,
+			row_number   => 2,
+			col_number   => 1,
+			is_a_control => 0,
+		},
+		5 => {
+			plot_name    => "${trial_name}_Plot_202",
+			stock_name   => $stock_names_aref->[4] || $stock_names_aref->[0],
+			plot_number  => 202,
+			block_number => 2,
+			rep_number   => 1,
+			row_number   => 2,
+			col_number   => 2,
+			is_a_control => 0,
+		},
+	);
+
+	my ($user_id) = eval { $f->dbh->selectrow_array("SELECT sp_person_id FROM sgn_people.sp_person WHERE username = 'janedoe'") };
+	if (!defined $user_id) {
+		die "User 'janedoe' not found in fixture database";
+	}
+
+	my $trial_type_cvterm = eval { SGN::Model::Cvterm->get_cvterm_row($f->bcs_schema, 'phenotyping_trial', 'project_type') }
+		|| $f->bcs_schema->resultset('Cv::Cvterm')->search({ name => 'phenotyping_trial' })->first;
+	my $trial_type_id = $trial_type_cvterm ? $trial_type_cvterm->cvterm_id : undef;
+
+	my $trial_create = CXGN::Trial::TrialCreate->new({
+		chado_schema      => $f->bcs_schema,
+		dbh               => $f->dbh,
+		owner_id          => $user_id,
+		operator          => 'janedoe',
+		trial_year        => '2024',
+		trial_description => "Fieldmap test trial for overlapping plots",
+		trial_location    => 'test_location',
+		program           => 'test',
+		trial_name        => $trial_name,
+		design_type       => 'CRD',
+		trial_type        => $trial_type_id,
+		trial_stock_type  => 'accessions',
+		design            => \%design,
+	});
+
+	my $save = $trial_create->save_trial();
+	die "Error creating overlapping plots trial: " . ($save->{error} || 'unknown error') if $save->{error} || !$save->{trial_id};
+	my $trial_id = $save->{trial_id};
+
+	my $trial_stock_type_cvterm = SGN::Model::Cvterm->get_cvterm_row($f->bcs_schema, 'trial_stock_type', 'project_property');
+	$f->bcs_schema->resultset('Project::Projectprop')->update_or_create({
+		project_id => $trial_id,
+		type_id    => $trial_stock_type_cvterm->cvterm_id,
+		value      => 'accessions',
+		rank       => 0,
+	});
+
+	my $trial_layout = CXGN::Trial::TrialLayout->new({
+		schema          => $f->bcs_schema,
+		trial_id        => $trial_id,
+		experiment_type => 'field_layout',
+	});
+	$trial_layout->generate_and_cache_layout();
+
+	return $trial_id;
+}
 
 # -----------------------------------------------------------------------------
 # Fixture Setup: Mark plot CASS_6Genotypes_107 as a control
@@ -1354,6 +1511,64 @@ EOSQL
 	$t->find_element_ok('//div[contains(@class,"show")]//label[contains(normalize-space(),"New Family Name:")]', 'xpath', 'Verify "New Family Name:" label');
 	$t->find_element_ok('//div[contains(@class,"show")]//button[contains(normalize-space(),"Update Family")]', 'xpath', 'Verify "Update Family" button');
 	$t->click_ok('//div[contains(@class,"show")]//button[contains(text(),"Close")]', 'xpath', 'Close plot details modal for family plot');
+
+	# =========================================================================
+	# Overlapping Plots Handling & Interactive Hover Tooltip
+	# =========================================================================
+	my $overlap_trial_id = create_trial_with_overlapping_plots(
+		'Test_Overlap_Fieldmap_Trial',
+		['TEST_OVERLAP_01', 'TEST_OVERLAP_02', 'TEST_OVERLAP_03', 'TEST_OVERLAP_04', 'TEST_OVERLAP_05']
+	);
+
+	$t->get_ok("/breeders/trial/$overlap_trial_id", 'Navigate to created overlapping plots trial page');
+	$t->click_ok('pheno_heatmap_onswitch', 'id', 'Open fieldmap section on overlapping plots trial');
+	$t->wait_for_working_dialog();
+	$t->find_element_ok('//*[@id="' . $svg_id . '"]', 'xpath', 'Find fieldmap SVG on overlapping plots trial');
+
+	# Verify Legend contains Overlapping Plots item and styling swatch
+	$t->find_element_ok('//div[@id="legend_list"]//span[contains(normalize-space(),"Overlapping Plots")]', 'xpath', 'Find Overlapping Plots item in legend');
+	$t->find_element_ok('//div[@id="legend_list"]//span[contains(normalize-space(),"Overlapping Plots")]//span[contains(@class,"tw:bg-[#000000]") and contains(@class,"tw:border-[#ff0000]")]', 'xpath', 'Find black swatch with red border for Overlapping Plots in legend');
+
+	# Verify Overlapping Cell Styling at grid (0, 1) -> (col 1, row 1)
+	find_overlapping_cell_ok(0, 1);
+
+	# Verify Non-Overlapping Cells have standard styling (not black fill or red stroke)
+	find_plot_cell_ok(1, 1); # Plot 103
+	find_plot_cell_ok(0, 0); # Plot 201
+	find_plot_cell_ok(1, 0); # Plot 202
+	ok(!scalar(@{$t->driver->find_elements('//*[local-name()="svg" and @id="' . $svg_id . '"]//*[local-name()="g" and @transform="translate(52, 52)"]/*[local-name()="rect" and @fill="' . $overlap_fill . '"]', 'xpath')}), 'Non-overlapping plot (1,1) does not have overlap fill');
+
+	# Verify Plot Labels: Overlapping cell suppresses individual labels, non-overlapping cells display labels
+	ok(!scalar(@{$t->driver->find_elements('//*[local-name()="svg" and @id="' . $svg_id . '"]//*[local-name()="text" and text()="101"]', 'xpath')}), 'No plot label 101 rendered for overlapping plot cell');
+	ok(!scalar(@{$t->driver->find_elements('//*[local-name()="svg" and @id="' . $svg_id . '"]//*[local-name()="text" and text()="102"]', 'xpath')}), 'No plot label 102 rendered for overlapping plot cell');
+	find_plot_label_ok('103', 1, 1);
+	find_plot_label_ok('201', 0, 0);
+	find_plot_label_ok('202', 1, 0);
+
+	# Interactive Hover Tooltip on Overlapping Plot
+	hover_plot_cell(0, 1);
+	$t->find_element_ok('//div[contains(@class,"tw:fixed") and contains(@class,"tw:bg-black/85")]//strong[contains(text(),"Overlapping Plots:")]', 'xpath', 'Find Overlapping Plots header in tooltip on hover');
+	$t->find_element_ok('//div[contains(@class,"tw:fixed") and contains(@class,"tw:bg-black/85") and contains(.,"101") and contains(.,"102")]', 'xpath', 'Find overlapping plot numbers 101 and 102 in tooltip');
+
+	# Unhover dismisses tooltip
+	unhover_plot_cell(0, 1);
+	ok(!scalar(@{$t->driver->find_elements('//div[contains(@class,"tw:fixed") and contains(@class,"tw:bg-black/85")]', 'xpath')}), 'Tooltip dismissed after mouse leave from overlapping plot');
+
+	# Interactive Hover Tooltip on Non-Overlapping Plot (Plot 103)
+	hover_plot_cell(1, 1);
+	$t->find_element_ok('//div[contains(@class,"tw:fixed") and contains(@class,"tw:bg-black/85")]//strong[contains(text(),"Plot Name:")]', 'xpath', 'Find Plot Name header in tooltip on non-overlapping plot');
+	$t->find_element_ok('//div[contains(@class,"tw:fixed") and contains(@class,"tw:bg-black/85")]//strong[contains(text(),"Plot Number:")]', 'xpath', 'Find Plot Number header in tooltip on non-overlapping plot');
+	$t->find_element_ok('//div[contains(@class,"tw:fixed") and contains(@class,"tw:bg-black/85") and contains(.,"103")]', 'xpath', 'Find plot number 103 in tooltip');
+	ok(!scalar(@{$t->driver->find_elements('//div[contains(@class,"tw:fixed") and contains(@class,"tw:bg-black/85")]//strong[contains(text(),"Overlapping Plots:")]', 'xpath')}), 'No Overlapping Plots header in tooltip for non-overlapping plot');
+
+	# Unhover dismisses tooltip
+	unhover_plot_cell(1, 1);
+	ok(!scalar(@{$t->driver->find_elements('//div[contains(@class,"tw:fixed") and contains(@class,"tw:bg-black/85")]', 'xpath')}), 'Tooltip dismissed after mouse leave from non-overlapping plot');
+
+	# Click Overlapping Plot opens Details Modal
+	click_plot_cell_ok(0, 1);
+	$t->find_element_ok('//div[contains(@class,"show")]//h4[contains(@class,"modal-title") and contains(text(),"Plot Details")]', 'xpath', 'Plot details modal opens when clicking overlapping plot');
+	$t->click_ok('//div[contains(@class,"show")]//button[contains(text(),"Close")]', 'xpath', 'Close plot details modal');
 });
 
 $t->driver->quit();
