@@ -408,14 +408,19 @@ sub download_spatial_layout_ok {
 }
 
 # Programmatically create a trial with specific stock type (cross or family_name) using CXGN::Trial::TrialCreate
-sub create_trial_with_stock_type {
-	my ($trial_name, $stock_type, $stock_names_aref) = @_;
+sub create_test_trial {
+	my ($trial_name, %opts) = @_;
+	my $stock_type = $opts{stock_type} || 'accessions';
+	my $stock_cvterm_name = ($stock_type eq 'cross' || $stock_type eq 'family_name') ? $stock_type : 'accession';
+	my $stock_names = $opts{stocks} || [];
+	my $intercrop_stocks = $opts{intercrop_stocks} || [];
 
-	my $stock_type_cvterm = SGN::Model::Cvterm->get_cvterm_row($f->bcs_schema, $stock_type, 'stock_type');
+	my $stock_type_cvterm = SGN::Model::Cvterm->get_cvterm_row($f->bcs_schema, $stock_cvterm_name, 'stock_type');
 	my $organism = $f->bcs_schema->resultset('Organism::Organism')->first();
 
-	for my $sname (@$stock_names_aref) {
-		$f->bcs_schema->resultset('Stock::Stock')->find_or_create({
+	my %created_stocks;
+	for my $sname (@$stock_names, @$intercrop_stocks) {
+		$created_stocks{$sname} = $f->bcs_schema->resultset('Stock::Stock')->find_or_create({
 			uniquename  => $sname,
 			name        => $sname,
 			type_id     => $stock_type_cvterm->cvterm_id,
@@ -423,48 +428,12 @@ sub create_trial_with_stock_type {
 		});
 	}
 
-	my %design = (
-		1 => {
-			plot_name    => "${trial_name}_Plot_101",
-			stock_name   => $stock_names_aref->[0],
-			plot_number  => 101,
-			block_number => 1,
-			rep_number   => 1,
-			row_number   => 1,
-			col_number   => 1,
-			is_a_control => 0,
-		},
-		2 => {
-			plot_name    => "${trial_name}_Plot_102",
-			stock_name   => $stock_names_aref->[1],
-			plot_number  => 102,
-			block_number => 1,
-			rep_number   => 1,
-			row_number   => 1,
-			col_number   => 2,
-			is_a_control => 0,
-		},
-		3 => {
-			plot_name    => "${trial_name}_Plot_201",
-			stock_name   => $stock_names_aref->[2],
-			plot_number  => 201,
-			block_number => 2,
-			rep_number   => 1,
-			row_number   => 2,
-			col_number   => 1,
-			is_a_control => 0,
-		},
-		4 => {
-			plot_name    => "${trial_name}_Plot_202",
-			stock_name   => $stock_names_aref->[3],
-			plot_number  => 202,
-			block_number => 2,
-			rep_number   => 1,
-			row_number   => 2,
-			col_number   => 2,
-			is_a_control => 0,
-		},
-	);
+	my $design = $opts{design} || {
+		1 => { plot_name => "${trial_name}_Plot_101", stock_name => $stock_names->[0], plot_number => 101, block_number => 1, rep_number => 1, row_number => 1, col_number => 1, is_a_control => 0 },
+		2 => { plot_name => "${trial_name}_Plot_102", stock_name => $stock_names->[1], plot_number => 102, block_number => 1, rep_number => 1, row_number => 1, col_number => 2, is_a_control => 0 },
+		3 => { plot_name => "${trial_name}_Plot_201", stock_name => $stock_names->[2], plot_number => 201, block_number => 2, rep_number => 1, row_number => 2, col_number => 1, is_a_control => 0 },
+		4 => { plot_name => "${trial_name}_Plot_202", stock_name => $stock_names->[3], plot_number => 202, block_number => 2, rep_number => 1, row_number => 2, col_number => 2, is_a_control => 0 },
+	};
 
 	my ($user_id) = eval { $f->dbh->selectrow_array("SELECT sp_person_id FROM sgn_people.sp_person WHERE username = 'janedoe'") };
 	if (!defined $user_id) {
@@ -481,14 +450,14 @@ sub create_trial_with_stock_type {
 		owner_id          => $user_id,
 		operator          => 'janedoe',
 		trial_year        => '2024',
-		trial_description => "Fieldmap test trial for $stock_type",
+		trial_description => $opts{description} || "Fieldmap test trial for $stock_type",
 		trial_location    => 'test_location',
 		program           => 'test',
 		trial_name        => $trial_name,
 		design_type       => 'CRD',
 		trial_type        => $trial_type_id,
 		trial_stock_type  => $stock_type,
-		design            => \%design,
+		design            => $design,
 	});
 
 	my $save = $trial_create->save_trial();
@@ -503,6 +472,32 @@ sub create_trial_with_stock_type {
 		rank       => 0,
 	});
 
+	if (my $intercrop_map = $opts{intercrop_mapping}) {
+		my $additional_info_cvterm = SGN::Model::Cvterm->get_cvterm_row($f->bcs_schema, 'stock_additional_info', 'stock_property');
+		for my $plot_name (keys %$intercrop_map) {
+			my $plot_stock = $f->bcs_schema->resultset('Stock::Stock')->find({ uniquename => $plot_name });
+			next unless $plot_stock;
+
+			my @intercrop_list;
+			for my $iname (@{$intercrop_map->{$plot_name}}) {
+				my $istock = $created_stocks{$iname};
+				push @intercrop_list, {
+					germplasmName => $iname,
+					germplasmDbId => $istock->stock_id . "",
+				};
+			}
+
+			$f->bcs_schema->resultset('Stock::Stockprop')->update_or_create({
+				type_id  => $additional_info_cvterm->cvterm_id,
+				stock_id => $plot_stock->stock_id,
+				rank     => 0,
+				value    => encode_json({
+					intercropGermplasm => \@intercrop_list,
+				}),
+			}, { key => 'stockprop_c1' });
+		}
+	}
+
 	my $trial_layout = CXGN::Trial::TrialLayout->new({
 		schema          => $f->bcs_schema,
 		trial_id        => $trial_id,
@@ -513,257 +508,39 @@ sub create_trial_with_stock_type {
 	return $trial_id;
 }
 
-# Programmatically create a trial with overlapping plot coordinates (two plots at row 1, col 1)
+sub create_trial_with_stock_type {
+	my ($trial_name, $stock_type, $stock_names_aref) = @_;
+	return create_test_trial($trial_name, stock_type => $stock_type, stocks => $stock_names_aref);
+}
+
 sub create_trial_with_overlapping_plots {
 	my ($trial_name, $stock_names_aref) = @_;
-
-	my $stock_type_cvterm = SGN::Model::Cvterm->get_cvterm_row($f->bcs_schema, 'accession', 'stock_type');
-	my $organism = $f->bcs_schema->resultset('Organism::Organism')->first();
-
-	for my $sname (@$stock_names_aref) {
-		$f->bcs_schema->resultset('Stock::Stock')->find_or_create({
-			uniquename  => $sname,
-			name        => $sname,
-			type_id     => $stock_type_cvterm->cvterm_id,
-			organism_id => $organism->organism_id,
-		});
-	}
-
-	my %design = (
-		1 => {
-			plot_name    => "${trial_name}_Plot_101",
-			stock_name   => $stock_names_aref->[0],
-			plot_number  => 101,
-			block_number => 1,
-			rep_number   => 1,
-			row_number   => 1,
-			col_number   => 1,
-			is_a_control => 0,
-		},
-		2 => {
-			plot_name    => "${trial_name}_Plot_102",
-			stock_name   => $stock_names_aref->[1],
-			plot_number  => 102,
-			block_number => 1,
-			rep_number   => 1,
-			row_number   => 1,
-			col_number   => 1, # OVERLAPPING WITH PLOT 101 AT (row 1, col 1)
-			is_a_control => 0,
-		},
-		3 => {
-			plot_name    => "${trial_name}_Plot_103",
-			stock_name   => $stock_names_aref->[2],
-			plot_number  => 103,
-			block_number => 1,
-			rep_number   => 1,
-			row_number   => 1,
-			col_number   => 2,
-			is_a_control => 0,
-		},
-		4 => {
-			plot_name    => "${trial_name}_Plot_201",
-			stock_name   => $stock_names_aref->[3],
-			plot_number  => 201,
-			block_number => 2,
-			rep_number   => 1,
-			row_number   => 2,
-			col_number   => 1,
-			is_a_control => 0,
-		},
-		5 => {
-			plot_name    => "${trial_name}_Plot_202",
-			stock_name   => $stock_names_aref->[4] || $stock_names_aref->[0],
-			plot_number  => 202,
-			block_number => 2,
-			rep_number   => 1,
-			row_number   => 2,
-			col_number   => 2,
-			is_a_control => 0,
+	return create_test_trial($trial_name,
+		stock_type  => 'accessions',
+		stocks      => $stock_names_aref,
+		description => 'Fieldmap test trial for overlapping plots',
+		design      => {
+			1 => { plot_name => "${trial_name}_Plot_101", stock_name => $stock_names_aref->[0], plot_number => 101, block_number => 1, rep_number => 1, row_number => 1, col_number => 1, is_a_control => 0 },
+			2 => { plot_name => "${trial_name}_Plot_102", stock_name => $stock_names_aref->[1], plot_number => 102, block_number => 1, rep_number => 1, row_number => 1, col_number => 1, is_a_control => 0 },
+			3 => { plot_name => "${trial_name}_Plot_103", stock_name => $stock_names_aref->[2], plot_number => 103, block_number => 1, rep_number => 1, row_number => 1, col_number => 2, is_a_control => 0 },
+			4 => { plot_name => "${trial_name}_Plot_201", stock_name => $stock_names_aref->[3], plot_number => 201, block_number => 2, rep_number => 1, row_number => 2, col_number => 1, is_a_control => 0 },
+			5 => { plot_name => "${trial_name}_Plot_202", stock_name => $stock_names_aref->[4] || $stock_names_aref->[0], plot_number => 202, block_number => 2, rep_number => 1, row_number => 2, col_number => 2, is_a_control => 0 },
 		},
 	);
-
-	my ($user_id) = eval { $f->dbh->selectrow_array("SELECT sp_person_id FROM sgn_people.sp_person WHERE username = 'janedoe'") };
-	if (!defined $user_id) {
-		die "User 'janedoe' not found in fixture database";
-	}
-
-	my $trial_type_cvterm = eval { SGN::Model::Cvterm->get_cvterm_row($f->bcs_schema, 'phenotyping_trial', 'project_type') }
-		|| $f->bcs_schema->resultset('Cv::Cvterm')->search({ name => 'phenotyping_trial' })->first;
-	my $trial_type_id = $trial_type_cvterm ? $trial_type_cvterm->cvterm_id : undef;
-
-	my $trial_create = CXGN::Trial::TrialCreate->new({
-		chado_schema      => $f->bcs_schema,
-		dbh               => $f->dbh,
-		owner_id          => $user_id,
-		operator          => 'janedoe',
-		trial_year        => '2024',
-		trial_description => "Fieldmap test trial for overlapping plots",
-		trial_location    => 'test_location',
-		program           => 'test',
-		trial_name        => $trial_name,
-		design_type       => 'CRD',
-		trial_type        => $trial_type_id,
-		trial_stock_type  => 'accessions',
-		design            => \%design,
-	});
-
-	my $save = $trial_create->save_trial();
-	die "Error creating overlapping plots trial: " . ($save->{error} || 'unknown error') if $save->{error} || !$save->{trial_id};
-	my $trial_id = $save->{trial_id};
-
-	my $trial_stock_type_cvterm = SGN::Model::Cvterm->get_cvterm_row($f->bcs_schema, 'trial_stock_type', 'project_property');
-	$f->bcs_schema->resultset('Project::Projectprop')->update_or_create({
-		project_id => $trial_id,
-		type_id    => $trial_stock_type_cvterm->cvterm_id,
-		value      => 'accessions',
-		rank       => 0,
-	});
-
-	my $trial_layout = CXGN::Trial::TrialLayout->new({
-		schema          => $f->bcs_schema,
-		trial_id        => $trial_id,
-		experiment_type => 'field_layout',
-	});
-	$trial_layout->generate_and_cache_layout();
-
-	return $trial_id;
 }
 
-# Programmatically create a trial with intercropped plots
 sub create_trial_with_intercrop_plots {
 	my ($trial_name, $primary_accessions_aref, $intercrop_accessions_aref) = @_;
-
-	my $stock_type_cvterm = SGN::Model::Cvterm->get_cvterm_row($f->bcs_schema, 'accession', 'stock_type');
-	my $organism = $f->bcs_schema->resultset('Organism::Organism')->first();
-
-	my %all_accession_stocks;
-	for my $sname (@$primary_accessions_aref, @$intercrop_accessions_aref) {
-		$all_accession_stocks{$sname} = $f->bcs_schema->resultset('Stock::Stock')->find_or_create({
-			uniquename  => $sname,
-			name        => $sname,
-			type_id     => $stock_type_cvterm->cvterm_id,
-			organism_id => $organism->organism_id,
-		});
-	}
-
-	my %design = (
-		1 => {
-			plot_name    => "${trial_name}_Plot_101",
-			stock_name   => $primary_accessions_aref->[0],
-			plot_number  => 101,
-			block_number => 1,
-			rep_number   => 1,
-			row_number   => 1,
-			col_number   => 1,
-			is_a_control => 0,
-		},
-		2 => {
-			plot_name    => "${trial_name}_Plot_102",
-			stock_name   => $primary_accessions_aref->[1],
-			plot_number  => 102,
-			block_number => 1,
-			rep_number   => 1,
-			row_number   => 1,
-			col_number   => 2,
-			is_a_control => 0,
-		},
-		3 => {
-			plot_name    => "${trial_name}_Plot_201",
-			stock_name   => $primary_accessions_aref->[2],
-			plot_number  => 201,
-			block_number => 2,
-			rep_number   => 1,
-			row_number   => 2,
-			col_number   => 1,
-			is_a_control => 0,
-		},
-		4 => {
-			plot_name    => "${trial_name}_Plot_202",
-			stock_name   => $primary_accessions_aref->[3],
-			plot_number  => 202,
-			block_number => 2,
-			rep_number   => 1,
-			row_number   => 2,
-			col_number   => 2,
-			is_a_control => 0,
+	return create_test_trial($trial_name,
+		stock_type        => 'accessions',
+		stocks            => $primary_accessions_aref,
+		intercrop_stocks  => $intercrop_accessions_aref,
+		description       => 'Fieldmap test trial for intercrop',
+		intercrop_mapping => {
+			"${trial_name}_Plot_101" => [ $intercrop_accessions_aref->[0] ],
+			"${trial_name}_Plot_202" => [ $intercrop_accessions_aref->[0], $intercrop_accessions_aref->[1] ],
 		},
 	);
-
-	my ($user_id) = eval { $f->dbh->selectrow_array("SELECT sp_person_id FROM sgn_people.sp_person WHERE username = 'janedoe'") };
-	if (!defined $user_id) {
-		die "User 'janedoe' not found in fixture database";
-	}
-
-	my $trial_type_cvterm = eval { SGN::Model::Cvterm->get_cvterm_row($f->bcs_schema, 'phenotyping_trial', 'project_type') }
-		|| $f->bcs_schema->resultset('Cv::Cvterm')->search({ name => 'phenotyping_trial' })->first;
-	my $trial_type_id = $trial_type_cvterm ? $trial_type_cvterm->cvterm_id : undef;
-
-	my $trial_create = CXGN::Trial::TrialCreate->new({
-		chado_schema      => $f->bcs_schema,
-		dbh               => $f->dbh,
-		owner_id          => $user_id,
-		operator          => 'janedoe',
-		trial_year        => '2024',
-		trial_description => "Fieldmap test trial for intercrop",
-		trial_location    => 'test_location',
-		program           => 'test',
-		trial_name        => $trial_name,
-		design_type       => 'CRD',
-		trial_type        => $trial_type_id,
-		trial_stock_type  => 'accessions',
-		design            => \%design,
-	});
-
-	my $save = $trial_create->save_trial();
-	die "Error creating intercrop trial: " . ($save->{error} || 'unknown error') if $save->{error} || !$save->{trial_id};
-	my $trial_id = $save->{trial_id};
-
-	my $trial_stock_type_cvterm = SGN::Model::Cvterm->get_cvterm_row($f->bcs_schema, 'trial_stock_type', 'project_property');
-	$f->bcs_schema->resultset('Project::Projectprop')->update_or_create({
-		project_id => $trial_id,
-		type_id    => $trial_stock_type_cvterm->cvterm_id,
-		value      => 'accessions',
-		rank       => 0,
-	});
-
-	my %intercrop_mapping = (
-		"${trial_name}_Plot_101" => [ $intercrop_accessions_aref->[0] ],
-		"${trial_name}_Plot_202" => [ $intercrop_accessions_aref->[0], $intercrop_accessions_aref->[1] ],
-	);
-
-	my $additional_info_cvterm = SGN::Model::Cvterm->get_cvterm_row($f->bcs_schema, 'stock_additional_info', 'stock_property');
-
-	for my $plot_name (keys %intercrop_mapping) {
-		my $plot_stock = $f->bcs_schema->resultset('Stock::Stock')->find({ uniquename => $plot_name });
-		next unless $plot_stock;
-
-		my @intercrop_list;
-		for my $iname (@{$intercrop_mapping{$plot_name}}) {
-			my $istock = $all_accession_stocks{$iname};
-			push @intercrop_list, {
-				germplasmName => $iname,
-				germplasmDbId => $istock->stock_id . "",
-			};
-		}
-
-		$f->bcs_schema->resultset('Stock::Stockprop')->update_or_create({
-			type_id  => $additional_info_cvterm->cvterm_id,
-			stock_id => $plot_stock->stock_id,
-			rank     => 0,
-			value    => encode_json({
-				intercropGermplasm => \@intercrop_list,
-			}),
-		}, { key => 'stockprop_c1' });
-	}
-
-	my $trial_layout = CXGN::Trial::TrialLayout->new({
-		schema          => $f->bcs_schema,
-		trial_id        => $trial_id,
-		experiment_type => 'field_layout',
-	});
-	$trial_layout->generate_and_cache_layout();
-
-	return $trial_id;
 }
 
 # -----------------------------------------------------------------------------
