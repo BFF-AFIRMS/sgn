@@ -30,22 +30,12 @@ export const SecondaryAxisModal: React.FC<SecondaryAxisModalProps> = ({}) => {
     }, [show, secondaryAxis]);
 
     const handleApply = async () => {
-        const toValueArray = (str: string) => str.split(',')
-            .map(v => v.trim());
-
-        const xValues = toValueArray(secondaryXAxisValues);
-        const yValues = toValueArray(secondaryYAxisValues);
-
-        if (secondaryXAxisLabel || secondaryYAxisLabel || xValues.length > 0 || yValues.length > 0) {
-            setSecondaryAxis({
-                xLabel: secondaryXAxisLabel,
-                yLabel: secondaryYAxisLabel,
-                xValues,
-                yValues
-            });
-        } else {
-            setSecondaryAxis(undefined);
-        }
+        setSecondaryAxis({
+            xLabel: secondaryXAxisLabel,
+            yLabel: secondaryYAxisLabel,
+            xValues: secondaryXAxisValues,
+            yValues: secondaryYAxisValues,
+        });
         setShow(false);
     };
 
