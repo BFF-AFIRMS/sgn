@@ -1230,6 +1230,7 @@ INSERT INTO public.nd_geolocationprop (nd_geolocation_id, type_id, value, rank)
 VALUES (23, 77158, 'Field', 0)
 EOSQL
 
+	$t->wait_for_network_idle();
 	$t->get_ok('/breeders/trial/139', 'Navigate to trial 139 page');
 	$t->click_ok('pheno_heatmap_onswitch', 'id', 'Open fieldmap section for trial 139');
 	$t->wait_for_working_dialog();
@@ -1295,6 +1296,7 @@ EOSQL
 	# =========================================================================
 	# Filler Accession Validation & Creation
 	# =========================================================================
+	$t->wait_for_network_idle();
 	$t->get_ok('/breeders/trial/165', 'Navigate to trial 165 for filler accession tests');
 	$t->click_ok('pheno_heatmap_onswitch', 'id', 'Open fieldmap section');
 	$t->wait_for_working_dialog();
@@ -1354,6 +1356,7 @@ EOSQL
 	$t->click_ok('//div[contains(@class,"show")]//button[contains(text(),"Close")]', 'xpath', 'Close plot details modal');
 
 	# Verify persistence across page reload
+	$t->wait_for_network_idle();
 	$t->get_ok('/breeders/trial/165', 'Reload trial 165 page to verify persistence of filler plots');
 	$t->click_ok('pheno_heatmap_onswitch', 'id', 'Open fieldmap section on reloaded page');
 	$t->wait_for_working_dialog();
@@ -1459,6 +1462,7 @@ EOSQL
 		});
 	});
 
+	$t->wait_for_network_idle();
 	$t->get_ok('/breeders/trial/165', 'Reload trial 165 page to view updated fieldmap with image');
 	$t->click_ok('pheno_heatmap_onswitch', 'id', 'Open fieldmap section');
 	$t->wait_for_working_dialog();
@@ -1495,6 +1499,7 @@ EOSQL
 		['TEST_CROSS_01', 'TEST_CROSS_02', 'TEST_CROSS_03', 'TEST_CROSS_04']
 	);
 
+	$t->wait_for_network_idle();
 	$t->get_ok("/breeders/trial/$cross_trial_id", 'Navigate to created cross trial page');
 	$t->click_ok('pheno_heatmap_onswitch', 'id', 'Open fieldmap section on cross trial');
 	$t->wait_for_working_dialog();
@@ -1540,6 +1545,7 @@ EOSQL
 		['TEST_FAMILY_01', 'TEST_FAMILY_02', 'TEST_FAMILY_03', 'TEST_FAMILY_04']
 	);
 
+	$t->wait_for_network_idle();
 	$t->get_ok("/breeders/trial/$family_trial_id", 'Navigate to created family trial page');
 	$t->click_ok('pheno_heatmap_onswitch', 'id', 'Open fieldmap section on family trial');
 	$t->wait_for_working_dialog();
@@ -1584,6 +1590,7 @@ EOSQL
 		['TEST_OVERLAP_01', 'TEST_OVERLAP_02', 'TEST_OVERLAP_03', 'TEST_OVERLAP_04', 'TEST_OVERLAP_05']
 	);
 
+	$t->wait_for_network_idle();
 	$t->get_ok("/breeders/trial/$overlap_trial_id", 'Navigate to created overlapping plots trial page');
 	$t->click_ok('pheno_heatmap_onswitch', 'id', 'Open fieldmap section on overlapping plots trial');
 	$t->wait_for_working_dialog();
