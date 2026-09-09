@@ -391,6 +391,7 @@ sub generate_and_cache_layout {
     my %unique_controls;
     my $project = $self->get_project();
 
+    print STDERR "_get_plots\n";
     $plots_ref = $self->_get_plots();
     if (!$plots_ref) {
       print STDERR "_get_design_from_trial: not plots provided... returning.\n";
@@ -420,6 +421,9 @@ sub generate_and_cache_layout {
 
     my %design;
 
+    print STDERR "retrieve_plot_info\n";
+    $self->retrieve_plot_info_bulk(\@plots, \%design);
+
     #print STDERR "PLOTS: ".Dumper(\@plots);
     foreach my $plot (@plots) {
 	$self->retrieve_plot_info($plot, \%design);
@@ -427,11 +431,13 @@ sub generate_and_cache_layout {
 
     #print STDERR "DESIGN IN generate_and_cache_layout: ".Dumper(\%design);
 
+    print STDERR "search_related\n";
     my $trial_layout_json_rs = $project->search_related('projectprops',{ 'type_id' => $self->cvterm_id('trial_layout_json') });
     while (my $t = $trial_layout_json_rs->next) {
         $t->delete();
     }
 
+    print STDERR "create_projectprops\n";
     $project->create_projectprops({
         'trial_layout_json' => encode_json(\%design)
 				  });
@@ -442,14 +448,458 @@ sub generate_and_cache_layout {
 
     #print STDERR "DESIGN AS READ : ".Dumper(\%design);
 
+    print STDERR "returning design\n";
     return \%design;
 }
 
+sub retrieve_plot_info_bulk {
+    my $self = shift;
+    my $plots = shift;
+    my $design = shift;
+
+    my $design_info;
+    my $verify_errors;
+    my $schema = $self->get_schema();
+    my $source_primary_stock_type_ids = $self->get_source_primary_stock_type_ids();
+    my $relationship_type_ids = $self->get_relationship_type_ids();
+
+    # Get the cvterms we need
+
+    # stock types
+    my $accession_cvterm_id = $self->cvterm_id('accession');
+    my $plant_cvterm_id = $self->cvterm_id('plant');
+    my $tissue_sample_cvterm_id = $self->cvterm_id('tissue_sample');
+
+    # stock relationships
+    my $plot_of_cvterm_id = $self->cvterm_id('plot_of');
+    my $subplot_of_cvterm_id = $self->cvterm_id('subplot_of');
+    my $plant_of_cvterm_id = $self->cvterm_id('plant_of');
+    my $tissue_sample_of_cvterm_id = $self->cvterm_id('tissue_sample_of');
+
+    # trial layout
+    my $plot_number_cvterm_id = $self->cvterm_id('plot number');
+    my $rep_number_cvterm_id = $self->cvterm_id('replicate');
+    my $block_number_cvterm_id = $self->cvterm_id('block');
+    my $row_number_cvterm_id = $self->cvterm_id('row_number');
+    my $col_number_cvterm_id = $self->cvterm_id('col_number');
+    my $range_number_cvterm_id = $self->cvterm_id('range');
+    my $stake_number_cvterm_id = $self->cvterm_id('stake_number');
+    my $set_number_cvterm_id = $self->cvterm_id('set_number');
+    my $plot_geo_json_cvterm_id = $self->cvterm_id('plot_geo_json');
+    my $concentration_cvterm_id = $self->cvterm_id('concentration');
+    my $volume_cvterm_id = $self->cvterm_id('volume');
+    my $dna_person_cvterm_id = $self->cvterm_id('dna_person');
+    my $extraction_cvterm_id = $self->cvterm_id('extraction');
+    my $tissue_type_cvterm_id = $self->cvterm_id('tissue_type');
+    my $acquisition_date_cvterm_id = $self->cvterm_id('acquisition date');
+    my $notes_cvterm_id = $self->cvterm_id('notes');
+    my $facility_identifier_cvterm_id = $self->cvterm_id('facility_identifier');
+    my $ncbi_taxonomy_id_cvterm_id = $self->cvterm_id('ncbi_taxonomy_id');
+    my $is_blank_cvterm_id = $self->cvterm_id('is_blank');
+    my $is_a_control_cvterm_id = $self->cvterm_id('is a control');
+    my $analysis_result_cvterm_id = $self->cvterm_id('analysis_result');
+
+    # Convert our input plots to a list of plot stock ids for db queries
+    my @plot_ids;
+    foreach my $plot (@$plots){
+        push @plot_ids, $plot->stock_id();
+    }
+    print STDERR "plots: " . join(",", @plot_ids) . "\n";
+    
+    # Prepare a DB resultset that we can re-use to search for plots
+    my $plots_rs = $schema->resultset('Stock::Stock')
+        ->search({'me.stock_id' => { -in => \@plot_ids}});
+
+    # -------------------------------------------------------------------------
+    # Get parent relationships
+
+    # Get accessions/crosses/family_names of plots
+    my $parents;
+    my $parents_rs = $plots_rs
+        ->search_related(
+            'stock_relationship_subjects',
+            {
+                'stock_relationship_subjects.type_id' => { -in => \@$relationship_type_ids },
+                'object.type_id' => { -in => \@$source_primary_stock_type_ids }
+            },
+            { 'join' => 'object' }
+	    );
+    while (my $record = $parents_rs->next){
+        my $plot_id = $record->subject_id();
+        my $parent = $record->object;
+        push @{$parents->{$plot_id}}, {
+            name => $parent->uniquename(),
+            id => $parent->stock_id(),
+            type_id => $parent->type_id(),
+        };
+    }
+    # Validate each plot is linked to exactly one parent (accession/cross/family_name)
+    foreach my $plot_id (@plot_ids){
+        my $plot_parents = $parents->{$plot_id};
+        if (! defined $plot_parents){
+            die "There is no accession/cross/family_name linked to plot: $plot_id\n";
+        }
+        if (scalar(@$plot_parents) > 1){
+            die "There is more than one accession/cross/family_name linked to plot: $plot_id\n";
+        }
+        $parents->{$plot_id} = $parents->{$plot_id}->[0];
+        print STDERR "plot: $plot_id, parent: " . Dumper($parents->{$plot_id});
+    }
+
+    # -------------------------------------------------------------------------
+    # Get child relationships
+    # -------------------------------------------------------------------------
+
+    # Subplots
+    my $subplots_rs = $plots_rs
+        ->search_related(
+            'stock_relationship_objects',
+            {
+                'stock_relationship_objects.type_id' => $self->cvterm_id('subplot_of'),
+                'subject.type_id' => $self->cvterm_id('subplot')
+            },
+            { 'join' => 'subject' }
+        );
+
+    # -------------------------------------------------------------------------
+    # Plants
+
+    # my $query = "
+    # select object_id as plant_id, tissue_sample.uniquename as tissue_sample_name
+    # from stock_relationship as plant_to_tissue_sample
+    # join stock as tissue_sample on (stock_id = subject_id)
+    # where plant_to_tissue_sample.type_id = ? and object_id = any (?)";
+    # my $sth = $schema->storage()->dbh()->prepare($query);
+    # $sth->execute($tissue_sample_of_cvterm_id, \@plant_ids);
+    # while (my ($plant_id, $tissue_sample_name) = $sth->fetchrow_array()) {
+    #     print STDERR "plant: $plant_id, tissue_sample: $tissue_sample_name\n";
+    #     push @{$design_info->{$plot_id}->{plants_tissue_sample_names}}, $plant_id;
+    # #     # push @{$design_info->{$plot_id}->{plant_names}}, $record->get_column('plant_name');
+    # #     # push @{$design_info->{$plot_id}->{plant_index_numbers}}, $record->get_column('plant_index_number');
+    # # }
+    # }
+
+    # Plants in plot + stockprop plant_index_nummber
+    my $plants_rs = $schema->resultset("Stock::Stock")
+        ->search(
+            {
+                'me.stock_id' => { -in => \@plot_ids},
+                -or => [
+                    'object.type_id' => $plant_cvterm_id,
+                    'object_2.type_id' => $accession_cvterm_id,
+                ],
+                #'object.type_id' => $plant_cvterm_id,
+                #'object_2.type_id' => $accession_cvterm_id,
+                #'stock_relationship_objects.type_id' => $tissue_sample_of_cvterm_id,
+                # -and => [
+                #     -or => [
+                #         'subject.stock_id' => undef
+                #     ]
+                # ]
+            },
+            {
+                'join' => [
+                    # plot -> plants
+                    #{'stock_relationship_subjects' => ['object', 'object']},
+                    {'stock_relationship_subjects' => ['object']},
+                    # plot -> parents
+                    {'stock_relationship_subjects' => ['object']},
+                    
+                    # plots -> plants -> plots or tissue samples of plant
+                    # {'stock_relationship_subjects' => 'object'},
+                    # # plots -> accessions
+                    # {'stock_relationship_subjects' => 'object'},
+
+                    #'stock_relationship_subjects' => {'object' => {'stock_relationship_objects' => 'subject'}},
+                    # plots -> accessions 
+                    #'stock_relationship_subjects',    
+                ],
+                'join_type' => 'LEFT',
+                '+select' => ['me.uniquename', 'object.uniquename', 'object.type_id'],
+                #'+select' => ['me.uniquename', 'object.uniquename', 'subject.uniquename'],
+                '+as' => ['plot', 'plant', 'parent', 'parent_type']
+            }
+        );
+    while (my $record = $plants_rs->next){
+        my $plot = $record->get_column('plot');
+        my $plant = $record->get_column('plant');
+        my $parent = $record->get_column('parent') || '';
+        print STDERR "plant record: $plot -> $plant -> $parent\n";
+    }
+
+    my $plants_rs = $plots_rs
+        ->search_related(
+            'stock_relationship_subjects',
+            {
+                'stock_relationship_subjects.type_id' => $self->cvterm_id('plant_of'),
+                'object.type_id' => $self->cvterm_id('plant'),
+                'stockprops.type_id' => $self->cvterm_id('plant_index_number')
+            },
+            {
+                'join' => {'object' => 'stockprops' },
+                '+select' => ['me.stock_id', 'object.stock_id', 'object.uniquename', 'stockprops.value'],
+                '+as' => ['plot_id', 'plant_id', 'plant_name', 'plant_index_number']
+            }
+	    );
+    my $plant_ids = {};
+    while (my $record = $plants_rs->next){
+        my $plot_id = $record->get_column("plot_id");
+        my $plant_id = $record->get_column('plant_id');
+        $plant_ids->{$plant_id} = 1;
+        push @{$design_info->{$plot_id}->{plant_ids}}, $plant_id;
+        push @{$design_info->{$plot_id}->{plant_names}}, $record->get_column('plant_name');
+        push @{$design_info->{$plot_id}->{plant_index_numbers}}, $record->get_column('plant_index_number');
+    }
+    my @plant_ids = keys %$plant_ids;
+
+    # Tissue samples of plants
+    # my $plant_tissue_samples_rs = $schema->resultset("Stock::StockRelationship")
+    #     ->search(
+    #         {
+    #             'me.object_id' => {-in => keys %$plant_ids},
+    #             'subject.type_id' => $tissue_sample_cvterm_id,
+    #         },
+    #         {
+    #             'join' => {'subject'},
+    #             '+select' => ['me.stock_id', 'subject.uniquename' ],
+    #             '+as' => ['plant_id', 'tissue_sample_name']  
+    #         }
+    #     );
+    # while (my $record = $plants_rs->next){
+    #     my $plant_id = $record->get_column("plant_id");
+    #     my $tissue_sample_name = $record->get_column('tissue_sample_name');
+    #     print STDERR "plant: $plant_id, tissue_sample: $tissue_sample_name\n";
+    #     # $plant_ids->{$plant_id} = 1;
+    #     # push @{$design_info->{$plot_id}->{plant_ids}}, $plant_id;
+    #     # push @{$design_info->{$plot_id}->{plant_names}}, $record->get_column('plant_name');
+    #     # push @{$design_info->{$plot_id}->{plant_index_numbers}}, $record->get_column('plant_index_number');
+    # }
+        
+
+    # Tissue samples of plant
+
+    # Optional verification: check parents of plants match parents of plot
+
+
+
+    # -------------------------------------------------------------------------
+    # Tissue Samples
+    my $tissue_samples_rs = $plots_rs
+        ->search_related(
+            'stock_relationship_objects',
+            {
+                'stock_relationship_objects.type_id' => $self->cvterm_id('tissue_sample_of'),
+                'subject.type_id' => $self->cvterm_id('tissue_sample')
+            },
+            { 'join' => 'subject' }
+        );
+    # Seedlots
+    my $seedlots;
+    my $seedlots_rs = $plots_rs
+        ->search_related(
+            'stock_relationship_subjects',
+            {
+                'stock_relationship_subjects.type_id' => $self->cvterm_id('seed transaction'),
+                'object.type_id' => $self->cvterm_id('seedlot')
+            },
+            { 'join' => 'object' }
+        );
+    while (my $record = $seedlots_rs->next){
+        my $plot_id = $record->subject_id();
+        my $seedlot_id = $record->object_id();
+        push @{$seedlots->{$plot_id}}, {
+            id => $record->object_id(),
+            name => $record->object->uniquename(),
+            transaction => decode_json $record->value,
+        };
+    }
+    # Validate each plot is linked to no more than 1 seedlot
+    my $seedlot_ids = {};
+    foreach my $plot_id (@plot_ids){
+        my $plot_seedlots = $seedlots->{$plot_id};
+        if (defined $plot_seedlots && scalar(@$plot_seedlots) > 1){
+            die "There is more than one seedlot linked to plot: $plot_id\n";
+        }
+        my $seedlot = $seedlots->{$plot_id}->[0];
+        $seedlots->{$plot_id} = $seedlot;
+        $seedlot_ids->{$seedlot->{id}} = 1;
+    }
+    # Optional validation, check if seedlot parent is same as plot's parent
+    if ($self->get_verify_layout){
+        my $seedlot_parents_rs = $schema->resultset("Stock::Stock")
+            ->search({'me.stock_id' => {-in => keys %$seedlot_ids}})
+            ->search_related(
+                'stock_relationship_subjects',
+                {
+                    'stock_relationship_subjects.type_id' => $self->cvterm_id('seed transaction'),
+                    'object.type_id' => { -in => \@$source_primary_stock_type_ids }
+                },
+                { 'join' => 'object' }
+            );
+        my $seedlot_parents;
+        while (my $record = $seedlot_parents_rs->next){
+            my $seedlot_id = $record->subject_id();
+            my $parent_id = $record->object_id();
+            $seedlot_parents->{$seedlot_id} = $parent_id;
+        }
+        foreach my $plot_id (@plot_ids){
+            my $plot_parent = $parents->{$plot_id}->{id};
+            my $seedlot_id = $seedlots->{$plot_id}->{id};
+            my $seedlot_parent = $seedlot_parents->{$seedlot_id};
+            if (defined $seedlot_parent && $seedlot_parent != $plot_parent){
+                my $message = "Plot: $plot_id has a different parent ($plot_parent) from its seedlot ($seedlot_id) parent ($seedlot_parent)";
+                push @{$verify_errors->{errors}->{layout_errors}}, $message;
+            }
+        }
+    }
+
+    # Intercropped accessions
+    my $intercrop_accesssions;
+    my $intercrop_accesssions_rs = $plots_rs
+        ->search_related(
+            'stock_relationship_subjects',
+            {
+                'stock_relationship_subjects.type_id' => $self->cvterm_id('intercrop_plot_of'),
+                'object.type_id' => $source_primary_stock_type_ids
+            },
+            { 'join' => 'object' }
+	    );
+    while (my $record = $intercrop_accesssions_rs->next){
+        my $plot_id = $record->subject_id();
+        my $intercropped_accession = $record->object;
+
+        push @{$design_info->{$plot_id}->{intercrop_accessions}}, {
+            accession_name => $intercropped_accession->uniquename(),
+            accession_id => $intercropped_accession->stock_id(),
+        };
+    }
+
+    # -------------------------------------------------------------------------
+    # Create the final design_info object
+
+    while (my $record = $plots_rs->next){
+        my $plot_id = $record->stock_id();
+        my $plot_name = $record->uniquename();
+        $design_info->{$plot_id}->{plot_id} = $plot_id;
+        $design_info->{$plot_id}->{plot_name} = $plot_name;
+    }
+
+    # Fetch stockprops of plots
+    my $stockprops;
+    my $stockprops_rs = $schema->resultset('Stock::Stockprop')
+        ->search({'me.stock_id' => {-in => \@plot_ids}});
+    while (my $record = $stockprops_rs->next){
+        my $plot_id = $record->stock_id();
+        my $type_id = $record->type_id();
+        my $value = $record->value();
+        push @{$stockprops->{$plot_id}->{$type_id}}, $value;
+        print STDERR "stockprop record: $plot_id, $type_id, $value\n";
+    }
+
+    # Validate stockprops, then convert values to comma separated
+
+    foreach my $plot_id (keys %$stockprops){
+
+        # Validate required values from stockprops
+        my $plot_number = $stockprops->{$plot_id}->{$plot_number_cvterm_id};
+        if (!defined $plot_number){ die "no plot number stockprop found for plot: $plot_id"; }
+        $design_info->{$plot_id}->{plot_number} = join(',', @$plot_number);
+
+        # Add design keys based on whether this is/isn't an analysis result
+        my $parent_data = $parents->{$plot_id};
+        if ($parent_data->{type_id} == $analysis_result_cvterm_id){
+            $design_info->{$plot_id}->{analysis_result_stock_name} = $parent_data->{name};
+            $design_info->{$plot_id}->{analysis_result_stock_id} = $parent_data->{id};
+        } else {
+            $design_info->{$plot_id}->{accession_name} = $parent_data->{name};
+            $design_info->{$plot_id}->{accession_id} = $parent_data->{id};
+        }
+
+        # Add design keys based on seedlot transaction
+        if (defined $seedlots->{$plot_id}){
+            my $transaction = $seedlots->{$plot_id}->{transaction};
+            $design_info->{$plot_id}->{"seedlot_name"} = $seedlots->{$plot_id}->{name};
+            $design_info->{$plot_id}->{"seedlot_stock_id"} = $seedlots->{$plot_id}->{id};
+            $design_info->{$plot_id}->{"num_seed_per_plot"} = $transaction->{amount};
+            $design_info->{$plot_id}->{"weight_gram_seed_per_plot"} = $transaction->{weight_gram};
+            $design_info->{$plot_id}->{"seed_transaction_operator"} = $transaction->{operator};
+        }
+
+        # Process optional values from stockprops
+        foreach my $type_id (keys %{$stockprops->{$plot_id}}){
+            my @values = @{$stockprops->{$plot_id}->{$type_id}};
+            my $formatted_values = join(',', @values);
+
+            my $design_info_key;
+            if    ($type_id == $rep_number_cvterm_id )        { $design_info_key = "rep_number"; }
+            elsif ($type_id == $block_number_cvterm_id )      { $design_info_key = "block_number"; }
+            elsif ($type_id == $row_number_cvterm_id )        { $design_info_key = "row_number"; }
+            elsif ($type_id == $col_number_cvterm_id )        { $design_info_key = "col_number"; }
+            elsif ($type_id == $range_number_cvterm_id )      { $design_info_key = "range_number"; }
+            elsif ($type_id == $stake_number_cvterm_id )      { $design_info_key = "stake_number"; }
+            elsif ($type_id == $set_number_cvterm_id )        { $design_info_key = "set_number"; }
+            elsif ($type_id == $concentration_cvterm_id)      { $design_info_key = "concentration"; }
+            elsif ($type_id == $volume_cvterm_id)             { $design_info_key = "volume"; }
+            elsif ($type_id == $dna_person_cvterm_id)         { $design_info_key = "dna_person"; }
+            elsif ($type_id == $extraction_cvterm_id)         { $design_info_key = "extraction"; }
+            elsif ($type_id == $tissue_type_cvterm_id)        { $design_info_key = "tissue_type"; }
+            elsif ($type_id == $acquisition_date_cvterm_id)   { $design_info_key = "acquisition_date"; }
+            elsif ($type_id == $notes_cvterm_id)              { $design_info_key = "notes"; }
+            elsif ($type_id == $facility_identifier_cvterm_id){ $design_info_key = "facility_identifier"; }
+            elsif ($type_id == $ncbi_taxonomy_id_cvterm_id)   { $design_info_key = "ncbi_taxonomy_id"; }
+            # Special values
+            elsif ($type_id == $plot_geo_json_cvterm_id){
+                $design_info_key = "plot_geo_json";
+                $formatted_values = decode_json $values[0];
+            }
+            elsif ($type_id == $is_blank_cvterm_id  ){
+                $design_info_key = "is_blank";
+                $formatted_values = $formatted_values ? 1 : 0;
+            }
+            elsif ($type_id == $is_a_control_cvterm_id  ){
+                $design_info_key = "is_a_control";
+                $formatted_values = $formatted_values ? 1 : 0;
+            }
+        
+            # Add values to design information
+            if ($design_info_key){
+                $design_info->{$plot_id}->{$design_info_key} = $formatted_values;
+            }
+        }
+
+        # Optional validation of the layout
+        if ($self->get_verify_layout){
+            # No block number
+            if (!defined $design_info->{$plot_id}->{block_number}){
+                push @{$verify_errors->{errors}->{layout_errors}}, "Plot: $plot_id does not have a block_number!";
+            }
+            # No linked seedlots
+            if (!defined $seedlots->{$plot_id}){
+                push @{$verify_errors->{errors}->{seedlot_errors}}, "Plot: $plot_id does not have a seedlot linked.";
+            }
+        }
+
+        if ($self->get_verify_physical_map){
+            my $row_number = $design_info->{$plot_id}->{row_number};
+            my $col_number = $design_info->{$plot_id}->{col_number};
+            if (!defined $row_number || ! defined $col_number){
+                push @{$verify_errors->{errors}->{physical_map_errors}}, "Plot: $plot_id does not have a row_number and/or col_number!";
+            }
+        }
+    }
+
+    
+    print STDERR "design_info: " . Dumper($design_info);
+
+}
 
 sub retrieve_plot_info {
     my $self = shift;
     my $plot = shift;
     my $design = shift;
+    my $plot_ids = shift;
+
+    my $schema = $self->get_schema();
 
     #print STDERR "retrieve_plot_info()... Working on plot ".$plot->uniquename()."\n";
     my %design_info;
@@ -469,6 +919,7 @@ sub retrieve_plot_info {
     while (my $r = $plot_properties->next){
 	push @{$stockprop_hash{$r->type_id}}, $r->value;
     }
+
     my $plot_number_prop = $stockprop_hash{$self->cvterm_id('plot number')} ? join ',', @{$stockprop_hash{$self->cvterm_id('plot number')}} : undef;
     my $block_number_prop = $stockprop_hash{$self->cvterm_id('block')} ? join ',', @{$stockprop_hash{$self->cvterm_id('block')}} : undef;
     my $replicate_number_prop = $stockprop_hash{$self->cvterm_id('replicate')} ? join ',', @{$stockprop_hash{$self->cvterm_id('replicate')}} : undef;
@@ -492,7 +943,7 @@ sub retrieve_plot_info {
 
     #print  STDERR "SORUCE STOCK TYPES: ".Dumper($self->get_source_stock_type_ids())."\n".Dumper($self->get_source_stock_types());
     #print STDERR "REL TYEPS = ".Dumper($self->get_relationship_types());
-    my $source_primary_stock_type_ids = $self->get_source_primary_stock_type_ids();
+    my $source_primary_stock_type_ids =  $self->get_source_primary_stock_type_ids();
 
     my $accession_rs = $plot->search_related('stock_relationship_subjects')->search(
 	{ 'me.type_id' => { -in => $self->get_relationship_type_ids() }, 'object.type_id' => { -in => $self->get_source_primary_stock_type_ids() } },
