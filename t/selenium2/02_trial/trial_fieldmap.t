@@ -380,6 +380,115 @@ sub drag_svg {
 	}, $dx, $dy);
 }
 
+# Persistent window.open handler that captures URL, features, and stubs win.print()
+sub setup_window_open_handler {
+	$t->driver->execute_script(q{
+		if (!window.__customOpenInstalled) {
+			window.__customOpenInstalled = true;
+			const realOpen = window.open;
+			window.open = function(url, target, features) {
+				window.__lastOpenedUrl = url;
+				window.__lastOpenedFeatures = features;
+				const win = realOpen.call(window, url, target, features);
+				if (win) {
+					try {
+						win.print = function() {
+							window.__printCalled = true;
+						};
+					} catch (e) {}
+				}
+				return win;
+			};
+		}
+	});
+}
+
+# Verify Print Fieldmap button, alert text, print preview window, and print() invocation
+sub test_print_field_map_ok {
+	my ($expected_title) = @_;
+	$expected_title ||= 'Field Map View';
+
+	setup_window_open_handler();
+	$t->driver->execute_script(q{
+		window.__printCalled = false;
+		window.__lastOpenedFeatures = null;
+	});
+
+	my $orig_handle = $t->driver->get_current_window_handle();
+	my @handles_before = @{$t->driver->get_window_handles()};
+
+	$t->click_ok('//button[@title="Print Fieldmap"]', 'xpath', 'Click Print Fieldmap toolbar button');
+
+	my $alert_text = $t->get_alert_text();
+	is(
+		$alert_text,
+		"You may need to change print settings - such as page size, margins, and scaling - to get the fieldmap to display properly in the print preview. Select \"Background graphics\" to ensure the legend includes colors.",
+		'Verify print settings alert text'
+	);
+	$t->accept_alert_ok('Accept print settings instruction alert');
+
+	# Verify window features passed to window.open
+	my $features = $t->driver->execute_script('return window.__lastOpenedFeatures;');
+	is($features, 'width=800,height=600', 'Verify window.open called with width=800,height=600');
+
+	# Wait for print preview window to open
+	my $has_new_window = eval {
+		wait_until {
+			scalar(@{$t->driver->get_window_handles()}) > scalar(@handles_before);
+		} timeout => 5;
+	};
+	ok($has_new_window, 'Print preview window was opened');
+
+	if ($has_new_window) {
+		my @handles_after = @{$t->driver->get_window_handles()};
+		my ($new_handle) = grep { $_ ne $orig_handle } @handles_after;
+		if ($new_handle) {
+			$t->driver->switch_to_window($new_handle);
+
+			# Verify document title
+			ok((wait_until {
+				my $title = eval { $t->driver->get_title() };
+				return $title && $title eq 'Print Field Map';
+			} timeout => 5), 'Print window has title "Print Field Map"');
+
+			# Verify <h1> heading
+			$t->find_element_ok(
+				'//h1[normalize-space()="' . $expected_title . '"]',
+				'xpath',
+				"Print window displays expected header '$expected_title'"
+			);
+
+			# Verify legend and SVG are present in the print window
+			$t->find_element_ok('//*[@id="legend_list"]', 'xpath', 'Print window contains legend list');
+			$t->find_element_ok('//*[@id="' . $svg_id . '"]', 'xpath', 'Print window contains fieldmap chart SVG');
+			$t->find_element_ok(
+				'//*[local-name()="svg" and @id="' . $svg_id . '"]//*[local-name()="rect"]',
+				'xpath',
+				'Print window SVG contains plot rect elements'
+			);
+
+			if ($expected_title ne 'Field Map View') {
+				$t->find_element_ok(
+					'//*[@id="legend_list"]//div[contains(@style,"linear-gradient")]',
+					'xpath',
+					'Print window contains gradient bar for heatmap'
+				);
+			}
+
+			# Switch back to orig_handle to verify print() was called
+			$t->driver->switch_to_window($orig_handle);
+			ok((wait_until {
+				$t->driver->execute_script('return !!window.__printCalled;');
+			} timeout => 5, interval => 0.2), 'Verify print() was invoked on printWindow');
+
+			# Switch back to new_handle to close it cleanly
+			$t->driver->switch_to_window($new_handle);
+			$t->driver->close();
+			$t->driver->switch_to_window($orig_handle);
+		}
+	}
+}
+
 my $all_checkbox_labels = [
 	'Accession Name',
 	'Plot Name',
@@ -911,6 +1020,11 @@ $t->while_logged_in_as("curator", sub {
 	ok(!scalar(@{$t->driver->find_elements('//div[contains(@class,"fieldmap-tooltip")]', 'xpath')}), 'Tooltip dismissed after unhover in heatmap view');
 
 	# =========================================================================
+	# Print Field Map Action (Heatmap View)
+	# =========================================================================
+	test_print_field_map_ok('cass sink leaf|3-phosphoglyceric acid|ug/g|week 16|COMP:0000013');
+
+	# =========================================================================
 	# Spatial Corrections Heatmap Views
 	# =========================================================================
 	# Verify Spatial Corrections optgroup and options exist
@@ -1273,16 +1387,8 @@ $t->while_logged_in_as("curator", sub {
 	ok($plot_206_id, "Found stock ID for plot 206: $plot_206_id");
 
 	# Hook window.open to track URLs passed from PlotLayer double click
-	$t->driver->execute_script(q{
-		window.__lastOpenedUrl = null;
-		if (!window.__origOpen) {
-			window.__origOpen = window.open;
-			window.open = function(url, target, features) {
-				window.__lastOpenedUrl = url;
-				return window.__origOpen.call(window, url, target, features);
-			};
-		}
-	});
+	setup_window_open_handler();
+	$t->driver->execute_script('window.__lastOpenedUrl = null;');
 
 	my $orig_handle = $t->driver->get_current_window_handle();
 	my @handles_before = @{$t->driver->get_window_handles()};
@@ -1440,6 +1546,11 @@ $t->while_logged_in_as("curator", sub {
 	$t->find_element_ok('//div[contains(@class,"show")]//h4[contains(@class,"modal-title") and contains(text(),"Download Spatial Layout Customizer")]', 'xpath', 'Download Spatial Layout Customizer modal is open via external header button');
 	$t->click_ok('//div[contains(@class,"show")]//button[contains(text(),"Close")]', 'xpath', 'Click Close button in Download CSV modal opened via external button');
 	ok(!scalar(@{$t->driver->find_elements('//div[contains(@class,"show")]//h4[contains(text(),"Download Spatial Layout Customizer")]', 'xpath')}), 'Download CSV modal is closed after clicking Close');
+
+	# =========================================================================
+	# Print Field Map Action (Field Map View)
+	# =========================================================================
+	test_print_field_map_ok('Field Map View');
 
 	# =========================================================================
 	# "Display Trials in Same Field" Multi-Trial Visualization
