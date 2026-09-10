@@ -769,6 +769,54 @@ sub create_trial_with_direct_plants {
 	return $trial_id;
 }
 
+sub create_trial_with_geo_coordinates {
+	my ($trial_name, $stock_names_aref) = @_;
+
+	my $trial_id = create_test_trial($trial_name,
+		stock_type  => 'accessions',
+		stocks      => $stock_names_aref,
+		description => 'Fieldmap test trial for geo layout',
+	);
+
+	my $stock_geo_json_cvterm = SGN::Model::Cvterm->get_cvterm_row($f->bcs_schema, 'plot_geo_json', 'stock_property');
+
+	my %plot_coords = (
+		"${trial_name}_Plot_101" => [ [ [32.580, 0.340], [32.581, 0.340], [32.581, 0.341], [32.580, 0.341], [32.580, 0.340] ] ],
+		"${trial_name}_Plot_102" => [ [ [32.581, 0.340], [32.582, 0.340], [32.582, 0.341], [32.581, 0.341], [32.581, 0.340] ] ],
+		"${trial_name}_Plot_201" => [ [ [32.580, 0.341], [32.581, 0.341], [32.581, 0.342], [32.580, 0.342], [32.580, 0.341] ] ],
+		"${trial_name}_Plot_202" => [ [ [32.581, 0.341], [32.582, 0.341], [32.582, 0.342], [32.581, 0.342], [32.581, 0.341] ] ],
+	);
+
+	for my $plot_name (keys %plot_coords) {
+		my $plot = $f->bcs_schema->resultset('Stock::Stock')->find({ uniquename => $plot_name });
+		next unless $plot;
+
+		my $geo_json = {
+			type => 'Feature',
+			geometry => {
+				type => 'Polygon',
+				coordinates => $plot_coords{$plot_name},
+			},
+			properties => {
+				plot_name => $plot_name,
+			}
+		};
+
+		$plot->create_stockprops({
+			$stock_geo_json_cvterm->name() => encode_json($geo_json),
+		});
+	}
+
+	my $trial_layout = CXGN::Trial::TrialLayout->new({
+		schema          => $f->bcs_schema,
+		trial_id        => $trial_id,
+		experiment_type => 'field_layout',
+	});
+	$trial_layout->generate_and_cache_layout();
+
+	return $trial_id;
+}
+
 # -----------------------------------------------------------------------------
 # Fixture Setup: Mark plot CASS_6Genotypes_107 as a control
 # -----------------------------------------------------------------------------
@@ -2081,6 +2129,86 @@ EOSQL
 	# Verify Download Plot Order panel renders "Include Plants" but NOT "Include Subplots"
 	$t->find_element_ok('//div[contains(@class,"panel")]//label[contains(.,"Include Plants")]/input', 'xpath', 'Find Include Plants checkbox in Download Plot Order panel');
 	ok(!scalar(@{$t->driver->find_elements('//div[contains(@class,"panel")]//label[contains(.,"Include Subplots")]', 'xpath')}), 'No Include Subplots checkbox when trial has no subplots');
+
+	# =========================================================================
+	# Geo Field Map Leaflet View
+	# =========================================================================
+	# Part 1: Trial Without Geo Reference Data (Trial 165)
+	$t->wait_for_network_idle();
+	$t->get_ok('/breeders/trial/165', 'Navigate to trial 165 for geo field map test');
+	$t->click_ok('pheno_heatmap_onswitch', 'id', 'Open fieldmap section on trial 165');
+	$t->wait_for_working_dialog();
+	$t->find_element_ok('//*[@id="' . $svg_id . '"]', 'xpath', 'Find fieldmap SVG on trial 165');
+
+	# Switch to View Geo Field Layout
+	$t->click_option_ok('//label[contains(text(),"Select Layout View:")]/following-sibling::select//option[@value="geofieldmap"]', 'xpath', 'Select View Geo Field Layout on trial without geo coordinates');
+
+	# Verify alert appears warning of no geo reference data
+	$t->wait_for_alert_appear();
+	my $no_geo_alert = $t->get_alert_text();
+	is($no_geo_alert, 'No geo reference data in this trial!', 'Verify alert text when trial has no geo coordinates');
+	$t->accept_alert_ok('Accept no geo reference data alert');
+
+	# Verify Leaflet container is rendered and initialized
+	$t->find_element_ok('//div[@id="geoflatmap_leaflet" and contains(@class,"leaflet-container")]', 'xpath', 'Find Leaflet map container with leaflet-container class');
+	$t->find_element_ok('//div[@id="geoflatmap_leaflet"]//a[contains(@class,"leaflet-control-zoom-in")]', 'xpath', 'Find Leaflet zoom in control');
+	$t->find_element_ok('//div[@id="geoflatmap_leaflet"]//a[contains(@class,"leaflet-control-zoom-out")]', 'xpath', 'Find Leaflet zoom out control');
+	$t->find_element_ok('//button[contains(text(),"Submit Geo Layout Changes")]', 'xpath', 'Find Submit Geo Layout Changes button');
+
+	# Verify standard fieldmap panels are unmounted
+	ok(!scalar(@{$t->driver->find_elements('//*[@id="' . $svg_id . '"]', 'xpath')}), 'Standard SVG chart is unmounted in Geo Field Layout view');
+	ok(!scalar(@{$t->driver->find_elements('//*[@id="fieldmap_north_arrow"]', 'xpath')}), 'North arrow is unmounted in Geo Field Layout view');
+	ok(!scalar(@{$t->driver->find_elements('//button[@title="Zoom In"]', 'xpath')}), 'Standard zoom controls are unmounted in Geo Field Layout view');
+
+	# Verify window.geoFieldMapInstance is initialized in browser
+	my $has_geo_instance = $t->driver->execute_script('return typeof window.geoFieldMapInstance === "object" && window.geoFieldMapInstance !== null;');
+	ok($has_geo_instance, 'window.geoFieldMapInstance is initialized in Geo Field Layout view');
+
+	# Switch back to View Field Layout
+	$t->click_option_ok('//label[contains(text(),"Select Layout View:")]/following-sibling::select//option[@value="fieldmap"]', 'xpath', 'Switch back to View Field Layout');
+	$t->find_element_ok('//*[@id="' . $svg_id . '"]', 'xpath', 'Standard SVG chart is restored');
+	$t->find_element_ok('//*[@id="fieldmap_north_arrow"]', 'xpath', 'North arrow is restored');
+	ok(!scalar(@{$t->driver->find_elements('geoflatmap_leaflet', 'id')}), 'Leaflet container is unmounted');
+	my $geo_instance_deleted = $t->driver->execute_script('return typeof window.geoFieldMapInstance === "undefined";');
+	ok($geo_instance_deleted, 'window.geoFieldMapInstance is cleaned up after switching away from Geo Field Layout');
+
+	# Part 2: Trial With Geo Reference Data
+	my $geo_trial_id = create_trial_with_geo_coordinates(
+		'Test_Geo_Fieldmap_Trial',
+		['TEST_GEO_01', 'TEST_GEO_02', 'TEST_GEO_03', 'TEST_GEO_04']
+	);
+
+	$t->wait_for_network_idle();
+	$t->get_ok("/breeders/trial/$geo_trial_id", 'Navigate to created geo trial page');
+	$t->click_ok('pheno_heatmap_onswitch', 'id', 'Open fieldmap section on geo trial');
+	$t->wait_for_working_dialog();
+	$t->find_element_ok('//*[@id="' . $svg_id . '"]', 'xpath', 'Find fieldmap SVG on geo trial');
+
+	# Switch to View Geo Field Layout
+	$t->click_option_ok('//label[contains(text(),"Select Layout View:")]/following-sibling::select//option[@value="geofieldmap"]', 'xpath', 'Select View Geo Field Layout on trial with geo coordinates');
+
+	# Verify Leaflet container initialized and plot polygon paths rendered
+	$t->find_element_ok('//div[@id="geoflatmap_leaflet" and contains(@class,"leaflet-container")]', 'xpath', 'Find Leaflet container on geo trial');
+	ok((wait_until {
+		scalar(@{$t->driver->find_elements('//div[@id="geoflatmap_leaflet"]//*[local-name()="svg"]//*[local-name()="path"]', 'xpath')}) > 0;
+	} timeout => 15, interval => 0.5), 'Leaflet rendered plot polygon paths on trial with geo coordinates');
+
+	my $geo_paths = $t->driver->find_elements('//div[@id="geoflatmap_leaflet"]//*[local-name()="svg"]//*[local-name()="path"]', 'xpath');
+	is(scalar(@$geo_paths), 4, 'Leaflet rendered 4 plot polygon paths for the 4 plots');
+
+	# Verify Submit Geo Layout Changes button and test submission
+	$t->find_element_ok('//button[contains(text(),"Submit Geo Layout Changes")]', 'xpath', 'Find Submit Geo Layout Changes button on geo trial');
+	$t->click_ok('//button[contains(text(),"Submit Geo Layout Changes")]', 'xpath', 'Click Submit Geo Layout Changes button');
+	$t->wait_for_alert_appear();
+	my $submit_geo_alert = $t->get_alert_text();
+	like($submit_geo_alert, qr/(?:successfully|updated)/i, 'Verify alert text after submitting geo layout changes');
+	$t->accept_alert_ok('Accept geo layout submission alert');
+	$t->wait_for_working_dialog();
+
+	# Switch back to View Field Layout
+	$t->click_option_ok('//label[contains(text(),"Select Layout View:")]/following-sibling::select//option[@value="fieldmap"]', 'xpath', 'Switch back to View Field Layout on geo trial');
+	$t->find_element_ok('//*[@id="' . $svg_id . '"]', 'xpath', 'Standard SVG chart restored on geo trial');
+	ok(!scalar(@{$t->driver->find_elements('geoflatmap_leaflet', 'id')}), 'Leaflet container removed on geo trial');
 });
 
 $t->driver->quit();
