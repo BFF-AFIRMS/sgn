@@ -72,6 +72,22 @@ my @palette = (
 # SVG & Field Map Helper Functions
 # -----------------------------------------------------------------------------
 
+# Dispatch synthetic MouseEvents with client coordinates to an element found via XPath
+sub _dispatch_mouse_events {
+	my ($xpath, @events) = @_;
+	$t->driver->execute_script(q{
+		const el = document.evaluate(arguments[0], document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+		if (!el) return;
+		const target = el.querySelector('rect') || el;
+		const b = target.getBoundingClientRect();
+		const clientX = b.left + b.width / 2;
+		const clientY = b.top + b.height / 2;
+		for (const evt of arguments[1]) {
+			target.dispatchEvent(new MouseEvent(evt, { clientX: clientX, clientY: clientY, bubbles: true }));
+		}
+	}, $xpath, \@events);
+}
+
 # Find an SVG <text> element matching the given text, optional (x, y) coordinates, and font-size
 sub find_svg_text_ok {
 	my ($text, $x, $y, $font_size) = @_;
@@ -128,20 +144,7 @@ sub click_plot_cell_ok {
 sub double_click_plot_cell_ok {
 	my ($col, $row) = @_;
 	my $xpath = plot_cell_xpath($col, $row);
-	$t->driver->execute_script(q{
-		const el = document.evaluate(arguments[0], document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
-		if (!el) return;
-		const target = el.querySelector('rect') || el;
-		const b = target.getBoundingClientRect();
-		const clientX = b.left + b.width / 2;
-		const clientY = b.top + b.height / 2;
-		for (let i = 0; i < 2; i++) {
-			target.dispatchEvent(new MouseEvent('mousedown', { clientX: clientX, clientY: clientY, bubbles: true, cancelable: true }));
-			target.dispatchEvent(new MouseEvent('mouseup', { clientX: clientX, clientY: clientY, bubbles: true, cancelable: true }));
-			target.dispatchEvent(new MouseEvent('click', { clientX: clientX, clientY: clientY, bubbles: true, cancelable: true }));
-		}
-		target.dispatchEvent(new MouseEvent('dblclick', { clientX: clientX, clientY: clientY, bubbles: true, cancelable: true }));
-	}, $xpath);
+	_dispatch_mouse_events($xpath, 'mousedown', 'mouseup', 'click', 'mousedown', 'mouseup', 'click', 'dblclick');
 }
 
 # Convenience wrapper to verify an overlapping plot cell at grid (col, row)
@@ -157,22 +160,6 @@ sub plot_cell_xpath {
 	my ($col, $row) = @_;
 	my ($x, $y) = cell_pos($col, $row);
 	return '//*[local-name()="svg" and @id="' . $svg_id . '"]//*[local-name()="g" and @transform="translate(' . $x . ', ' . $y . ')"]';
-}
-
-# Dispatch synthetic MouseEvents with client coordinates to an element found via XPath
-sub _dispatch_mouse_events {
-	my ($xpath, @events) = @_;
-	$t->driver->execute_script(q{
-		const el = document.evaluate(arguments[0], document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
-		if (!el) return;
-		const target = el.querySelector('rect') || el;
-		const b = target.getBoundingClientRect();
-		const clientX = b.left + b.width / 2;
-		const clientY = b.top + b.height / 2;
-		for (const evt of arguments[1]) {
-			target.dispatchEvent(new MouseEvent(evt, { clientX: clientX, clientY: clientY, bubbles: true }));
-		}
-	}, $xpath, \@events);
 }
 
 # Trigger mouse hover events (mouseover, mouseenter) on an element found via XPath
@@ -197,6 +184,12 @@ sub hover_plot_cell {
 sub unhover_plot_cell {
 	my ($col, $row) = @_;
 	unhover_element(plot_cell_xpath($col, $row));
+}
+
+# Issue a synthetic click on an element by dispatching mouse events
+sub click_synthetic {
+	my ($xpath) = @_;
+	_dispatch_mouse_events($xpath, 'mousedown', 'mouseup', 'click');
 }
 
 # Verify plot label text at grid (col, row), handling standard or staggered (even/odd col) vertical offsets
@@ -1092,6 +1085,91 @@ $t->while_logged_in_as("curator", sub {
 	$t->find_element_ok('//div[contains(@class,"show")]//h4[contains(@class,"modal-title") and contains(.,"CASS_6Genotypes_206_renamed")]', 'xpath', 'Verify updated plot name CASS_6Genotypes_206_renamed in modal header');
 	$t->find_element_ok('//div[contains(@class,"show")]//tr[td[contains(text(),"Accession")]]/td[2][contains(text(),"IITA-TMS-IBA30572")]', 'xpath', 'Verify accession name IITA-TMS-IBA30572 in details modal');
 	$t->click_ok('//div[contains(@class,"show")]//button[contains(text(),"Close")]', 'xpath', 'Click Close button in details modal');
+
+	# =========================================================================
+	# Accession Autocomplete Dropdown Interaction (Plot Details Modal)
+	# =========================================================================
+	click_plot_cell_ok(3, 2);
+	$t->find_element_ok('//div[contains(@class,"show")]//h4[contains(@class,"modal-title") and contains(text(),"Plot Details")]', 'xpath', 'Plot details modal is open for autocomplete testing');
+	$t->click_ok('//div[contains(@class,"show")]//a[contains(text(),"Replace")]', 'xpath', 'Click Replace Accession tab for autocomplete test');
+
+	my $replace_acc_input_xpath = '//div[contains(@class,"show")]//label[contains(normalize-space(),"Accession")]/following-sibling::div//input';
+	my $replace_acc_dropdown_xpath = '//div[contains(@class,"show")]//label[contains(normalize-space(),"Accession")]/following-sibling::div//ul[contains(@class,"dropdown-menu")]';
+
+	# Verify dropdown is not displayed initially
+	ok(!scalar(@{$t->driver->find_elements($replace_acc_dropdown_xpath, 'xpath')}), 'Autocomplete dropdown is not displayed when input is empty');
+
+	# Type partial search term
+	$t->send_keys_ok($replace_acc_input_xpath, 'xpath', 'IITA-TMS', 'Type IITA-TMS into New Accession input', clear => 1);
+
+	# Verify autocomplete suggestions dropdown appears with matching accessions
+	$t->find_element_ok($replace_acc_dropdown_xpath, 'xpath', 'Autocomplete suggestions dropdown appears');
+	$t->find_element_ok($replace_acc_dropdown_xpath . '//li[contains(.,"IITA-TMS-IBA980581")]', 'xpath', 'Find IITA-TMS-IBA980581 in suggestions');
+	$t->find_element_ok($replace_acc_dropdown_xpath . '//li[contains(.,"IITA-TMS-IBA980002")]', 'xpath', 'Find IITA-TMS-IBA980002 in suggestions');
+
+	# Test onBlur dismissal: clicking outside the input (e.g. modal title) dismisses suggestions
+	$t->click_ok('//div[contains(@class,"show")]//h4[contains(@class,"modal-title")]', 'xpath', 'Click modal title to blur accession input');
+	ok((wait_until {
+		scalar(@{$t->driver->find_elements($replace_acc_dropdown_xpath, 'xpath')}) == 0;
+	} timeout => 5, interval => 0.5), 'Autocomplete dropdown dismissed on input blur');
+
+	# Re-type partial search term to bring back suggestions
+	$t->send_keys_ok($replace_acc_input_xpath, 'xpath', 'IITA-TMS-IBA98', 'Type IITA-TMS-IBA98 into New Accession input', clear => 1);
+	$t->find_element_ok($replace_acc_dropdown_xpath, 'xpath', 'Autocomplete suggestions dropdown reappears');
+	$t->find_element_ok($replace_acc_dropdown_xpath . '//li[contains(.,"IITA-TMS-IBA980581")]', 'xpath', 'Find IITA-TMS-IBA980581 in suggestions again');
+
+	# Click a suggestion from the dropdown and verify selection
+	click_synthetic($replace_acc_dropdown_xpath . '//li[contains(.,"IITA-TMS-IBA980581")]');
+	is($t->driver->find_element($replace_acc_input_xpath, 'xpath')->get_attribute('value'), 'IITA-TMS-IBA980581', 'Accession input populated with clicked suggestion');
+	ok((wait_until {
+		scalar(@{$t->driver->find_elements($replace_acc_dropdown_xpath, 'xpath')}) == 0;
+	} timeout => 5, interval => 0.5), 'Autocomplete dropdown dismissed after selecting suggestion');
+
+	# Clear the input and verify no dropdown is shown
+	$t->clear_ok($replace_acc_input_xpath, 'xpath', 'Clear New Accession input');
+	sleep(1);
+	ok(!scalar(@{$t->driver->find_elements($replace_acc_dropdown_xpath, 'xpath')}), 'Autocomplete dropdown is not displayed when input is cleared');
+
+	# Close Plot Details modal without submitting
+	$t->click_ok('//div[contains(@class,"show")]//button[contains(text(),"Close")]', 'xpath', 'Close plot details modal after autocomplete test');
+
+	# =========================================================================
+	# Accession Autocomplete Dropdown Interaction (Dimensions Modal)
+	# =========================================================================
+	$t->click_ok('//button[@title="Change Dimensions"]', 'xpath', 'Click Change Dimensions button for autocomplete test');
+	$t->find_element_ok('//div[contains(@class,"show")]//h4[contains(text(),"Change Layout Dimensions")]', 'xpath', 'Change Layout Dimensions modal is open');
+
+	my $filler_acc_input_xpath = '//div[contains(@class,"show")]//label[contains(text(),"Filler Accession")]/following-sibling::div//input';
+	my $filler_acc_dropdown_xpath = '//div[contains(@class,"show")]//label[contains(text(),"Filler Accession")]/following-sibling::div//ul[contains(@class,"dropdown-menu")]';
+
+	# Verify dropdown is not displayed initially
+	ok(!scalar(@{$t->driver->find_elements($filler_acc_dropdown_xpath, 'xpath')}), 'Filler accession autocomplete dropdown is not displayed initially');
+
+	# Type non-existent query to verify no dropdown appears
+	$t->send_keys_ok($filler_acc_input_xpath, 'xpath', 'NONEXISTENT_ACCESSION_XYZ', 'Type non-existent term into Filler Accession input', clear => 1);
+	sleep(1);
+	ok(!scalar(@{$t->driver->find_elements($filler_acc_dropdown_xpath, 'xpath')}), 'Filler accession autocomplete dropdown is not displayed for non-existent query');
+
+	# Type partial search term
+	$t->send_keys_ok($filler_acc_input_xpath, 'xpath', 'TMEB', 'Type TMEB into Filler Accession input', clear => 1);
+
+	# Verify suggestions dropdown appears
+	$t->find_element_ok($filler_acc_dropdown_xpath, 'xpath', 'Filler accession autocomplete suggestions dropdown appears');
+	$t->find_element_ok($filler_acc_dropdown_xpath . '//li[contains(.,"TMEB693")]', 'xpath', 'Find TMEB693 in filler accession suggestions');
+
+	# Click suggestion item and verify selection
+	click_synthetic($filler_acc_dropdown_xpath . '//li[contains(.,"TMEB693")]');
+	is($t->driver->find_element($filler_acc_input_xpath, 'xpath')->get_attribute('value'), 'TMEB693', 'Filler Accession input populated with clicked suggestion');
+	ok((wait_until {
+		scalar(@{$t->driver->find_elements($filler_acc_dropdown_xpath, 'xpath')}) == 0;
+	} timeout => 5, interval => 0.5), 'Filler accession dropdown dismissed after selecting suggestion');
+
+	# Clear the Filler Accession input before canceling so no state lingers
+	$t->clear_ok($filler_acc_input_xpath, 'xpath', 'Clear Filler Accession input before canceling modal');
+
+	# Cancel and close Change Dimensions modal
+	$t->click_ok('//div[contains(@class,"show")]//button[contains(text(),"Cancel")]', 'xpath', 'Cancel and close Change Dimensions modal');
+	ok(!scalar(@{$t->driver->find_elements('//div[contains(@class,"show")]//h4[contains(text(),"Change Layout Dimensions")]', 'xpath')}), 'Change Layout Dimensions modal is closed');
 
 	# =========================================================================
 	# Double-Click Plot Navigation
