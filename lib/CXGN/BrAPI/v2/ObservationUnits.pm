@@ -447,7 +447,6 @@ sub observationunits_update {
 
     # other cvterms
     my $external_references_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'phenotype_external_references', 'phenotype_property')->cvterm_id();
-
     # -------------------------------------------------------------------------
     # Initial Validation
 
@@ -540,25 +539,22 @@ sub observationunits_update {
     }
 
     # Get old values of parent accessions, to check if we need to update them
-    # TBD simplify
-    my $old_accessions_rs = $schema->resultset("Stock::Stock")->search(
-        {
-            'object.type_id'=> $accession_cvterm_id,
-            'me.stock_id' => {-in => \@observation_unit_db_ids},
-            'me.type_id' => {-in => [$plot_cvterm_id, $subplot_cvterm_id, $plant_cvterm_id, $tissue_sample_cvterm_id]}
-        },
-        {
-            join => {'stock_relationship_subjects' => 'object'},
-            '+select'=>['stock_relationship_subjects.subject_id', 'stock_relationship_subjects.object_id'],
-            '+as'=>['observation_unit_db_id', 'accession_id']
-        }
-    );
+
+    my $query = "
+    select ou.stock_id, accession.stock_id
+    from stock as ou
+    join stock_relationship as ou_to_accession on (subject_id = ou.stock_id and ou_to_accession.type_id = $plot_of_cvterm_id)
+    join stock as accession on (ou_to_accession.object_id = accession.stock_id and accession.type_id = $accession_cvterm_id)
+    where ou.stock_id = any(?)";
+
+    my $sth = $schema->storage()->dbh()->prepare($query);
+    $sth->execute(\@observation_unit_db_ids);
+
     my $old_accessions = {};
     my $new_accessions = {};
     my $new_accession_names = {};
-    while (my $record = $old_accessions_rs->next){
-        my $observation_unit_db_id = $record->get_column('observation_unit_db_id');
-        my $accession_id = $record->get_column('accession_id');
+
+    while (my ($observation_unit_db_id, $accession_id) = $sth->fetchrow_array()) {
         $old_accessions->{$observation_unit_db_id} = $accession_id;
     }
 
