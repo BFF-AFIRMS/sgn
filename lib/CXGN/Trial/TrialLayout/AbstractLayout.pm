@@ -423,9 +423,6 @@ sub generate_and_cache_layout {
 
     #print STDERR "PLOTS: ".Dumper(\@plots);
     my $design = $self->retrieve_plot_info(\@plots);
-    # foreach my $plot (@plots) {
-	# $self->retrieve_plot_info($plot, \%design);
-    # }
 
     #print STDERR "DESIGN IN generate_and_cache_layout: ".Dumper(\%design);
 
