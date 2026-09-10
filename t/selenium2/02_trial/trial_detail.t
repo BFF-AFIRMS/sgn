@@ -105,6 +105,9 @@ $t->while_logged_in_as("curator", sub {
         $t->click_ok("delete_field_map_hm_link", "id", "click on delete previous coordinate");
         $t->accept_alert_ok("click on delete previous coordinate - confirm");
         $t->accept_alert_ok("click on confirmation of delete");
+        # There is a full page reload that occurs here; lets give the page some time to
+        # fire off its requests before we wait for network idle
+        sleep(3);
 
         #Upload Trial Coordinates
         if ($file eq "T100_trial_layout.xls") { #the coords upload file only works on the first trial, no need to test that feature again
