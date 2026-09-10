@@ -32,6 +32,11 @@ $trial_phenotype_stock_type
 $identifier_prefix
 $analysis_metadata
 $has_col_and_row_numbers
+
+$main_production_site_url => undef
+$site_project_name => undef
+$sgn_session_id => undef
+$user_name => undef
 </%args>
 
 <& /util/import_javascript.mas, entries => ['analyses'], classes => [ 'CXGN.Trial' ] &>
@@ -42,7 +47,23 @@ $has_col_and_row_numbers
 
 <& /page/detail_page_2_col_section.mas, info_section_collapsed => 1, trial_id => $analysis_id, info_section_title => "<h4 style='display:inline'>Model Details</h4>", info_section_subtitle => 'View basic information about the model.', buttons_html => '', icon_class => "glyphicon glyphicon-option-horizontal", info_section_id => "model_details", trial_name => $analysis_name, analysis_metadata => $analysis_metadata &>
 
-<& /page/detail_page_2_col_section.mas, trial_id => $analysis_id, info_section_title => "<h4 style='display:inline'>Analysis Results</h4>", info_section_subtitle => 'View and download phenotype data.', buttons_html => "<button class='btn btn-sm btn-primary' style='margin:3px' id='trial_download_phenotypes_button'>Download Analysis Data</button>", icon_class => "glyphicon glyphicon-equalizer", info_section_id => "trial_detail_traits_assayed", trial_name => $analysis_name, trial_stock_type => $trial_phenotype_stock_type &>
+<& /page/detail_page_2_col_section.mas,
+    icon_class => "glyphicon glyphicon-equalizer",
+    info_section_title => "<h4 style='display:inline'>Analysis Results</h4>",
+    info_section_subtitle => 'View and download analysis data',
+    info_section_id => "trial_raw_data",
+    buttons_html => "<button class='btn btn-sm btn-primary' style='margin:3px' id='trial_download_phenotypes_button'>Download Analysis Data</button>",
+    trial_id => $analysis_id,
+    trial_name => $analysis_name,
+    site_project_name => $site_project_name,
+    sgn_session_id => $sgn_session_id,
+    user_name => $user_name,
+    main_production_site_url => $main_production_site_url,
+    trial_stock_type => $trial_phenotype_stock_type,
+    user_can_modify => $user_can_modify
+&>
+
+<& /page/detail_page_2_col_section.mas, trial_id => $analysis_id, info_section_title => "<h4 style='display:inline'>Summary Statistics</h4>", info_section_subtitle => 'View summary of analysis data.', icon_class => "glyphicon glyphicon-equalizer", info_section_id => "trial_detail_traits_assayed", trial_name => $analysis_name, trial_stock_type => $trial_phenotype_stock_type, trial_id => $analysis_id &>
 
 % my $subtitle = 'View and edit the spatial layout of the experiment. Also view a heatmap for phenotyped traits.';
 % my $layout_buttons = '';
