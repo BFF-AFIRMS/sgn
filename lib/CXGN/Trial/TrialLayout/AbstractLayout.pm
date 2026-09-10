@@ -599,7 +599,7 @@ sub retrieve_plot_info {
     my $sth = $schema->storage()->dbh()->prepare($query);
     $sth->execute(\@plot_ids);
     while (my ($plot_id, $subplot_id, $subplot_name, $subplot_parent_id, $index_number, $plant_name, $tissue_sample_name) = $sth->fetchrow_array()) {
-        # TBD: Validate that a plant is not associated with multiple numbers?
+        # TBD: Validate that a subplot is not associated with multiple index numbers?
         $design_info->{$plot_id}->{subplot_ids}->{$subplot_id} = 1;
         $design_info->{$plot_id}->{subplot_names}->{$subplot_name} = 1;
         $design_info->{$plot_id}->{subplot_index_numbers}->{$index_number} = 1;
@@ -617,8 +617,12 @@ sub retrieve_plot_info {
     # relationship of subplots to plants and tissue samples
     foreach my $plot_id (keys %$design_info){
         foreach my $key ('subplot_ids', 'subplot_names', 'subplot_index_numbers') {
-            my @values = keys %{$design_info->{$plot_id}->{$key}};
-            $design_info->{$plot_id}->{$key} = \@values;
+            my $values = $design_info->{$plot_id}->{$key};
+            # Currently, tests expect plots missing subplots to be undef;
+            if (defined $values){
+                my @entries = keys %$values;
+                $design_info->{$plot_id}->{$key} = \@entries;
+            }
         }
         # handle deeper nesting of subplots_plant_names
         my $subplots_plant_names = $design_info->{$plot_id}->{subplots_plant_names};
@@ -653,7 +657,9 @@ sub retrieve_plot_info {
         $design_info->{$plot_id}->{plant_ids}->{$plant_id} = 1;
         $design_info->{$plot_id}->{plant_names}->{$plant_name} = 1;
         $design_info->{$plot_id}->{plant_index_numbers}->{$index_number} = 1;
-        push @{$design_info->{$plot_id}->{plants_tissue_sample_names}->{$plant_name}}, $tissue_sample_name;
+        if (defined $tissue_sample_name){
+            push @{$design_info->{$plot_id}->{plants_tissue_sample_names}->{$plant_name}}, $tissue_sample_name;
+        }
         # Optional validation, check if plant parent is same as plot parent
         if ($self->get_verify_layout){
             my $plot_parent_id = $parents->{$plot_id}->{id};
@@ -668,6 +674,13 @@ sub retrieve_plot_info {
         foreach my $key ('plant_ids', 'plant_names', 'plant_index_numbers') {
             my @values = keys %{$design_info->{$plot_id}->{$key}};
             $design_info->{$plot_id}->{$key} = \@values;
+        }
+        # Initialize plants with no tissue samples to an empty array
+        foreach my $key ('plants_tissue_sample_names'){
+            my $values = $design_info->{$plot_id}->{$key};
+            if (! defined $values){
+                $design_info->{$plot_id}->{$key} = {};
+            }
         }
     }
 
@@ -689,6 +702,7 @@ sub retrieve_plot_info {
 
     my $sth = $schema->storage()->dbh()->prepare($query);
     $sth->execute(\@plot_ids);
+
     while (my ($plot_id, $tissue_sample_id, $tissue_sample_name, $tissue_sample_parent_id, $index_number) = $sth->fetchrow_array()) {
         # TBD: Validate that a tissue sample is not associated with multiple numbers?
         push @{$design_info->{$plot_id}->{tissue_sample_ids}}, $tissue_sample_id;
@@ -699,6 +713,15 @@ sub retrieve_plot_info {
             my $plot_parent_id = $parents->{$plot_id}->{id};
             if ( $plot_parent_id != $tissue_sample_parent_id ){
                 push @{$verify_errors->{errors}->{layout_errors}}, "Tissue Sample: $tissue_sample_name does not have the same parent: $tissue_sample_parent_id as the plot: $plot_parent_id.";
+            }
+        }
+    }
+
+    # Initialize missing tissue_sample keys to empty array
+    foreach my $plot_id (@plot_ids){
+        foreach my $key ('tissue_sample_ids', 'tissue_sample_names', 'tissue_sample_index_numbers') {
+            if (! defined $design_info->{$plot_id}->{$key}){
+                $design_info->{$plot_id}->{$key} = [];
             }
         }
     }
