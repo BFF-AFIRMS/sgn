@@ -843,7 +843,7 @@ sub retrieve_plot_info_bulk {
         }
     }
 
-    print STDERR "design_info: " . Dumper($design_info);
+    # print STDERR "design_info: " . Dumper($design_info);
 
     return $design_info;
 
