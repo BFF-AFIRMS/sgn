@@ -24,6 +24,7 @@ my $profile = Selenium::Firefox::Profile->new;
 $profile->set_preference( 'browser.download.folderList', 2 );
 $profile->set_preference( 'browser.download.dir', '/downloads' );
 $profile->set_preference( 'browser.helperApps.neverAsk.saveToDisk', 'application/csv;text/csv' );
+$profile->set_preference( 'dom.disable_open_during_load', \0 );
 
 my $driver = Selenium::Remote::Driver->new(
     firefox_profile    => $profile,
@@ -121,6 +122,26 @@ sub click_plot_cell_ok {
 	my ($col, $row) = @_;
 	my ($x, $y) = cell_pos($col, $row);
 	return click_svg_square_ok($x, $y);
+}
+
+# Dispatch double-click mouse events on a plot cell at grid (col, row)
+sub double_click_plot_cell_ok {
+	my ($col, $row) = @_;
+	my $xpath = plot_cell_xpath($col, $row);
+	$t->driver->execute_script(q{
+		const el = document.evaluate(arguments[0], document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+		if (!el) return;
+		const target = el.querySelector('rect') || el;
+		const b = target.getBoundingClientRect();
+		const clientX = b.left + b.width / 2;
+		const clientY = b.top + b.height / 2;
+		for (let i = 0; i < 2; i++) {
+			target.dispatchEvent(new MouseEvent('mousedown', { clientX: clientX, clientY: clientY, bubbles: true, cancelable: true }));
+			target.dispatchEvent(new MouseEvent('mouseup', { clientX: clientX, clientY: clientY, bubbles: true, cancelable: true }));
+			target.dispatchEvent(new MouseEvent('click', { clientX: clientX, clientY: clientY, bubbles: true, cancelable: true }));
+		}
+		target.dispatchEvent(new MouseEvent('dblclick', { clientX: clientX, clientY: clientY, bubbles: true, cancelable: true }));
+	}, $xpath);
 }
 
 # Convenience wrapper to verify an overlapping plot cell at grid (col, row)
@@ -1071,6 +1092,67 @@ $t->while_logged_in_as("curator", sub {
 	$t->find_element_ok('//div[contains(@class,"show")]//h4[contains(@class,"modal-title") and contains(.,"CASS_6Genotypes_206_renamed")]', 'xpath', 'Verify updated plot name CASS_6Genotypes_206_renamed in modal header');
 	$t->find_element_ok('//div[contains(@class,"show")]//tr[td[contains(text(),"Accession")]]/td[2][contains(text(),"IITA-TMS-IBA30572")]', 'xpath', 'Verify accession name IITA-TMS-IBA30572 in details modal');
 	$t->click_ok('//div[contains(@class,"show")]//button[contains(text(),"Close")]', 'xpath', 'Click Close button in details modal');
+
+	# =========================================================================
+	# Double-Click Plot Navigation
+	# =========================================================================
+	my $plot_206 = $f->bcs_schema->resultset('Stock::Stock')->find({ uniquename => 'CASS_6Genotypes_206_renamed' })
+		|| $f->bcs_schema->resultset('Stock::Stock')->find({ uniquename => 'CASS_6Genotypes_206' });
+	my $plot_206_id = $plot_206 ? $plot_206->stock_id : undef;
+	ok($plot_206_id, "Found stock ID for plot 206: $plot_206_id");
+
+	# Hook window.open to track URLs passed from PlotLayer double click
+	$t->driver->execute_script(q{
+		window.__lastOpenedUrl = null;
+		if (!window.__origOpen) {
+			window.__origOpen = window.open;
+			window.open = function(url, target, features) {
+				window.__lastOpenedUrl = url;
+				return window.__origOpen.call(window, url, target, features);
+			};
+		}
+	});
+
+	my $orig_handle = $t->driver->get_current_window_handle();
+	my @handles_before = @{$t->driver->get_window_handles()};
+
+	double_click_plot_cell_ok(3, 2);
+
+	# Wait past the 250ms single-click timer
+	sleep(1);
+
+	my $opened_url = $t->driver->execute_script('return window.__lastOpenedUrl;');
+	is($opened_url, "/stock/$plot_206_id/view", "Verify window.open called with /stock/$plot_206_id/view on double click");
+	ok(!scalar(@{$t->driver->find_elements('//div[contains(@class,"show")]//h4[contains(text(),"Plot Details")]', 'xpath')}), 'Plot Details modal did not open on double click');
+
+	# If a new window or tab was opened, verify its URL, close it, and switch back
+	my $has_new_window = eval {
+		wait_until {
+			scalar(@{$t->driver->get_window_handles()}) > scalar(@handles_before);
+		} timeout => 5;
+	};
+
+	if ($has_new_window) {
+		my @handles_after = @{$t->driver->get_window_handles()};
+		my ($new_handle) = grep { $_ ne $orig_handle } @handles_after;
+		if ($new_handle) {
+			$t->driver->switch_to_window($new_handle);
+			eval {
+				wait_until {
+					my $url = $t->driver->get_current_url();
+					return $url && $url =~ m{/stock/$plot_206_id/view};
+				} timeout => 10;
+			};
+			like($t->driver->get_current_url(), qr{/stock/$plot_206_id/view}, "New window URL contains /stock/$plot_206_id/view");
+			$t->driver->close();
+			$t->driver->switch_to_window($orig_handle);
+		}
+	}
+
+	# Verify normal single click still opens details modal afterwards
+	click_plot_cell_ok(3, 2);
+	$t->find_element_ok('//div[contains(@class,"show")]//h4[contains(@class,"modal-title") and contains(.,"CASS_6Genotypes_206")]', 'xpath', 'Plot details modal opens on single click after double-click test');
+	$t->click_ok('//div[contains(@class,"show")]//button[contains(text(),"Close")]', 'xpath', 'Close plot details modal');
 
 	# =========================================================================
 	# Column Inversion, Layout Rotation, & North Arrow Tracking
