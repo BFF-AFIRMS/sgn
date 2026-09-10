@@ -268,8 +268,17 @@ sub get {
     $self->collect_js_logs("get_$url");
 
     my $ok = wait_until {
-        $self->driver->get($url);
+        try {
+            $self->driver->get($url);
+        } catch {
+            if ($_ =~ /unexpected alert open/) {
+                print STDERR "get: $_\n";
+                return 1;
+            }
+            die $_;
+        }
     } timeout => $options->{timeout};
+
     $self->wait_for_network_idle();
     return $ok;
 }
@@ -514,9 +523,27 @@ sub wait_for_network_idle {
     for (1 .. $timeout) {
         $self->screenshot("wait_for_network_idle");
 
-        my $active_requests = $self->driver->execute_script(
-            "return (window.jQuery != null) ? jQuery.active : 0"
-        );
+        # If a background alert popped up, dismiss it so execute_script doesn't crash
+        try {
+            if($self->driver->accept_alert()) {
+                print STDERR "wait_for_network_idle -> Dismissed an alert\n";
+            }
+        } catch {
+            # Ignore if no alert is present
+        };
+
+        my $active_requests = eval {
+            $self->driver->execute_script(
+                "return (window.jQuery != null) ? jQuery.active : 0"
+            );
+        };
+
+        if (!defined $active_requests) {
+            print STDERR "wait_for_network_idle -> Failed to get active requests, retrying...\n";
+            sleep(1);
+            next;
+        }
+
         print STDERR "wait_for_network_idle -> Active requests: $active_requests\n";
 
         if ($active_requests == $last_active_requests) {
@@ -563,7 +590,11 @@ sub screenshot {
         close $fh;
     } catch {
         # Otherwise, capture screenshot
-        $self->driver->capture_screenshot("$dir/$filename.png", { 'full' => 1 });
+        try {
+            $self->driver->capture_screenshot("$dir/$filename.png", { 'full' => 1 });
+        } catch {
+            # Ignore any errors from taking the screenshot
+        }
     }
 }
 
