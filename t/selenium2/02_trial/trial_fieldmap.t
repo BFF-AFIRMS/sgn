@@ -567,6 +567,99 @@ sub create_trial_with_intercrop_plots {
 	);
 }
 
+sub create_trial_with_direct_plants {
+	my ($trial_name, $stock_names_aref) = @_;
+
+	my $trial_id = create_test_trial($trial_name,
+		stock_type  => 'accessions',
+		stocks      => $stock_names_aref,
+		description => 'Fieldmap test trial for direct plant grid',
+	);
+
+	my $plant_type_cvterm   = SGN::Model::Cvterm->get_cvterm_row($f->bcs_schema, 'plant', 'stock_type');
+	my $plant_of_cvterm     = SGN::Model::Cvterm->get_cvterm_row($f->bcs_schema, 'plant_of', 'stock_relationship');
+	my $plant_number_cvterm = SGN::Model::Cvterm->get_cvterm_row($f->bcs_schema, 'plant_number', 'stock_property');
+	my $plant_index_cvterm  = SGN::Model::Cvterm->get_cvterm_row($f->bcs_schema, 'plant_index_number', 'stock_property');
+	my $row_number_cvterm   = SGN::Model::Cvterm->get_cvterm_row($f->bcs_schema, 'row_number', 'stock_property');
+	my $col_number_cvterm   = SGN::Model::Cvterm->get_cvterm_row($f->bcs_schema, 'col_number', 'stock_property');
+	my $organism            = $f->bcs_schema->resultset('Organism::Organism')->first();
+
+	my $field_layout_cvterm = SGN::Model::Cvterm->get_cvterm_row($f->bcs_schema, 'field_layout', 'experiment_type');
+	my $exp_project = $f->bcs_schema->resultset('NaturalDiversity::NdExperimentProject')->search({
+		project_id => $trial_id,
+	})->first;
+	my $nd_experiment_id = $exp_project ? $exp_project->nd_experiment_id : undef;
+
+	# Define plant layouts: Plot 101 is a full 2x2 grid; Plot 102 omits (row 2, col 1) as an empty slot
+	my @plots_and_plants = (
+		[ "${trial_name}_Plot_101", [ [1, 1, 1], [2, 1, 2], [3, 2, 1], [4, 2, 2] ] ],
+		[ "${trial_name}_Plot_102", [ [1, 1, 1], [2, 1, 2], [3, 2, 2] ] ],
+	);
+
+	for my $entry (@plots_and_plants) {
+		my ($plot_name, $plant_coords) = @$entry;
+		my $plot = $f->bcs_schema->resultset('Stock::Stock')->find({ uniquename => $plot_name });
+		next unless $plot;
+
+		for my $c (@$plant_coords) {
+			my ($p, $row, $col) = @$c;
+			my $plant_name = "${plot_name}_plant_${p}";
+			my $plant = $f->bcs_schema->resultset('Stock::Stock')->create({
+				uniquename  => $plant_name,
+				name        => $plant_name,
+				type_id     => $plant_type_cvterm->cvterm_id,
+				organism_id => $organism->organism_id,
+			});
+			$f->bcs_schema->resultset('Stock::StockRelationship')->create({
+				subject_id => $plot->stock_id,
+				object_id  => $plant->stock_id,
+				type_id    => $plant_of_cvterm->cvterm_id,
+			});
+			for my $prop (
+				[ $plant_number_cvterm->cvterm_id, $p ],
+				[ $plant_index_cvterm->cvterm_id,  $p ],
+				[ $row_number_cvterm->cvterm_id,   $row ],
+				[ $col_number_cvterm->cvterm_id,   $col ],
+			) {
+				$f->bcs_schema->resultset('Stock::Stockprop')->create({
+					stock_id => $plant->stock_id,
+					type_id  => $prop->[0],
+					value    => "$prop->[1]",
+					rank     => 0,
+				});
+			}
+			if ($nd_experiment_id) {
+				$f->bcs_schema->resultset('NaturalDiversity::NdExperimentStock')->create({
+					nd_experiment_id => $nd_experiment_id,
+					stock_id         => $plant->stock_id,
+					type_id          => $field_layout_cvterm ? $field_layout_cvterm->cvterm_id : 0,
+				});
+			}
+		}
+	}
+
+	for my $term_name ('project_has_plant_entries', 'has_plant_entries') {
+		my $cvterm = eval { SGN::Model::Cvterm->get_cvterm_row($f->bcs_schema, $term_name, 'project_property') };
+		if ($cvterm) {
+			$f->bcs_schema->resultset('Project::Projectprop')->update_or_create({
+				project_id => $trial_id,
+				type_id    => $cvterm->cvterm_id,
+				value      => '1',
+				rank       => 0,
+			});
+		}
+	}
+
+	my $trial_layout = CXGN::Trial::TrialLayout->new({
+		schema          => $f->bcs_schema,
+		trial_id        => $trial_id,
+		experiment_type => 'field_layout',
+	});
+	$trial_layout->generate_and_cache_layout();
+
+	return $trial_id;
+}
+
 # -----------------------------------------------------------------------------
 # Fixture Setup: Mark plot CASS_6Genotypes_107 as a control
 # -----------------------------------------------------------------------------
@@ -1822,6 +1915,61 @@ EOSQL
 		['Accession Name']
 	);
 	unlink $expected_intercrop_csv if -e $expected_intercrop_csv;
+
+	# =========================================================================
+	# Direct Plant Grid Hierarchy (Without Subplots)
+	# =========================================================================
+	my $direct_plant_trial_id = create_trial_with_direct_plants(
+		'Test_Direct_Plant_Fieldmap_Trial',
+		['TEST_DIRECT_PLANT_01', 'TEST_DIRECT_PLANT_02', 'TEST_DIRECT_PLANT_03', 'TEST_DIRECT_PLANT_04']
+	);
+
+	$t->wait_for_network_idle();
+	$t->get_ok("/breeders/trial/$direct_plant_trial_id", 'Navigate to created direct plant trial page');
+	$t->click_ok('pheno_heatmap_onswitch', 'id', 'Open fieldmap section on direct plant trial');
+	$t->wait_for_working_dialog();
+	$t->find_element_ok('//*[@id="' . $svg_id . '"]', 'xpath', 'Find fieldmap SVG on direct plant trial');
+
+	# Click Plot 101 (grid col 0, row 1) to open details modal
+	click_plot_cell_ok(0, 1);
+	$t->find_element_ok('//div[contains(@class,"show")]//h4[contains(@class,"modal-title") and contains(text(),"Plot Details")]', 'xpath', 'Plot details modal is open for Plot 101');
+	$t->find_element_ok('//h5[contains(text(),"Plot Contents & Structure Hierarchy:")]', 'xpath', 'Verify Plot Contents & Structure Hierarchy heading');
+
+	# Verify direct plant coordinate grid table rendered
+	$t->find_element_ok('//div[contains(@class,"show")]//table[contains(@class,"plant-grid-table")]', 'xpath', 'Find direct plant grid table');
+	$t->find_element_ok('//div[contains(@class,"show")]//table[contains(@class,"plant-grid-table")]//th[text()="2"]', 'xpath', 'Find plant grid row/column header 2');
+
+	# Verify all 4 direct plant cells rendered in the table with plant names
+	my $direct_plant_cells = $t->driver->find_elements('//div[contains(@class,"show")]//table[contains(@class,"plant-grid-table")]//td[contains(@class,"plant-grid-cell")]', 'xpath');
+	is(scalar(@$direct_plant_cells), 4, 'Direct plant grid contains 4 plant cells');
+	$t->find_element_ok('//div[contains(@class,"show")]//table[contains(@class,"plant-grid-table")]//td[contains(@class,"plant-grid-cell") and contains(.,"plant_1")]', 'xpath', 'Verify plant_1 in grid');
+	$t->find_element_ok('//div[contains(@class,"show")]//table[contains(@class,"plant-grid-table")]//td[contains(@class,"plant-grid-cell") and contains(.,"plant_4")]', 'xpath', 'Verify plant_4 in grid');
+
+	# Verify NO subplot containers or headings exist
+	ok(!scalar(@{$t->driver->find_elements('//div[contains(@class,"show")]//div[contains(@class,"tw:font-bold") and contains(text(),"subplot")]', 'xpath')}), 'No subplot headings rendered in direct plant grid');
+	ok(!scalar(@{$t->driver->find_elements('//div[contains(@class,"show")]//pre[contains(text(),"subplot")]', 'xpath')}), 'No subplot references in JSON hierarchy block');
+	$t->find_element_ok('//div[contains(@class,"show")]//pre[contains(text(),"plant")]', 'xpath', 'JSON hierarchy block contains plant nodes');
+
+	$t->click_ok('//div[contains(@class,"show")]//button[contains(text(),"Close")]', 'xpath', 'Close plot details modal for Plot 101');
+
+	# Interactive Hover Tooltip for Plot 101 displays plant list
+	hover_plot_cell(0, 1);
+	$t->find_element_ok('//div[contains(@class,"fieldmap-tooltip")]//strong[contains(text(),"Plants:")]', 'xpath', 'Tooltip displays Plants: header for direct plant plot');
+	$t->find_element_ok('//div[contains(@class,"fieldmap-tooltip") and contains(.,"plant_1") and contains(.,"plant_4")]', 'xpath', 'Tooltip displays plant names');
+	unhover_plot_cell(0, 1);
+	ok(!scalar(@{$t->driver->find_elements('//div[contains(@class,"fieldmap-tooltip")]', 'xpath')}), 'Tooltip dismissed after unhover from Plot 101');
+
+	# Click Plot 102 (grid col 1, row 1) which has an empty slot at (row 2, col 1)
+	click_plot_cell_ok(1, 1);
+	$t->find_element_ok('//div[contains(@class,"show")]//h4[contains(@class,"modal-title") and contains(text(),"Plot Details")]', 'xpath', 'Plot details modal is open for Plot 102');
+	$t->find_element_ok('//div[contains(@class,"show")]//table[contains(@class,"plant-grid-table")]', 'xpath', 'Find plant grid table for Plot 102');
+	$t->find_element_ok('//div[contains(@class,"show")]//table[contains(@class,"plant-grid-table")]//td[contains(@class,"plant-grid-cell")]//span[contains(@class,"tw:text-gray-300") and text()="empty"]', 'xpath', 'Find empty slot placeholder in plant grid');
+	$t->find_element_ok('//div[contains(@class,"show")]//table[contains(@class,"plant-grid-table")]//td[contains(@class,"plant-grid-cell") and contains(.,"plant_1")]', 'xpath', 'Find plant_1 in Plot 102 grid');
+	$t->click_ok('//div[contains(@class,"show")]//button[contains(text(),"Close")]', 'xpath', 'Close plot details modal for Plot 102');
+
+	# Verify Download Plot Order panel renders "Include Plants" but NOT "Include Subplots"
+	$t->find_element_ok('//div[contains(@class,"panel")]//label[contains(.,"Include Plants")]/input', 'xpath', 'Find Include Plants checkbox in Download Plot Order panel');
+	ok(!scalar(@{$t->driver->find_elements('//div[contains(@class,"panel")]//label[contains(.,"Include Subplots")]', 'xpath')}), 'No Include Subplots checkbox when trial has no subplots');
 });
 
 $t->driver->quit();
