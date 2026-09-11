@@ -557,7 +557,7 @@ sub retrieve_plot_info {
             'stock_relationship_subjects',
             {
                 'stock_relationship_subjects.type_id' => $intercrop_plot_of_cvterm_id,
-                'object.type_id' => $source_primary_stock_type_ids
+                'object.type_id' => { -in => \@$source_primary_stock_type_ids }
             },
             { 'join' => 'object' }
 	    );
@@ -591,13 +591,13 @@ sub retrieve_plot_info {
     left join (
         select subject_id as subplot_id, object_id as parent_id
         from stock_relationship
-        join stock on (subject_id = stock_id and stock.type_id = $subplot_cvterm_id)
+        join stock on (subject_id = stock_id and stock.type_id = any (?))
     ) as subplot_parent on (subplot.stock_id = subplot_parent.subplot_id)
     where plot.stock_id = any (?);
     ";
 
     my $sth = $schema->storage()->dbh()->prepare($query);
-    $sth->execute(\@plot_ids);
+    $sth->execute(\@$source_primary_stock_type_ids, \@plot_ids);
     while (my ($plot_id, $subplot_id, $subplot_name, $subplot_parent_id, $index_number, $plant_name, $tissue_sample_name) = $sth->fetchrow_array()) {
         # TBD: Validate that a subplot is not associated with multiple index numbers?
         $design_info->{$plot_id}->{subplot_ids}->{$subplot_id} = 1;
@@ -642,16 +642,16 @@ sub retrieve_plot_info {
     join stock as plant on (plant.stock_id = plot_to_plant.object_id)
     join stockprop as index_number on (index_number.stock_id = plant.stock_id and index_number.type_id = $plant_index_number_cvterm_id)
     join (
-        select subject_id as plant_id, stock_id as parent_id
+        select subject_id as plant_id, object_id as parent_id
         from stock_relationship
-        join stock on (object_id = stock_id and stock.type_id = $accession_cvterm_id)
+        join stock on (object_id = stock_id and stock.type_id = any(?))
     ) as plant_parent on (plant.stock_id = plant_parent.plant_id)
     left join stock_relationship as plant_to_tissue_sample on (plant.stock_id = plant_to_tissue_sample.object_id and plant_to_tissue_sample.type_id = $tissue_sample_of_cvterm_id)
     left join stock as tissue_sample on (tissue_sample.stock_id = plant_to_tissue_sample.subject_id)
     where plot.stock_id = any (?);";
 
     my $sth = $schema->storage()->dbh()->prepare($query);
-    $sth->execute(\@plot_ids);
+    $sth->execute(\@$source_primary_stock_type_ids, \@plot_ids);
     while (my ($plot_id, $plant_id, $plant_name, $plant_parent_id, $index_number, $tissue_sample_name) = $sth->fetchrow_array()) {
         # TBD: Validate that a plant is not associated with multiple numbers?
         $design_info->{$plot_id}->{plant_ids}->{$plant_id} = 1;
@@ -694,14 +694,14 @@ sub retrieve_plot_info {
     join stock as tissue_sample on (tissue_sample.stock_id = plot_to_tissue_sample.subject_id)
     join stockprop as index_number on (tissue_sample.stock_id = index_number.stock_id and index_number.type_id = $tissue_sample_index_number_cvterm_id)
     left join (
-        select subject_id as tissue_sample_id, stock_id as parent_id
+        select subject_id as tissue_sample_id, object_id as parent_id
         from stock_relationship
-        join stock on (object_id = stock_id and stock.type_id = $accession_cvterm_id)
+        join stock on (object_id = stock_id and stock.type_id = any (?))
     ) as tissue_sample_parent on (tissue_sample.stock_id = tissue_sample_parent.tissue_sample_id)
     where plot.stock_id = any (?);";
 
     my $sth = $schema->storage()->dbh()->prepare($query);
-    $sth->execute(\@plot_ids);
+    $sth->execute(\@$source_primary_stock_type_ids, \@plot_ids);
 
     while (my ($plot_id, $tissue_sample_id, $tissue_sample_name, $tissue_sample_parent_id, $index_number) = $sth->fetchrow_array()) {
         # TBD: Validate that a tissue sample is not associated with multiple numbers?
@@ -737,12 +737,12 @@ sub retrieve_plot_info {
     left join (
         select subject_id as seedlot_id, object_id as parent_id
         from stock_relationship
-        join stock on (subject_id = stock_id and stock.type_id = $seedlot_cvterm_id)
+        join stock on (object_id = stock_id and stock.type_id = any (?))
     ) as seedlot_parent on (seedlot.stock_id = seedlot_parent.seedlot_id)
     where plot.stock_id = any (?);";
 
     my $sth = $schema->storage()->dbh()->prepare($query);
-    $sth->execute(\@plot_ids);
+    $sth->execute(\@$source_primary_stock_type_ids, \@plot_ids);
     while (my ($plot_id, $seedlot_name, $seedlot_id, $seedlot_parent_id, $transaction_string) = $sth->fetchrow_array()) {
 
         my $transaction = decode_json $transaction_string;
