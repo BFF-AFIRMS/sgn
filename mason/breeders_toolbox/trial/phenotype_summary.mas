@@ -174,13 +174,18 @@ input[type="text"] {
 
     jQuery(document).ready(function () {
         var type = "<% $trial_stock_type %>";
+        type = type == 'analysis_instance' ? 'accession' : type;
         var trial_id = "<% $trial_id %>";
     	jQuery.ajax( {
             url: '/ajax/breeders/trial/'+ trial_id + '/collect_date_range',
     	}).done( function(r) {
             //alert('Setting start date to '+r.start_date+' and end date to '+r.end_date);
-            var raw_startDate = new Date(r.start_date).toISOString().split('T')[0];
-            var raw_endDate = new Date(r.end_date).toISOString().split('T')[0];
+            const tzOffset = (new Date()).getTimezoneOffset() * 60000;
+            const start_date = new Date(r.start_date);
+            const end_date = new Date(r.end_date);
+            var raw_startDate = new Date(start_date  - tzOffset).toISOString().split('T')[0];
+            var raw_endDate = new Date(end_date  - tzOffset).toISOString().split('T')[0];
+
             jQuery('#summary_start_date').val(raw_startDate);
             jQuery('#summary_end_date').val(raw_endDate);
 
@@ -228,8 +233,11 @@ input[type="text"] {
                 values: [new Date(raw_startDate).getTime(), new Date(raw_endDate).getTime()],
                 slide: function(event, ui) {
                     //the start and end date of this measurement will be updated based on the slider moved from.
-                    var raw_phenotype_startDate = new Date(ui.values[0]).toISOString().split('T')[0];
-                    var raw_phenotype_endDate = new Date(ui.values[1]).toISOString().split('T')[0];
+                    const tzOffset = new Date().getTimezoneOffset() * 60000;
+                    const start_date = new Date(ui.values[0]);
+                    const end_date = new Date(ui.values[1]);
+                    var raw_phenotype_startDate = new Date(start_date - tzOffset).toISOString().split('T')[0];
+                    var raw_phenotype_endDate = new Date(end_date - tzOffset).toISOString().split('T')[0];
                     jQuery('#summary_start_date').val(raw_phenotype_startDate);
                     jQuery('#summary_end_date').val(raw_phenotype_endDate);
                     //console.log("Slided moved Start_date in Pheno summ :", raw_phenotype_startDate);
@@ -312,8 +320,10 @@ input[type="text"] {
         jQuery('#tissue_samples_stock_option').text(tissue_samples_stock_text);
 
     });
+    // End document.read function
 
     function datatables_display_phenosummary(type) {
+        var trial_id = "<% $trial_id %>";
         var start_date = jQuery('#summary_start_date').val();
         var end_date = jQuery('#summary_end_date').val();
         var split_by_treatments = jQuery('#split_by_treatments_check').prop('checked') ? 1 : 0;
@@ -383,6 +393,7 @@ input[type="text"] {
     }
 
     function trait_summary_hist_display_change(value) {
+        var trial_id = "<% $trial_id %>";
         var start_date = jQuery('#summary_start_date').val();
         var end_date = jQuery('#summary_end_date').val();
 
@@ -493,6 +504,7 @@ input[type="text"] {
         jQuery('#traits_assayed_histogram_cvterm_link').html("<a href='/cvterm/"+value+"/view'>Definition</a>");
         var start_date = jQuery('#summary_start_date').val();
         var end_date = jQuery('#summary_end_date').val();
+        var trial_id = "<% $trial_id %>";
     
         // console.log("value",value);
         jQuery.ajax( {
