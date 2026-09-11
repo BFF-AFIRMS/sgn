@@ -42,8 +42,9 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok("//b[contains(text(), 'Boxplotter')]/span[contains(\@class, 'glyphicon-ok')]", "xpath", "boxplotter status is ok");
     $d->find_element_ok("//b[contains(text(), 'Correlation')]/span[contains(\@class, 'glyphicon-ok')]", "xpath", "correlation status is ok");
     $d->find_element_ok("//b[contains(text(), 'Clustering')]/span[contains(\@class, 'glyphicon-warning')]", "xpath", "clustering status is warning");
-    $d->find_element_ok("//b[contains(text(), 'GWAS')]/span[contains(\@class, 'glyphicon-warning')]", "xpath", "gwas status is warning");
+    $d->find_element_ok("//b[contains(text(), 'GWAS')]/span[contains(\@class, 'glyphicon-remove')]", "xpath", "gwas status is fail");
     $d->find_element_ok("//b[contains(text(), 'Heritability')]/span[contains(\@class, 'glyphicon-remove')]", "xpath", "heritability status is fail");
+    $d->find_element_ok("//b[contains(text(), 'Kinship & Inbreeding')]/span[contains(\@class, 'glyphicon-remove')]", "xpath", "kinship and inbreeding status is fail");
     $d->find_element_ok("//b[contains(text(), 'Mixed Models')]/span[contains(\@class, 'glyphicon-ok')]", "xpath", "mixed models status is ok");
     $d->find_element_ok("//b[contains(text(), 'NIRS')]/span[contains(\@class, 'glyphicon-remove')]", "xpath", "nirs status is fail");
     $d->find_element_ok("//b[contains(text(), 'Population Structure')]/span[contains(\@class, 'glyphicon-warning')]", "xpath", "population structure status is warning");
@@ -82,7 +83,7 @@ $d->while_logged_in_as("submitter", sub {
     $d->find_element_ok("//b[contains(text(), 'Clustering')]/span[contains(\@class, 'glyphicon-warning')]", "xpath", "clustering status is warning");
     $d->find_element_ok("//b[contains(text(), 'GWAS')]/span[contains(\@class, 'glyphicon-remove')]", "xpath", "gwas status is fail");
     $d->find_element_ok("//b[contains(text(), 'Heritability')]/span[contains(\@class, 'glyphicon-remove')]", "xpath", "heritability status is fail");
-    $d->find_element_ok("//b[contains(text(), 'Kinship & Inbreeding')]/span[contains(\@class, 'glyphicon-warning')]", "xpath", "kinship and inbreeding status is warning");
+    $d->find_element_ok("//b[contains(text(), 'Kinship & Inbreeding')]/span[contains(\@class, 'glyphicon-remove')]", "xpath", "kinship and inbreeding status is fail");
     $d->find_element_ok("//b[contains(text(), 'Mixed Models')]/span[contains(\@class, 'glyphicon-warning')]", "xpath", "mixed models status is warning");
     $d->find_element_ok("//b[contains(text(), 'NIRS')]/span[contains(\@class, 'glyphicon-remove')]", "xpath", "nirs status is fail");
     $d->find_element_ok("//b[contains(text(), 'Population Structure')]/span[contains(\@class, 'glyphicon-warning')]", "xpath", "population structure status is warning");

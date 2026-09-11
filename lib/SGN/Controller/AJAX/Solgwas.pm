@@ -99,7 +99,7 @@ sub extract_trait_data :Path('/ajax/solgwas/getdata') Args(0) {
 
     $file = basename($file);
 
-    my $temppath = File::Spec->catfile($c->config->{basepath}, "static/documents/tempfiles/solgwas_files/".$file);
+    my $temppath = File::Spec->catfile($c->config->{cluster_shared_tempdir}, $file);
 #    my $temppath = File::Spec->catfile($c->config->{cluster_shared_tempdir}, "static/documents/tempfiles/solgwas_files/".$file);
 #    my $temppath = File::Spec->catfile($c->config->{basepath}, "static/documents/tempfiles/solgwas_files/solgwas_download_0bDQ5_phenotype.txt");
     print STDERR Dumper($temppath);
@@ -289,12 +289,7 @@ sub generate_pca: Path('/ajax/solgwas/generate_pca') : {
     $cmd->is_cluster(1);
     $cmd->wait;
 
-
-    my $figure_path = "./documents/tempfiles/solgwas_files/";
-    copy($figure2file,$figure_path);
-
-    my $figure2basename = basename($figure2file);
-    my $figure2file_response = "/documents/tempfiles/solgwas_files/" . $figure2basename;
+    my $figure2file_response = $solgwas_tmp_output . "/" . basename($figure2file);
 
     $c->stash->{rest} = {
         figure2 => $figure2file_response,
@@ -546,19 +541,9 @@ sub generate_results: Path('/ajax/solgwas/generate_results') : {
 		$job->update_status("finished");
 	}
 
-    my $figure_path = "./documents/tempfiles/solgwas_files/";
-    copy($figure3file,$figure_path);
-    copy($figure4file,$figure_path);
-    copy($gwasResultsPhenoCsv,$figure_path);
-#    my $figure3basename = $figure3file;
-
-#    $figure3basename =~ s/\/export\/prod\/tmp\/solgwas\_files\///;
-    my $figure3basename = basename($figure3file);
-    my $figure3file_response = "/documents/tempfiles/solgwas_files/" . $figure3basename;
-    my $figure4basename = basename($figure4file);
-    my $figure4file_response = "/documents/tempfiles/solgwas_files/" . $figure4basename;
-    my $gwasResultsCsvBasename = basename($gwasResultsPhenoCsv);
-    my $gwasCsv_response = "/documents/tempfiles/solgwas_files/" . $gwasResultsCsvBasename;
+    my $figure3file_response = $solgwas_tmp_output . "/" . basename($figure3file);
+    my $figure4file_response = $solgwas_tmp_output . "/" . basename($figure4file);
+    my $gwasCsv_response = $solgwas_tmp_output . "/" . basename($gwasResultsPhenoCsv);
 #    $figure4file_response =~ s/\.\/static//;
     $c->stash->{rest} = {
         figure3         => $figure3file_response,

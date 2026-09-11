@@ -106,17 +106,17 @@ $criteria_list = [
                'years',
                'locations',
                'trials',
-               'genotyping_protocols'
+               'organisms'
              ];
 $dataref = {
-               'genotyping_protocols' => {
+               'organisms' => {
                                          'trials' => '\'139\'',
                                          'locations' => '\'23\'',
                                          'years' => '\'2014\''
                                        }
              };
 $queryref = {
-               'genotyping_protocols' => {
+               'organisms' => {
                                          'trials' => 0,
                                          'locations' => 0,
                                          'years' => 0
@@ -126,8 +126,8 @@ $results = $bs ->metadata_query($criteria_list, $dataref, $queryref);
 is_deeply($results, {
                'results' => [
                               [
-                                1,
-                                'GBS ApeKI genotyping v4'
+                                103155,
+                                'Solanum lycopersicum'
                               ]
                             ]
              }, "wizard four category query");
