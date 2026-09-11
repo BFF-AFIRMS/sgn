@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { PlotStructureNode } from '../types';
 import { RenderPlantGrid, RenderSubplotGrid } from '../components/PlantSubplotGrids';
 import { AccessionAutocomplete } from '../components/AccessionAutocomplete';
@@ -16,8 +16,6 @@ export const PlotDetailsModal: React.FC<PlotDetailsModalProps> = ({ }) => {
     const {
         showPlotDetails: show,
         setShowPlotDetails: setShow,
-        showEditAccession,
-        setShowEditAccession,
     } = useModals();
 
     const {
@@ -42,6 +40,12 @@ export const PlotDetailsModal: React.FC<PlotDetailsModalProps> = ({ }) => {
 
     const [showCuratorWarning, setShowCuratorWarning] = useState(false);
     const [showSuppressModal, setShowSuppressModal] = useState(false);
+
+    const [showEditAccession, setShowEditAccession] = useState(false);
+
+    useEffect(() => {
+        setShowEditAccession(false);
+    }, [show]);
 
     const plotStructureLayoutType = useMemo(() => {
         if (!plotStructure || !plotStructure.has) return 'none';
