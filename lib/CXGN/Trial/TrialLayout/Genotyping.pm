@@ -29,121 +29,104 @@ sub BUILD {
 
 
 sub retrieve_plot_info {
-     my $self = shift;
-     my $plot = shift;
-     my $design = shift;
-     
-     $self->SUPER::retrieve_plot_info($plot, $design);
+    my $self = shift;
+    my $plots = shift;
 
-     my $plot_properties = $plot->search_related('stockprops', { type_id => { -in => [ $self->cvterm_id('plot number') ] }});
+    my $accession_cvterm_id = $self->cvterm_id('accession');
+    my $plot_cvterm_id = $self->cvterm_id('plot');
+    my $subplot_cvterm_id = $self->cvterm_id('subplot');
+    my $plant_cvterm_id = $self->cvterm_id('plant');
+    my $tissue_sample_cvterm_id = $self->cvterm_id('tissue_sample');
 
-     my $plot_number;
-     if (my $row = $plot_properties->next()) {
-	 $plot_number = $row->value();
-     }
+    my $schema = $self->get_schema();
+    my $design = $self->SUPER::retrieve_plot_info($plots);
 
-     if (! $plot_number) { print STDERR "NO PLOT NUMBER AVAILABLE!!!!\n"; }
+    # -------------------------------------------------------------------------
+    # Set genotyping project properties
 
-     my $project = $self->get_project();
-     my $genotyping_user_id = "unknown";
-     my $genotyping_project_name;
+    my $project = $self->get_project();
+    my $genotyping_user_id = "unknown";
+    my $genotyping_project_name = "";
+    my $genotyping_project_id = "";
+    my $genotyping_project ="";
 
-     my $genotyping_user_id_row = $project
-	 ->search_related("nd_experiment_projects")
-	 ->search_related("nd_experiment")
-	 ->search_related("nd_experimentprops")
-	 ->find({ 'type.name' => 'genotyping_user_id' }, {join => 'type' });
-     if ($genotyping_user_id_row) {
-	 $genotyping_user_id = $genotyping_user_id_row->get_column("value") || "unknown";
-     }
+    my $genotyping_user_id_row = $project
+        ->search_related("nd_experiment_projects")
+        ->search_related("nd_experiment")
+        ->search_related("nd_experimentprops")
+        ->find({ 'type.name' => 'genotyping_user_id' }, {join => 'type' });
 
-#     my $genotyping_project_name_row = $project
-#	 ->search_related("nd_experiment_projects")
-#	 ->search_related("nd_experiment")
-#	 ->search_related("nd_experimentprops")
-#	 ->find({ 'type.name' => 'genotyping_project_name' }, {join => 'type' });
-#     $genotyping_project_name = $genotyping_project_name_row->get_column("value") || "unknown";
+    if ($genotyping_user_id_row) {
+        $genotyping_user_id = $genotyping_user_id_row->get_column("value") || "unknown";
+    }
 
-     my $genotyping_project_relationship_cvterm = SGN::Model::Cvterm->get_cvterm_row($self->get_schema(), 'genotyping_project_and_plate_relationship', 'project_relationship');
-     my $genotyping_project_plate_relationship = $self->get_schema()->resultset("Project::ProjectRelationship")->find (
-	 {
-	     subject_project_id => $project->project_id(),
-	     type_id => $genotyping_project_relationship_cvterm->cvterm_id()
-	 });
-     my $genotyping_project_id = "";
-     $genotyping_project_name = "";
-     my $genotyping_project ="";
+    my $genotyping_project_relationship_cvterm_id = $self->cvterm_id('genotyping_project_and_plate_relationship');
+    my $genotyping_project_plate_relationship = $self->get_schema()
+        ->resultset("Project::ProjectRelationship")
+        ->find ({
+            subject_project_id => $project->project_id(),
+            type_id => $genotyping_project_relationship_cvterm_id
+        });
 
-     if ($genotyping_project_plate_relationship) {
-         $genotyping_project_id = $genotyping_project_plate_relationship->object_project_id();
-         $genotyping_project = $self->get_schema()->resultset("Project::Project")->find (
-	     {
-		 project_id => $genotyping_project_id
-	     });
-         $genotyping_project_name = $genotyping_project->name();
-         print STDERR "GENOTYPING PROJECT NAME =".Dumper($genotyping_project_name)."\n";
-     }
+    if ($genotyping_project_plate_relationship) {
+        $genotyping_project_id = $genotyping_project_plate_relationship->object_project_id();
+        $genotyping_project = $self->get_schema()
+            ->resultset("Project::Project")
+            ->find ({ project_id => $genotyping_project_id });
+        $genotyping_project_name = $genotyping_project->name();
+        # print STDERR "GENOTYPING PROJECT NAME =".Dumper($genotyping_project_name)."\n";
+    }
 
-    print STDERR "GENOTYPING PROJECT NAME =".Dumper($genotyping_project_name)."\n";
+    # print STDERR "GENOTYPING PROJECT NAME =".Dumper($genotyping_project_name)."\n";
 
-     $design->{$plot_number}->{genotyping_user_id} = $genotyping_user_id;
-     # print STDERR "RETRIEVED: genotyping_user_id: $design->{genotyping_user_id}\n";
-     $design->{$plot_number}->{genotyping_project_name} = $genotyping_project_name;
-     # print STDERR "RETRIEVED: genotyping_project_name: $design->{genotyping_project_name}\n";
+    my $plot_ids_to_plot_numbers;
+    foreach my $plot_number (keys %$design){
+        $design->{$plot_number}->{genotyping_user_id} = $genotyping_user_id;
+        # print STDERR "RETRIEVED: genotyping_user_id: $design->{genotyping_user_id}\n";
+        $design->{$plot_number}->{genotyping_project_name} = $genotyping_project_name;
+        # print STDERR "RETRIEVED: genotyping_project_name: $design->{genotyping_project_name}\n";
+        my $plot_id =  $design->{$plot_number}->{plot_id};
+        $plot_ids_to_plot_numbers->{$plot_id} = $plot_number;
+    }
+    my @plot_ids = keys %$plot_ids_to_plot_numbers;
 
-     my $source_rs = $plot->search_related('stock_relationship_subjects')->search(
-	 { 'me.type_id' => { -in => $self->get_relationship_type_ids() }, 'object.type_id' => { -in => $self->get_source_stock_type_ids() } },
-	 { 'join' => 'object' }
-	 )->search_related('object');
+    # -------------------------------------------------------------------------
+    # Set source of material in genotyping plate well
 
-	 # was $accession_cvterm_id, $plot_cvterm_id, $plant_cvterm_id, $tissue_cvterm_id, $subplot_cvterm_id
+    my $source_rs = $schema->resultset("Stock::StockRelationship")
+        ->search(
+	        {
+                'me.subject_id' => {-in => \@plot_ids},
+                'me.type_id' => { -in => $self->get_relationship_type_ids() },
+                'object.type_id' => { -in => $self->get_source_stock_type_ids() }
+            },
+            {
+                'join' => {'object' => ['organism', 'type']},
+                '+select' => ['me.subject_id', 'object.stock_id', 'object.uniquename', 'type.name',  'organism.genus', 'organism.species' ],
+                '+as' => ['plot_id', 'source_id', 'source_name', 'type_name', 'genus', 'species'],
+            }
+	    );
 
+    while (my $record = $source_rs->next()){
+        my $type_name = $record->get_column('type_name');
+        my $plot_id = $record->get_column('plot_id');
+        my $source_id = $record->get_column('source_id');
+        my $source_name = $record->get_column('source_name');
+        my $genus = $record->get_column('genus');
+        my $species = $record->get_column('species');
+        my $plot_number = $plot_ids_to_plot_numbers->{$plot_id};
 
-     print STDERR "Now dealing with metadata... [".$source_rs->count()."]\n";
-     while (my $r=$source_rs->next){
-	 print STDERR "TYPE= ".$r->type_id()."\n";
-	 if ($r->type_id == $self->cvterm_id('accession')){
-	     print STDERR "Dealing with accession metadata.\n";
-	     $design->{$plot_number}->{"source_accession_id"} = $r->stock_id;
-	     $design->{$plot_number}->{"source_accession_name"} = $r->uniquename;
-	     $design->{$plot_number}->{"source_observation_unit_name"} = $r->uniquename;
-	     $design->{$plot_number}->{"source_observation_unit_id"} = $r->stock_id;
-	 }
-	 if ($r->type_id == $self->cvterm_id('plot')){
-	     print STDERR "Dealing with plot metadata.\n";
-	     $design->{$plot_number}->{"source_plot_id"} = $r->stock_id;
-	     $design->{$plot_number}->{"source_plot_name"} = $r->uniquename;
-	     $design->{$plot_number}->{"source_observation_unit_name"} = $r->uniquename;
-	     $design->{$plot_number}->{"source_observation_unit_id"} = $r->stock_id;
-	 }
-     if ($r->type_id == $self->cvterm_id('subplot')){
-         print STDERR "Dealing with subplot metadata.\n";
-         $design->{$plot_number}->{"source_subplot_id"} = $r->stock_id;
-         $design->{$plot_number}->{"source_subplot_name"} = $r->uniquename;
-         $design->{$plot_number}->{"source_observation_unit_name"} = $r->uniquename;
-         $design->{$plot_number}->{"source_observation_unit_id"} = $r->stock_id;
-     }
-	 if ($r->type_id == $self->cvterm_id('plant')){
-	     print STDERR "Dealing with plant metadata\n";
-	     $design->{$plot_number}->{"source_plant_id"} = $r->stock_id;
-	     $design->{$plot_number}->{"source_plant_name"} = $r->uniquename;
-	     $design->{$plot_number}->{"source_observation_unit_name"} = $r->uniquename;
-	     $design->{$plot_number}->{"source_observation_unit_id"} = $r->stock_id;
-	 }
-	 if ($r->type_id == $self->cvterm_id('tissue_sample')){
-	     print STDERR "Dealing with tieeus metadata\n";
-	      $design->{$plot_number}->{"source_tissue_id"} = $r->stock_id;
-	      $design->{$plot_number}->{"source_tissue_name"} = $r->uniquename;
-	      $design->{$plot_number}->{"source_observation_unit_name"} = $r->uniquename;
-	      $design->{$plot_number}->{"source_observation_unit_id"} = $r->stock_id;
-	 }
-     }
-     my $organism_q = "SELECT species, genus FROM organism WHERE organism_id = ?;";
-     my $h = $self->get_schema->storage->dbh()->prepare($organism_q);
-     $h->execute($plot->organism_id);
-     my ($species, $genus) = $h->fetchrow_array;
-     $design->{$plot_number}->{"species"} = $species;
-     $design->{$plot_number}->{"genus"} = $genus;
+        # print STDERR "Dealing with $type_name metadata.\n";
+
+        $design->{$plot_number}->{"source_" . "$type_name"} = $source_id;
+        $design->{$plot_number}->{"source_" . "$type_name" . "_name"} = $source_name;
+        $design->{$plot_number}->{"source_observation_unit_name"} = $source_name;
+        $design->{$plot_number}->{"source_observation_unit_id"} = $source_id;
+        $design->{$plot_number}->{"species"} = $species;
+        $design->{$plot_number}->{"genus"} = $genus;
+    }
+
+    return $design;
  }
 
 ###
