@@ -81,7 +81,12 @@ export const HeatmapProvider: React.FC<FieldMapContextProps> = ({ trialId, authT
             headers['Authorization'] = `Bearer ${authToken}`;
         }
         try {
-            const response = await fetch(`/brapi/v2/observations?observationVariableDbId=${variableId}&studyDbId=${activeTrialIds.join(',')}&pageSize=10000`, { headers });
+            const params = new URLSearchParams({
+                observationVariableDbId: variableId,
+                pageSize: '10000',
+            });
+            activeTrialIds.forEach(id => params.append('studyDbId', id));
+            const response = await fetch(`/brapi/v2/observations?${params.toString()}`, { headers });
             const body = await response.json();
             const data = body?.result?.data || [];
             const map: Record<string, HeatmapValue> = {};
