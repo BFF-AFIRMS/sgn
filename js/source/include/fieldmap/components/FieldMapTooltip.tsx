@@ -33,7 +33,7 @@ export const FieldMapTooltip: React.FC<FieldMapTooltipProps> = ({ }) => {
 
     return (
         <div
-            className="tw:fixed tw:bg-black/85 tw:text-white tw:px-3 tw:py-2 tw:rounded-md tw:z-10000 tw:text-[11px] tw:pointer-events-none tw:max-w-70"
+            className="fieldmap-tooltip tw:fixed tw:bg-black/85 tw:text-white tw:px-3 tw:py-2 tw:rounded-md tw:z-10000 tw:text-[11px] tw:pointer-events-none tw:max-w-70"
             style={{
                 top: hoveredPlot.y + 15,
                 left: hoveredPlot.x + 15,
