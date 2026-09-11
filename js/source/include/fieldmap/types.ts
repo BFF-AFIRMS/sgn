@@ -38,12 +38,14 @@ export interface Plot {
     germplasmDbId?: string;
     germplasmName?: string;
     crossName?: string;
+    crossDbId?: string;
     locationName?: string;
     studyName?: string;
     plotImageDbIds?: string[];
     additionalInfo?: {
         intercropGermplasm?: { germplasmName: string }[];
         familyName?: string;
+        familyDbId?: string;
         is_a_control?: boolean;
         isObsolete?: boolean;
         invert_row_checkmark?: boolean;
