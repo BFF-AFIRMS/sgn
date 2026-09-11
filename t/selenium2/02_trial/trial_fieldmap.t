@@ -23,7 +23,7 @@ use Selenium::Firefox::Profile;
 my $profile = Selenium::Firefox::Profile->new;
 $profile->set_preference( 'browser.download.folderList', 2 );
 $profile->set_preference( 'browser.download.dir', '/downloads' );
-$profile->set_preference( 'browser.helperApps.neverAsk.saveToDisk', 'application/csv;text/csv' );
+$profile->set_preference( 'browser.helperApps.neverAsk.saveToDisk', 'application/csv;text/csv,image/png' );
 $profile->set_preference( 'dom.disable_open_during_load', \0 );
 
 my $driver = Selenium::Remote::Driver->new(
@@ -32,6 +32,8 @@ my $driver = Selenium::Remote::Driver->new(
     remote_server_addr => $ENV{SGN_REMOTE_SERVER_ADDR} || 'localhost'
 );
 $t->driver($driver);
+
+my $download_dir = '/selenium/downloads';
 
 # -----------------------------------------------------------------------------
 # Field Map Layout Constants & Color Definitions
@@ -489,6 +491,82 @@ sub test_print_field_map_ok {
 	}
 }
 
+# Verify Heatmap PNG image download: button click, canvas rasterization, anchor attributes, and file on disk
+sub test_download_heatmap_image_ok {
+	my ($expected_label) = @_;
+
+	# Clean up any existing heatmap PNG files
+	if (opendir(my $dh, $download_dir)) {
+		while (my $f = readdir($dh)) {
+			if ($f =~ /_heatmap\.png$/) {
+				unlink "$download_dir/$f";
+			}
+		}
+		closedir($dh);
+	}
+
+	# Intercept HTMLAnchorElement.prototype.click in browser to capture download attributes
+	$t->driver->execute_script(q{
+		window.__lastHeatmapDownload = null;
+		if (!window.__heatmapDownloadSpyInstalled) {
+			window.__heatmapDownloadSpyInstalled = true;
+			const origClick = HTMLAnchorElement.prototype.click;
+			HTMLAnchorElement.prototype.click = function() {
+				if (this.download && this.download.indexOf('_heatmap.png') !== -1) {
+					window.__lastHeatmapDownload = {
+						download: this.download,
+						hrefPrefix: this.href ? this.href.substring(0, 30) : '',
+						hrefLength: this.href ? this.href.length : 0
+					};
+				}
+				return origClick.apply(this, arguments);
+			};
+		}
+	});
+
+	$t->click_ok(
+		'//button[contains(text(),"Download Heatmap Image")]',
+		'xpath',
+		"Click Download Heatmap Image button for '$expected_label'"
+	);
+
+	# Wait for asynchronous image.onload, canvas drawing, and download link click
+	ok(wait_until {
+		my $info = $t->driver->execute_script('return window.__lastHeatmapDownload;');
+		return defined $info && $info->{hrefLength} > 100;
+	} timeout => 15, interval => 0.5, "Wait for heatmap image download data to be generated for '$expected_label'");
+
+	my $dl_info = $t->driver->execute_script('return window.__lastHeatmapDownload;');
+	is($dl_info->{download}, "${expected_label}_heatmap.png", "Verify download filename attribute is '${expected_label}_heatmap.png'");
+	like($dl_info->{hrefPrefix}, qr{^data:image/png;base64,}, 'Verify download data URL has image/png base64 prefix');
+	cmp_ok($dl_info->{hrefLength}, '>', 1000, 'Verify PNG data URL payload is non-trivial (>1000 chars)');
+
+	# Wait for file to be written to disk in download directory
+	my $found_file = '';
+	ok(wait_until {
+		if (opendir(my $dh, $download_dir)) {
+			my @matches = grep { /_heatmap\.png$/ } readdir($dh);
+			closedir($dh);
+			if (@matches) {
+				my $candidate = "$download_dir/$matches[0]";
+				if (-s $candidate > 0) {
+					$found_file = $candidate;
+					return 1;
+				}
+			}
+		}
+		return 0;
+	} timeout => 15, interval => 0.5, "Verify heatmap PNG file was downloaded to disk for '$expected_label'");
+
+	if ($found_file && -e $found_file) {
+		open my $fh, '<:raw', $found_file or die "Could not open downloaded file '$found_file': $!";
+		read($fh, my $magic, 8);
+		close $fh;
+		is($magic, "\x89PNG\r\n\x1a\n", "Verify file '$found_file' has valid PNG magic header bytes");
+		unlink $found_file or warn "Could not unlink '$found_file': $!";
+	}
+}
+
 my $all_checkbox_labels = [
 	'Accession Name',
 	'Plot Name',
@@ -505,7 +583,7 @@ sub download_spatial_layout_ok {
 	$checkboxes ||= $all_checkbox_labels;
 	$trigger_xpath ||= '//button[@title="Download Spatial Layout (CSV)"]';
 
-	my $file_path = '/selenium/downloads/' . $filename;
+	my $file_path = "$download_dir/$filename";
 	if (-e $file_path) {
 		unlink $file_path or die "Could not delete existing file '$file_path': $!";
 	}
@@ -891,6 +969,7 @@ $t->while_logged_in_as("curator", sub {
 	$t->find_element_ok('//*[@id="' . $svg_id . '"]', 'xpath', 'Find fieldmap SVG');
 	$t->find_element_ok('//div[@id="legend_list"]//span[contains(normalize-space(),"Checks")]', 'xpath', 'Find Checks item in legend');
 	$t->find_element_ok('//div[@id="legend_list"]//span[contains(normalize-space(),"Checks")]//span[contains(@class,"tw:bg-[#6a5acd]")]', 'xpath', 'Find purple swatch for Checks in legend');
+	ok(!scalar(@{$t->driver->find_elements('//button[contains(text(),"Download Heatmap Image")]', 'xpath')}), 'Download Heatmap Image button is not visible in Field Layout view');
 
 	# =========================================================================
 	# Zoom & Pan Controls (Buttons, Mouse Wheel, Mouse Drag)
@@ -1073,6 +1152,11 @@ $t->while_logged_in_as("curator", sub {
 	test_print_field_map_ok('cass sink leaf|3-phosphoglyceric acid|ug/g|week 16|COMP:0000013');
 
 	# =========================================================================
+	# Heatmap PNG Image Download Action
+	# =========================================================================
+	test_download_heatmap_image_ok('cass sink leaf|3-phosphoglyceric acid|ug/g|week 16|COMP:0000013');
+
+	# =========================================================================
 	# Spatial Corrections Heatmap Views
 	# =========================================================================
 	# Verify Spatial Corrections optgroup and options exist
@@ -1089,6 +1173,7 @@ $t->while_logged_in_as("curator", sub {
 	# Select (corrected) view
 	set_layout_view("$spatial_trait_id (corrected)");
 	$t->find_element_ok('//div[@id="legend_list"]//span[contains(text(),"Low trait value") and contains(.,"(corrected)")]', 'xpath', 'Verify legend displays corrected view label');
+	test_download_heatmap_image_ok('cass sink leaf|3-phosphoglyceric acid|ug/g|week 16|COMP:0000013 (corrected)');
 
 	# Switch back to raw Assayed Trait view
 	set_layout_view($spatial_trait_id);
@@ -1175,6 +1260,7 @@ $t->while_logged_in_as("curator", sub {
 	ok(!scalar(@{$t->driver->find_elements('//div[@id="legend_list"]//span[contains(.,"Low trait value")]', 'xpath')}), 'Low trait value legend not present after trait deletion');
 	ok(!scalar(@{$t->driver->find_elements('//div[@id="legend_list"]//div[contains(@style,"linear-gradient")]', 'xpath')}), 'Gradient bar not present after trait deletion');
 	ok(!scalar(@{$t->driver->find_elements('//button[contains(text(),"Delete Selected Trait")]', 'xpath')}), 'Delete Selected Trait button not present after trait deletion');
+	ok(!scalar(@{$t->driver->find_elements('//button[contains(text(),"Download Heatmap Image")]', 'xpath')}), 'Download Heatmap Image button not present after trait deletion');
 	ok(!scalar(@{$t->driver->find_elements('//button[contains(text(),"View Controls")]', 'xpath')}), 'View Controls button not present in Field Layout view');
 	find_plot_cell_ok(0, 2, $odd_block_fill);
 	find_plot_cell_ok(0, 1, $even_block_fill);
@@ -2159,6 +2245,7 @@ EOSQL
 	ok(!scalar(@{$t->driver->find_elements('//*[@id="' . $svg_id . '"]', 'xpath')}), 'Standard SVG chart is unmounted in Geo Field Layout view');
 	ok(!scalar(@{$t->driver->find_elements('//*[@id="fieldmap_north_arrow"]', 'xpath')}), 'North arrow is unmounted in Geo Field Layout view');
 	ok(!scalar(@{$t->driver->find_elements('//button[@title="Zoom In"]', 'xpath')}), 'Standard zoom controls are unmounted in Geo Field Layout view');
+	ok(!scalar(@{$t->driver->find_elements('//button[contains(text(),"Download Heatmap Image")]', 'xpath')}), 'Download Heatmap Image button is not present in Geo Field Layout view');
 
 	# Verify window.geoFieldMapInstance is initialized in browser
 	my $has_geo_instance = $t->driver->execute_script('return typeof window.geoFieldMapInstance === "object" && window.geoFieldMapInstance !== null;');
