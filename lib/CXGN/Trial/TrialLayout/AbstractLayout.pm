@@ -593,18 +593,36 @@ sub retrieve_plot_info {
         from stock_relationship
         join stock on (subject_id = stock_id and stock.type_id = any (?))
     ) as subplot_parent on (subplot.stock_id = subplot_parent.subplot_id)
-    where plot.stock_id = any (?);
-    ";
+    where plot.stock_id = any (?)
+    order by plot.stock_id, subplot.stock_id, plant.stock_id, tissue_sample.stock_id";
 
     my $sth = $schema->storage()->dbh()->prepare($query);
     $sth->execute(\@$source_primary_stock_type_ids, \@plot_ids);
     while (my ($plot_id, $subplot_id, $subplot_name, $subplot_parent_id, $index_number, $plant_name, $tissue_sample_name) = $sth->fetchrow_array()) {
-        # TBD: Validate that a subplot is not associated with multiple index numbers?
-        $design_info->{$plot_id}->{subplot_ids}->{$subplot_id} = 1;
-        $design_info->{$plot_id}->{subplot_names}->{$subplot_name} = 1;
-        $design_info->{$plot_id}->{subplot_index_numbers}->{$index_number} = 1;
-        $design_info->{$plot_id}->{subplots_plant_names}->{$subplot_name}->{$plant_name} = 1;
-        push @{$design_info->{$plot_id}->{subplots_tissue_sample_names}->{$subplot_name}}, $tissue_sample_name;
+        # This query is a one to many join (one subplot to possibly multiple plant names and tissue samples)
+        # This means we will have multiple rows for each subplot: subplot1->plant1, subplot1->plant2, etc.
+        # Because of this, we check whether we have seen already seen a subplot, before pushing to arrays
+        my $subplot_ids = $design_info->{$plot_id}->{subplot_ids};
+        my $subplot_names = $design_info->{$plot_id}->{subplot_names};
+        my $index_numbers = $design_info->{$plot_id}->{subplot_index_numbers};
+        my $plant_names = $design_info->{$plot_id}->{subplots_plant_names}->{$subplot_name};
+        my $tissue_sample_names = $design_info->{$plot_id}->{subplots_tissue_sample_names}->{$subplot_name};
+
+        if (!grep( /^$subplot_id$/, @$subplot_ids)) {
+            push @{$design_info->{$subplot_id}->{subplot_ids}}, $subplot_id;
+        }
+        if (!grep( /^$subplot_name$/, @$subplot_names)) {
+            push @{$design_info->{$subplot_id}->{subplot_names}}, $subplot_name;
+        }
+        if (!grep( /^$index_number$/, @$index_numbers)) {
+            push @{$design_info->{$subplot_id}->{subplot_index_numbers}}, $index_number;
+        }
+        if (defined $plant_name && !grep( /^$plant_name$/, @$plant_names)) {
+            push @{$design_info->{$plot_id}->{subplots_plant_names}->{$subplot_name}}, $plant_name;
+        }
+        if (defined $tissue_sample_name && !grep( /^$tissue_sample_name$/, @$tissue_sample_names)) {
+            push @{$design_info->{$plot_id}->{subplots_tissue_sample_names}->{$subplot_name}}, $tissue_sample_name;
+        }
         # Optional validation, check if subplot parent is same as plot parent
         if ($self->get_verify_layout){
             my $plot_parent_id = $parents->{$plot_id}->{id};
@@ -612,35 +630,20 @@ sub retrieve_plot_info {
                 push @{$verify_errors->{errors}->{layout_errors}}, "Subplot: subplot_name does not have the same parent: $subplot_parent_id as the plot: $plot_parent_id.";
             }
         }
+        # TBD: Validate that a subplot is not associated with multiple index numbers?
     }
-    # Convert unique hashes to arrays, since our query involves a one->many
-    # relationship of subplots to plants and tissue samples
-    foreach my $plot_id (keys %$design_info){
-        foreach my $key ('subplot_ids', 'subplot_names', 'subplot_index_numbers') {
-            my $values = $design_info->{$plot_id}->{$key};
-            # Currently, tests expect plots missing subplots to be undef;
-            if (defined $values){
-                my @entries = keys %$values;
-                $design_info->{$plot_id}->{$key} = \@entries;
-            }
-        }
-        # handle deeper nesting of subplots_plant_names
-        my $subplots_plant_names = $design_info->{$plot_id}->{subplots_plant_names};
-        foreach my $subplot_name (keys %$subplots_plant_names){
-            my @plant_names = keys %{$subplots_plant_names->{$subplot_name}};
-            $design_info->{$plot_id}->{subplots_plant_names}->{$subplot_name} = \@plant_names;
-        }
-    }
+    # Note, we do not initialize missing subplots as an empty array, becauses
+    # tests currently expect these keys to be undef.
 
     # -------------------------------------------------------------------------
     # Plants
 
     my $query = "
-    select plot.stock_id, plant.stock_id, plant.uniquename, plant_parent.parent_id, index_number.value, tissue_sample.uniquename
+    select plot.stock_id, plant.stock_id, plant.uniquename, plant_parent.parent_id, plant_index_number.value, tissue_sample.uniquename
     from stock as plot
     join stock_relationship as plot_to_plant on (plot.stock_id = plot_to_plant.subject_id and plot_to_plant.type_id = $plant_of_cvterm_id)
     join stock as plant on (plant.stock_id = plot_to_plant.object_id)
-    join stockprop as index_number on (index_number.stock_id = plant.stock_id and index_number.type_id = $plant_index_number_cvterm_id)
+    join stockprop as plant_index_number on (plant_index_number.stock_id = plant.stock_id and plant_index_number.type_id = $plant_index_number_cvterm_id)
     join (
         select subject_id as plant_id, object_id as parent_id
         from stock_relationship
@@ -648,16 +651,31 @@ sub retrieve_plot_info {
     ) as plant_parent on (plant.stock_id = plant_parent.plant_id)
     left join stock_relationship as plant_to_tissue_sample on (plant.stock_id = plant_to_tissue_sample.object_id and plant_to_tissue_sample.type_id = $tissue_sample_of_cvterm_id)
     left join stock as tissue_sample on (tissue_sample.stock_id = plant_to_tissue_sample.subject_id)
-    where plot.stock_id = any (?);";
+    left join stockprop as tissue_sample_index_number on (tissue_sample_index_number.stock_id = tissue_sample.stock_id and tissue_sample_index_number.type_id = $tissue_sample_index_number_cvterm_id)
+    where plot.stock_id = any (?)
+    order by plot.stock_id, plant.stock_id, tissue_sample.stock_id;";
 
     my $sth = $schema->storage()->dbh()->prepare($query);
     $sth->execute(\@$source_primary_stock_type_ids, \@plot_ids);
     while (my ($plot_id, $plant_id, $plant_name, $plant_parent_id, $index_number, $tissue_sample_name) = $sth->fetchrow_array()) {
-        # TBD: Validate that a plant is not associated with multiple numbers?
-        $design_info->{$plot_id}->{plant_ids}->{$plant_id} = 1;
-        $design_info->{$plot_id}->{plant_names}->{$plant_name} = 1;
-        $design_info->{$plot_id}->{plant_index_numbers}->{$index_number} = 1;
-        if (defined $tissue_sample_name){
+        # This query is a one to many join (one plant to possibly multiple tissue samples)
+        # This means we will have multiple rows for each plant: plant1->tissue1, plant2->tissue2, etc.
+        # Because of this, we check whether we have seen already seen a plant, before pushing to arrays
+        my $plant_ids = $design_info->{$plot_id}->{plant_ids};
+        my $plant_names = $design_info->{$plot_id}->{plant_names};
+        my $index_numbers = $design_info->{$plot_id}->{plant_names};
+        my $tissue_sample_names = $design_info->{$plot_id}->{plants_tissue_sample_names}->{$plant_name};
+
+        if (!grep( /^$plant_id$/, @$plant_ids)) {
+            push @{$design_info->{$plot_id}->{plant_ids}}, $plant_id;
+        }
+        if (!grep( /^$plant_name$/, @$plant_names)) {
+            push @{$design_info->{$plot_id}->{plant_names}}, $plant_name;
+        }
+        if (!grep(/^$index_number$/, @$index_numbers)) {
+            push @{$design_info->{$plot_id}->{plant_index_numbers}}, $index_number;
+        }
+        if (defined $tissue_sample_name && !grep(/^$tissue_sample_name$/, @$tissue_sample_names)){
             push @{$design_info->{$plot_id}->{plants_tissue_sample_names}->{$plant_name}}, $tissue_sample_name;
         }
         # Optional validation, check if plant parent is same as plot parent
@@ -667,25 +685,28 @@ sub retrieve_plot_info {
                 push @{$verify_errors->{errors}->{layout_errors}}, "Plant: $plant_name does not have the same parent: $plant_parent_id as the plot: $plot_parent_id.";
             }
         }
+        # TBD: Validate that a plant is not associated with multiple index numbers?
     }
-    # Convert unique hashes to arrays, since our query involves a one->many
-    # relationship of plants to tissue samples
-    foreach my $plot_id (keys %$design_info){
+
+    # Initialize plots with no plants to an empty array
+    foreach my $plot_id (@plot_ids){
         foreach my $key ('plant_ids', 'plant_names', 'plant_index_numbers') {
-            my @values = keys %{$design_info->{$plot_id}->{$key}};
-            $design_info->{$plot_id}->{$key} = \@values;
-        }
-        # Initialize plants with no tissue samples to an empty array
-        foreach my $key ('plants_tissue_sample_names'){
-            my $values = $design_info->{$plot_id}->{$key};
-            if (! defined $values){
-                $design_info->{$plot_id}->{$key} = {};
+            if (! defined $design_info->{$plot_id}->{$key}){
+                $design_info->{$plot_id}->{$key} = [];
             }
+        }
+        # This data is a hash
+        my $key = 'plants_tissue_sample_names';
+        my $values = $design_info->{$plot_id}->{$key};
+        if (! defined $values){
+            $design_info->{$plot_id}->{$key} = {};
         }
     }
 
     # -------------------------------------------------------------------------
     # Tissue Samples
+    # Note: This includes tissue samples collected from plants as well as directly
+    # from the plot itself.
 
     my $query = "
     select plot.stock_id, tissue_sample.stock_id, tissue_sample.uniquename, tissue_sample_parent.parent_id, index_number.value
@@ -698,13 +719,13 @@ sub retrieve_plot_info {
         from stock_relationship
         join stock on (object_id = stock_id and stock.type_id = any (?))
     ) as tissue_sample_parent on (tissue_sample.stock_id = tissue_sample_parent.tissue_sample_id)
-    where plot.stock_id = any (?);";
+    where plot.stock_id = any (?)
+    order by plot.stock_id, tissue_sample.stock_id;";
 
     my $sth = $schema->storage()->dbh()->prepare($query);
     $sth->execute(\@$source_primary_stock_type_ids, \@plot_ids);
 
     while (my ($plot_id, $tissue_sample_id, $tissue_sample_name, $tissue_sample_parent_id, $index_number) = $sth->fetchrow_array()) {
-        # TBD: Validate that a tissue sample is not associated with multiple numbers?
         push @{$design_info->{$plot_id}->{tissue_sample_ids}}, $tissue_sample_id;
         push @{$design_info->{$plot_id}->{tissue_sample_names}}, $tissue_sample_name;
         push @{$design_info->{$plot_id}->{tissue_sample_index_numbers}}, $index_number;
@@ -715,6 +736,7 @@ sub retrieve_plot_info {
                 push @{$verify_errors->{errors}->{layout_errors}}, "Tissue Sample: $tissue_sample_name does not have the same parent: $tissue_sample_parent_id as the plot: $plot_parent_id.";
             }
         }
+        # TBD: Validate that a tissue sample is not associated with multiple index numbers?
     }
 
     # Initialize missing tissue_sample keys to empty array
@@ -739,7 +761,8 @@ sub retrieve_plot_info {
         from stock_relationship
         join stock on (object_id = stock_id and stock.type_id = any (?))
     ) as seedlot_parent on (seedlot.stock_id = seedlot_parent.seedlot_id)
-    where plot.stock_id = any (?);";
+    where plot.stock_id = any (?)
+    order by plot.stock_id, seedlot.stock_id;";
 
     my $sth = $schema->storage()->dbh()->prepare($query);
     $sth->execute(\@$source_primary_stock_type_ids, \@plot_ids);
