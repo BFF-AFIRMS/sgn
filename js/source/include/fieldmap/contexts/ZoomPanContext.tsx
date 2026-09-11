@@ -32,7 +32,17 @@ export const ZoomPanProvider: React.FC<FieldMapContextProps> = ({ children }) =>
     const [pan, setPan] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
     const [isDragging, setIsDragging] = useState<boolean>(false);
     const hasDragged = useRef<boolean>(false);
-    const dragStart = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
+    const dragStart = useRef<{
+        startX: number;
+        startY: number;
+        panX: number;
+        panY: number;
+    } | null>(null);
+
+    const zoomRef = useRef(zoom);
+    zoomRef.current = zoom;
+    const panRef = useRef(pan);
+    panRef.current = pan;
 
     // Stash the container element received by the containerRef callback for use in updateZoomAndPan
     const containerValueRef = useRef<HTMLElement | null>(null);
@@ -53,8 +63,8 @@ export const ZoomPanProvider: React.FC<FieldMapContextProps> = ({ children }) =>
         if (!targetPan) {
             const centerX = rect.width / 2;
             const centerY = rect.height / 2;
-            const mapX = (centerX - pan.x) / zoom;
-            const mapY = (centerY - pan.y) / zoom;
+            const mapX = (centerX - panRef.current.x) / zoomRef.current;
+            const mapY = (centerY - panRef.current.y) / zoomRef.current;
             targetPan = {
                 x: centerX - mapX * clampedZoom,
                 y: centerY - mapY * clampedZoom
@@ -71,7 +81,7 @@ export const ZoomPanProvider: React.FC<FieldMapContextProps> = ({ children }) =>
             x: Math.max(minPanX, Math.min(maxPanX, targetPan.x)),
             y: Math.max(minPanY, Math.min(maxPanY, targetPan.y))
         });
-    }, [pan, zoom, svgWidth, svgHeight]);
+    }, [svgWidth, svgHeight]);
 
     const handleNativeWheel = useCallback((node: HTMLElement | null, e: WheelEvent) => {
         e.preventDefault();
@@ -82,12 +92,15 @@ export const ZoomPanProvider: React.FC<FieldMapContextProps> = ({ children }) =>
         const cursorX = e.clientX - rect.left;
         const cursorY = e.clientY - rect.top;
 
+        const currentZoom = zoomRef.current;
+        const currentPan = panRef.current;
+
         // Determine target coordinates on the unscaled map corresponding to the cursor position
-        const mapX = (cursorX - pan.x) / zoom;
-        const mapY = (cursorY - pan.y) / zoom;
+        const mapX = (cursorX - currentPan.x) / currentZoom;
+        const mapY = (cursorY - currentPan.y) / currentZoom;
 
         const scaleFactor = 1.1;
-        let nextZoom = e.deltaY < 0 ? zoom * scaleFactor : zoom / scaleFactor;
+        let nextZoom = e.deltaY < 0 ? currentZoom * scaleFactor : currentZoom / scaleFactor;
         nextZoom = Math.max(0.1, Math.min(5, nextZoom));
 
         // Recalculate pan to keep the point under the cursor stable
@@ -95,7 +108,7 @@ export const ZoomPanProvider: React.FC<FieldMapContextProps> = ({ children }) =>
         const nextPanY = cursorY - mapY * nextZoom;
 
         updateZoomAndPan(nextZoom, { x: nextPanX, y: nextPanY });
-    }, [pan, zoom, updateZoomAndPan]);
+    }, [updateZoomAndPan]);
 
     // Bind native non-passive wheel listener to allow e.preventDefault() and prevent window scroll
     const containerRef = useCallback((node: HTMLElement | null) => {
@@ -118,26 +131,29 @@ export const ZoomPanProvider: React.FC<FieldMapContextProps> = ({ children }) =>
         if (e.button !== 0) return;
         setIsDragging(true);
         hasDragged.current = false;
-        dragStart.current = { x: e.clientX - pan.x, y: e.clientY - pan.y };
-    }, [pan]);
+        dragStart.current = {
+            startX: e.clientX,
+            startY: e.clientY,
+            panX: panRef.current.x,
+            panY: panRef.current.y
+        };
+    }, []);
 
     const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-        if (!isDragging) return;
+        if (!dragStart.current) return;
 
-        // Calculate the raw next pan coordinates
-        const nextX = e.clientX - dragStart.current.x;
-        const nextY = e.clientY - dragStart.current.y;
+        const dx = e.clientX - dragStart.current.startX;
+        const dy = e.clientY - dragStart.current.startY;
 
-        updateZoomAndPan(zoom, { x: nextX, y: nextY });
-
-        const deltaX = Math.abs(e.clientX - (dragStart.current.x + pan.x));
-        const deltaY = Math.abs(e.clientY - (dragStart.current.y + pan.y));
-        if (deltaX > CLICK_DRAG_THRESHOLD || deltaY > CLICK_DRAG_THRESHOLD) {
+        if (Math.abs(dx) > CLICK_DRAG_THRESHOLD || Math.abs(dy) > CLICK_DRAG_THRESHOLD) {
             hasDragged.current = true;
         }
-    }, [isDragging, pan, zoom]);
+
+        updateZoomAndPan(zoomRef.current, { x: dragStart.current.panX + dx, y: dragStart.current.panY + dy });
+    }, [updateZoomAndPan]);
 
     const handleMouseUpOrLeave = useCallback(() => {
+        dragStart.current = null;
         setIsDragging(false);
     }, []);
 
