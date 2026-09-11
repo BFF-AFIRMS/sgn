@@ -14,6 +14,13 @@ export interface SecondaryAxis {
     readonly yValues?: string[];
 }
 
+export interface SecondaryAxisInput {
+    readonly xLabel?: string;
+    readonly yLabel?: string;
+    readonly xValues?: string | string[];
+    readonly yValues?: string | string[];
+}
+
 export interface LayoutConfigContextType {
     plotLayout: PlotLayout;
     setPlotLayout: React.Dispatch<React.SetStateAction<PlotLayout>>;
@@ -39,7 +46,7 @@ export interface LayoutConfigContextType {
     setNorthArrowAngle: React.Dispatch<React.SetStateAction<number>>;
     loadNorthArrowAngle: () => void;
     secondaryAxis: SecondaryAxis | undefined;
-    setSecondaryAxis: React.Dispatch<React.SetStateAction<SecondaryAxis | undefined>>;
+    setSecondaryAxis: (input?: SecondaryAxisInput) => void;
     loadSecondaryAxis: () => void;
     hasSecondaryAxis: boolean;
 }
@@ -62,7 +69,45 @@ export const LayoutConfigProvider: React.FC<FieldMapContextProps> = ({ trialId, 
     const [labelSize, setLabelSize] = useState(10);
 
     const [northArrowAngle, setNorthArrowAngle] = useState<number>(0);
-    const [secondaryAxis, setSecondaryAxis] = useState<SecondaryAxis | undefined>();
+    const [secondaryAxis, setSecondaryAxisState] = useState<SecondaryAxis | undefined>();
+
+    const setSecondaryAxis = useCallback((input?: SecondaryAxisInput) => {
+        if (!input) {
+            setSecondaryAxisState(undefined);
+            return;
+        }
+
+        const parseValues = (v?: string | string[]): string[] => {
+            if (!v) {
+                return [];
+            }
+            if (Array.isArray(v)) {
+                return v.map(s => s.trim());
+            }
+            if (!v.trim()) {
+                return [];
+            }
+            return v.split(',').map(s => s.trim());
+        };
+
+        const xLabel = input.xLabel?.trim();
+        const yLabel = input.yLabel?.trim();
+        const xValues = parseValues(input.xValues);
+        const yValues = parseValues(input.yValues);
+
+        const hasValues = (arr: string[]) => arr.some(v => v.length > 0);
+
+        if (xLabel || yLabel || hasValues(xValues) || hasValues(yValues)) {
+            setSecondaryAxisState({
+                xLabel,
+                yLabel,
+                xValues,
+                yValues,
+            });
+        } else {
+            setSecondaryAxisState(undefined);
+        }
+    }, []);
 
     const loadNorthArrowAngle = useCallback(async () => {
         try {
@@ -81,30 +126,24 @@ export const LayoutConfigProvider: React.FC<FieldMapContextProps> = ({ trialId, 
             const response = await fetch(`/ajax/breeders/trial/${trialId}/secondary_axis`);
             const body = await response.json();
             if (body) {
-                const {
-                    secondary_x_axis_label: xLabel,
-                    secondary_y_axis_label: yLabel,
-                    secondary_x_axis_values: xValues,
-                    secondary_y_axis_values: yValues
-                } = body;
-
                 setSecondaryAxis({
-                    xLabel,
-                    yLabel,
-                    xValues: xValues?.split(',') || [],
-                    yValues: yValues?.split(',') || [],
+                    xLabel: body.secondary_x_axis_label,
+                    yLabel: body.secondary_y_axis_label,
+                    xValues: body.secondary_x_axis_values,
+                    yValues: body.secondary_y_axis_values,
                 });
             }
         } catch (e) {
             console.error('Error loading secondary axis labels and values:', e);
         }
-    }, [trialId]);
+    }, [trialId, setSecondaryAxis]);
 
     const hasSecondaryAxis = useMemo(() => Boolean(
         secondaryAxis && (
-            secondaryAxis.xLabel || secondaryAxis.yLabel ||
-            (secondaryAxis.xValues && secondaryAxis.xValues.length > 0) ||
-            (secondaryAxis.yValues && secondaryAxis.yValues.length > 0)
+            (secondaryAxis.xLabel && secondaryAxis.xLabel.trim().length > 0) ||
+            (secondaryAxis.yLabel && secondaryAxis.yLabel.trim().length > 0) ||
+            (secondaryAxis.xValues && secondaryAxis.xValues.some(v => v.length > 0)) ||
+            (secondaryAxis.yValues && secondaryAxis.yValues.some(v => v.length > 0))
         )
     ), [secondaryAxis]);
 
