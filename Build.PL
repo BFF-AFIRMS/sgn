@@ -170,6 +170,7 @@ my $build = SGN::Build->new(
         'Sys::Hostname'                            => '== 1.25',
         'Test::Class'                              => '== 0.52',
         'Test::More'                               => '== 1.302199',
+        'Test::MockModule'                         => '== 0.185.3',
         'Test::Pod'                                => '== 1.52',
         'Test::WWW::Mechanize'                     => '== 1.60',
         'Test::WWW::Mechanize::Catalyst'           => '== 0.62',
