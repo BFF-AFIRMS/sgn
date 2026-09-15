@@ -591,7 +591,7 @@ sub retrieve_plot_info {
     left join (
         select subject_id as subplot_id, object_id as parent_id
         from stock_relationship
-        join stock on (subject_id = stock_id and stock.type_id = any (?))
+        join stock on (object_id = stock_id and stock.type_id = any (?))
     ) as subplot_parent on (subplot.stock_id = subplot_parent.subplot_id)
     where plot.stock_id = any (?)
     order by plot.stock_id, subplot.stock_id, plant.stock_id, tissue_sample.stock_id";
@@ -609,13 +609,13 @@ sub retrieve_plot_info {
         my $tissue_sample_names = $design_info->{$plot_id}->{subplots_tissue_sample_names}->{$subplot_name};
 
         if (!grep( /^$subplot_id$/, @$subplot_ids)) {
-            push @{$design_info->{$subplot_id}->{subplot_ids}}, $subplot_id;
+            push @{$design_info->{$plot_id}->{subplot_ids}}, $subplot_id;
         }
         if (!grep( /^$subplot_name$/, @$subplot_names)) {
-            push @{$design_info->{$subplot_id}->{subplot_names}}, $subplot_name;
+            push @{$design_info->{$plot_id}->{subplot_names}}, $subplot_name;
         }
         if (!grep( /^$index_number$/, @$index_numbers)) {
-            push @{$design_info->{$subplot_id}->{subplot_index_numbers}}, $index_number;
+            push @{$design_info->{$plot_id}->{subplot_index_numbers}}, $index_number;
         }
         if (defined $plant_name && !grep( /^$plant_name$/, @$plant_names)) {
             push @{$design_info->{$plot_id}->{subplots_plant_names}->{$subplot_name}}, $plant_name;
