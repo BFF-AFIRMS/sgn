@@ -50,7 +50,7 @@ $has_child_folders => undef
 
   <ul class="nav nav-tabs" role="tablist">
     <li role="presentation" class="active"><a href="#trials" aria-controls="trials" role="tab" data-toggle="tab"><span class="glyphicon glyphicon-leaf text-success"></span>&nbsp;&nbsp;&nbsp;Trials</a></li>
-    <li role="presentation"><a href="#analyses" aria-controls="analyses" role="tab" data-toggle="tab"><span class="glyphicon glyphicon-stats text-success"></span>&nbsp;&nbsp;&nbsp;Analyses</a></li>
+    <li role="presentation"><a href="#analyses" aria-controls="analyses" role="tab" data-toggle="tab"><span class="glyphicon glyphicon-stats text-warning"></span>&nbsp;&nbsp;&nbsp;Analyses</a></li>
     <li role="presentation"><a href="#crosses" aria-controls="crosses" role="tab" data-toggle="tab"><span class="glyphicon glyphicon-grain text-success"></span>&nbsp;&nbsp;&nbsp;Crossing Experiments</a></li>
     <li role="presentation"><a href="#genotyping_trials" aria-controls="genotyping_trials" role="tab" data-toggle="tab"><span class="glyphicon glyphicon-th text-success"></span>&nbsp;&nbsp;&nbsp;Genotyping Plates</a></li>
     <li role="presentation"><a href="#genotyping_projects" aria-controls="genotyping_projects" role="tab" data-toggle="tab"><span class="glyphicon glyphicon-th text-success"></span>&nbsp;&nbsp;&nbsp;Genotyping Projects</a></li>
