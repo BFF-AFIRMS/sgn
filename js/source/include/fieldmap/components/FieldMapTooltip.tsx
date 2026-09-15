@@ -68,7 +68,12 @@ export const FieldMapTooltip: React.FC<FieldMapTooltipProps> = ({ }) => {
                     <div><strong>Plot Name:</strong> {plot.observationUnitName}</div>
                     {plot.type === 'data' && (
                         <>
-                            <div><strong>Plot Number:</strong> {plot.observationUnitPosition?.observationLevel?.levelCode}</div>
+                            {plot.observationUnitPosition?.observationLevel?.levelName != 'analysis_instance' && (
+                                <div><strong>Plot Number:</strong> {plot.observationUnitPosition?.observationLevel?.levelCode}</div>
+                            )}
+                            {plot.observationUnitPosition?.observationLevel?.levelName === 'analysis_instance' && plot.observationUnitPosition?.observationLevelRelationships && plot.observationUnitPosition.observationLevelRelationships.length > 2 && (
+                                <div><strong>Plot Number:</strong> {plot.observationUnitPosition.observationLevelRelationships[1].levelCode}</div>
+                            )}
                             {plot.observationUnitPosition?.observationLevelRelationships && plot.observationUnitPosition.observationLevelRelationships.length > 1 && (
                                 <>
                                     <div><strong>Block Number:</strong> {plot.observationUnitPosition.observationLevelRelationships[1].levelCode}</div>
