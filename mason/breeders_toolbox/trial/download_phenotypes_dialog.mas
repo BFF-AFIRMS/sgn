@@ -57,14 +57,14 @@ $dialog_name => undef
                 </div>
             </div>
             <div class="form-group">
-                <label class="col-sm-3 control-label">Traits:<br/><small>(Select none for all traits)</small></label>
+                <label class="col-sm-3 control-label">Traits:<br/><small class="tw:text-wrap">(Select none for all traits)</small></label>
                 <div class="col-sm-9" >
                     <div id="download_trial_phenotypes_traits">
                     </div>
                 </div>
             </div>
             <div class="form-group">
-                <label class="col-sm-3 control-label">Trait Components:<br/><small>(Select none for all)</small></label>
+                <label class="col-sm-3 control-label">Trait Components:<br/><small class="tw:text-wrap">(Select none for all)</small></label>
                 <div class="col-sm-9" >
                     <div id="download_trial_phenotypes_trait_components">
                     </div>
@@ -144,18 +144,19 @@ $dialog_name => undef
             </div>
 
             <div class="row">
-                <div class="col-sm-6">
+                <label class="col-sm-4 control-label">Phenotype Value:</label>
+                <div class="col-sm-4">
                     <div class="form-group">
-                        <label class="col-sm-7 control-label">Min Phenotype Value: </label>
-                        <div class="col-sm-5" >
+                        <label class="col-sm-5 tw:pl-3! tw:min-w-[3.5em] control-label">Min:</label>
+                        <div class="col-sm-7" >
                             <input id="download_trial_phenotype_phenotype_min" name="download_trial_phenotype_phenotype_min" type="number" class="form-control" />
                         </div>
                     </div>
                 </div>
-                <div class="col-sm-6">
+                <div class="col-sm-4">
                     <div class="form-group">
-                        <label class="col-sm-7 control-label">Max Phenotype Value: </label>
-                        <div class="col-sm-5" >
+                        <label class="col-sm-5 tw:pl-3! tw:min-w-[3.5em] control-label">Max: </label>
+                        <div class="col-sm-7" >
                             <input id="download_trial_phenotype_phenotype_max" name="download_trial_phenotype_phenotype_max" type="number" class="form-control" />
                         </div>
                     </div>
