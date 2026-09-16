@@ -105,7 +105,8 @@ ok($rdata_outliers_included->{gwas_csv_response}, "Gwas csv response returned");
 
 # Because problem with gitaction in given test - just check value of gwas
 my $gwas_outliers_included = csv(in => "static/".$rdata_outliers_included->{gwas_csv_response});
-is(@$gwas_outliers_included[10]->[1], '0.241138827424217', "check value of row 10 in a gwas table");
+# Only check the first 8 decimal places, because precision beyond that will vary based on computer
+like(@$gwas_outliers_included[10]->[1], qr/^0.24113882/, "check value of row 10 in a gwas table");
 
 # Test for dataset with outliers but with true outliers parameter -> outliers points are excluded from computation
 $mech->get_ok('http://localhost:3010/ajax/solgwas/generate_results?dataset_id='.$outliers_excluded_dataset_id.'&trait_id='.$outliers_excluded_trait_id.'&pc_check=0&kinship_check=0&dataset_trait_outliers=1', 'run the solgwas analysis for outliers dataset with outliers excluded');
@@ -118,7 +119,8 @@ ok($rdata_outliers_excluded->{gwas_csv_response}, "Gwas csv response returned");
 
 # Because problem with gitaction in given test - just check value of gwas
 my $gwas_outliers_excluded = csv(in => "static/".$rdata_outliers_excluded->{gwas_csv_response});
-is(@$gwas_outliers_excluded[10]->[1], '0.816958537019708', "check value of row 10 in a gwas table");
+# Only check the first 8 decimal places, because precision beyond that will vary based on computer
+is(@$gwas_outliers_excluded[10]->[1], qr/^0.81695853/, "check value of row 10 in a gwas table");
 
 ### END: GITACTION PROBLEM
 
