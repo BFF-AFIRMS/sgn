@@ -171,11 +171,11 @@ input[type="text"] {
 (function(){
     var d3 = d3v4;
     var draw_histogram = stackedObservationPhenotypeHistogram.draw;
+    var trial_id = "<% $trial_id %>";
 
     jQuery(document).ready(function () {
         var type = "<% $trial_stock_type %>";
         type = type == 'analysis_instance' ? 'accession' : type;
-        var trial_id = "<% $trial_id %>";
     	jQuery.ajax( {
             url: '/ajax/breeders/trial/'+ trial_id + '/collect_date_range',
     	}).done( function(r) {
@@ -320,10 +320,8 @@ input[type="text"] {
         jQuery('#tissue_samples_stock_option').text(tissue_samples_stock_text);
 
     });
-    // End document.read function
 
     function datatables_display_phenosummary(type) {
-        var trial_id = "<% $trial_id %>";
         var start_date = jQuery('#summary_start_date').val();
         var end_date = jQuery('#summary_end_date').val();
         var split_by_treatments = jQuery('#split_by_treatments_check').prop('checked') ? 1 : 0;
@@ -393,7 +391,6 @@ input[type="text"] {
     }
 
     function trait_summary_hist_display_change(value) {
-        var trial_id = "<% $trial_id %>";
         var start_date = jQuery('#summary_start_date').val();
         var end_date = jQuery('#summary_end_date').val();
 
@@ -504,7 +501,6 @@ input[type="text"] {
         jQuery('#traits_assayed_histogram_cvterm_link').html("<a href='/cvterm/"+value+"/view'>Definition</a>");
         var start_date = jQuery('#summary_start_date').val();
         var end_date = jQuery('#summary_end_date').val();
-        var trial_id = "<% $trial_id %>";
     
         // console.log("value",value);
         jQuery.ajax( {
