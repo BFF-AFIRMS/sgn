@@ -104,6 +104,7 @@ const regression = d3.regressionLinear()
 jQuery(document).ready(function() {
     var trial_id = '<% $trial_id %>';
     let selectedTraitId = '';
+    const tzOffset = (new Date()).getTimezoneOffset() * 60000;
 
     jQuery(document).on('change', '#select_trait_for_repetitive_data_and_plot', function() {
         selectedTraitId = jQuery(this).val();
@@ -133,7 +134,7 @@ jQuery(document).ready(function() {
         var repetitive_endDate = new Date(end_date);
         repetitive_endDate.setDate(repetitive_endDate.getDate() + 1);
         //Format the new end date to YYYY-MM-DD
-        var repetitive_end_date = repetitive_endDate.toISOString().split('T')[0];
+        var repetitive_end_date = new Date(repetitive_endDate  - tzOffset).toISOString().split('T')[0];
 
         var repetitive_observation_level = jQuery('#repetitive_measurement_observation_level').find(":selected").val();
         var repetitive_measurement_level = jQuery('#repetitive_measurements_level').find(":selected").val();
@@ -152,8 +153,10 @@ jQuery(document).ready(function() {
     jQuery.ajax({
         'url': '/ajax/breeders/trial/'+ trial_id + '/collect_date_range',
     }).done(function(data) {
-        var repetitive_startDate = new Date(data.start_date).toISOString().split('T')[0];
-        var repetitive_endDate = new Date(data.end_date).toISOString().split('T')[0];
+        var repetitive_startDate = new Date(data.start_date);
+        var repetitive_endDate = new Date(data.end_date);
+        repetitive_startDate = new Date(repetitive_startDate - tzOffset).toISOString().split('T')[0];
+        repetitive_endDate = new Date(repetitive_endDate - tzOffset).toISOString().split('T')[0];
         jQuery('#repetitive_measurement_start_date').val(repetitive_startDate);
         jQuery('#repetitive_measurement_end_date').val(repetitive_endDate);
 
