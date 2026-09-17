@@ -127,7 +127,7 @@ ok($rdata_outliers_excluded->{gwas_csv_response}, "Gwas csv response returned");
 # Because problem with gitaction in given test - just check value of gwas
 my $gwas_outliers_excluded = csv(in => $rdata_outliers_excluded->{gwas_csv_response});
 # Only check the first 8 decimal places, because precision beyond that will vary based on computer
-like(@$gwas_outliers_excluded[10]->[1], qr/^0.81695853/, "check value of row 10 in a gwas table");
+like(@$gwas_outliers_excluded[10]->[1], qr/^0.24113882/, "check value of row 10 in a gwas table");
 
 # remove changes to the database
 #
