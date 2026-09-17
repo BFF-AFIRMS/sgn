@@ -376,6 +376,7 @@ jQuery(window).ready( function() {
 
     function displayRawObservations(result) {
   		var data = [];
+  		const tzOffset = (new Date()).getTimezoneOffset() * 60000;
 
     	for (var i = 0; i < result.data.length; i++) {
     	    var observationDate = result.data[i].observationTimeStamp;
@@ -385,7 +386,8 @@ jQuery(window).ready( function() {
     	    if (observationDate) {
     	        try {
     	            // format the date (YYYY-MM-DD)
-    	            formattedDate = new Date(observationDate).toISOString().split('T')[0];
+    	            observationDate = new Date(observationDate);
+    	            formattedDate = new Date(observationDate  - tzOffset).toISOString().split('T')[0];
     	        } catch (e) {
     	            formattedDate = "";
     	        }
