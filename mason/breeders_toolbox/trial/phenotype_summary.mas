@@ -172,6 +172,7 @@ input[type="text"] {
     var d3 = d3v4;
     var draw_histogram = stackedObservationPhenotypeHistogram.draw;
     var trial_id = "<% $trial_id %>";
+    const tzOffset = (new Date()).getTimezoneOffset() * 60000;
 
     jQuery(document).ready(function () {
         var type = "<% $trial_stock_type %>";
@@ -180,7 +181,6 @@ input[type="text"] {
             url: '/ajax/breeders/trial/'+ trial_id + '/collect_date_range',
     	}).done( function(r) {
             //alert('Setting start date to '+r.start_date+' and end date to '+r.end_date);
-            const tzOffset = (new Date()).getTimezoneOffset() * 60000;
             const start_date = new Date(r.start_date);
             const end_date = new Date(r.end_date);
             var raw_startDate = new Date(start_date  - tzOffset).toISOString().split('T')[0];
@@ -233,7 +233,6 @@ input[type="text"] {
                 values: [new Date(raw_startDate).getTime(), new Date(raw_endDate).getTime()],
                 slide: function(event, ui) {
                     //the start and end date of this measurement will be updated based on the slider moved from.
-                    const tzOffset = new Date().getTimezoneOffset() * 60000;
                     const start_date = new Date(ui.values[0]);
                     const end_date = new Date(ui.values[1]);
                     var raw_phenotype_startDate = new Date(start_date - tzOffset).toISOString().split('T')[0];
