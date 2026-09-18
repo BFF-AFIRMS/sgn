@@ -804,10 +804,7 @@ jQuery(document).ready(function () {
                     }
                     run = true;
                     params = {"germplasmDbIds" : stock_ids, "observationLevel" : 'plot'};
-                    loadBrAPIData("<% $c->config->{main_production_site_url} %>",params,function(response){
-                        useBrAPIData(response,true);
-                    });
-
+                    loadBrAPIData("<% $c->config->{main_production_site_url} %>",params);
                 },
                 error: function(response){
                     jQuery("#working_modal").modal("hide");
