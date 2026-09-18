@@ -97,7 +97,7 @@ ok(-s $rdata->{figure3} > 10000, "Manhattan plot file has contents");
 ok(-s $rdata->{figure4} > 10000, "QQ plot file has contents");
 
 # Test for outliers dataset
-my $outliers_excluded_dataset_id = $ds->sp_dataset_id();
+my $outliers_excluded_dataset_id = 1;
 my $outliers_excluded_trait_id = "fresh root weight";
 # run test for dataset with outliers but with false outliers parameter
 
