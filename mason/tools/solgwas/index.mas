@@ -8,8 +8,7 @@
 
 <%perl>
   use JSON::Any;
-
-
+  my $cluster_shared_tempdir = $c->config->{cluster_shared_tempdir};
 </%perl>
 
 
@@ -89,7 +88,7 @@
 
 
 
-<&| /page/info_section.mas, title=>"Output", collapsible=>1, collapsed=>0, subtitle=>'<a id="download_table" class="download_tag" target="_blank" href="javascript:download_table();" title="Download results in tabular format">Table&#8675;</a>&nbsp;&nbsp;<a id="download_basic" class="download_tag" target="_blank" href="javascript:download();" title="Download results in basic format">Basic&#8675;</a>' &>
+<&| /page/info_section.mas, title=>"Output", collapsible=>1, collapsed=>0 &>
 
 
 
@@ -115,6 +114,9 @@
 <script>
 
 jQuery(document).ready(function() {
+
+  const clusterSharedTempdir = "<% $cluster_shared_tempdir %>";
+  const solgwasDataPrefix = "/data";
 
   if (isLoggedIn()) {
     get_select_box("datasets", "dataset_select", {"checkbox_name":"dataset_select_checkbox", "analysis_type":"GWAS", "show_compatibility":"yes"});
@@ -282,7 +284,7 @@ jQuery(document).ready(function() {
               $('#dataset_select').val('ERROR');
             }
             else {
-              var fig2_response = response.figure2;
+              var fig2_response = response.figure2.replace(clusterSharedTempdir, solgwasDataPrefix);
   	            $('#pca_output').append("<img id='SolGWAS_Figure2' src='"+ fig2_response + "'/>");
   	      }
           },
@@ -335,13 +337,26 @@ jQuery(document).ready(function() {
               alert(response.error);
             }
             else {
-              var fig3_response = response.figure3;
-              var fig4_response = response.figure4;
+              var fig3_response = response.figure3.replace(clusterSharedTempdir, solgwasDataPrefix);
+              var fig4_response = response.figure4.replace(clusterSharedTempdir, solgwasDataPrefix);
+              var csv_response = response.gwas_csv_response.replace(clusterSharedTempdir, solgwasDataPrefix);
+              var phenotypes_response = response.input_phenotypes.replace(clusterSharedTempdir, solgwasDataPrefix);
+              var genotypes_response = response.input_genotypes.replace(clusterSharedTempdir, solgwasDataPrefix);
   	          //alert("Response ID: "+temp_response);
       	      //alert("Response ID: "+fig3_response);
 
-  	          $('#Solgwas_output').append("<img id='SolGWAS_Figure3' src='"+ fig3_response + "'/>");
-  	          $('#Solgwas_output').append("<img id='SolGWAS_Figure4' src='"+ fig4_response + "'/>");
+              var solgwas_output_html = `
+              <div class="tw:flex tw:gap-2.5 tw:flex-wrap tw:mb-3.75 tw:w-full tw:justify-center">
+                <a class="btn btn-success" id='SolGWAS_csv' href="${csv_response}" download>Download Results</a>
+                <a class="btn btn-success" id='SolGWAS_phenotypes' href="${phenotypes_response}" download>Download Input Phenotypes</a>
+                <a class="btn btn-success" id='SolGWAS_genotypes' href="${genotypes_response}" download>Download Input Genotypes</a>
+              </div>
+              <div>
+                <img id='SolGWAS_Figure3' src='${fig3_response}'/>
+                <img id='SolGWAS_Figure4' src='${fig4_response}'/>
+              </div>`;
+
+              $('#Solgwas_output').append(solgwas_output_html);
   	        }
           },
           error: function(xhr, status, error) {
