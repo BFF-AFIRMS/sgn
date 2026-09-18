@@ -628,8 +628,8 @@ sub observationunits_update {
         my $additional_info;
         if (defined $params->{additionalInfo}) {
             foreach my $key (keys %{$params->{additionalInfo}}) {
-                # Ignore the following keys, because we will handle them separately
-                if ( ! grep( /^$key$/, ["observationUnitParent","control","range"]) ) {
+                # Ignore the following keys, because we handled them separately above
+                if (! grep { $_ eq $key } ("observationUnitParent","control","range")) {
                     $additional_info->{$key} = $params->{additionalInfo}->{$key};
                 }
             }
