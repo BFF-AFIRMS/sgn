@@ -551,6 +551,8 @@ sub generate_results: Path('/ajax/solgwas/generate_results') : {
         dummy_response  => $dataset_id,
         dummy_response2 => $trait_id,
         gwas_csv_response  => $gwasCsv_response,
+        input_phenotypes => $pheno_filepath,
+        input_genotypes => $geno_filepath2
     };
 }
 

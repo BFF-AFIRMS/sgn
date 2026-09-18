@@ -196,7 +196,7 @@ legend(1,13.5, c("Bonferroni") ,
 dev.off()
 
 # write results to csv file only for testing purpose - not for client use
-write.csv(gwasresults$PHENO, file = gwasresultsPhenoCsv)
+write.csv(gwasresults, file = gwasresultsPhenoCsv)
 
 N <- length(gwasresults$PHENO)
 expected.logvalues <- sort( -log10( c(1:N) * (1/N) ) )
