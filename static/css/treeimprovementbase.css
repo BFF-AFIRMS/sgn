@@ -561,7 +561,7 @@ div.infosectioncontent {
 }
 
 td.infosectionsubtitle {
-    text-align: left;
+    text-align: right;
     padding-left: 22px;
     text-wrap: auto;
     display: inline-block;
