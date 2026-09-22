@@ -150,7 +150,7 @@ sub _search {
     }
     if (keys %$external_references_by_dbxref_id){
         my $dbxrefs_rs = $schema->resultset("General::Dbxref")->search(
-            {dbxref_id => {-in => keys %$external_references_by_dbxref_id}},
+            {dbxref_id => {-in => [ keys %$external_references_by_dbxref_id ]}},
             {
                 join => 'db',
                 '+select'=> ['me.dbxref_id', 'db.name', 'me.accession'],
@@ -472,8 +472,8 @@ sub observationunits_update {
         my $type_id = $record->type_id();
         my $level_name = $observation_units->{$observation_unit_db_id}->{observationUnitPosition}->{observationLevel}->{levelName};
         if (
-            ( ! $type_id ~~ [$plot_cvterm_id, $subplot_cvterm_id, $plant_cvterm_id, $tissue_sample_cvterm_id] )
-            || ( ! $level_name ~~ ['plot', 'subplot', 'plant', 'tissue_sample'] )
+            ( !grep { $type_id == $_ } [$plot_cvterm_id, $subplot_cvterm_id, $plant_cvterm_id, $tissue_sample_cvterm_id] )
+            || ( !grep {$level_name == $_ } ['plot', 'subplot', 'plant', 'tissue_sample'] )
         ) {
             my $message = "observationUnitDbId $observation_unit_db_id has invalid level: type_id=$type_id, level_name=$level_name\n";
             print STDERR $message;
@@ -798,7 +798,7 @@ sub observationunits_update {
     # For records that only supplied a germplasmName, get the correct accession ID
     if (scalar keys %$new_accession_names > 0){
         my $accessions_rs = $schema->resultset('Stock::Stock')->search(
-            {uniquename => {-in => (keys %$new_accession_names)}}
+            {uniquename => {-in => [ keys %$new_accession_names ]}}
         );
         while (my $record = $accessions_rs->next){
             my $accession_id = $record->stock_id();
