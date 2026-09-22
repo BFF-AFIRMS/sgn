@@ -79,6 +79,8 @@ sub retrieve_plot_info {
         $design->{$plot_number}->{"species"} = $species;
         $design->{$plot_number}->{"genus"} = $genus;
     }
+
+    return $design;
  }
 
 ###
