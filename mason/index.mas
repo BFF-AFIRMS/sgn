@@ -31,6 +31,12 @@ $editable_stock_props => {}
 
 <& homepage/carousel.mas &>
 
+<div class="container-fluid">
+  <center>
+    <& homepage/usage_popup.mas &>
+  </center>
+</div>
+
 <div>
 
 	<h3>What is Best Future Forests?</h3>

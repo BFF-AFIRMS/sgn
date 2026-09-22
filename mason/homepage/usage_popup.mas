@@ -1,0 +1,68 @@
+
+<div class="modal fade" id="usage_policy" name="usage_policy" tabindex="-1" role="dialog" aria-labelledby="usagePolicyDialog" data-controls-modal="your_div_id" data-backdrop="static" data-keyboard="false" href="#">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 class="modal-title" id="usagePolicyDialog">Please Note: Website Data Usage Policy</h4>
+      </div>
+      <div class="modal-body">
+        <div class="container-fluid">
+            To foster a transparent and accessible data sharing culture, in accordance with the
+            <a href="https://www.nature.com/articles/461168a">Toronto Agreement</a>, all data
+            deposited is made available to all BFF-AFIRMS users immediately.
+            <br/><br/>
+            <b><u>Data producers</u></b> can provide information on the data they deposit, including planned
+            analyses and publication timeline information, to indicate their publication intentions.
+            <br/><br/>
+            <b><u>Data users</u></b> are expected to respect scientific
+            etiquette and allow data producers the first global analyses of their data set, and should be aware
+            that pre-publication data may not have been subject to full quality control and peer review, so
+            caution must be applied when utilizing these data.
+            <br/><br/>
+            For more information, please see the 
+            <a href="/usage_policy">data usage policy</a>.
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" id="usage_policy_disagree_submit">Don't Agree</button>
+        <button type="button" class="btn btn-primary" id="usage_policy_agree_submit">Agree</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<script>
+
+  jQuery('#usage_policy_agree_submit').click( function () {
+     jQuery.cookie("website_usage_policy_approved", "1", { expires: 10000 } );
+     jQuery('#usage_policy').modal("hide");
+  });
+
+  jQuery('#usage_policy_disagree_submit').click( function () {
+     document.location.href="http://www.biochemie.nat.uni-erlangen.de/Cassava/index.html";
+  });
+
+
+  if (jQuery.cookie("website_usage_policy_approved") == 1) {
+    document.write('<div class="well well-sm">You have already accepted the <a href="/usage_policy">website usage policy</a>. Thank you.</div>');
+  }
+
+  window.onload=function() {
+    var cookie = jQuery.cookie("website_usage_policy_approved");
+  //alert("have cookie: "+cookie);
+
+    if (cookie == undefined) {
+    //  alert("showing!");
+
+      jQuery('#usage_policy').modal("show");
+  //alert("Done!");
+    }
+    else {
+      //alert("Hiding!");
+      jQuery('#usage_policy').modal("hide");
+
+    }
+  }
+
+</script>

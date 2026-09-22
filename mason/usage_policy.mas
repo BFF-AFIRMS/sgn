@@ -1,7 +1,14 @@
 <div id="pagetitle"><h3>Data Usage Policy</h3></div>
 
 
-The data on this database is shared according to the Toronto agreement (see below). 
+<p>
+    The data on this database is shared according to the
+    <a href="https://www.nature.com/articles/461168a">Toronto Agreement</a>
+    (see below).
+</p>
+
+<h3 style="margin-top: 40px">Unpublished Datasets</h3>
+<hr>
 
 Datasets that are currently released but have not yet been published include:<br /><br />
 <style type="text/css">
@@ -11,13 +18,10 @@ table.myTable td, table.myTable th { border:1px solid black;padding:5px; }
 
 <table class="myTable">
 <tr><td>Institution</td><td>Researchers</td><td>Data</td></tr>
-<tr><td>IITA</td><td>Peter Kulakow, Ismail Rabbi</td><td>IITA cassava phenotypic data</td></tr>
-<tr><td>NRCRI</td><td>Chiedozie Egesi</td><td>NRCRI cassava phenotypic and genotypic data.</td></tr>
-<tr><td>NaCRRI</td><td>Robert Kawuki</td><td>NaCRRI cassava phenotypic and genotypic data.</td></tr>
 </table>
 
-
-<h3>Toronto Agreement</h3>
+<h3 style="margin-top: 40px">Toronto Agreement</h3>
+<hr>
 
 <h4>Rapid prepublication data release should be encouraged for projects with the following attributes:</h4>
 
