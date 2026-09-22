@@ -112,40 +112,40 @@ sub create_design {
         @converted_plot_numbers=@{$self->_convert_plot_numbers(\@plot_numbers, \@rep_numbers, $number_of_reps)};
         #print STDERR Dumper \@converted_plot_numbers;
 
-        #generate col_number
-        if ($plot_layout_format eq "zigzag") {
-          if (!$fieldmap_col_number){
-            @col_number_fieldmaps = ((1..(scalar(@stock_list))) x $number_of_reps);
-          } else {
-            @col_number_fieldmaps = ((1..$fieldmap_col_number) x $fieldmap_row_number);
-          }
-          #print STDERR Dumper(\@col_number_fieldmaps);
-        }
-        elsif ($plot_layout_format eq "serpentine") {
-          if (!$fieldmap_row_number)  {
-            for my $rep (1 .. $number_of_reps){
-              if ($rep % 2){
-                push @col_number_fieldmaps, (1..(scalar(@stock_list)));
-              } else {
-                push @col_number_fieldmaps, (reverse 1..(scalar(@stock_list)));
-              }
-            }
-          } else {
-            for my $rep (1 .. $fieldmap_row_number){
-              if ($rep % 2){
-                push @col_number_fieldmaps, (1..$fieldmap_col_number);
-              } else {
-                push @col_number_fieldmaps, (reverse 1..$fieldmap_col_number);
-              }
-            }
-          }
-          #@col_number_fieldmaps = (my @cols, (1..(scalar(@stock_list))) x $number_of_reps);
-        }
-
     } else { #only a single stock was given, so no randomization can occur.
         @converted_plot_numbers = (1...$number_of_reps);
         @rep_numbers = (1...$number_of_reps);
         @stock_names = ($stock_list[0]) x $number_of_reps;
+    }
+
+    #generate col_number
+    if ($plot_layout_format eq "zigzag") {
+      if (!$fieldmap_col_number){
+        @col_number_fieldmaps = ((1..(scalar(@stock_list))) x $number_of_reps);
+      } else {
+        @col_number_fieldmaps = ((1..$fieldmap_col_number) x $fieldmap_row_number);
+      }
+      #print STDERR Dumper(\@col_number_fieldmaps);
+    }
+    elsif ($plot_layout_format eq "serpentine") {
+      if (!$fieldmap_row_number)  {
+        for my $rep (1 .. $number_of_reps){
+          if ($rep % 2){
+            push @col_number_fieldmaps, (1..(scalar(@stock_list)));
+          } else {
+            push @col_number_fieldmaps, (reverse 1..(scalar(@stock_list)));
+          }
+        }
+      } else {
+        for my $rep (1 .. $fieldmap_row_number){
+          if ($rep % 2){
+            push @col_number_fieldmaps, (1..$fieldmap_col_number);
+          } else {
+            push @col_number_fieldmaps, (reverse 1..$fieldmap_col_number);
+          }
+        }
+      }
+      #@col_number_fieldmaps = (my @cols, (1..(scalar(@stock_list))) x $number_of_reps);
     }
 
     if ($plot_layout_format && !$fieldmap_col_number && !$fieldmap_row_number){
