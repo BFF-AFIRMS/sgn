@@ -472,8 +472,8 @@ sub observationunits_update {
         my $type_id = $record->type_id();
         my $level_name = $observation_units->{$observation_unit_db_id}->{observationUnitPosition}->{observationLevel}->{levelName};
         if (
-            ( !grep { $type_id == $_ } [$plot_cvterm_id, $subplot_cvterm_id, $plant_cvterm_id, $tissue_sample_cvterm_id] )
-            || ( !grep {$level_name == $_ } ['plot', 'subplot', 'plant', 'tissue_sample'] )
+            ( !grep { $type_id == $_ } ($plot_cvterm_id, $subplot_cvterm_id, $plant_cvterm_id, $tissue_sample_cvterm_id) )
+            || ( !grep {$level_name eq $_ } ('plot', 'subplot', 'plant', 'tissue_sample') )
         ) {
             my $message = "observationUnitDbId $observation_unit_db_id has invalid level: type_id=$type_id, level_name=$level_name\n";
             print STDERR $message;
