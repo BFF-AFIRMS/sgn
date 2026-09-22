@@ -35,7 +35,7 @@
 
     </div>
       <div class="form-group form-inline">
-        <label class="blast_select_label" for="pheno_select">Available&nbspTraits:&nbsp; </label>        
+        <label for="pheno_select">Available Traits:</label>
         <& /page/html_select.mas, name=>'pheno_select', id=>'pheno_select', params=>"class\=\"form-control input-sm blast_select_box\"", choices=>"" &>                
         <button class="btn btn-primary" id="preview_trait_histogram_btn" type="submit" name="preview_trait_histogram_btn" value="preview_trait_histogram_btn">View Trait Histogram</button>
         <img id="loading-spinner" src="/img/wheel.gif" alt="loading" style="visibility: hidden;">
@@ -230,8 +230,8 @@ jQuery(document).ready(function() {
           //alert("data grabbed "+JSON.stringify(r.data));
           var v = {
               "$schema": "https://vega.github.io/schema/vega-lite/v2.json",
-              "width": 200,
-              "height": 100,
+              "width": 400,
+              "height": 200,
               "padding": 5,
               "data": { 'values': r.data },
               "mark": "bar",
