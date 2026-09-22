@@ -58,7 +58,6 @@ sub shared_phenotypes: Path('/ajax/solgwas/shared_phenotypes') : {
 
     # Write dataset to file
     my $temppath = $tempfile;
-    print STDERR "\ntemppath: $temppath\n";
     my $ds2 = CXGN::Dataset::File->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id, exclude_dataset_outliers => $exclude_outliers, file_name => $temppath, quotes => 0);
     $ds2->retrieve_phenotypes();
 
