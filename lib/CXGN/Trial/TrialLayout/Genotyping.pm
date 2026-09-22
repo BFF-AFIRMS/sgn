@@ -39,7 +39,7 @@ sub retrieve_plot_info {
     my $tissue_sample_cvterm_id = $self->cvterm_id('tissue_sample');
 
     my $schema = $self->get_schema();
-    my $design = $self->SUPER::retrieve_plot_info($plots);
+    my ($design, $verify_errors) = $self->SUPER::retrieve_plot_info($plots);
 
     # -------------------------------------------------------------------------
     # Set genotyping project properties
@@ -126,7 +126,7 @@ sub retrieve_plot_info {
         $design->{$plot_number}->{"genus"} = $genus;
     }
 
-    return $design;
+    return ($design, $verify_errors);
  }
 
 ###

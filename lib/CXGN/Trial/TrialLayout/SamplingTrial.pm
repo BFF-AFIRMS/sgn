@@ -33,7 +33,7 @@ sub retrieve_plot_info {
     my $plots = shift;
 
 	my $schema = $self->get_schema();
-    my $design = $self->SUPER::retrieve_plot_info($plots);
+    my ($design, $verify_errors) = $self->SUPER::retrieve_plot_info($plots);
 
 	# Get lookup of plot_ids to plot_numbers, we'll need this
 	# to update our design with source material
@@ -80,7 +80,7 @@ sub retrieve_plot_info {
         $design->{$plot_number}->{"genus"} = $genus;
     }
 
-    return $design;
+    return ($design, $verify_errors);
  }
 
 ###

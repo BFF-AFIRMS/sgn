@@ -386,12 +386,10 @@ sub generate_and_cache_layout {
     my $schema = $self->get_schema();
     my $plots_ref;
     my @plots;
-    my %verify_errors;
     my %unique_accessions;
     my %unique_controls;
     my $project = $self->get_project();
 
-    print STDERR "_get_plots\n";
     $plots_ref = $self->_get_plots();
     if (!$plots_ref) {
       print STDERR "_get_design_from_trial: not plots provided... returning.\n";
@@ -422,7 +420,7 @@ sub generate_and_cache_layout {
     my %design;
 
     #print STDERR "PLOTS: ".Dumper(\@plots);
-    my $design = $self->retrieve_plot_info(\@plots);
+    my ($design, $verify_errors) = $self->retrieve_plot_info(\@plots);
 
     #print STDERR "DESIGN IN generate_and_cache_layout: ".Dumper(\%design);
 
@@ -436,7 +434,7 @@ sub generate_and_cache_layout {
 				  });
 
     if ($self->get_verify_layout || $self->get_verify_physical_map){
-        return \%verify_errors;
+        return $verify_errors;
     }
 
     #print STDERR "DESIGN AS READ : ".Dumper(\%design);
@@ -602,11 +600,11 @@ sub retrieve_plot_info {
         # This query is a one to many join (one subplot to possibly multiple plant names and tissue samples)
         # This means we will have multiple rows for each subplot: subplot1->plant1, subplot1->plant2, etc.
         # Because of this, we check whether we have seen already seen a subplot, before pushing to arrays
-        my $subplot_ids = $design_info->{$plot_id}->{subplot_ids};
-        my $subplot_names = $design_info->{$plot_id}->{subplot_names};
-        my $index_numbers = $design_info->{$plot_id}->{subplot_index_numbers};
-        my $plant_names = $design_info->{$plot_id}->{subplots_plant_names}->{$subplot_name};
-        my $tissue_sample_names = $design_info->{$plot_id}->{subplots_tissue_sample_names}->{$subplot_name};
+        my $subplot_ids = $design_info->{$plot_id}->{subplot_ids} || [];
+        my $subplot_names = $design_info->{$plot_id}->{subplot_names} || [];
+        my $index_numbers = $design_info->{$plot_id}->{subplot_index_numbers} || [];
+        my $plant_names = $design_info->{$plot_id}->{subplots_plant_names}->{$subplot_name} || [];
+        my $tissue_sample_names = $design_info->{$plot_id}->{subplots_tissue_sample_names}->{$subplot_name} || [];
 
         if (!grep( /^$subplot_id$/, @$subplot_ids)) {
             push @{$design_info->{$plot_id}->{subplot_ids}}, $subplot_id;
@@ -627,7 +625,7 @@ sub retrieve_plot_info {
         if ($self->get_verify_layout){
             my $plot_parent_id = $parents->{$plot_id}->{id};
             if ( $plot_parent_id != $subplot_parent_id ){
-                push @{$verify_errors->{errors}->{layout_errors}}, "Subplot: subplot_name does not have the same parent: $subplot_parent_id as the plot: $plot_parent_id.";
+                push @{$verify_errors->{errors}->{layout_errors}}, "Subplot: $subplot_name does not have the same parent: $subplot_parent_id as the plot: $plot_parent_id.";
             }
         }
         # TBD: Validate that a subplot is not associated with multiple index numbers?
@@ -661,10 +659,10 @@ sub retrieve_plot_info {
         # This query is a one to many join (one plant to possibly multiple tissue samples)
         # This means we will have multiple rows for each plant: plant1->tissue1, plant2->tissue2, etc.
         # Because of this, we check whether we have seen already seen a plant, before pushing to arrays
-        my $plant_ids = $design_info->{$plot_id}->{plant_ids};
-        my $plant_names = $design_info->{$plot_id}->{plant_names};
-        my $index_numbers = $design_info->{$plot_id}->{plant_names};
-        my $tissue_sample_names = $design_info->{$plot_id}->{plants_tissue_sample_names}->{$plant_name};
+        my $plant_ids = $design_info->{$plot_id}->{plant_ids} || [];
+        my $plant_names = $design_info->{$plot_id}->{plant_names} || [];
+        my $index_numbers = $design_info->{$plot_id}->{index_numbers} || [];
+        my $tissue_sample_names = $design_info->{$plot_id}->{plants_tissue_sample_names}->{$plant_name} || [];
 
         if (!grep( /^$plant_id$/, @$plant_ids)) {
             push @{$design_info->{$plot_id}->{plant_ids}}, $plant_id;
@@ -820,7 +818,7 @@ sub retrieve_plot_info {
         # Validate required values from stockprops
         my $plot_number = $stockprops->{$plot_id}->{$plot_number_cvterm_id};
         if (!defined $plot_number){ die "no plot number stockprop found for plot: $plot_id"; }
-        my $plot_number = join(',', @$plot_number);
+        $plot_number = join(',', @$plot_number);
         $plot_ids_to_plot_numbers->{$plot_id} = $plot_number;
         $design_info->{$plot_id}->{plot_number} = $plot_number;
 
@@ -900,7 +898,7 @@ sub retrieve_plot_info {
         $final_design_info->{$plot_number} = $design_info->{$plot_id};
     }
 
-    return $final_design_info;
+    return ($final_design_info, $verify_errors);
 
 }
 
