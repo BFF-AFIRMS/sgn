@@ -842,6 +842,9 @@ sub observationunits_update {
                 return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf($message), 400);
             }
         }
+        if ($preflight_check_done) {
+            $replace_plot_accession_fieldmap->_regenerate_trial_layout_cache();
+        }
     }
 
     my $search_params = {observationUnitDbIds => \@observation_unit_db_ids };
