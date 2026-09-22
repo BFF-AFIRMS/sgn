@@ -703,30 +703,34 @@ sub observationunits_update {
     # -------------------------------------------------------------------------
     # Update stockprops in the database
 
+    my @u_stock_ids;
+    my @u_type_ids;
+    my @u_values;
+    my @u_ranks;
+
     # Compare new stockprops values to old ones to check what we need to update
-    my @stockprop_sql_values;
     foreach my $observation_unit_db_id (keys %$new_stockprops){
         foreach my $cvterm_id (keys %{$new_stockprops->{$observation_unit_db_id}}){
             my $old_stockprop_record = $old_stockprops->{$observation_unit_db_id}->{$cvterm_id};
             my $old_value = $old_stockprop_record->{value};
             my $rank = $old_stockprop_record->{rank} || 0;
             my $new_value = $new_stockprops->{$observation_unit_db_id}->{$cvterm_id}->{value};
-            # Escape single quotes for SQL
-            $new_value =~ s/'/\\'/g;
             # If the value is new or changed, add it to our upsert sql query values
             if (!defined $old_value || (defined $old_value && $new_value ne $old_value)){
-                push @stockprop_sql_values, "($observation_unit_db_id, $cvterm_id, '$new_value', $rank)";
+                push @u_stock_ids, $observation_unit_db_id;
+                push @u_type_ids, $cvterm_id;
+                push @u_values, $new_value;
+                push @u_ranks, $rank;
             }
         }
     }
 
-    # Turn our stockprops into an upsert sql statement
-    if (scalar @stockprop_sql_values > 0){
-        my $stockprop_sql_string = join(', ', @stockprop_sql_values);
-        my $q = "insert into stockprop(stock_id, type_id, value, rank) values $stockprop_sql_string
-        on conflict (stock_id, type_id, rank) do update set value = excluded.value";
+    if (scalar @u_stock_ids > 0){
+        my $q = "INSERT INTO stockprop (stock_id, type_id, value, rank)
+                 SELECT * FROM unnest(?::int[], ?::int[], ?::text[], ?::int[])
+                 ON CONFLICT (stock_id, type_id, rank) DO UPDATE SET value = excluded.value";
         my $sth = $dbh->prepare($q);
-        $sth->execute();
+        $sth->execute(\@u_stock_ids, \@u_type_ids, \@u_values, \@u_ranks);
     }
 
     # -------------------------------------------------------------------------
