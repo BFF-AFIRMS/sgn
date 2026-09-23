@@ -36,8 +36,8 @@ export const AddTrialApp: React.FC = () => {
                 .form-horizontal .control-label {
                     text-align: right;
                     margin-bottom: 0;
-                    padding-top: 7px;
-                    padding-right: 24px;
+                    padding-top: var(--padding-md);
+                    padding-right: var(--padding-sm);
                 }
                 ol.workflow-prog {
                     display: table;
