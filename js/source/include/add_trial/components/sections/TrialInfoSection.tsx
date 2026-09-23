@@ -32,10 +32,19 @@ export const TrialInfoSection: React.FC = () => {
 
     const filteredLocations = useMemo(() => {
         return serverProps.locations.filter(loc => {
-            const program = loc.properties?.Program;
-            return !program || program === formData.breedingProgram;
+            return Boolean(formData.breedingProgram && loc.properties?.Program === formData.breedingProgram);
         });
     }, [serverProps.locations, formData.breedingProgram]);
+
+    useEffect(() => {
+        if (formData.locations.length > 0) {
+            const validNames = new Set(filteredLocations.map(l => l.properties?.Name).filter(Boolean));
+            const updated = formData.locations.filter(loc => validNames.has(loc));
+            if (updated.length !== formData.locations.length) {
+                updateField('locations', updated);
+            }
+        }
+    }, [filteredLocations, formData.locations, updateField]);
 
     const availableDesignTypes = useMemo(() => {
         if (!serverProps.design_types || serverProps.design_types.length === 0) {
@@ -345,16 +354,18 @@ export const TrialInfoSection: React.FC = () => {
 
             {formData.locations.length > 1 && (
                 <div id="randomization_div" className="form-group row">
-                    <div className="col-sm-offset-3 col-sm-9">
-                        <label className="tw:font-normal">
-                            <input
-                                id="use_same_layout"
-                                type="checkbox"
-                                checked={formData.useSameLayout}
-                                onChange={e => updateField('useSameLayout', e.target.checked)}
-                            />{' '}
-                            Use same randomization for all selected locations
-                        </label>
+                    <label className="col-sm-3 control-label">Use same randomization for all locations:</label>
+                    <div className="col-sm-9">
+                        <div className="checkbox">
+                            <label className="tw:font-normal">
+                                <input
+                                    id="use_same_layout"
+                                    type="checkbox"
+                                    checked={formData.useSameLayout}
+                                    onChange={e => updateField('useSameLayout', e.target.checked)}
+                                />
+                            </label>
+                        </div>
                     </div>
                 </div>
             )}

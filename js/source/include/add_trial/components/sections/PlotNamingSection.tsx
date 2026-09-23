@@ -8,16 +8,18 @@ export const PlotNamingSection: React.FC = () => {
     return (
         <div className="tw:flex tw:flex-col tw:gap-3">
             <div className="form-group row">
-                <div className="col-sm-offset-3 col-sm-9">
-                    <label className="tw:font-normal">
-                        <input
-                            id="show_plot_naming_options"
-                            type="checkbox"
-                            checked={formData.showPlotNamingOptions}
-                            onChange={e => updateField('showPlotNamingOptions', e.target.checked)}
-                        />{' '}
-                        Custom plot naming/numbering
-                    </label>
+                <label className="col-sm-3 control-label">Custom plot naming/numbering:</label>
+                <div className="col-sm-9">
+                    <div className="checkbox">
+                        <label className="tw:font-normal">
+                            <input
+                                id="show_plot_naming_options"
+                                type="checkbox"
+                                checked={formData.showPlotNamingOptions}
+                                onChange={e => updateField('showPlotNamingOptions', e.target.checked)}
+                            />
+                        </label>
+                    </div>
                 </div>
             </div>
             {formData.showPlotNamingOptions && (
