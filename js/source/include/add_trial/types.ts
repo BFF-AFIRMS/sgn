@@ -13,6 +13,38 @@ export type DesignType =
     | 'p-rep'
     | 'Westcott';
 
+export const DESIGN_TYPE_ALIASES: Record<DesignType, string[]> = {
+    CRD: ['crd', 'completely randomized', 'completely randomized (crd)'],
+    RCBD: ['rcbd', 'complete block', 'complete block (rcbd)'],
+    RRC: ['rrc', 'resolvable row-column', 'resolvable row-column (rrc)'],
+    DRRC: ['drrc', 'doubly-resolvable row-column', 'doubly-resolvable row-column (drrc)'],
+    URDD: ['urdd', 'un-replicated diagonal design', 'un-replicated diagonal design (urdd)'],
+    Alpha: ['alpha', 'alpha lattice'],
+    Lattice: ['lattice', 'lattice (k x k)'],
+    Augmented: ['augmented'],
+    MAD: ['mad', 'modified augmented design', 'modified augmented design (mad)'],
+    greenhouse: ['greenhouse', 'nursery/greenhouse', 'nursery / greenhouse', 'nursery'],
+    splitplot: ['splitplot', 'split plot'],
+    'p-rep': ['p-rep', 'prep', 'partially replicated', 'partially replicated (p-rep)'],
+    Westcott: ['westcott']
+};
+
+export const STANDARD_DESIGN_TYPES: Array<{ value: DesignType; label: string }> = [
+    { value: 'CRD', label: 'Completely Randomized (CRD)' },
+    { value: 'RCBD', label: 'Complete Block (RCBD)' },
+    { value: 'RRC', label: 'Resolvable Row-Column (RRC)' },
+    { value: 'DRRC', label: 'Doubly-Resolvable Row-Column (DRRC)' },
+    { value: 'URDD', label: 'Un-Replicated Diagonal Design (URDD)' },
+    { value: 'Alpha', label: 'Alpha Lattice' },
+    { value: 'Lattice', label: 'Lattice (K x K)' },
+    { value: 'Augmented', label: 'Augmented' },
+    { value: 'MAD', label: 'Modified Augmented Design (MAD)' },
+    { value: 'greenhouse', label: 'Nursery / Greenhouse' },
+    { value: 'splitplot', label: 'Split Plot' },
+    { value: 'p-rep', label: 'Partially Replicated (p-rep)' },
+    { value: 'Westcott', label: 'Westcott' }
+];
+
 export type StockType = 'accession' | 'cross' | 'family_name';
 export type PlotNumberingScheme = 'block_based' | 'consecutive';
 export type PlotLayoutFormat = 'serpentine' | 'zigzag' | '';

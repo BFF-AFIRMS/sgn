@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState } from 'react';
-import { TrialFormData, ServerProps } from '../types';
+import { TrialFormData, ServerProps, DESIGN_TYPE_ALIASES, DesignType } from '../types';
 import { useFormDraft } from '../hooks/useFormDraft';
 
 export interface TrialFormContextType {
@@ -82,6 +82,23 @@ export const TrialFormProvider: React.FC<{ serverProps: ServerProps; children: R
         const initial = { ...defaultFormData };
         if (serverProps.breeding_programs?.length > 0) {
             initial.breedingProgram = serverProps.breeding_programs[0][1];
+        }
+        if (serverProps.design_types && serverProps.design_types.length > 0) {
+            const configuredLower = serverProps.design_types.map(t => t.trim().toLowerCase());
+            const aliasesForDefault = DESIGN_TYPE_ALIASES[initial.designType] || [];
+            const hasDefault = aliasesForDefault.some(a => configuredLower.includes(a));
+            if (!hasDefault) {
+                for (const raw of serverProps.design_types) {
+                    const cleanLower = raw.trim().toLowerCase();
+                    for (const [val, aliases] of Object.entries(DESIGN_TYPE_ALIASES)) {
+                        if (aliases.includes(cleanLower)) {
+                            initial.designType = val as DesignType;
+                            break;
+                        }
+                    }
+                    if (initial.designType !== defaultFormData.designType) break;
+                }
+            }
         }
         return initial;
     });
