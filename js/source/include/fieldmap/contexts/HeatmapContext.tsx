@@ -25,7 +25,7 @@ export interface HeatmapContextType {
 
 const HeatmapContext = createContext<HeatmapContextType | undefined>(undefined);
 
-export const HeatmapProvider: React.FC<FieldMapContextProps> = ({ trialId, authToken, children }) => {
+export const HeatmapProvider: React.FC<FieldMapContextProps> = ({ trialId, authToken, mode = 'full', children }) => {
 	const {
 		setLoading
 	} = useModals();
@@ -70,11 +70,14 @@ export const HeatmapProvider: React.FC<FieldMapContextProps> = ({ trialId, authT
     }, [heatmapData, selectedView]);
 
 	useEffect(() => {
-		loadVariables();
-		loadSpatialAdjustments();
-	}, [activeTrialIds]);
+		if (trialId && mode !== 'preview') {
+			loadVariables();
+			loadSpatialAdjustments();
+		}
+	}, [activeTrialIds, trialId, mode]);
 
     const fetchHeatmapObservations = useCallback(async (variableId: string, currentView?: string) => {
+        if (!trialId || mode === 'preview') return;
         setLoading(true);
         const activeView = currentView ?? selectedView;
         const headers: Record<string, string> = {};
@@ -119,6 +122,7 @@ export const HeatmapProvider: React.FC<FieldMapContextProps> = ({ trialId, authT
     }, [activeTrialIds, authToken, selectedView, spatialAdjustments, setLoading]);
 
     const loadVariables = useCallback(async () => {
+        if (!trialId || mode === 'preview') return;
         const headers: Record<string, string> = {};
         if (authToken) {
             headers['Authorization'] = `Bearer ${authToken}`;
@@ -140,6 +144,7 @@ export const HeatmapProvider: React.FC<FieldMapContextProps> = ({ trialId, authT
     }, [authToken, trialId]);
 
     const loadSpatialAdjustments = useCallback(async () => {
+        if (!trialId || mode === 'preview') return;
         try {
             const response = await fetch(`/ajax/spatial_model/retrieve_spatial_adjustments/${trialId}`);
             const body = await response.json();
