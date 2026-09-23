@@ -11,16 +11,19 @@ export const FieldMapSection: React.FC = () => {
                 Configure the spatial layout for this trial. Plot coordinates can be auto-generated in serpentine or zigzag order.
             </p>
             <div className="form-group row">
-                <div className="col-sm-offset-3 col-sm-9">
-                    <label className="tw:font-normal">
-                        <input
-                            id="show_field_map_options"
-                            type="checkbox"
-                            checked={formData.showFieldMapOptions}
-                            onChange={e => updateField('showFieldMapOptions', e.target.checked)}
-                        />{' '}
-                        Enable field layout generation
-                    </label>
+                <label className="col-sm-3 control-label">Field map display:</label>
+                <div className="col-sm-9">
+                    <div className="checkbox">
+                        <label className="tw:font-normal">
+                            <input
+                                id="show_field_map_options"
+                                type="checkbox"
+                                checked={formData.showFieldMapOptions}
+                                onChange={e => updateField('showFieldMapOptions', e.target.checked)}
+                            />{' '}
+                            Enable field layout generation
+                        </label>
+                    </div>
                 </div>
             </div>
 

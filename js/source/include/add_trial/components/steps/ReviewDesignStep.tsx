@@ -127,6 +127,7 @@ export const ReviewDesignStep: React.FC<ReviewDesignStepProps> = ({ FieldMapCont
 
             <div className="tw:flex tw:justify-center tw:my-2">
                 <button
+                    type="button"
                     id="redo_trial_layout_button"
                     className="btn btn-info btn-lg"
                     disabled={regenerating || saving}

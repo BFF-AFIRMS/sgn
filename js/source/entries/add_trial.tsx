@@ -30,7 +30,14 @@ export const AddTrialApp: React.FC = () => {
 
     return (
         <div id="trial_design_workflow" className="workflow">
+            <div className="well">
+            <form className="form-horizontal" id="create_new_trial_form" name="create_new_trial_form" onSubmit={e => e.preventDefault()}>
             <style>{`
+                .form-horizontal .control-label {
+                    text-align: right;
+                    margin-bottom: 0;
+                    padding-top: 7px;
+                }
                 ol.workflow-prog {
                     display: table;
                     table-layout: fixed;
@@ -187,6 +194,8 @@ export const AddTrialApp: React.FC = () => {
             </div>
 
             <PartialRepHelpModal show={showPrepHelp} onClose={() => setShowPrepHelp(false)} />
+            </form>
+            </div>
         </div>
     );
 };

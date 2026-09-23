@@ -38,6 +38,7 @@ export const IntroStep: React.FC = () => {
             <br /><br />
             <div className="tw:flex tw:justify-center">
                 <button
+                    type="button"
                     id="next_step_intro_button"
                     className="btn btn-primary"
                     onClick={handleNext}
