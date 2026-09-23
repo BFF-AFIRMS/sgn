@@ -8,9 +8,10 @@ import { useDownloadHeatmapImage } from '../hooks/useDownloadHeatmapImage';
 import { useSubmitFieldLayout } from '../hooks/useSubmitFieldLayout';
 
 interface FieldMapSettingsPanelProps {
+    mode?: 'full' | 'preview';
 }
 
-export const FieldMapSettingsPanel: React.FC<FieldMapSettingsPanelProps> = ({ }) => {
+export const FieldMapSettingsPanel: React.FC<FieldMapSettingsPanelProps> = ({ mode = 'full' }) => {
     const {
         transposeLayout,
         rotateLayout,
@@ -130,14 +131,20 @@ export const FieldMapSettingsPanel: React.FC<FieldMapSettingsPanelProps> = ({ })
             <div className="tw:flex tw:gap-2.5 tw:flex-wrap tw:mb-3.75 tw:w-full">
                 <button className="btn btn-default" onClick={transposeLayout} disabled={displayLinkedTrials} title="Transpose Display"><span className="glyphicon glyphicon-random"></span></button>
                 <button className="btn btn-default" onClick={rotateLayout} disabled={displayLinkedTrials} title="Rotate"><span className="glyphicon glyphicon-repeat"></span></button>
-                <button className="btn btn-default" onClick={() => setShowDimDialog(true)} disabled={displayLinkedTrials} title="Change Dimensions"><span className="glyphicon glyphicon-resize-full"></span></button>
-                <button className="btn btn-default" onClick={() => setShowSecondaryAxisModal(true)} disabled={displayLinkedTrials} title="Change Secondary Axis"><span className="glyphicon glyphicon-indent-left"></span></button>
+                {mode !== 'preview' && (
+                    <>
+                        <button className="btn btn-default" onClick={() => setShowDimDialog(true)} disabled={displayLinkedTrials} title="Change Dimensions"><span className="glyphicon glyphicon-resize-full"></span></button>
+                        <button className="btn btn-default" onClick={() => setShowSecondaryAxisModal(true)} disabled={displayLinkedTrials} title="Change Secondary Axis"><span className="glyphicon glyphicon-indent-left"></span></button>
+                    </>
+                )}
                 <button className="btn btn-default" onClick={() => setShowDownloadCSVModal(true)} title="Download Spatial Layout (CSV)"><span className="glyphicon glyphicon-save"></span></button>
                 <button className="btn btn-default" onClick={() => printFieldMap(selectedView, selectedViewLabel)} title="Print Fieldmap"><span className="glyphicon glyphicon-print"></span></button>
                 {selectedView !== 'fieldmap' && selectedView !== 'geofieldmap' && (
                     <button className="btn btn-default" onClick={() => downloadHeatmapImage()}>Download Heatmap Image</button>
                 )}
-                <button className="btn btn-success" onClick={submitFieldLayout} disabled={displayLinkedTrials}>Submit Layout Changes</button>
+                {mode !== 'preview' && (
+                    <button className="btn btn-success" onClick={submitFieldLayout} disabled={displayLinkedTrials}>Submit Layout Changes</button>
+                )}
                 {selectedView !== 'fieldmap' && selectedView !== 'geofieldmap' && (
                     <button className="btn btn-danger" onClick={() => setShowDeleteTraitModal(true)}>Delete Selected Trait</button>
                 )}
