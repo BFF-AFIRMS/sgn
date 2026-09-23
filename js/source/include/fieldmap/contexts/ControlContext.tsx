@@ -23,6 +23,7 @@ export const ControlProvider: React.FC<FieldMapContextProps> = ({ trialId, child
     const [controlAccessions, setControlAccessions] = useState<string[]>([]);
 
     useEffect(() => {
+        if (!trialId) return;
         fetch(`/ajax/breeders/trial/${trialId}/controls`)
             .then(res => res.json())
             .then(response => {
@@ -35,7 +36,11 @@ export const ControlProvider: React.FC<FieldMapContextProps> = ({ trialId, child
 
     const controlPlots = useMemo(() => {
         return plotList.filter(p => {
-            return p.type === 'data' && (p.additionalInfo?.is_a_control || (p.germplasmName && controlAccessions.includes(p.germplasmName)));
+            return p.type === 'data' && (
+                p.additionalInfo?.is_a_control ||
+                p.observationUnitPosition?.entryType === 'check' ||
+                (p.germplasmName && controlAccessions.includes(p.germplasmName))
+            );
         });
     }, [plotList, controlAccessions]);
 
