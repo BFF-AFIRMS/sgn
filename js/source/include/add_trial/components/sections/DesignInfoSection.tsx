@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useTrialForm } from '../../contexts/TrialFormContext';
 import { BreedbaseListSelect } from '../common/BreedbaseListSelect';
 import { AccessionAutocomplete } from '../../../fieldmap/components/AccessionAutocomplete';
@@ -14,26 +14,6 @@ export const DesignInfoSection: React.FC<DesignInfoSectionProps> = ({ onOpenPrep
     const { designType, stockType } = formData;
 
     const { getListElements } = useBreedbaseLists(stockType === 'cross' ? 'crosses' : stockType === 'family_name' ? 'family_names' : 'accessions');
-
-    useEffect(() => {
-        const targetStockList = formData.designType === 'p-rep' ? formData.repStockListId : formData.stockListId;
-        if (targetStockList && formData.seedlotListId) {
-            const stocks = getListElements(targetStockList);
-            const seedlots = getListElements(formData.seedlotListId);
-            if (stocks.length > 0 && seedlots.length > 0) {
-                fetch('/ajax/trial/verify_seedlot_list', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                    body: new URLSearchParams({ stock_list: JSON.stringify(stocks), seedlot_list: JSON.stringify(seedlots) }).toString()
-                })
-                    .then(res => res.json())
-                    .then(data => {
-                        if (data.seedlot_hash) updateField('seedlotHash', data.seedlot_hash);
-                    })
-                    .catch(() => {});
-            }
-        }
-    }, [formData.stockListId, formData.repStockListId, formData.seedlotListId, formData.designType, getListElements]);
 
     const listCategory = stockType === 'cross' ? 'crosses' : stockType === 'family_name' ? 'family_names' : 'accessions';
 
@@ -149,9 +129,7 @@ export const DesignInfoSection: React.FC<DesignInfoSectionProps> = ({ onOpenPrep
             )}
 
             {/* Design-specific numeric parameters */}
-            <div className="panel panel-default">
-                <div className="panel-heading"><h4 className="panel-title">Design Parameters</h4></div>
-                <div className="panel-body tw:flex tw:flex-col tw:gap-3">
+            <div className="tw:flex tw:flex-col tw:gap-3">
                     {['CRD', 'Alpha', 'Lattice', 'DRRC'].includes(designType) && (
                         <div className="form-group row">
                             <label className="col-sm-5 control-label"><span className="tw:text-red-500 tw:mr-1">*</span>Replicates:</label>
@@ -413,7 +391,7 @@ export const DesignInfoSection: React.FC<DesignInfoSectionProps> = ({ onOpenPrep
                                 </div>
                             </div>
                             {formData.stockListId && (
-                                <div className="well well-sm">
+                                <div className="tw:border tw:border-gray-200 tw:rounded tw:p-3 tw:bg-gray-50">
                                     <h5 className="tw:font-bold tw:mb-2">Custom Number of Plants per Entry:</h5>
                                     <div className="tw:max-h-48 tw:overflow-y-auto tw:space-y-2">
                                         {getListElements(formData.stockListId).map((name, i) => (
@@ -549,56 +527,6 @@ export const DesignInfoSection: React.FC<DesignInfoSectionProps> = ({ onOpenPrep
                             </div>
                         </>
                     )}
-                </div>
-            </div>
-
-            {/* Optional seedlots */}
-            <div className="well well-sm">
-                <h4 className="tw:font-bold tw:text-sm">Optional Seedlot Linking</h4>
-                <div className="form-group row">
-                    <label className="col-sm-5 control-label">Seedlot List:</label>
-                    <div className="col-sm-7">
-                        <BreedbaseListSelect
-                            id="select_seedlot_list"
-                            selectId="select_seedlot_list_list_select"
-                            listType="seedlots"
-                            value={formData.seedlotListId}
-                            onChange={id => updateField('seedlotListId', id)}
-                            placeholder="Optional seedlot list"
-                        />
-                    </div>
-                </div>
-                {formData.seedlotListId && (
-                    <div className="form-group row">
-                        <label className="col-sm-5 control-label">Seeds per Plot:</label>
-                        <div className="col-sm-7">
-                            <input
-                                id="num_seed_per_plot"
-                                name="num_seed_per_plot"
-                                type="number"
-                                className="form-control"
-                                value={formData.numSeedPerPlot}
-                                onChange={e => updateField('numSeedPerPlot', e.target.value)}
-                            />
-                        </div>
-                    </div>
-                )}
-                <div className="tw:text-center tw:mt-2">
-                    <button
-                        type="button"
-                        name="convert_accessions_to_seedlots"
-                        className="btn btn-default btn-sm"
-                        onClick={() => {
-                            if (!formData.stockListId) {
-                                alert('Please first select a list of accessions above!');
-                            } else {
-                                (window as any).CXGN?.List && new (window as any).CXGN.List().seedlotSearch(formData.stockListId);
-                            }
-                        }}
-                    >
-                        Search Seedlots for Accessions
-                    </button>
-                </div>
             </div>
         </div>
     );
