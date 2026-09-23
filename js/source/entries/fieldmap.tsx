@@ -36,6 +36,7 @@ const FieldMap: React.FC<FieldMapProps> = ({
     hasColAndRowNumbers,
     hasSubplotEntries,
     hasPlantEntries,
+    mode = 'full'
 }) => {
     const { hasSecondaryAxis } = useLayoutConfig();
     const offsetX = hasSecondaryAxis ? 80 : 50;
@@ -82,15 +83,19 @@ const FieldMap: React.FC<FieldMapProps> = ({
 
     return (
         <div className="tw:p-3.75">
-            <FieldMapHeaderPanel />
-            <FieldMapControlPanel />
+            {mode !== 'preview' && (
+                <>
+                    <FieldMapHeaderPanel />
+                    <FieldMapControlPanel />
+                </>
+            )}
 
             {selectedView === 'geofieldmap' ? (
                 <GeoFieldMap />
             ) : (
                 <div key="standard-fieldmap-panel" className="panel panel-default">
                     <div className="panel-body tw:grid">
-                        <FieldMapSettingsPanel />
+                        <FieldMapSettingsPanel mode={mode} />
 
                         <div
                             ref={containerRef}
@@ -126,16 +131,20 @@ const FieldMap: React.FC<FieldMapProps> = ({
             <FieldMapLegend />
 
             <DownloadCSVModal />
-            <DeleteTraitModal />
-            <DimensionsModal />
-            <PlotDetailsModal />
-            <SecondaryAxisModal />
+            {mode !== 'preview' && (
+                <>
+                    <DeleteTraitModal />
+                    <DimensionsModal />
+                    <PlotDetailsModal />
+                    <SecondaryAxisModal />
 
-            <DownloadPlotOrderPanel
-                hasColAndRowNumbers={hasColAndRowNumbers}
-                hasSubplotEntries={hasSubplotEntries}
-                hasPlantEntries={hasPlantEntries}
-            />
+                    <DownloadPlotOrderPanel
+                        hasColAndRowNumbers={hasColAndRowNumbers}
+                        hasSubplotEntries={hasSubplotEntries}
+                        hasPlantEntries={hasPlantEntries}
+                    />
+                </>
+            )}
         </div>
     );
 };
