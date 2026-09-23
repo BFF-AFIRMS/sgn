@@ -105,8 +105,8 @@ export const DesignInfoSection: React.FC<DesignInfoSectionProps> = ({ onOpenPrep
                         </label>
                         <div className="col-sm-7">
                             <BreedbaseListSelect
-                                id="select_list"
-                                selectId="select_list_list_select"
+                                id={stockListDivId}
+                                selectId={stockListSelectId}
                                 listType={listCategory}
                                 value={formData.stockListId}
                                 onChange={id => updateField('stockListId', id)}
@@ -120,8 +120,8 @@ export const DesignInfoSection: React.FC<DesignInfoSectionProps> = ({ onOpenPrep
                             </label>
                             <div className="col-sm-7">
                                 <BreedbaseListSelect
-                                    id="list_of_checks_section"
-                                    selectId="list_of_checks_section_list_select"
+                                    id={checkDivId}
+                                    selectId={checkSelectId}
                                     listType="accessions"
                                     value={formData.controlListId}
                                     onChange={id => updateField('controlListId', id)}
@@ -135,8 +135,8 @@ export const DesignInfoSection: React.FC<DesignInfoSectionProps> = ({ onOpenPrep
                             <label className="col-sm-5 control-label">Optional Checks List:</label>
                             <div className="col-sm-7">
                                 <BreedbaseListSelect
-                                    id="crbd_list_of_checks_section"
-                                    selectId="crbd_list_of_checks_section_list_select"
+                                    id={crbdCheckDivId}
+                                    selectId={crbdCheckSelectId}
                                     listType="accessions"
                                     value={formData.crbdControlListId}
                                     onChange={id => updateField('crbdControlListId', id)}
@@ -355,33 +355,11 @@ export const DesignInfoSection: React.FC<DesignInfoSectionProps> = ({ onOpenPrep
                     {designType === 'p-rep' && (
                         <>
                             <div className="form-group row">
-                                <label className="col-sm-5 control-label">Rows in Design:</label>
+                                <label className="col-sm-5 control-label">Replication Factor for Replicated Entries:</label>
                                 <div className="col-sm-7">
                                     <input
                                         id="no_of_rep_times"
                                         name="no_of_rep_times"
-                                        type="number"
-                                        className="form-control"
-                                        value={formData.rowInDesignNumber}
-                                        onChange={e => updateField('rowInDesignNumber', e.target.value)}
-                                    />
-                                </div>
-                            </div>
-                            <div className="form-group row">
-                                <label className="col-sm-5 control-label">Columns in Design:</label>
-                                <div className="col-sm-7">
-                                    <input
-                                        type="number"
-                                        className="form-control"
-                                        value={formData.colInDesignNumber}
-                                        onChange={e => updateField('colInDesignNumber', e.target.value)}
-                                    />
-                                </div>
-                            </div>
-                            <div className="form-group row">
-                                <label className="col-sm-5 control-label">Replication Factor for Replicated Entries:</label>
-                                <div className="col-sm-7">
-                                    <input
                                         type="number"
                                         className="form-control"
                                         value={formData.noOfRepTimes}

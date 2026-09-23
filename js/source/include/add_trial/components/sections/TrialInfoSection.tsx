@@ -1,22 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useTrialForm } from '../../contexts/TrialFormContext';
-import { DesignType, StockType } from '../../types';
-
-const STANDARD_DESIGN_TYPES: Array<{ value: DesignType; label: string }> = [
-    { value: 'RCBD', label: 'Complete Block (RCBD)' },
-    { value: 'CRD', label: 'Completely Randomized (CRD)' },
-    { value: 'Alpha', label: 'Alpha Lattice' },
-    { value: 'Lattice', label: 'Lattice (K x K)' },
-    { value: 'Augmented', label: 'Augmented' },
-    { value: 'MAD', label: 'Modified Augmented Design (MAD)' },
-    { value: 'RRC', label: 'Resolvable Row-Column (RRC)' },
-    { value: 'DRRC', label: 'Doubly-Resolvable Row-Column (DRRC)' },
-    { value: 'URDD', label: 'Un-Replicated Diagonal Design (URDD)' },
-    { value: 'p-rep', label: 'Partially Replicated (p-rep)' },
-    { value: 'splitplot', label: 'Split Plot' },
-    { value: 'greenhouse', label: 'Nursery / Greenhouse' },
-    { value: 'Westcott', label: 'Westcott' }
-];
+import { DESIGN_TYPE_ALIASES, STANDARD_DESIGN_TYPES, DesignType, StockType } from '../../types';
 
 export const TrialInfoSection: React.FC = () => {
     const { formData, updateField, serverProps } = useTrialForm();
@@ -57,10 +41,28 @@ export const TrialInfoSection: React.FC = () => {
         if (!serverProps.design_types || serverProps.design_types.length === 0) {
             return STANDARD_DESIGN_TYPES;
         }
-        return STANDARD_DESIGN_TYPES.filter(d =>
-            serverProps.design_types!.includes(d.value) || serverProps.design_types!.includes(d.label)
-        );
+        const seen = new Set<DesignType>();
+        const ordered: Array<{ value: DesignType; label: string }> = [];
+
+        for (const raw of serverProps.design_types) {
+            const cleanLower = raw.trim().toLowerCase();
+            const standardItem = STANDARD_DESIGN_TYPES.find(d => {
+                const aliases = DESIGN_TYPE_ALIASES[d.value] || [d.value.toLowerCase(), d.label.toLowerCase()];
+                return aliases.includes(cleanLower);
+            });
+            if (standardItem && !seen.has(standardItem.value)) {
+                seen.add(standardItem.value);
+                ordered.push(standardItem);
+            }
+        }
+        return ordered.length > 0 ? ordered : STANDARD_DESIGN_TYPES;
     }, [serverProps.design_types]);
+
+    useEffect(() => {
+        if (availableDesignTypes.length > 0 && !availableDesignTypes.some(d => d.value === formData.designType)) {
+            updateField('designType', availableDesignTypes[0].value);
+        }
+    }, [availableDesignTypes, formData.designType, updateField]);
 
     return (
         <div className="tw:flex tw:flex-col tw:gap-3.5">
@@ -335,7 +337,7 @@ export const TrialInfoSection: React.FC = () => {
                         onChange={e => updateField('designType', e.target.value as DesignType)}
                     >
                         {availableDesignTypes.map(d => (
-                            <option key={d.value} value={d.value}>{d.label}</option>
+                            <option key={d.value} value={d.value} title={d.label}>{d.label}</option>
                         ))}
                     </select>
                 </div>
