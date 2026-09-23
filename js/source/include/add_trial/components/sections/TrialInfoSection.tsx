@@ -139,7 +139,7 @@ export const TrialInfoSection: React.FC = () => {
                         value={formData.trialName}
                         onChange={e => updateField('trialName', e.target.value)}
                     />
-                    <p className="tw:text-xs tw:text-gray-500 tw:mt-1">
+                    <p className="tw:text-gray-500 tw:mt-1">
                         <em>Location abbreviation will automatically be appended if multiple locations are selected.</em>
                     </p>
                 </div>
@@ -198,7 +198,7 @@ export const TrialInfoSection: React.FC = () => {
                 <label className="col-sm-3 control-label">Plot Dimensions (m):</label>
                 <div className="col-sm-9 tw:flex tw:gap-4">
                     <div className="tw:flex-1">
-                        <label className="tw:text-xs">Width (m):</label>
+                        <label>Width (m):</label>
                         <input
                             id="add_project_plot_width"
                             name="add_project_plot_width"
@@ -211,7 +211,7 @@ export const TrialInfoSection: React.FC = () => {
                         />
                     </div>
                     <div className="tw:flex-1">
-                        <label className="tw:text-xs">Length (m):</label>
+                        <label>Length (m):</label>
                         <input
                             id="add_project_plot_length"
                             name="add_project_plot_length"
@@ -224,7 +224,7 @@ export const TrialInfoSection: React.FC = () => {
                         />
                     </div>
                     <div className="tw:flex-1">
-                        <label className="tw:text-xs">Field Size (ha):</label>
+                        <label>Field Size (ha):</label>
                         <input
                             id="new_trial_field_size"
                             name="new_trial_field_size"
@@ -273,7 +273,7 @@ export const TrialInfoSection: React.FC = () => {
                     {formData.assignRowColToPlants && (
                         <div className="well well-sm tw:mt-2 tw:flex tw:gap-4">
                             <div>
-                                <label className="tw:text-xs">Rows per Plot:</label>
+                                <label>Rows per Plot:</label>
                                 <input
                                     id="trial_create_rows_per_plot"
                                     type="number"
@@ -283,7 +283,7 @@ export const TrialInfoSection: React.FC = () => {
                                 />
                             </div>
                             <div>
-                                <label className="tw:text-xs">Columns per Plot:</label>
+                                <label>Columns per Plot:</label>
                                 <input
                                     id="trial_create_cols_per_plot"
                                     type="number"
