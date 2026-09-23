@@ -396,7 +396,7 @@ export const DesignInfoSection: React.FC<DesignInfoSectionProps> = ({ onOpenPrep
                                     <div className="tw:max-h-48 tw:overflow-y-auto tw:space-y-2">
                                         {getListElements(formData.stockListId).map((name, i) => (
                                             <div key={name} className="tw:flex tw:items-center tw:gap-2">
-                                                <label className="tw:flex-1 tw:text-xs tw:truncate">{name}</label>
+                                                <label className="tw:flex-1 tw:truncate tw:mr-2">{name}</label>
                                                 <input
                                                     id={`greenhouse_num_plants_input_${i}`}
                                                     type="number"
