@@ -87,7 +87,7 @@ export const ReviewDesignStep: React.FC<ReviewDesignStepProps> = ({ FieldMapCont
 
             {formData.locations.length > 1 && (
                 <div className="tw:flex tw:items-center tw:gap-3">
-                    <label className="tw:font-bold">Select Location Preview:</label>
+                    <label className="tw:font-bold tw:mr-2">Select Location Preview:</label>
                     <select
                         className="form-control tw:w-auto"
                         value={selectedLocationIndex}
