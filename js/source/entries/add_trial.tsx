@@ -37,6 +37,7 @@ export const AddTrialApp: React.FC = () => {
                     text-align: right;
                     margin-bottom: 0;
                     padding-top: 7px;
+                    padding-right: 24px;
                 }
                 ol.workflow-prog {
                     display: table;
