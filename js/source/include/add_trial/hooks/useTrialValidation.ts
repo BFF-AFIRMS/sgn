@@ -199,49 +199,6 @@ export const useTrialValidation = () => {
             }
         }
 
-        if (form.designType === 'p-rep') {
-            if (!form.unrepStockListId || !form.repStockListId) {
-                return { valid: false, error: 'Please select unreplicated and replicated stock lists for p-rep design.' };
-            }
-            const rep = getListElements(form.repStockListId);
-            const unrep = getListElements(form.unrepStockListId);
-            if (rep.length === 0 || unrep.length === 0) {
-                return { valid: false, error: 'Selected replicated or unreplicated list has no entries.' };
-            }
-            const rows = parseInt(form.rowInDesignNumber || '0', 10);
-            const cols = parseInt(form.colInDesignNumber || '0', 10);
-            const repTimes = parseInt(form.noOfRepTimes || '0', 10);
-            if (rows * cols !== (unrep.length + rep.length * repTimes)) {
-                return { valid: false, error: 'Treatment repeats do not equal total plots (rows × columns) in design.' };
-            }
-        } else {
-            if (!form.stockListId) {
-                return { valid: false, error: 'Please select a list of stocks to include in the trial.' };
-            }
-            const elements = getListElements(form.stockListId);
-            if (elements.length === 0) {
-                return { valid: false, error: 'Selected stock list contains no items.' };
-            }
-        }
-
-        if (form.designType === 'Westcott') {
-            if (!form.westcottCheck1.trim() || !form.westcottCheck2.trim()) {
-                return { valid: false, error: 'Westcott design requires Check 1 and Check 2.' };
-            }
-            if (!form.westcottCol || parseInt(form.westcottCol, 10) < 1) {
-                return { valid: false, error: 'Please provide number of columns for Westcott design.' };
-            }
-        }
-
-        if (form.designType === 'splitplot') {
-            if (!form.treatments || form.treatments.length === 0 || !form.treatments[0].name.trim()) {
-                return { valid: false, error: 'Please provide at least one treatment for splitplot design.' };
-            }
-            if (!form.numPlantsPerTreatment || parseInt(form.numPlantsPerTreatment, 10) < 1) {
-                return { valid: false, error: 'Please provide number of plants per treatment for splitplot design.' };
-            }
-        }
-
         return { valid: true };
     }, []);
 
