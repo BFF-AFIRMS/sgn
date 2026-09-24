@@ -1,10 +1,13 @@
 export interface FieldMapProps {
-    trialId: string;
+    trialId?: string;
     trialStockType: string;
+    trialPlotType: string;
     hasColAndRowNumbers: boolean;
     hasSubplotEntries: boolean;
     hasPlantEntries: boolean;
     authToken?: string;
+    initialUnits?: any[];
+    mode?: 'full' | 'preview';
 }
 
 export interface FieldMapContextProps extends FieldMapProps {

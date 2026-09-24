@@ -68,10 +68,14 @@ $user_can_modify
 			<div class="form-group">
 				<label for="raw_data_observation_level">Observation Level:</label>
 				<select class="form-control" id="raw_data_observation_level">
+%  if ($trial_stock_type eq 'analysis_instance') {
+					<option value="analysis_instance">Values for Analysis</option>
+% } else {
 					<option value="plot">Plots</option>
 					<option value="plant">Plants</option>
 					<option value="subplot">Subplots</option>
 					<option value="tissue_sample">Tissue samples</option>
+% }
 	      		</select>
 			</div>
 	    </td>
@@ -372,6 +376,7 @@ jQuery(window).ready( function() {
 
     function displayRawObservations(result) {
   		var data = [];
+  		const tzOffset = (new Date()).getTimezoneOffset() * 60000;
 
     	for (var i = 0; i < result.data.length; i++) {
     	    var observationDate = result.data[i].observationTimeStamp;
@@ -381,7 +386,8 @@ jQuery(window).ready( function() {
     	    if (observationDate) {
     	        try {
     	            // format the date (YYYY-MM-DD)
-    	            formattedDate = new Date(observationDate).toISOString().split('T')[0];
+    	            observationDate = new Date(observationDate);
+    	            formattedDate = new Date(observationDate  - tzOffset).toISOString().split('T')[0];
     	        } catch (e) {
     	            formattedDate = "";
     	        }

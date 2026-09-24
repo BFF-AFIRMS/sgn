@@ -508,6 +508,9 @@ Forms
     white-space: break-spaces;
 }
 
+.static-form-value-cell {
+    text-wrap: wrap;
+}
 
 
 /*
@@ -561,7 +564,7 @@ div.infosectioncontent {
 }
 
 td.infosectionsubtitle {
-    text-align: left;
+    text-align: right;
     padding-left: 22px;
     text-wrap: auto;
     display: inline-block;
@@ -735,6 +738,19 @@ Miscellaneous
         padding-left: 0px;
         padding-top: var(--padding-xl);
     }
+}
+
+.stock-image-cell {
+    display: flex;
+    flex-direction: column;
+}
+
+.stock-image-description-cell {
+    padding-left: var(--padding-lg);
+}
+
+.stock-image {
+    max-width: 120px;
 }
 
 /*

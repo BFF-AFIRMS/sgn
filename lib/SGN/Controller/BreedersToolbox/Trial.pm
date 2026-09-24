@@ -83,8 +83,8 @@ sub trial_create_page : Path('/breeders/trial/create') Args(0) {
     my $field_management_factors = $c->config->{management_factor_types};
     my @management_factor_types = split ',', $field_management_factors;
 
-    my $design_types_cfg = $c->config->{design_types};
-    my @design_types = split ',', $design_types_cfg;
+    my $design_types_cfg = $c->config->{design_types} || '';
+    my @design_types = map { s/^\s+|\s+$//gr } split ',', $design_types_cfg;
 
     $c->stash->{locations} = $locations;
     $c->stash->{breeding_programs} = $breeding_programs;
@@ -490,6 +490,7 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
         my @management_factor_types = split ',',$field_management_factors;
         $c->stash->{management_factor_types} = \@management_factor_types;
         $c->stash->{trial_stock_type} = $trial->get_trial_stock_type();
+        $c->stash->{trial_plot_type} = $trial->get_trial_plot_type();
 	$c->stash->{trial_stock_count} = $trial->get_trial_stock_count();
         $c->stash->{template} = '/breeders_toolbox/trial.mas';
     }
