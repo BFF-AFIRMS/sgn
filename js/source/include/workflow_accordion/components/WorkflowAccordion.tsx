@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { AccordionWorkflowStep, WorkflowAccordionProps } from './types';
+import { AccordionWorkflowStep, WorkflowAccordionProps } from '../types';
 import { AccordionPanelContent } from './AccordionPanelContent';
 
 export const evaluateAccordionSync = (steps: AccordionWorkflowStep[]): {
