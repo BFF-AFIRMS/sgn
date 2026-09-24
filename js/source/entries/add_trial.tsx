@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { FieldMapContainer } from './fieldmap';
 import { ServerProps } from '../include/add_trial/types';
-import { WorkflowPaged, WorkflowPagedProvider, useWorkflowPaged } from '../include/workflow-paged';
+import { WorkflowPaged, WorkflowPagedStepHelpers } from '../include/workflow-paged';
 import { TrialFormProvider } from '../include/add_trial/contexts/TrialFormContext';
 import { DesignResultProvider } from '../include/add_trial/contexts/DesignResultContext';
 import { IntroStep } from '../include/add_trial/components/steps/IntroStep';
@@ -12,29 +12,32 @@ import { CompleteStep } from '../include/add_trial/components/steps/CompleteStep
 import { PartialRepHelpModal } from '../include/add_trial/modals/PartialRepHelpModal';
 
 export const AddTrialApp: React.FC = () => {
-    const { currentStep } = useWorkflowPaged();
     const [showPrepHelp, setShowPrepHelp] = useState(false);
 
     const steps = [
         {
             id: 'intro',
             title: 'Intro',
-            content: currentStep === 0 ? <IntroStep /> : null
+            content: ({ next }: WorkflowPagedStepHelpers) => <IntroStep onNext={next} />
         },
         {
             id: 'details',
             title: 'Trial Design Details',
-            content: currentStep === 1 ? <DesignDetailsStep onOpenPrepHelp={() => setShowPrepHelp(true)} /> : null
+            content: ({ next }: WorkflowPagedStepHelpers) => (
+                <DesignDetailsStep onOpenPrepHelp={() => setShowPrepHelp(true)} onSuccess={next} />
+            )
         },
         {
             id: 'review',
             title: 'Review Designed Trial',
-            content: currentStep === 2 ? <ReviewDesignStep FieldMapContainer={FieldMapContainer} /> : null
+            content: ({ next }: WorkflowPagedStepHelpers) => (
+                <ReviewDesignStep FieldMapContainer={FieldMapContainer} onSuccess={next} />
+            )
         },
         {
             id: 'complete',
             title: 'Complete',
-            content: currentStep === 3 ? <CompleteStep /> : null
+            content: <CompleteStep />
         }
     ];
 
@@ -63,13 +66,11 @@ export const AddTrialApp: React.FC = () => {
 
 export const AddTrialContainer: React.FC<ServerProps> = (props) => {
     return (
-        <WorkflowPagedProvider>
-            <TrialFormProvider serverProps={props}>
-                <DesignResultProvider>
-                    <AddTrialApp />
-                </DesignResultProvider>
-            </TrialFormProvider>
-        </WorkflowPagedProvider>
+        <TrialFormProvider serverProps={props}>
+            <DesignResultProvider>
+                <AddTrialApp />
+            </DesignResultProvider>
+        </TrialFormProvider>
     );
 };
 
