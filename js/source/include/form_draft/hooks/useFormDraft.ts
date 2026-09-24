@@ -1,5 +1,4 @@
-import { useEffect, useCallback, useRef, useState, useMemo } from 'react';
-import { TrialFormData } from '../../add_trial/types';
+import { useEffect, useCallback, useState, useMemo } from 'react';
 import { DraftData } from '../types';
 
 const MAX_DRAFTS = 10;
@@ -54,43 +53,43 @@ export const initDraftId = (paramName: string = 'draft_id'): string => {
     }
 };
 
-export const useFormDraft = (
-    formData: TrialFormData,
-    setFormData: React.Dispatch<React.SetStateAction<TrialFormData>>
+export const useFormDraft = <T extends Record<string, any>>(
+    initialValues: T | (() => T)
 ) => {
     const [draftId] = useState<string>(() => initDraftId('draft_id'));
-    const [maxStep, setMaxStep] = useState<number>(0);
-    const [isRestored, setIsRestored] = useState(false);
-
     const draftKey = useMemo(() => `${DRAFT_PREFIX}${draftId}`, [draftId]);
 
-    useEffect(() => {
+    const savedDraft = useMemo(() => {
+        if (typeof window === 'undefined' || !window.localStorage) return null;
         try {
             const saved = localStorage.getItem(draftKey);
             if (saved) {
                 const parsed = JSON.parse(saved);
                 if (parsed && typeof parsed === 'object') {
-                    const data = (parsed.data && typeof parsed.data === 'object') ? parsed.data : parsed;
-                    setFormData(prev => ({ ...prev, ...data }));
-                    if (typeof parsed.max_step === 'number') {
-                        setMaxStep(parsed.max_step);
-                    }
+                    return parsed as DraftData<T>;
                 }
             }
         } catch (e) {
-            console.warn('Could not restore trial creation form draft', e);
-        } finally {
-            setIsRestored(true);
+            console.warn('Could not restore form draft from localStorage', e);
         }
-    }, [draftKey, setFormData]);
+        return null;
+    }, [draftKey]);
+
+    const [formData, setFormData] = useState<T>(() => {
+        const defaults = typeof initialValues === 'function' ? initialValues() : initialValues;
+        if (savedDraft?.data && typeof savedDraft.data === 'object') {
+            return { ...defaults, ...savedDraft.data };
+        }
+        return defaults;
+    });
+
+    const [maxStep, setMaxStep] = useState<number>(() => {
+        return typeof savedDraft?.max_step === 'number' ? savedDraft.max_step : 0;
+    });
 
     useEffect(() => {
-        if (!isRestored) {
-            return;
-        }
-
         try {
-            const draftData: DraftData<TrialFormData> = {
+            const draftData: DraftData<T> = {
                 last_modified: Date.now(),
                 max_step: maxStep,
                 data: formData
@@ -98,7 +97,7 @@ export const useFormDraft = (
             localStorage.setItem(draftKey, JSON.stringify(draftData));
             cleanupOldDrafts();
         } catch {}
-    }, [formData, maxStep, draftKey, isRestored]);
+    }, [formData, maxStep, draftKey]);
 
     const clearDraft = useCallback(() => {
         try {
@@ -106,5 +105,5 @@ export const useFormDraft = (
         } catch {}
     }, [draftKey]);
 
-    return { clearDraft, draftId, maxStep, setMaxStep };
+    return { formData, setFormData, clearDraft, draftId, maxStep, setMaxStep };
 };
