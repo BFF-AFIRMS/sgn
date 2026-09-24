@@ -4,6 +4,8 @@
   (global.GraphicalFilter = factory());
 }(this, (function () { 'use strict';
 
+const MISSING_DATA_SYMBOL = 'N/A';
+
 function GraphicalFilter(brapi_node,trait_accessor,table_col_accessor,table_col_order,group_key_accessor){
   "use strict";
   
@@ -77,11 +79,12 @@ function GraphicalFilter(brapi_node,trait_accessor,table_col_accessor,table_col_
       arr.forEach(function(d){
         for (var key in d.traits) {
           if (d.traits.hasOwnProperty(key)) {
-            if(grouped.traits[key]){
-              grouped.traits[key]+= +d.traits[key];
+            const trait = d.traits[key];
+            if(grouped.traits[key] && grouped.traits[key] !== MISSING_DATA_SYMBOL){
+              grouped.traits[key]+= +trait;
               trait_counts[key]+=1;
             } else {
-              grouped.traits[key] = +d.traits[key];
+              grouped.traits[key] = trait !== null ? +trait : MISSING_DATA_SYMBOL;
               trait_counts[key] = 1;
             }
           }
@@ -89,7 +92,11 @@ function GraphicalFilter(brapi_node,trait_accessor,table_col_accessor,table_col_
       });
       for (var key in grouped.traits) {
         if (grouped.traits.hasOwnProperty(key)) {
-          grouped.traits[key] = grouped.traits[key]/trait_counts[key];
+          const trait = grouped.traits[key];
+          if (trait === MISSING_DATA_SYMBOL) {
+            continue;
+          }
+          grouped.traits[key] = trait/trait_counts[key];
         }
       }
       return grouped;
