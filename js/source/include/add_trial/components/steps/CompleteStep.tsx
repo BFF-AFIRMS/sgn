@@ -23,7 +23,6 @@ export const CompleteStep: React.FC = () => {
                 {savedTrialId && (
                     <a
                         id="create_trial_success_complete_button"
-                        name="create_trial_success_complete_button"
                         href={`/breeders/trial/${savedTrialId}`}
                         className="btn btn-primary"
                     >
