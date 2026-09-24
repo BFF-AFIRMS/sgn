@@ -14,9 +14,10 @@ import { WorkflowAccordion, evaluateAccordionSync } from '../../../workflow-acco
 interface DesignDetailsStepProps {
     onOpenPrepHelp: () => void;
     onSuccess: () => void;
+    onLockForward?: () => void;
 }
 
-export const DesignDetailsStep: React.FC<DesignDetailsStepProps> = ({ onOpenPrepHelp, onSuccess }) => {
+export const DesignDetailsStep: React.FC<DesignDetailsStepProps> = ({ onOpenPrepHelp, onSuccess, onLockForward }) => {
     const { formData } = useTrialForm();
     const { setResult } = useDesignResult();
     const { validateTrialInfo, validateDesignInfo } = useTrialValidation();
@@ -90,7 +91,11 @@ export const DesignDetailsStep: React.FC<DesignDetailsStepProps> = ({ onOpenPrep
     };
 
     return (
-        <div className="tw:flex tw:flex-col tw:gap-4 tw:p-4">
+        <div
+            className="tw:flex tw:flex-col tw:gap-4 tw:p-4"
+            onInput={onLockForward}
+            onChange={onLockForward}
+        >
             <div className="page_title">
                 <h3 className="tw:font-bold tw:text-lg">Enter trial details and design options</h3>
             </div>
