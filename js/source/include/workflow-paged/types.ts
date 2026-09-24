@@ -1,6 +1,6 @@
 import React from 'react';
 
-export interface WorkflowPagedStepHelpers {
+export interface WorkflowPagedStepController {
     next: () => void;
     prev: () => void;
     goTo: (step: number) => void;
@@ -10,7 +10,7 @@ export interface WorkflowPagedStepHelpers {
 export interface WorkflowPagedStep {
     id?: string;
     title: string;
-    content?: React.ReactNode | ((helpers: WorkflowPagedStepHelpers) => React.ReactNode);
+    content?: React.ReactNode | ((controller: WorkflowPagedStepController) => React.ReactNode);
 }
 
 export interface WorkflowPagedProps {
