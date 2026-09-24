@@ -17,6 +17,8 @@ export interface WorkflowPagedProps {
     id?: string;
     steps: WorkflowPagedStep[];
     initialStep?: number;
+    urlParam?: string | boolean;
+    onStepChange?: (stepIndex: number, step: WorkflowPagedStep) => void;
     className?: string;
     children?: React.ReactNode;
 }
