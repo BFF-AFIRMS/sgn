@@ -9,7 +9,7 @@ import { TrialLinkageSection } from '../sections/TrialLinkageSection';
 import { FieldMapSection } from '../sections/FieldMapSection';
 import { PlotNamingSection } from '../sections/PlotNamingSection';
 import { useBreedbaseLists } from '../../hooks/useBreedbaseLists';
-import { WorkflowAccordion, evaluateAccordionSync } from '../../../workflow-accordion';
+import { WorkflowAccordion, evaluateAccordionSync } from '../../../workflow_accordion';
 
 interface DesignDetailsStepProps {
     onOpenPrepHelp: () => void;
