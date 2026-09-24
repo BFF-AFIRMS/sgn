@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 
+export interface AccordionPanelContentProps {
     id: string;
     isOpen: boolean;
     children: React.ReactNode;

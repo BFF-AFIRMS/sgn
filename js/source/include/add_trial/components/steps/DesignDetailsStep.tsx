@@ -1,5 +1,4 @@
 import React, { useState, useMemo } from 'react';
-import { useWizard } from '../../contexts/WizardContext';
 import { useTrialForm } from '../../contexts/TrialFormContext';
 import { useDesignResult } from '../../contexts/DesignResultContext';
 import { useTrialValidation, validateTrialInfoSync, validateDesignInfoSync } from '../../hooks/useTrialValidation';
@@ -14,10 +13,10 @@ import { WorkflowAccordion, evaluateAccordionSync } from '../../../workflow-acco
 
 interface DesignDetailsStepProps {
     onOpenPrepHelp: () => void;
+    onSuccess: () => void;
 }
 
-export const DesignDetailsStep: React.FC<DesignDetailsStepProps> = ({ onOpenPrepHelp }) => {
-    const { setCurrentStep, markStepComplete } = useWizard();
+export const DesignDetailsStep: React.FC<DesignDetailsStepProps> = ({ onOpenPrepHelp, onSuccess }) => {
     const { formData } = useTrialForm();
     const { setResult } = useDesignResult();
     const { validateTrialInfo, validateDesignInfo } = useTrialValidation();
@@ -86,8 +85,7 @@ export const DesignDetailsStep: React.FC<DesignDetailsStepProps> = ({ onOpenPrep
         }
         if (generated) {
             setResult(generated);
-            markStepComplete(1);
-            setCurrentStep(2);
+            onSuccess();
         }
     };
 
