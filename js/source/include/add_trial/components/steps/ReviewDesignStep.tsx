@@ -1,5 +1,4 @@
 import React, { useMemo } from 'react';
-import { useWizard } from '../../contexts/WizardContext';
 import { useTrialForm } from '../../contexts/TrialFormContext';
 import { useDesignResult } from '../../contexts/DesignResultContext';
 import { useDesignGenerator } from '../../hooks/useDesignGenerator';
@@ -10,10 +9,10 @@ import { FieldMapProps } from '../../../fieldmap/types';
 
 interface ReviewDesignStepProps {
     FieldMapContainer: React.ComponentType<FieldMapProps>;
+    onSuccess: () => void;
 }
 
-export const ReviewDesignStep: React.FC<ReviewDesignStepProps> = ({ FieldMapContainer }) => {
-    const { setCurrentStep, markStepComplete } = useWizard();
+export const ReviewDesignStep: React.FC<ReviewDesignStepProps> = ({ FieldMapContainer, onSuccess }) => {
     const { formData, clearDraft } = useTrialForm();
     const {
         result,
@@ -50,8 +49,7 @@ export const ReviewDesignStep: React.FC<ReviewDesignStepProps> = ({ FieldMapCont
         if (res.success && res.trialId) {
             clearDraft();
             setSavedTrialId(res.trialId);
-            markStepComplete(2);
-            setCurrentStep(3);
+            onSuccess();
         }
     };
 
