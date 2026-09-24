@@ -1,8 +1,8 @@
-import { useEffect, useCallback, useRef, useState } from 'react';
+import { useEffect, useCallback, useRef, useState, useMemo } from 'react';
 import { TrialFormData } from '../types';
 
 const MAX_DRAFTS = 10;
-export const DEFAULT_DRAFT_PREFIX = 'trial_create_form_state_';
+const DRAFT_PREFIX = 'form_draft';
 
 export interface DraftData<T = TrialFormData> {
     last_modified: number;
@@ -10,18 +10,13 @@ export interface DraftData<T = TrialFormData> {
     data: T;
 }
 
-export interface UseFormDraftOptions {
-    prefix?: string;
-    maxDrafts?: number;
-}
-
-export const cleanupOldDrafts = (prefix: string, maxDrafts: number = MAX_DRAFTS): void => {
+export const cleanupOldDrafts = (): void => {
     if (typeof window === 'undefined' || !window.localStorage) return;
     try {
         const drafts: { key: string; lastModified: number }[] = [];
         for (let i = 0; i < localStorage.length; i++) {
             const key = localStorage.key(i);
-            if (key && key.startsWith(prefix)) {
+            if (key && key.startsWith(DRAFT_PREFIX)) {
                 let lastModified = 0;
                 try {
                     const itemStr = localStorage.getItem(key);
@@ -37,9 +32,9 @@ export const cleanupOldDrafts = (prefix: string, maxDrafts: number = MAX_DRAFTS)
                 drafts.push({ key, lastModified });
             }
         }
-        if (drafts.length > maxDrafts) {
+        if (drafts.length > MAX_DRAFTS) {
             drafts.sort((a, b) => b.lastModified - a.lastModified);
-            for (let j = maxDrafts; j < drafts.length; j++) {
+            for (let j = MAX_DRAFTS; j < drafts.length; j++) {
                 localStorage.removeItem(drafts[j].key);
             }
         }
@@ -66,20 +61,17 @@ export const initDraftId = (paramName: string = 'draft_id'): string => {
 
 export const useFormDraft = (
     formData: TrialFormData,
-    setFormData: React.Dispatch<React.SetStateAction<TrialFormData>>,
-    options?: UseFormDraftOptions
+    setFormData: React.Dispatch<React.SetStateAction<TrialFormData>>
 ) => {
-    const draftPrefix = options?.prefix ?? DEFAULT_DRAFT_PREFIX;
-    const maxDrafts = options?.maxDrafts ?? MAX_DRAFTS;
     const [draftId] = useState<string>(() => initDraftId('draft_id'));
     const [maxStep, setMaxStep] = useState<number>(0);
     const isRestoredRef = useRef(false);
-    const getDraftKey = useCallback(() => `${draftPrefix}${draftId}`, [draftPrefix, draftId]);
+
+    const draftKey = useMemo(() => `${DRAFT_PREFIX}${draftId}`, [draftId]);
 
     useEffect(() => {
-        const key = getDraftKey();
         try {
-            const saved = localStorage.getItem(key);
+            const saved = localStorage.getItem(draftKey);
             if (saved) {
                 const parsed = JSON.parse(saved);
                 if (parsed && typeof parsed === 'object') {
@@ -95,31 +87,29 @@ export const useFormDraft = (
         } finally {
             isRestoredRef.current = true;
         }
-    }, [getDraftKey, setFormData]);
+    }, [draftKey, setFormData]);
 
     useEffect(() => {
         if (!isRestoredRef.current) return;
         const timeout = setTimeout(() => {
             try {
-                const key = getDraftKey();
                 const draftData: DraftData<TrialFormData> = {
                     last_modified: Date.now(),
                     max_step: maxStep,
                     data: formData
                 };
-                localStorage.setItem(key, JSON.stringify(draftData));
-                cleanupOldDrafts(draftPrefix, maxDrafts);
+                localStorage.setItem(draftKey, JSON.stringify(draftData));
+                cleanupOldDrafts();
             } catch {}
         }, 500);
         return () => clearTimeout(timeout);
-    }, [formData, maxStep, draftPrefix, maxDrafts, getDraftKey]);
+    }, [formData, maxStep, draftKey]);
 
     const clearDraft = useCallback(() => {
         try {
-            const key = getDraftKey();
-            localStorage.removeItem(key);
+            localStorage.removeItem(draftKey);
         } catch {}
-    }, [getDraftKey]);
+    }, [draftKey]);
 
     return { clearDraft, draftId, maxStep, setMaxStep };
 };
