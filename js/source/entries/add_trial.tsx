@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { createRoot } from 'react-dom/client';
 import { FieldMapContainer } from './fieldmap';
 import { ServerProps } from '../include/add_trial/types';
@@ -15,7 +15,7 @@ export const AddTrialApp: React.FC = () => {
     const [showPrepHelp, setShowPrepHelp] = useState(false);
     const { maxStep, setMaxStep } = useTrialForm();
 
-    const steps = [
+    const steps = useMemo(() => [
         {
             id: 'intro',
             title: 'Intro',
@@ -44,7 +44,7 @@ export const AddTrialApp: React.FC = () => {
             title: 'Complete',
             content: <CompleteStep />
         }
-    ];
+    ], []);
 
     return (
         <div className="well">
@@ -54,7 +54,7 @@ export const AddTrialApp: React.FC = () => {
                         text-align: right;
                         margin-bottom: 0;
                         padding-top: var(--padding-md);
-                        padding-right: var(--padding-sm);
+                        padding-right: var(--padding-lg);
                     }
                 `}</style>
 

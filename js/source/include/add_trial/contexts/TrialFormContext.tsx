@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useMemo } from 'react';
 import { TrialFormData, ServerProps, DESIGN_TYPE_ALIASES, DesignType } from '../types';
 import { useFormDraft } from '../../form_draft';
 
@@ -81,7 +81,7 @@ export const TrialFormProvider: React.FC<{ serverProps: ServerProps; children: R
     serverProps,
     children
 }) => {
-    const [formData, setFormData] = useState<TrialFormData>(() => {
+    const defaultData = useMemo(() => {
         const initial = { ...defaultFormData };
         if (serverProps.breeding_programs?.length > 0) {
             initial.breedingProgram = serverProps.breeding_programs[0][1];
@@ -104,9 +104,9 @@ export const TrialFormProvider: React.FC<{ serverProps: ServerProps; children: R
             }
         }
         return initial;
-    });
+    }, [serverProps]);
 
-    const { clearDraft, draftId, maxStep, setMaxStep } = useFormDraft(formData, setFormData);
+    const { formData, setFormData, clearDraft, draftId, maxStep, setMaxStep } = useFormDraft<TrialFormData>(defaultData);
 
     const updateField = <K extends keyof TrialFormData>(key: K, val: TrialFormData[K]) => {
         setFormData(prev => ({ ...prev, [key]: val }));
