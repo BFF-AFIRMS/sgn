@@ -19,7 +19,6 @@ export interface WorkflowAccordionProps {
     steps: AccordionWorkflowStep[];
     maxUnlocked?: number;
     firstFailingMessage?: string | null;
-    openPanels?: Set<number>;
     onOpenPanelsChange?: (panels: Set<number>) => void;
     onHeaderClick?: (index: number) => void;
     className?: string;

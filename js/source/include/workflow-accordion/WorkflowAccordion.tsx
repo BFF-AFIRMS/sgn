@@ -35,8 +35,6 @@ export const WorkflowAccordion: React.FC<WorkflowAccordionProps> = ({
     steps,
     maxUnlocked,
     firstFailingMessage,
-    openPanels: controlledOpenPanels,
-    onOpenPanelsChange,
     onHeaderClick,
     className = ''
 }) => {
@@ -44,9 +42,7 @@ export const WorkflowAccordion: React.FC<WorkflowAccordionProps> = ({
     const effectiveMaxUnlocked = maxUnlocked !== undefined ? maxUnlocked : evaluation.maxUnlocked;
     const effectiveFailingMessage = firstFailingMessage !== undefined ? firstFailingMessage : evaluation.message;
 
-    const [internalOpenPanels, setInternalOpenPanels] = useState<Set<number>>(new Set([0]));
-    const openPanels = controlledOpenPanels !== undefined ? controlledOpenPanels : internalOpenPanels;
-    const setOpenPanels = onOpenPanelsChange || setInternalOpenPanels;
+    const [openPanels, setOpenPanels] = useState<Set<number>>(new Set([0]));
 
     const prevMaxUnlockedRef = useRef<number>(0);
 
