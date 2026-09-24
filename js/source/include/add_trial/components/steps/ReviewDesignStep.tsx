@@ -89,6 +89,9 @@ export const ReviewDesignStep: React.FC<ReviewDesignStepProps> = ({ FieldMapCont
                     </div>
                 </center>
             )}
+            {regenError && (
+                <div className="alert alert-danger tw:m-0">{regenError}</div>
+            )}
             {saveError && (
                 <div className="alert alert-danger tw:m-0">{saveError}</div>
             )}
