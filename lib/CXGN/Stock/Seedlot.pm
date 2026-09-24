@@ -904,14 +904,19 @@ sub verify_seedlot_accessions_crosses {
     }
 
     my %seen_accession_names;
+    my %seen_seedlot_names;
     foreach (@pairs){
+        $seen_seedlot_names{$_->[0]}++;
         $seen_accession_names{$_->[1]}++;
     }
+
+    # /home/production/cxgn/sgn/bin/upload_multiple_trial_design.pl
     my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
     my $cross_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'cross', 'stock_type')->cvterm_id();
     my $synonym_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'stock_synonym', 'stock_property')->cvterm_id();
     my $seedlot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "seedlot", "stock_type")->cvterm_id();
     my $collection_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "collection_of", "stock_relationship")->cvterm_id();
+    my $offspring_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "offspring_of", "stock_relationship")->cvterm_id();
 
     my @accessions = keys %seen_accession_names;
     my $acc_synonym_rs = $schema->resultset("Stock::Stock")->search({
@@ -923,6 +928,46 @@ sub verify_seedlot_accessions_crosses {
     my %acc_synonyms_lookup;
     while (my $r=$acc_synonym_rs->next){
         $acc_synonyms_lookup{$r->get_column('synonym')}->{$r->uniquename} = $r->stock_id;
+    }
+
+    # -------------------------------------------------------------------------
+    # Get parent material of seedlots (ex. accession, cross)
+
+    my $seedlot_parent_rs = $schema->resultset("Stock::Stock")
+        ->search({'me.uniquename'=> {-in => [ keys %seen_seedlot_names]}, 'me.type_id'=>$seedlot_cvterm_id})
+        ->search_related(
+            'stock_relationship_objects',
+            {'stock_relationship_objects.type_id'=>$collection_of_cvterm_id},
+            {join => 'subject', '+select' => ['subject.uniquename', 'me.uniquename'], '+as' => ['parent_name', 'seedlot_name'] }
+        );
+    my $seedlot_info;
+    my $parent_to_seedlots;
+    while (my $record = $seedlot_parent_rs->next()){
+        my $parent_name = $record->get_column("parent_name");
+        my $seedlot_name = $record->get_column("seedlot_name");
+        $seedlot_info->{$seedlot_name}->{"parent"} = $parent_name;
+        push @{$parent_to_seedlots->{$parent_name}}, $seedlot_name;
+    }
+
+    # -------------------------------------------------------------------------
+    # Get optional crosses of accessions (where they are considered 'offspring_of')
+    # Handles the case in which a seedlot parent is a cros which has produced the
+    # accessions as offspring.
+
+    my $offspring_rs = $schema->resultset("Stock::Stock")
+        ->search({'me.uniquename'=> {-in => [ keys %$parent_to_seedlots ]}})
+        ->search_related(
+            'stock_relationship_objects',
+            {'stock_relationship_objects.type_id'=>$offspring_of_cvterm_id},
+            {join => 'subject', '+select' => ['subject.uniquename', 'me.uniquename'], '+as' => ['offspring_name', 'cross_name'] }
+        );
+    while (my $record = $offspring_rs->next()){
+        my $cross_name = $record->get_column("cross_name");
+        my $offspring_name = $record->get_column("offspring_name");
+        my @seedlots = @{$parent_to_seedlots->{$cross_name}};
+        foreach my $seedlot_name (@seedlots){
+            push @{$seedlot_info->{$seedlot_name}->{"offspring"}}, $offspring_name;
+        }
     }
 
     foreach (@pairs){
@@ -937,8 +982,16 @@ sub verify_seedlot_accessions_crosses {
             $accession_name = $accession_names[0];
         }
 
-        my $seedlot_rs = $schema->resultset("Stock::Stock")->search({'me.uniquename'=>$seedlot_name, 'me.type_id'=>$seedlot_cvterm_id})->search_related('stock_relationship_objects', {'stock_relationship_objects.type_id'=>$collection_of_cvterm_id})->search_related('subject', {'subject.uniquename'=>$accession_name, 'subject.type_id'=>[$accession_cvterm_id, $cross_cvterm_id]});
-        if (!$seedlot_rs->first){
+        my $seedlot_parent = $seedlot_info->{$seedlot_name}->{"parent"};
+        my $cross_offspring = $seedlot_info->{$seedlot_name}->{"offspring"};
+        #print STDERR "accession_name: $accession_name, seedlot_name: $seedlot_name, cross_offspring: " . Dumper(@cross_offspring) . "\n";
+
+        # Option 1. Exact match between accession and seedlot parent
+        # Option 2. Accession is an offspring of the seedlot's parent cross
+        if (! (
+            $accession_name eq $seedlot_parent
+            ||(defined $cross_offspring && grep { $_ eq $accession_name } @$cross_offspring)
+        )){
             $error .= "The seedlot: $seedlot_name is not linked to the accession/cross_unique_id: $accession_name.";
         }
     }
