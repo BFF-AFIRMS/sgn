@@ -26,16 +26,15 @@ export const AccordionPanelContent: React.FC<AccordionPanelContentProps> = ({ id
     return (
         <div
             id={id}
-            className={`accordion-collapse-wrapper collapse ${isOpen ? 'in' : ''}`}
-            style={{
-                gridTemplateRows: isOpen ? '1fr' : '0fr',
-                visibility: isOpen || isTransitioning ? 'visible' : 'hidden'
-            }}
+            className={`accordion-collapse-wrapper collapse ${isOpen ? 'in' : ''} tw:grid! tw:transition-[grid-template-rows,visibility] tw:duration-[350ms] tw:ease-in-out ${
+                isOpen
+                    ? 'tw:grid-rows-[1fr] tw:visible'
+                    : `tw:grid-rows-[0fr] ${isTransitioning ? 'tw:visible' : 'tw:invisible'}`
+            }`}
             onTransitionEnd={handleTransitionEnd}
         >
             <div
-                className="accordion-collapse-inner"
-                style={{ overflow: isTransitioning || !isOpen ? 'hidden' : 'visible' }}
+                className={`accordion-collapse-inner tw:min-h-0 ${isTransitioning || !isOpen ? 'tw:overflow-hidden' : 'tw:overflow-visible'}`}
             >
                 <div className="sub_infosectioncontent">{children}</div>
             </div>
