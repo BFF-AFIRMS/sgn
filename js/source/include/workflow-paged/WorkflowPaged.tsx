@@ -1,27 +1,102 @@
-import React, { useState } from 'react';
-import { WorkflowPagedProps, WorkflowPagedStepController } from './types';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { WorkflowPagedProps, WorkflowPagedStep, WorkflowPagedStepController } from './types';
 
 export const WorkflowPaged: React.FC<WorkflowPagedProps> = ({
     id = 'workflow',
     steps,
     initialStep = 0,
+    urlParam,
+    onStepChange,
     className = ''
 }) => {
-    const [currentStep, setCurrentStep] = useState(initialStep);
-    const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());
+    const paramName = typeof urlParam === 'string' ? urlParam : urlParam ? 'step' : null;
+
+    const resolveStepFromUrl = useCallback((): number => {
+        if (!paramName || typeof window === 'undefined') return initialStep;
+        try {
+            const val = new URLSearchParams(window.location.search).get(paramName);
+            if (val) {
+                const idxById = steps.findIndex(s => s.id && s.id.toLowerCase() === val.toLowerCase());
+                if (idxById !== -1) return idxById;
+
+                const num = parseInt(val, 10);
+                if (!isNaN(num) && num >= 1 && num <= steps.length) {
+                    return num - 1;
+                }
+            }
+        } catch {}
+        return initialStep;
+    }, [paramName, steps, initialStep]);
+
+    const resolvedInitialStep = useMemo(() => resolveStepFromUrl(), [resolveStepFromUrl]);
+
+    const [currentStep, setCurrentStep] = useState<number>(resolvedInitialStep);
+    const [completedSteps, setCompletedSteps] = useState<Set<number>>(() => {
+        const set = new Set<number>();
+        for (let i = 0; i < resolvedInitialStep; i++) {
+            set.add(i);
+        }
+        return set;
+    });
+
+    const updateUrl = useCallback((stepIndex: number) => {
+        if (!paramName || typeof window === 'undefined') return;
+        try {
+            const url = new URL(window.location.href);
+            const step = steps[stepIndex];
+            const paramVal = step?.id || String(stepIndex + 1);
+            if (url.searchParams.get(paramName) !== paramVal) {
+                url.searchParams.set(paramName, paramVal);
+                window.history.replaceState(null, '', url.toString());
+            }
+        } catch {}
+    }, [paramName, steps]);
+
+    const changeStep = useCallback((newStep: number) => {
+        setCurrentStep(newStep);
+        updateUrl(newStep);
+        if (onStepChange && steps[newStep]) {
+            onStepChange(newStep, steps[newStep]);
+        }
+    }, [updateUrl, onStepChange, steps]);
+
+    useEffect(() => {
+        if (paramName) {
+            updateUrl(currentStep);
+        }
+    }, [paramName, currentStep, updateUrl]);
+
+    useEffect(() => {
+        if (!paramName || typeof window === 'undefined') return;
+        const handlePopState = () => {
+            const stepFromUrl = resolveStepFromUrl();
+            setCurrentStep(stepFromUrl);
+            setCompletedSteps(prev => {
+                const nextSet = new Set(prev);
+                for (let i = 0; i < stepFromUrl; i++) {
+                    nextSet.add(i);
+                }
+                return nextSet;
+            });
+        };
+        window.addEventListener('popstate', handlePopState);
+        return () => window.removeEventListener('popstate', handlePopState);
+    }, [paramName, resolveStepFromUrl]);
 
     const next = () => {
         setCompletedSteps(prev => new Set(prev).add(currentStep));
-        setCurrentStep(prev => Math.min(prev + 1, steps.length - 1));
+        const nextStep = Math.min(currentStep + 1, steps.length - 1);
+        changeStep(nextStep);
     };
 
     const prev = () => {
-        setCurrentStep(p => Math.max(p - 1, 0));
+        const prevStep = Math.max(currentStep - 1, 0);
+        changeStep(prevStep);
     };
 
     const goTo = (step: number) => {
         if (step >= 0 && step < steps.length) {
-            setCurrentStep(step);
+            changeStep(step);
         }
     };
 
@@ -42,7 +117,7 @@ export const WorkflowPaged: React.FC<WorkflowPagedProps> = ({
             stepIndex === currentStep ||
             (stepIndex > 0 && completedSteps.has(stepIndex - 1))
         ) {
-            setCurrentStep(stepIndex);
+            changeStep(stepIndex);
         }
     };
 
