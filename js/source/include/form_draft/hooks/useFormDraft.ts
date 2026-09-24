@@ -1,14 +1,9 @@
 import { useEffect, useCallback, useRef, useState, useMemo } from 'react';
-import { TrialFormData } from '../types';
+import { TrialFormData } from '../../add_trial/types';
+import { DraftData } from '../types';
 
 const MAX_DRAFTS = 10;
 const DRAFT_PREFIX = 'form_draft';
-
-export interface DraftData<T = TrialFormData> {
-    last_modified: number;
-    max_step?: number;
-    data: T;
-}
 
 export const cleanupOldDrafts = (): void => {
     if (typeof window === 'undefined' || !window.localStorage) return;
@@ -65,7 +60,7 @@ export const useFormDraft = (
 ) => {
     const [draftId] = useState<string>(() => initDraftId('draft_id'));
     const [maxStep, setMaxStep] = useState<number>(0);
-    const isRestoredRef = useRef(false);
+    const [isRestored, setIsRestored] = useState(false);
 
     const draftKey = useMemo(() => `${DRAFT_PREFIX}${draftId}`, [draftId]);
 
@@ -85,25 +80,25 @@ export const useFormDraft = (
         } catch (e) {
             console.warn('Could not restore trial creation form draft', e);
         } finally {
-            isRestoredRef.current = true;
+            setIsRestored(true);
         }
     }, [draftKey, setFormData]);
 
     useEffect(() => {
-        if (!isRestoredRef.current) return;
-        const timeout = setTimeout(() => {
-            try {
-                const draftData: DraftData<TrialFormData> = {
-                    last_modified: Date.now(),
-                    max_step: maxStep,
-                    data: formData
-                };
-                localStorage.setItem(draftKey, JSON.stringify(draftData));
-                cleanupOldDrafts();
-            } catch {}
-        }, 500);
-        return () => clearTimeout(timeout);
-    }, [formData, maxStep, draftKey]);
+        if (!isRestored) {
+            return;
+        }
+
+        try {
+            const draftData: DraftData<TrialFormData> = {
+                last_modified: Date.now(),
+                max_step: maxStep,
+                data: formData
+            };
+            localStorage.setItem(draftKey, JSON.stringify(draftData));
+            cleanupOldDrafts();
+        } catch {}
+    }, [formData, maxStep, draftKey, isRestored]);
 
     const clearDraft = useCallback(() => {
         try {
