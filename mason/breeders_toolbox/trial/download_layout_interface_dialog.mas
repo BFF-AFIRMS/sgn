@@ -421,7 +421,7 @@ function show_available_columns_<% $download_type %>(level){
 
     var mandatory_cols = [];
     var optional_cols_checked = [];
-    var optional_cols_unchecked = ['synonyms', 'trial_name', 'location_name', 'year', 'pedigree', 'female_parent', 'male_parent', 'tier', 'seedlot_name', 'seed_transaction_operator', 'num_seed_per_plot', 'range_number', 'stake_number', 'set_number', 'plot_geo_json'];
+    var optional_cols_unchecked = ['synonyms', 'trial_name', 'location_name', 'year', 'family_name', 'cross_unique_id', 'pedigree', 'female_parent', 'male_parent', 'tier', 'seedlot_name', 'seed_transaction_operator', 'num_seed_per_plot', 'range_number', 'stake_number', 'set_number', 'plot_geo_json'];
 
     if (level == 'plots') {
         mandatory_cols = ['plot_name', 'plot_id'];
