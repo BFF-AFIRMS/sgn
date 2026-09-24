@@ -98,7 +98,7 @@ export const WorkflowAccordion: React.FC<WorkflowAccordionProps> = ({
                 return (
                     <div
                         key={sec.id}
-                        className="accordion-step-panel tw:mb-[15px]"
+                        className="accordion-step-panel tw:mb-3.75"
                         id={`${id}_panel_${i}`}
                         data-step-index={i}
                     >
@@ -107,7 +107,7 @@ export const WorkflowAccordion: React.FC<WorkflowAccordionProps> = ({
                                 <tr>
                                     <td className="sub_infosectiontitle">
                                         <a
-                                            className={`collapser collapser_show tw:no-underline tw:hover:no-underline ${
+                                            className={`collapser tw:no-underline tw:hover:no-underline ${
                                                 !isOpen ? 'collapsed' : ''
                                             } ${
                                                 isLocked
@@ -118,7 +118,7 @@ export const WorkflowAccordion: React.FC<WorkflowAccordionProps> = ({
                                         >
                                             <span
                                                 className={`glyphicon glyphicon-chevron-down collapser-chevron tw:inline-block tw:mr-2 tw:transition-transform tw:duration-200 tw:ease-in-out ${
-                                                    !isOpen ? '-tw:rotate-90' : 'tw:rotate-0'
+                                                    !isOpen ? 'tw:-rotate-90' : 'tw:rotate-0'
                                                 }`}
                                             ></span>
                                             <span className="collapser-label">{sec.title}</span>
