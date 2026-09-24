@@ -124,9 +124,12 @@ sub _R_installdeps {
 
     print "\n\nInstalling R dependencies in ~/cxgn/R_libs. \nDepending on the number of deps to install, this may take long time.\n\nAfter the installation completes, set the env variable R_LIBS_USER in your system (/etc/R/Renviron) to \"~/cxgn/R_libs\". This will ensure deps you manually install in R will be in the same place as sgn R libraries and avoid installation of the same R packages in multiple places. It will also add packages in the \"~/cxgn/R_libs\" to the search path\n\n";
 
-    my $rout = qx /Rscript R\/sgnPackages.r 2>&1 /;
-
-    print "\nR dependencies installation output:\n $rout\n";
+    my $rout = '';
+    open my $proc, '-|', "Rscript R\/sgnPackages.r 2>&1";
+    while (<$proc>) {
+        print $_;
+        $rout .= $_;
+    }
 
     if( $? ) {
 	_handle_errors($?);
