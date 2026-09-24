@@ -753,6 +753,13 @@ Miscellaneous
     max-width: 120px;
 }
 
+.edit-list-button-row {
+    display: flex;
+    flex-direction: row;
+    align-items: start;
+    margin-top: var(--padding-sm);
+}
+
 /*
 -------------------------------------------------------------------------------
 Modal
