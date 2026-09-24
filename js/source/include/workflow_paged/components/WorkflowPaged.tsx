@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { WorkflowPagedProps, WorkflowPagedStep, WorkflowPagedStepController } from './types';
+import { WorkflowPagedProps, WorkflowPagedStep, WorkflowPagedStepController } from '../types';
 
 export const WorkflowPaged: React.FC<WorkflowPagedProps> = ({
     id = 'workflow',
@@ -152,18 +152,18 @@ export const WorkflowPaged: React.FC<WorkflowPagedProps> = ({
                             <div className="tw:relative tw:flex tw:items-center tw:justify-center">
                                 {idx < steps.length - 1 && (
                                     <div
-                                        className={`tw:absolute tw:left-1/2 tw:w-full tw:h-[2px] ${
+                                        className={`tw:absolute tw:left-1/2 tw:w-full tw:h-0.5 ${
                                             idx < currentMaxStep ? 'tw:bg-[#5fba7d]' : 'tw:bg-[#bbb]'
                                         }`}
                                     />
                                 )}
                                 <div
-                                    className={`tw:relative tw:z-10 tw:flex tw:items-center tw:justify-center tw:w-[30px] tw:h-[30px] tw:rounded-full tw:border-4 tw:border-solid tw:text-[14px] tw:leading-none ${
+                                    className={`tw:relative tw:z-10 tw:flex tw:items-center tw:justify-center tw:w-7.5 tw:h-7.5 tw:rounded-full tw:border-4 tw:border-solid tw:text-[14px] tw:leading-none ${
                                         isComplete
                                             ? 'tw:border-[#5fba7d] tw:bg-[#5fba7d] tw:text-white'
                                             : isFocus
-                                            ? 'tw:border-[#5fba7d] tw:bg-white tw:text-[#5fba7d]'
-                                            : 'tw:border-[#bbb] tw:bg-white tw:text-[#bbb]'
+                                                ? 'tw:border-[#5fba7d] tw:bg-white tw:text-[#5fba7d]'
+                                                : 'tw:border-[#bbb] tw:bg-white tw:text-[#bbb]'
                                     }`}
                                 >
                                     {idx + 1}
