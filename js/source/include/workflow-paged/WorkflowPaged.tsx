@@ -7,6 +7,8 @@ export const WorkflowPaged: React.FC<WorkflowPagedProps> = ({
     initialStep = 0,
     urlParam,
     onStepChange,
+    maxStep: controlledMaxStep,
+    onMaxStepChange,
     className = ''
 }) => {
     const paramName = typeof urlParam === 'string' ? urlParam : urlParam ? 'step' : null;
@@ -31,15 +33,20 @@ export const WorkflowPaged: React.FC<WorkflowPagedProps> = ({
     const resolvedInitialStep = useMemo(() => resolveStepFromUrl(), [resolveStepFromUrl]);
 
     const [currentStep, setCurrentStep] = useState<number>(resolvedInitialStep);
-    const [completedSteps, setCompletedSteps] = useState<Set<number>>(() => {
-        const set = new Set<number>();
-        for (let i = 0; i < resolvedInitialStep; i++) {
-            set.add(i);
-        }
-        return set;
-    });
+    const [internalMaxStep, setInternalMaxStep] = useState<number>(resolvedInitialStep);
+    const isControlledMaxStep = controlledMaxStep !== undefined;
+    const currentMaxStep = isControlledMaxStep ? controlledMaxStep : internalMaxStep;
 
-    const updateUrl = useCallback((stepIndex: number) => {
+    const updateMaxStep = useCallback((newMax: number) => {
+        if (!isControlledMaxStep) {
+            setInternalMaxStep(newMax);
+        }
+        if (onMaxStepChange) {
+            onMaxStepChange(newMax);
+        }
+    }, [isControlledMaxStep, onMaxStepChange]);
+
+    const updateUrl = useCallback((stepIndex: number, replace: boolean = true) => {
         if (!paramName || typeof window === 'undefined') return;
         try {
             const url = new URL(window.location.href);
@@ -47,22 +54,32 @@ export const WorkflowPaged: React.FC<WorkflowPagedProps> = ({
             const paramVal = step?.id || String(stepIndex + 1);
             if (url.searchParams.get(paramName) !== paramVal) {
                 url.searchParams.set(paramName, paramVal);
-                window.history.replaceState(null, '', url.toString());
+                if (replace) {
+                    window.history.replaceState(null, '', url.toString());
+                } else {
+                    window.history.pushState(null, '', url.toString());
+                }
             }
         } catch {}
     }, [paramName, steps]);
 
-    const changeStep = useCallback((newStep: number) => {
+    const changeStep = useCallback((newStep: number, replace: boolean = false) => {
         setCurrentStep(newStep);
-        updateUrl(newStep);
+        updateUrl(newStep, replace);
         if (onStepChange && steps[newStep]) {
             onStepChange(newStep, steps[newStep]);
         }
     }, [updateUrl, onStepChange, steps]);
 
     useEffect(() => {
+        if (currentStep > currentMaxStep) {
+            changeStep(currentMaxStep, true);
+        }
+    }, [currentStep, currentMaxStep, changeStep]);
+
+    useEffect(() => {
         if (paramName) {
-            updateUrl(currentStep);
+            updateUrl(currentStep, true);
         }
     }, [paramName, currentStep, updateUrl]);
 
@@ -70,54 +87,45 @@ export const WorkflowPaged: React.FC<WorkflowPagedProps> = ({
         if (!paramName || typeof window === 'undefined') return;
         const handlePopState = () => {
             const stepFromUrl = resolveStepFromUrl();
-            setCurrentStep(stepFromUrl);
-            setCompletedSteps(prev => {
-                const nextSet = new Set(prev);
-                for (let i = 0; i < stepFromUrl; i++) {
-                    nextSet.add(i);
-                }
-                return nextSet;
-            });
+            const targetStep = Math.min(stepFromUrl, currentMaxStep);
+            setCurrentStep(targetStep);
+            updateUrl(targetStep, true);
         };
         window.addEventListener('popstate', handlePopState);
         return () => window.removeEventListener('popstate', handlePopState);
-    }, [paramName, resolveStepFromUrl]);
+    }, [paramName, resolveStepFromUrl, currentMaxStep, updateUrl]);
 
-    const next = () => {
-        setCompletedSteps(prev => new Set(prev).add(currentStep));
-        const nextStep = Math.min(currentStep + 1, steps.length - 1);
-        changeStep(nextStep);
-    };
-
-    const prev = () => {
-        const prevStep = Math.max(currentStep - 1, 0);
-        changeStep(prevStep);
-    };
-
-    const goTo = (step: number) => {
-        if (step >= 0 && step < steps.length) {
-            changeStep(step);
+    const getController = useCallback((stepIdx: number): WorkflowPagedStepController => ({
+        next: () => {
+            const nextStep = Math.min(stepIdx + 1, steps.length - 1);
+            updateMaxStep(Math.max(currentMaxStep, nextStep));
+            changeStep(nextStep, false);
+        },
+        prev: () => {
+            const prevStep = Math.max(stepIdx - 1, 0);
+            changeStep(prevStep, false);
+        },
+        goTo: (step: number) => {
+            if (step >= 0 && step <= currentMaxStep && step < steps.length) {
+                changeStep(step, false);
+            }
+        },
+        completeStep: (step?: number) => {
+            const target = step ?? stepIdx;
+            updateMaxStep(Math.max(currentMaxStep, target + 1));
+        },
+        lockForward: () => {
+            updateMaxStep(stepIdx);
         }
-    };
+    }), [steps.length, currentMaxStep, updateMaxStep, changeStep]);
 
-    const completeStep = (step: number = currentStep) => {
-        setCompletedSteps(p => new Set(p).add(step));
-    };
-
-    const controller: WorkflowPagedStepController = {
-        next,
-        prev,
-        goTo,
-        completeStep
+    const isStepAccessible = (stepIndex: number) => {
+        return stepIndex <= currentMaxStep;
     };
 
     const handleProgClick = (stepIndex: number) => {
-        if (
-            completedSteps.has(stepIndex) ||
-            stepIndex === currentStep ||
-            (stepIndex > 0 && completedSteps.has(stepIndex - 1))
-        ) {
-            changeStep(stepIndex);
+        if (isStepAccessible(stepIndex)) {
+            changeStep(stepIndex, false);
         }
     };
 
@@ -126,11 +134,14 @@ export const WorkflowPaged: React.FC<WorkflowPagedProps> = ({
             <ol className="workflow-prog tw:table tw:table-fixed tw:list-none tw:text-center tw:m-0 tw:mb-[1em] tw:p-0 tw:w-full tw:text-[16px]">
                 {steps.map((s, idx) => {
                     const isFocus = currentStep === idx;
-                    const isComplete = completedSteps.has(idx);
+                    const isComplete = idx < currentMaxStep;
+                    const isAccessible = isStepAccessible(idx);
                     return (
                         <li
                             key={s.id || idx}
-                            className={`tw:table-cell tw:text-center tw:text-black tw:relative tw:text-[11px] tw:cursor-pointer ${
+                            className={`tw:table-cell tw:text-center tw:text-black tw:relative tw:text-[11px] ${
+                                isAccessible ? 'tw:cursor-pointer' : 'tw:cursor-not-allowed tw:opacity-60'
+                            } ${
                                 isFocus ? 'workflow-focus' : ''
                             } ${isComplete ? 'workflow-complete' : ''}`}
                             onClick={() => handleProgClick(idx)}
@@ -142,7 +153,7 @@ export const WorkflowPaged: React.FC<WorkflowPagedProps> = ({
                                 {idx < steps.length - 1 && (
                                     <div
                                         className={`tw:absolute tw:left-1/2 tw:w-full tw:h-[2px] ${
-                                            isComplete ? 'tw:bg-[#5fba7d]' : 'tw:bg-[#bbb]'
+                                            idx < currentMaxStep ? 'tw:bg-[#5fba7d]' : 'tw:bg-[#bbb]'
                                         }`}
                                     />
                                 )}
@@ -172,7 +183,7 @@ export const WorkflowPaged: React.FC<WorkflowPagedProps> = ({
                                 className={`tw:w-full tw:relative ${currentStep === idx ? 'workflow-focus tw:block' : 'tw:hidden'}`}
                             >
                                 {currentStep === idx && (
-                                    typeof s.content === 'function' ? s.content(controller) : s.content
+                                    typeof s.content === 'function' ? s.content(getController(idx)) : s.content
                                 )}
                             </li>
                         ))}

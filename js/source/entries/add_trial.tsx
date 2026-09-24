@@ -13,6 +13,7 @@ import { PartialRepHelpModal } from '../include/add_trial/modals/PartialRepHelpM
 
 export const AddTrialApp: React.FC = () => {
     const [showPrepHelp, setShowPrepHelp] = useState(false);
+    const { maxStep, setMaxStep } = useTrialForm();
 
     const steps = [
         {
@@ -23,8 +24,12 @@ export const AddTrialApp: React.FC = () => {
         {
             id: 'details',
             title: 'Trial Design Details',
-            content: ({ next }: WorkflowPagedStepController) => (
-                <DesignDetailsStep onOpenPrepHelp={() => setShowPrepHelp(true)} onSuccess={next} />
+            content: ({ next, lockForward }: WorkflowPagedStepController) => (
+                <DesignDetailsStep
+                    onOpenPrepHelp={() => setShowPrepHelp(true)}
+                    onSuccess={next}
+                    onLockForward={lockForward}
+                />
             )
         },
         {
@@ -57,6 +62,8 @@ export const AddTrialApp: React.FC = () => {
                     id="trial_design_workflow"
                     steps={steps}
                     urlParam="step"
+                    maxStep={maxStep}
+                    onMaxStepChange={setMaxStep}
                 />
 
                 <PartialRepHelpModal show={showPrepHelp} onClose={() => setShowPrepHelp(false)} />

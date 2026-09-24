@@ -5,6 +5,7 @@ export interface WorkflowPagedStepController {
     prev: () => void;
     goTo: (step: number) => void;
     completeStep: (step?: number) => void;
+    lockForward: () => void;
 }
 
 export interface WorkflowPagedStep {
@@ -19,6 +20,8 @@ export interface WorkflowPagedProps {
     initialStep?: number;
     urlParam?: string | boolean;
     onStepChange?: (stepIndex: number, step: WorkflowPagedStep) => void;
+    maxStep?: number;
+    onMaxStepChange?: (maxStep: number) => void;
     className?: string;
     children?: React.ReactNode;
 }
