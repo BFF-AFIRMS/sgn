@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect } from 'react';
 import { useTrialForm } from '../../contexts/TrialFormContext';
 import { useDesignResult } from '../../contexts/DesignResultContext';
 import { useDesignGenerator } from '../../hooks/useDesignGenerator';
@@ -31,6 +31,16 @@ export const ReviewDesignStep: React.FC<ReviewDesignStepProps> = ({ FieldMapCont
         const locName = formData.locations[selectedLocationIndex] || formData.trialName;
         return designMapToObservationUnits(currentDesign, locName);
     }, [currentDesign, selectedLocationIndex, formData.locations, formData.trialName]);
+
+    useEffect(() => {
+        if (!result && !regenerating && formData.trialName.trim()) {
+            generateDesign(formData, getListElements).then(({ data }) => {
+                if (data) {
+                    setResult(data);
+                }
+            });
+        }
+    }, [result, regenerating, formData, getListElements, generateDesign, setResult]);
 
     const handleRedo = async () => {
         const { data: generated, error: err } = await generateDesign(formData, getListElements);

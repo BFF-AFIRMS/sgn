@@ -56,6 +56,7 @@ export const AddTrialApp: React.FC = () => {
                 <WorkflowPaged
                     id="trial_design_workflow"
                     steps={steps}
+                    urlParam="step"
                 />
 
                 <PartialRepHelpModal show={showPrepHelp} onClose={() => setShowPrepHelp(false)} />
