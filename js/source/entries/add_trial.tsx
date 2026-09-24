@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { FieldMapContainer } from './fieldmap';
 import { ServerProps } from '../include/add_trial/types';
-import { WorkflowPaged, WorkflowPagedStepHelpers } from '../include/workflow-paged';
+import { WorkflowPaged, WorkflowPagedStepController } from '../include/workflow-paged';
 import { TrialFormProvider } from '../include/add_trial/contexts/TrialFormContext';
 import { DesignResultProvider } from '../include/add_trial/contexts/DesignResultContext';
 import { IntroStep } from '../include/add_trial/components/steps/IntroStep';
@@ -18,19 +18,19 @@ export const AddTrialApp: React.FC = () => {
         {
             id: 'intro',
             title: 'Intro',
-            content: ({ next }: WorkflowPagedStepHelpers) => <IntroStep onNext={next} />
+            content: ({ next }: WorkflowPagedStepController) => <IntroStep onNext={next} />
         },
         {
             id: 'details',
             title: 'Trial Design Details',
-            content: ({ next }: WorkflowPagedStepHelpers) => (
+            content: ({ next }: WorkflowPagedStepController) => (
                 <DesignDetailsStep onOpenPrepHelp={() => setShowPrepHelp(true)} onSuccess={next} />
             )
         },
         {
             id: 'review',
             title: 'Review Designed Trial',
-            content: ({ next }: WorkflowPagedStepHelpers) => (
+            content: ({ next }: WorkflowPagedStepController) => (
                 <ReviewDesignStep FieldMapContainer={FieldMapContainer} onSuccess={next} />
             )
         },
