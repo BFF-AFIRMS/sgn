@@ -47,45 +47,23 @@ sub shared_phenotypes: Path('/ajax/solgwas/shared_phenotypes') : {
         push @trait_info, [ $tobj->cvterm_id(), $tobj->name()];
     }
 
-    # my $solgwas_tmp_output = $c->config->{cluster_shared_tempdir}."/solgwas_files";
-    # mkdir $solgwas_tmp_output if ! -d $solgwas_tmp_output;
-    # my ($fh, $tempfile) = tempfile(
-    # "trait_XXXXXX",
-    #   DIR=> $solgwas_tmp_output,
-    # );
-
+    # Create temporary file for dataset data
     $c->tempfiles_subdir("solgwas_files");
-    my ($fh, $tempfile) = $c->tempfile(TEMPLATE=>"solgwas_files/trait_XXXXX");
-    #my $tmp_dir = File::Spec->catfile($c->config->{basepath}, 'gwas_tmpdir');
-#    my $solgwas_tmp_output = $c->config->{cluster_shared_tempdir}."/solgwas_files";
-#    mkdir $solgwas_tmp_output if ! -d $solgwas_tmp_output;
-#    my ($tmp_fh, $tempfile) = tempfile(
-#      "solgwas_download_XXXXX",
-#      DIR=> $solgwas_tmp_output,
-#    );
-#    my $pheno_filepath = $tempfile . "_phenotype.txt";
+    my $solgwas_tmp_output = $c->config->{cluster_shared_tempdir}."/solgwas_files";
+    mkdir $solgwas_tmp_output if ! -d $solgwas_tmp_output;
+    my ($tmp_fh, $tempfile) = tempfile(
+        "solgwas_download_XXXXX",
+        DIR=> $solgwas_tmp_output,
+    );
 
-    my $temppath = $c->config->{basepath}."/".$tempfile;
-#    my $temppath = $solgwas_tmp_output . "/" . $tempfile;
+    # Write dataset to file
+    my $temppath = $tempfile;
     my $ds2 = CXGN::Dataset::File->new(people_schema => $people_schema, schema => $schema, sp_dataset_id => $dataset_id, exclude_dataset_outliers => $exclude_outliers, file_name => $temppath, quotes => 0);
-    my $phenotype_data_ref = $ds2->retrieve_phenotypes();
+    $ds2->retrieve_phenotypes();
 
-#    my $phenotypes = $ds->retrieve_phenotypes();
-#    my $trials_ref = $ds->retrieve_trials();
-    print STDERR Dumper(@trait_info);
-#    my @trials = @$trials_ref;
-
-#    my $values_path = $c->{basepath} . "./documents/tempfiles/solgwas_files/";
-#    copy($pheno_filepath,$values_path);
-
-#    my $file_basename = basename($pheno_filepath);
-#    my $file_response = "./documents/tempfiles/solgwas_files/" . $file_basename;
-#    print STDERR $file_response . "\n";
-#    my @co_pheno;
     $c->stash->{rest} = {
         options => \@trait_info,
         tempfile => $tempfile."_phenotype.txt",
-#        tempfile => $file_response,
     };
 }
 
@@ -99,11 +77,7 @@ sub extract_trait_data :Path('/ajax/solgwas/getdata') Args(0) {
 
     $file = basename($file);
 
-    my $temppath = File::Spec->catfile($c->config->{cluster_shared_tempdir}, $file);
-#    my $temppath = File::Spec->catfile($c->config->{cluster_shared_tempdir}, "static/documents/tempfiles/solgwas_files/".$file);
-#    my $temppath = File::Spec->catfile($c->config->{basepath}, "static/documents/tempfiles/solgwas_files/solgwas_download_0bDQ5_phenotype.txt");
-    print STDERR Dumper($temppath);
-
+    my $temppath = File::Spec->catfile($c->config->{cluster_shared_tempdir}, "solgwas_files", $file);
     my $F;
     if (! open($F, "<", $temppath)) {
 	$c->stash->{rest} = { error => "Can't find data." };
@@ -112,9 +86,9 @@ sub extract_trait_data :Path('/ajax/solgwas/getdata') Args(0) {
 
     my $header = <$F>;
     chomp($header);
-    print STDERR Dumper($header);
+    #print STDERR Dumper($header);
     my @keys = split("\t", $header);
-    print STDERR Dumper($keys[1]);
+    #print STDERR Dumper($keys[1]);
 # add this for loop to remove the crop ontology codes from the keys (and the preceding pipes)
     for(my $n=0; $n <@keys; $n++) {
         if ($keys[$n] =~ /\|CO\_/) {
@@ -133,7 +107,7 @@ sub extract_trait_data :Path('/ajax/solgwas/getdata') Args(0) {
 		$line{$keys[$n]}=$fields[$n];
 	    }
 	}
-    print STDERR Dumper(\%line);
+    #print STDERR Dumper(\%line);
 	push @data, \%line;
     }
 
@@ -551,6 +525,8 @@ sub generate_results: Path('/ajax/solgwas/generate_results') : {
         dummy_response  => $dataset_id,
         dummy_response2 => $trait_id,
         gwas_csv_response  => $gwasCsv_response,
+        input_phenotypes => $pheno_filepath,
+        input_genotypes => $geno_filepath2
     };
 }
 
