@@ -1,30 +1,29 @@
 use strict;
 use lib 't/lib';
 
-use JSON;
-use Test::More;
-use Test::WWW::Mechanize;
-use SGN::Test::Fixture;
-use SGN::Model::Cvterm;
-
 use Bio::GeneticRelationships::Individual;
 use Bio::GeneticRelationships::Pedigree;
-
 use CXGN::Stock::Seedlot;
 use CXGN::Pedigree::AddCrosses;
 use CXGN::Pedigree::AddCrossingtrial;
 use CXGN::Pedigree::AddProgeny;
 use CXGN::Trial::ParseUpload;
 use CXGN::Trial::TrialCreate;
+use Excel::Writer::XLSX;
+use JSON;
+use SGN::Test::Fixture;
+use SGN::Model::Cvterm;
+use Test::More;
+use Test::WWW::Mechanize;
+
 
 my $mech = Test::WWW::Mechanize->new;
 my $f = SGN::Test::Fixture->new();
 my $schema = $f->bcs_schema;
 my $dbh = $f->dbh;
 my $phenome_schema = $f->phenome_schema();
-
-# Setup shared variables
-my $breeding_program_id   = $schema->resultset('Project::Project')->find({ name => 'test' })->project_id();
+my $breeding_program_name = 'test';
+my $breeding_program_id   = $schema->resultset('Project::Project')->find({ name => $breeding_program_name })->project_id();
 my $location_name = 'test_location';
 my $location_id = $schema->resultset('NaturalDiversity::NdGeolocation')->find({description => $location_name})->nd_geolocation_id();
 
@@ -37,7 +36,7 @@ my $add_crossingtrial = CXGN::Pedigree::AddCrossingtrial->new({
     breeding_program_id => $breeding_program_id,
     year                => '2026',
     crossingtrial_name  => 'seedlot_crossing_trial',
-    project_description => 'Description of seedlot crossing trial',   
+    project_description => 'Description of seedlot crossing trial',
     nd_geolocation_id   => $location_id,
     owner_id            => 41
 });
@@ -84,7 +83,7 @@ my $cross_biparental_id = $schema->resultset('Stock::Stock')->find({ uniquename 
 # Create open-pollinated seedlot
 my $seedlot_op = CXGN::Stock::Seedlot->new( schema => $schema);
 $seedlot_op->uniquename("seedlot_cross_op");
-$seedlot_op->location_code("test_location");
+$seedlot_op->location_code($location_name);
 $seedlot_op->cross_stock_id($cross_op_id);
 $seedlot_op->breeding_program_id($breeding_program_id);
 ok($seedlot_op->store(), 'Create open-pollinated seedlot');
@@ -92,7 +91,7 @@ ok($seedlot_op->store(), 'Create open-pollinated seedlot');
 # Create biparental seedlot
 my $seedlot_biparental = CXGN::Stock::Seedlot->new( schema => $schema);
 $seedlot_biparental->uniquename("seedlot_cross_biparental");
-$seedlot_biparental->location_code("test_location");
+$seedlot_biparental->location_code($location_name);
 $seedlot_biparental->cross_stock_id($cross_biparental_id);
 $seedlot_biparental->breeding_program_id($breeding_program_id);
 ok($seedlot_biparental->store(), 'Create biparental seedlot');
@@ -101,7 +100,7 @@ ok($seedlot_biparental->store(), 'Create biparental seedlot');
 my $test_accession_id = $schema->resultset('Stock::Stock')->find({ uniquename => 'test_accession1' })->stock_id;
 my $seedlot_biparental = CXGN::Stock::Seedlot->new( schema => $schema);
 $seedlot_biparental->uniquename("seedlot_accession");
-$seedlot_biparental->location_code("test_location");
+$seedlot_biparental->location_code($location_name);
 $seedlot_biparental->cross_stock_id($test_accession_id);
 $seedlot_biparental->breeding_program_id($breeding_program_id);
 ok($seedlot_biparental->store(), 'Create accession seedlot');
@@ -132,12 +131,40 @@ my $progeny_biparental = CXGN::Pedigree::AddProgeny->new({
 ok($progeny_biparental->add_progeny(), 'Add progeny to cross_biparental');
 
 # -----------------------------------------------------------------------------
-# Create trial using multi upload
+# Create trial multi upload file
 
-my $trial_file_path = "t/data/trial/accession_trial_layout_with_seedlot_from_cross.xlsx";
-my $parser  = CXGN::Trial::ParseUpload->new(chado_schema=> $schema, filename => $trial_file_path);
+my $trial_layout_csv = "
+trial_name,breeding_program,location,year,transplanting_date,design_type,description,trial_type,trial_stock_type,plot_width,plot_length,field_size,planting_date,harvest_date,plot_name,accession_name,plot_number,block_number,is_a_control,rep_number,range_number,row_number,col_number,seedlot_name,num_seed_per_plot,weight_gram_seed_per_plot,entry_number
+seedlot_trial,$breeding_program_name,$location_name,2026,,RCBD,Description of seedlot trial,misc_trial,accession,,,,,,seedlot_trial_plot_1,cross_op_accession_001,1,1,0,1,1,1,1,seedlot_cross_op,3,0,
+seedlot_trial,$breeding_program_name,$location_name,2026,,RCBD,Description of seedlot trial,misc_trial,accession,,,,,,seedlot_trial_plot_2,cross_biparental_accession_001,2,1,0,2,1,1,2,seedlot_cross_biparental,3,0,
+seedlot_trial,$breeding_program_name,$location_name,2026,,RCBD,Description of seedlot trial,misc_trial,accession,,,,,,seedlot_trial_plot_3,test_accession1,3,1,0,3,1,1,3,seedlot_accession,3,0,
+";
+my $trial_xlsx = '/tmp/accession_trial_layout_with_seedlot_from_cross.xlsx';
+my $workbook  = Excel::Writer::XLSX->new($trial_xlsx);
+my $worksheet = $workbook->add_worksheet();
+my @csv_lines = split("\n", $trial_layout_csv);
+
+my $row = 0;
+foreach my $line (@csv_lines) {
+    if (!$line) { next; }
+    my @record = split(",", $line);
+    my $col = 0;
+    foreach my $value (@record) {
+        $worksheet->write( $row, $col, $value );
+        $col++;
+    }
+    $row++;
+}
+$workbook->close();
+ok(-e $trial_xlsx, "Create trial multi upload xlsx");
+
+# -----------------------------------------------------------------------------
+# Upload trial
+
+my $parser  = CXGN::Trial::ParseUpload->new(chado_schema=> $schema, filename => $trial_xlsx);
 $parser->load_plugin('MultipleTrialDesignGeneric');
 my $parsed_data = $parser->parse();
+ok(unlink($trial_xlsx), 'Delete temporary trial xlsx');
 
 my $trial_data = $parsed_data->{"seedlot_trial"};
 my $trial_create = CXGN::Trial::TrialCreate->new({
@@ -154,16 +181,24 @@ my $trial_create = CXGN::Trial::TrialCreate->new({
     operator 			=> "janedoe",
 });
 my $save = $trial_create->save_trial();
-ok($trial_create->save_trial(), "Create trial");
+ok($trial_create->save_trial(), "Create trial with 3 seeds per plot");
 
- my $trial_id = $schema->resultset('Project::Project')->find({ name => 'seedlot_trial' })->project_id();
+my $trial_id = $schema->resultset('Project::Project')->find({ name => 'seedlot_trial' })->project_id();
 
 # -----------------------------------------------------------------------------
 # Add seedlot to plots
 
-# jQuery('#trial_upload_used_seedlot_form').attr("action", "/ajax/breeders/trial/<% $trial_id %>/upload_used_seedlots?trial_stock_type=<% $trial_stock_type %>");
+# Write seedlot transactions to file
+my $seedlot_upload_csv = "seedlot_name,plot_name,num_seed_per_plot,weight_gram_seed_per_plot,description
+seedlot_cross_op,seedlot_trial_plot_1,10,,
+seedlot_cross_biparental,seedlot_trial_plot_2,10,,
+seedlot_accession,seedlot_trial_plot_3,10,,";
+my $seedlot_file_path = my $trial_file_path = "/tmp/accession_trial_layout_with_seedlot_upload.csv";
+open(FH, '>', $seedlot_file_path ) or die $!;
+print FH $seedlot_upload_csv;
+close(FH);
 
-my $seedlot_file_path = my $trial_file_path = "t/data/trial/accession_trial_layout_with_seedlot_upload.csv";
+# Parse and upload the seed transactions to plots
 my $parser = CXGN::Trial::ParseUpload->new(
     chado_schema => $schema,
     filename => $seedlot_file_path,
@@ -182,16 +217,16 @@ while (my ($key, $data) = each(%$parsed_data)){
     $transaction->from_stock([$data->{seedlot_stock_id}, $data->{seedlot_name}]);
     $transaction->to_stock([$data->{plot_stock_id}, $data->{plot_name}]);
     $transaction->amount($data->{amount});
-    $transaction->weight_gram($data->{weight_gram});
     $transaction->description($data->{description});
     $transaction->timestamp($timestamp);
     $transaction->operator('janedoe');
-    my $test_name = 'Adding seedlot ' .  $data->{seedlot_name} . ' to plot ' . $data->{plot_name};
+    my $test_name = 'Plant 10 seeds from seedlot ' .  $data->{seedlot_name} . ' into plot ' . $data->{plot_name};
     ok($transaction->store(), $test_name);
 
     my $seedlot = CXGN::Stock::Seedlot->new(schema => $schema, seedlot_id => $data->{seedlot_stock_id});
     $seedlot->set_current_count_property();
-    $seedlot->set_current_weight_property();
+
+    is($seedlot->get_current_count_property(), -13, "Seedlot count is -13 seeds for " . $data->{seedlot_name});
 }
 
 $f->clean_up_db();
