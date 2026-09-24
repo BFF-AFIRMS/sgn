@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { WorkflowPagedProps, WorkflowPagedStepHelpers } from './types';
+import { WorkflowPagedProps, WorkflowPagedStepController } from './types';
 
 export const WorkflowPaged: React.FC<WorkflowPagedProps> = ({
     id = 'workflow',
@@ -29,7 +29,7 @@ export const WorkflowPaged: React.FC<WorkflowPagedProps> = ({
         setCompletedSteps(p => new Set(p).add(step));
     };
 
-    const helpers: WorkflowPagedStepHelpers = {
+    const controller: WorkflowPagedStepController = {
         next,
         prev,
         goTo,
@@ -162,7 +162,7 @@ export const WorkflowPaged: React.FC<WorkflowPagedProps> = ({
                                 className={currentStep === idx ? 'workflow-focus' : ''}
                             >
                                 {currentStep === idx && (
-                                    typeof s.content === 'function' ? s.content(helpers) : s.content
+                                    typeof s.content === 'function' ? s.content(controller) : s.content
                                 )}
                             </li>
                         ))}
