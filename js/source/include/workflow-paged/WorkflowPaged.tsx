@@ -1,13 +1,40 @@
-import React from 'react';
-import { WorkflowPagedProps } from './types';
-import { useWorkflowPaged } from './WorkflowPagedContext';
+import React, { useState } from 'react';
+import { WorkflowPagedProps, WorkflowPagedStepHelpers } from './types';
 
 export const WorkflowPaged: React.FC<WorkflowPagedProps> = ({
     id = 'workflow',
     steps,
+    initialStep = 0,
     className = ''
 }) => {
-    const { currentStep, setCurrentStep, completedSteps } = useWorkflowPaged();
+    const [currentStep, setCurrentStep] = useState(initialStep);
+    const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());
+
+    const next = () => {
+        setCompletedSteps(prev => new Set(prev).add(currentStep));
+        setCurrentStep(prev => Math.min(prev + 1, steps.length - 1));
+    };
+
+    const prev = () => {
+        setCurrentStep(p => Math.max(p - 1, 0));
+    };
+
+    const goTo = (step: number) => {
+        if (step >= 0 && step < steps.length) {
+            setCurrentStep(step);
+        }
+    };
+
+    const completeStep = (step: number = currentStep) => {
+        setCompletedSteps(p => new Set(p).add(step));
+    };
+
+    const helpers: WorkflowPagedStepHelpers = {
+        next,
+        prev,
+        goTo,
+        completeStep
+    };
 
     const handleProgClick = (stepIndex: number) => {
         if (
@@ -135,7 +162,7 @@ export const WorkflowPaged: React.FC<WorkflowPagedProps> = ({
                                 className={currentStep === idx ? 'workflow-focus' : ''}
                             >
                                 {currentStep === idx && (
-                                    typeof s.content === 'function' ? s.content() : s.content
+                                    typeof s.content === 'function' ? s.content(helpers) : s.content
                                 )}
                             </li>
                         ))}

@@ -1,14 +1,10 @@
 import React from 'react';
-import { useWizard } from '../../contexts/WizardContext';
 
-export const IntroStep: React.FC = () => {
-    const { setCurrentStep, markStepComplete } = useWizard();
+interface IntroStepProps {
+    onNext: () => void;
+}
 
-    const handleNext = () => {
-        markStepComplete(0);
-        setCurrentStep(1);
-    };
-
+export const IntroStep: React.FC<IntroStepProps> = ({ onNext }) => {
     return (
         <div className="tw:p-4">
             <div className="page_title tw:mb-4">
@@ -41,7 +37,7 @@ export const IntroStep: React.FC = () => {
                     type="button"
                     id="next_step_intro_button"
                     className="btn btn-primary"
-                    onClick={handleNext}
+                    onClick={onNext}
                 >
                     Go to Next Step
                 </button>
