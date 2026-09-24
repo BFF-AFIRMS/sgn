@@ -92,48 +92,13 @@ export const WorkflowAccordion: React.FC<WorkflowAccordionProps> = ({
 
     return (
         <div className={`panel-group accordion-workflow ${className}`} id={id}>
-            <style>{`
-                .accordion-workflow .accordion-step-panel {
-                    margin-bottom: 15px;
-                }
-                .accordion-workflow .accordion-locked {
-                    opacity: 0.5;
-                    cursor: help !important;
-                }
-                .accordion-workflow .accordion-locked * {
-                    cursor: help !important;
-                }
-                .accordion-workflow .accordion-collapse-wrapper {
-                    display: grid !important;
-                    grid-template-rows: 0fr;
-                    transition: grid-template-rows 0.35s ease-in-out, visibility 0.35s ease-in-out;
-                    visibility: hidden;
-                }
-                .accordion-workflow .accordion-collapse-wrapper.in {
-                    grid-template-rows: 1fr;
-                    visibility: visible;
-                }
-                .accordion-workflow .accordion-collapse-inner {
-                    overflow: hidden;
-                    min-height: 0;
-                }
-                .collapser-chevron {
-                    transition: transform 0.2s ease-in-out;
-                    margin-right: 8px;
-                    display: inline-block;
-                }
-                .collapsed .collapser-chevron {
-                    transform: rotate(-90deg);
-                }
-            `}</style>
-
             {steps.map((sec, i) => {
                 const isOpen = openPanels.has(i);
                 const isLocked = i > effectiveMaxUnlocked;
                 return (
                     <div
                         key={sec.id}
-                        className="accordion-step-panel"
+                        className="accordion-step-panel tw:mb-[15px]"
                         id={`${id}_panel_${i}`}
                         data-step-index={i}
                     >
@@ -142,11 +107,20 @@ export const WorkflowAccordion: React.FC<WorkflowAccordionProps> = ({
                                 <tr>
                                     <td className="sub_infosectiontitle">
                                         <a
-                                            className={`collapser collapser_show ${!isOpen ? 'collapsed' : ''} ${isLocked ? 'accordion-locked' : ''}`}
-                                            style={{ textDecoration: 'none', cursor: isLocked ? 'help' : 'pointer' }}
+                                            className={`collapser collapser_show tw:no-underline tw:hover:no-underline ${
+                                                !isOpen ? 'collapsed' : ''
+                                            } ${
+                                                isLocked
+                                                    ? 'accordion-locked tw:opacity-50 tw:cursor-help! [&_*]:tw:cursor-help!'
+                                                    : 'tw:cursor-pointer'
+                                            }`}
                                             onClick={() => handleHeaderClick(i)}
                                         >
-                                            <span className="glyphicon glyphicon-chevron-down collapser-chevron"></span>
+                                            <span
+                                                className={`glyphicon glyphicon-chevron-down collapser-chevron tw:inline-block tw:mr-2 tw:transition-transform tw:duration-200 tw:ease-in-out ${
+                                                    !isOpen ? '-tw:rotate-90' : 'tw:rotate-0'
+                                                }`}
+                                            ></span>
                                             <span className="collapser-label">{sec.title}</span>
                                         </a>
                                     </td>
