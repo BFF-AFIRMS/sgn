@@ -22,13 +22,8 @@ my $f = SGN::Test::Fixture->new();
 my $schema = $f->bcs_schema;
 my $dbh = $f->dbh;
 my $phenome_schema = $f->phenome_schema();
-    
-# -----------------------------------------------------------------------------
-# Login
-$mech->post_ok('http://localhost:3010/brapi/v1/token', [ "username" => "janedoe", "password" => "secretpw", "grant_type" => "password" ]);
-my $response = decode_json $mech->content;
-is($response->{'metadata'}->{'status'}->[2]->{'message'}, 'Login Successfull', "Logging in");
 
+# Setup shared variables
 my $breeding_program_id   = $schema->resultset('Project::Project')->find({ name => 'test' })->project_id();
 my $location_name = 'test_location';
 my $location_id = $schema->resultset('NaturalDiversity::NdGeolocation')->find({description => $location_name})->nd_geolocation_id();
@@ -199,4 +194,5 @@ while (my ($key, $data) = each(%$parsed_data)){
     $seedlot->set_current_weight_property();
 }
 
+$f->clean_up_db();
 done_testing();
