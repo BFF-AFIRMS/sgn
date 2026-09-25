@@ -5,6 +5,10 @@ export interface DerivedGridResult {
     dimensions: {
         rows: number;
         cols: number;
+        minX: number;
+        maxX: number;
+        minY: number;
+        maxY: number;
     };
 }
 
@@ -75,6 +79,6 @@ export const derivePlotGrid = (data: any[]): DerivedGridResult => {
     
     return {
         plotObject: mapped,
-        dimensions: { rows, cols }
+        dimensions: { rows, cols, minX, maxX, minY, maxY }
     };
 };
