@@ -129,7 +129,7 @@ sub retrieve {
                 } elsif ($_ eq 'family_name'){
                     push @$line, $design_info->{"family_name"} || '';
                 } elsif ($_ eq 'cross_unique_id'){
-                    push @$line, $design_info->{"cross_unique_id"} || '';
+                    push @$line, $design_info->{"cross_name"} || '';
                 } elsif ($_ eq 'pedigree'){
                     push @$line, $pedigree_strings->{$design_info->{"accession_name"}};
                 } elsif ($_ eq 'female_parent'){
