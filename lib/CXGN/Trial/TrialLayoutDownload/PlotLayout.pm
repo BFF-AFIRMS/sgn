@@ -53,7 +53,7 @@ sub retrieve {
     my $trial_stock_type = $self->trial_stock_type();
     my $include_plot_order = $self->include_plot_order() && $self->plot_order() && $self->plot_order() ne '' && $self->plot_start() && $self->plot_start() ne '';
 
-    my @possible_cols = ('plot_name','plot_id','accession_name','accession_id','plot_order','plot_number','block_number','is_a_control','rep_number','range_number','row_number','col_number','stake_number','set_number','seedlot_name','seed_transaction_operator','num_seed_per_plot','pedigree','female_parent','male_parent','location_name','trial_name','year', 'planting_date', 'synonyms','tier','plot_geo_json',);
+    my @possible_cols = ('plot_name','plot_id','accession_name','accession_id','plot_order','plot_number','block_number','is_a_control','rep_number','range_number','row_number','col_number','stake_number','set_number','seedlot_name','seed_transaction_operator','num_seed_per_plot', 'family_name', 'cross_unique_id', 'pedigree','female_parent','male_parent','location_name','trial_name','year', 'planting_date', 'synonyms','tier','plot_geo_json',);
 
     $selected_cols{plot_order} = 1 if $include_plot_order;
 
@@ -64,6 +64,10 @@ sub retrieve {
                 push @header, 'family_name';
             } elsif (($_ eq 'accession_name') && ($trial_stock_type eq 'cross')) {
                 push @header, 'cross_unique_id';
+            } elsif (($_ eq 'family_name') && ($trial_stock_type eq 'family_name')){
+                next;
+            } elsif (($_ eq 'cross_unique_id') && ($trial_stock_type eq 'cross')){
+                next;
             } else {
                 push @header, $_;
             }
@@ -122,6 +126,10 @@ sub retrieve {
                 } elsif ($_ eq 'synonyms'){
                     my $accession = CXGN::Stock::Accession->new({schema=>$schema, stock_id=>$design_info->{"accession_id"}});
                     push @$line, join ',', @{$accession->synonyms}
+                } elsif ($_ eq 'family_name'){
+                    push @$line, $design_info->{"family_name"} || '';
+                } elsif ($_ eq 'cross_unique_id'){
+                    push @$line, $design_info->{"cross_name"} || '';
                 } elsif ($_ eq 'pedigree'){
                     push @$line, $pedigree_strings->{$design_info->{"accession_name"}};
                 } elsif ($_ eq 'female_parent'){
