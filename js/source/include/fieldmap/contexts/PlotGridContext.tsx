@@ -213,12 +213,8 @@ export const PlotGridProvider: React.FC<FieldMapContextProps> = ({ trialId, auth
         return matrix;
     }, [bounds, renderBounds, plotList, fillerAccessionId]);
 
-    const recalculateLayout = useCallback((layout: 'serpentine' | 'zigzag', minX?: number, maxX?: number, minY?: number, maxY?: number) => {
+    const recalculateLayout = useCallback((layout: 'serpentine' | 'zigzag') => {
         setPlotObject(currentPlots => {
-            minX = minX ?? dimensions.minX ?? 1;
-            maxX = maxX ?? dimensions.maxX ?? bounds.numCols;
-            minY = minY ?? dimensions.minY ?? 1;
-            maxY = maxY ?? dimensions.maxX ?? bounds.numRows;
 
             const plotsArr = Object.values(currentPlots).filter(p => !!p.observationUnitDbId);
 
@@ -241,20 +237,22 @@ export const PlotGridProvider: React.FC<FieldMapContextProps> = ({ trialId, auth
 
             const newPlotObject: Record<string, Plot> = {};
             let plotIdx = 0;
-            for (let r = minY; r <= maxY; r++) {
-                const relativeRow = 1 + r - minY;
+            for (let r = dimensions.minY; r <= dimensions.maxY; r++) {
+                const relativeRow = 1 + r - dimensions.minY;
                 const swap_columns = layout === 'serpentine' && (relativeRow % 2 === 0);
+                const cStart = swap_columns ? dimensions.maxX : dimensions.minX;
+                const cEnd = swap_columns ? dimensions.minX: dimensions.maxX;
+                const cStep = swap_columns ? -1: 1;
 
-                for (let c = minX; c <= maxX; c++) {
+                for (let c = cStart; cStep > 0 ? c <= cEnd : c >= cEnd; c += cStep) {
+                    console.log(`r: ${r}, c: ${c}`);
                     if (plotIdx < sortedPlots.length) {
                         const plot = sortedPlots[plotIdx];
-                        const newC = swap_columns ? 1 + maxX - c : c;
-
                         newPlotObject[plot.observationUnitDbId!] = {
                             ...plot,
                             observationUnitPosition: {
                                 ...plot.observationUnitPosition,
-                                positionCoordinateX: newC,
+                                positionCoordinateX: c,
                                 positionCoordinateY: r,
                             }
                         };
@@ -425,7 +423,7 @@ export const PlotGridProvider: React.FC<FieldMapContextProps> = ({ trialId, auth
         const newMaxX = dimensions.maxX + addCols;
 
         setDimensions(d => ({ rows: rows, cols: cols, minX: d.minX, maxX: newMaxX, minY: d.minY, maxY: newMaxY }));
-        recalculateLayout(plotLayout, newMinX, newMaxX, newMinY, newMaxY);
+        recalculateLayout(plotLayout);
     }, [trialId, plotList]);
 
     const transformedSecondaryAxis = useMemo(() => {
