@@ -3,7 +3,6 @@ import { useTrialForm } from '../../contexts/TrialFormContext';
 import { useDesignResult } from '../../contexts/DesignResultContext';
 import { useDesignGenerator } from '../../hooks/useDesignGenerator';
 import { useTrialSaver } from '../../hooks/useTrialSaver';
-import { useBreedbaseLists } from '../../hooks/useBreedbaseLists';
 import { designMapToObservationUnits } from '../../utils/designAdapters';
 import { FieldMapProps } from '../../../fieldmap/types';
 
@@ -24,7 +23,6 @@ export const ReviewDesignStep: React.FC<ReviewDesignStepProps> = ({ FieldMapCont
     } = useDesignResult();
     const { generateDesign, loading: regenerating, error: regenError } = useDesignGenerator();
     const { saveTrial, saving, error: saveError } = useTrialSaver();
-    const { getListElements } = useBreedbaseLists(formData.stockType === 'cross' ? 'crosses' : formData.stockType === 'family_name' ? 'family_names' : 'accessions');
 
     const currentDesign = parsedDesigns[selectedLocationIndex] || parsedDesigns[0] || {};
     const currentUnits = useMemo(() => {
@@ -34,16 +32,16 @@ export const ReviewDesignStep: React.FC<ReviewDesignStepProps> = ({ FieldMapCont
 
     useEffect(() => {
         if (!result && !regenerating && formData.trialName.trim()) {
-            generateDesign(formData, getListElements).then(({ data }) => {
+            generateDesign(formData).then(({ data }) => {
                 if (data) {
                     setResult(data);
                 }
             });
         }
-    }, [result, regenerating, formData, getListElements, generateDesign, setResult]);
+    }, [result, regenerating, formData, generateDesign, setResult]);
 
     const handleRedo = async () => {
-        const { data: generated, error: err } = await generateDesign(formData, getListElements);
+        const { data: generated, error: err } = await generateDesign(formData);
         if (err) {
             alert(err);
             return;

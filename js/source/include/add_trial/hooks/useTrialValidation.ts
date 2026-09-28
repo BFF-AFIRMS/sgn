@@ -1,5 +1,6 @@
 import { useCallback } from 'react';
 import { TrialFormData } from '../types';
+import { fetchListItems } from './useBreedbaseLists';
 
 export const validateTrialInfoSync = (form: TrialFormData): { valid: boolean; error?: string } => {
     if (!form.trialName.trim()) return { valid: false, error: 'Please supply a trial name.' };
@@ -39,44 +40,24 @@ export const validateTrialInfoSync = (form: TrialFormData): { valid: boolean; er
 };
 
 export const validateDesignInfoSync = (
-    form: TrialFormData,
-    getListElements: (listId: string) => string[]
+    form: TrialFormData
 ): { valid: boolean; error?: string } => {
     if (form.designType === 'p-rep') {
         if (!form.unrepStockListId || !form.repStockListId) {
             return { valid: false, error: 'Please select unreplicated and replicated stock lists for p-rep design.' };
         }
-        const rep = getListElements(form.repStockListId);
-        const unrep = getListElements(form.unrepStockListId);
-        if (rep.length === 0 || unrep.length === 0) {
-            return { valid: false, error: 'Selected replicated or unreplicated list has no entries.' };
-        }
-        const rows = parseInt(form.rowInDesignNumber || '0', 10);
-        const cols = parseInt(form.colInDesignNumber || '0', 10);
-        const repTimes = parseInt(form.noOfRepTimes || '0', 10);
-        if (rows * cols === 0) {
+        if (!form.rowInDesignNumber || !form.colInDesignNumber) {
             return { valid: false, error: 'Please provide number of rows and columns in design for p-rep.' };
-        }
-        if (rows * cols !== (unrep.length + rep.length * repTimes)) {
-            return { valid: false, error: 'Treatment repeats do not equal total plots (rows × columns) in design.' };
         }
     } else {
         if (!form.stockListId) {
             return { valid: false, error: 'Please select a list of stocks to include in the trial.' };
-        }
-        const elements = getListElements(form.stockListId);
-        if (elements.length === 0) {
-            return { valid: false, error: 'Selected stock list contains no items.' };
         }
     }
 
     if (form.designType === 'Augmented' || form.designType === 'MAD') {
         if (!form.controlListId) {
             return { valid: false, error: 'Please select a list of checks.' };
-        }
-        const checks = getListElements(form.controlListId);
-        if (checks.length === 0) {
-            return { valid: false, error: 'Selected checks list contains no items.' };
         }
     }
 
@@ -164,16 +145,44 @@ export const useTrialValidation = () => {
         return { valid: true };
     }, []);
 
-    const validateDesignInfo = useCallback(async (
-        form: TrialFormData,
-        getListElements: (listId: string) => string[]
-    ): Promise<{ valid: boolean; error?: string }> => {
-        const syncCheck = validateDesignInfoSync(form, getListElements);
+    const validateDesignInfo = useCallback(async (form: TrialFormData): Promise<{ valid: boolean; error?: string }> => {
+        const syncCheck = validateDesignInfoSync(form);
         if (!syncCheck.valid) return syncCheck;
+
+        if (form.designType === 'p-rep') {
+            const [rep, unrep] = await Promise.all([
+                fetchListItems(form.repStockListId),
+                fetchListItems(form.unrepStockListId)
+            ]);
+            if (rep.length === 0 || unrep.length === 0) {
+                return { valid: false, error: 'Selected replicated or unreplicated list has no entries.' };
+            }
+            const rows = parseInt(form.rowInDesignNumber || '0', 10);
+            const cols = parseInt(form.colInDesignNumber || '0', 10);
+            const repTimes = parseInt(form.noOfRepTimes || '0', 10);
+            if (rows * cols === 0) {
+                return { valid: false, error: 'Please provide number of rows and columns in design for p-rep.' };
+            }
+            if (rows * cols !== (unrep.length + rep.length * repTimes)) {
+                return { valid: false, error: 'Treatment repeats do not equal total plots (rows × columns) in design.' };
+            }
+        } else {
+            const elements = await fetchListItems(form.stockListId);
+            if (elements.length === 0) {
+                return { valid: false, error: 'Selected stock list contains no items.' };
+            }
+        }
+
+        if (form.designType === 'Augmented' || form.designType === 'MAD') {
+            const checks = await fetchListItems(form.controlListId);
+            if (checks.length === 0) {
+                return { valid: false, error: 'Selected checks list contains no items.' };
+            }
+        }
 
         // Validate stock list server-side
         const targetListId = form.designType === 'p-rep' ? form.repStockListId : form.stockListId;
-        const elements = getListElements(targetListId);
+        const elements = await fetchListItems(targetListId);
         if (elements.length > 0) {
             let endpoint = '/ajax/trial/verify_stock_list';
             let paramName = 'stock_list';

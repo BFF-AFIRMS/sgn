@@ -1,22 +1,30 @@
 import { useState, useCallback } from 'react';
 import { TrialFormData, DesignResultResponse } from '../types';
+import { fetchListItems } from './useBreedbaseLists';
 
 export const useDesignGenerator = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
     const generateDesign = useCallback(async (
-        form: TrialFormData,
-        getListElements: (listId: string) => string[]
+        form: TrialFormData
     ): Promise<{ data: DesignResultResponse | null; error: string | null }> => {
         setLoading(true);
         setError(null);
         try {
-            const stockList = form.stockListId ? JSON.stringify(getListElements(form.stockListId)) : undefined;
-            const controlList = form.controlListId ? JSON.stringify(getListElements(form.controlListId)) : undefined;
-            const crbdControlList = form.crbdControlListId ? JSON.stringify(getListElements(form.crbdControlListId)) : undefined;
-            const unrepStockList = form.unrepStockListId ? JSON.stringify(getListElements(form.unrepStockListId)) : undefined;
-            const repStockList = form.repStockListId ? JSON.stringify(getListElements(form.repStockListId)) : undefined;
+            const [stockListItems, controlListItems, crbdControlListItems, unrepStockListItems, repStockListItems] = await Promise.all([
+                form.stockListId ? fetchListItems(form.stockListId) : Promise.resolve(null),
+                form.controlListId ? fetchListItems(form.controlListId) : Promise.resolve(null),
+                form.crbdControlListId ? fetchListItems(form.crbdControlListId) : Promise.resolve(null),
+                form.unrepStockListId ? fetchListItems(form.unrepStockListId) : Promise.resolve(null),
+                form.repStockListId ? fetchListItems(form.repStockListId) : Promise.resolve(null),
+            ]);
+
+            const stockList = stockListItems ? JSON.stringify(stockListItems) : undefined;
+            const controlList = controlListItems ? JSON.stringify(controlListItems) : undefined;
+            const crbdControlList = crbdControlListItems ? JSON.stringify(crbdControlListItems) : undefined;
+            const unrepStockList = unrepStockListItems ? JSON.stringify(unrepStockListItems) : undefined;
+            const repStockList = repStockListItems ? JSON.stringify(repStockListItems) : undefined;
 
             // Format splitplot treatments
             const treatmentsMap: Record<string, string[]> = {};
@@ -35,10 +43,9 @@ export const useDesignGenerator = () => {
 
             // Greenhouse plants array
             let greenhousePlantsArray: number[] | undefined;
-            if (form.designType === 'greenhouse' && form.stockListId) {
-                const stocks = getListElements(form.stockListId);
+            if (form.designType === 'greenhouse' && stockListItems) {
                 const defaultPlants = parseInt(form.greenhouseDefaultPlants || '1', 10) || 1;
-                greenhousePlantsArray = stocks.map(st => {
+                greenhousePlantsArray = stockListItems.map(st => {
                     const custom = form.greenhouseCustomPlants[st];
                     const parsed = parseInt(custom, 10);
                     return !isNaN(parsed) && parsed > 0 ? parsed : defaultPlants;
