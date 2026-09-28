@@ -5,9 +5,9 @@ export const CompleteStep: React.FC = () => {
     const { savedTrialId } = useDesignResult();
 
     return (
-        <div className="tw:p-6">
-            <div className="page_title tw:mb-4">
-                <h3 className="tw:font-bold tw:text-lg">Complete! Your trial was saved in the database.</h3>
+        <div>
+            <div id="pagetitle">
+                <h3>Complete! Your trial was saved in the database.</h3>
             </div>
             <p>
                 <span className="glyphicon glyphicon-ok-sign tw:text-green-600 tw:text-xl tw:mr-2"></span>
