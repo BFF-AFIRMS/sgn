@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useTrialForm } from '../../contexts/TrialFormContext';
+
 export const TrialLinkageSection: React.FC = () => {
     const { formData, updateField } = useTrialForm();
     const [precedingTrials, setPrecedingTrials] = useState<Array<[number, string]>>([]);
