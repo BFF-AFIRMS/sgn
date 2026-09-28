@@ -195,7 +195,7 @@ export const TrialInfoSection: React.FC = () => {
             </div>
 
             <div className="form-group row">
-                <label className="col-sm-3 control-label">Plot Dimensions (m):</label>
+                <label className="col-sm-3 control-label">Plot Dimensions:</label>
                 <div className="col-sm-9 tw:flex tw:gap-4">
                     <div className="tw:flex-1">
                         <label>Width (m):</label>
