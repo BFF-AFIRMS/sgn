@@ -1,7 +1,7 @@
 import React from 'react';
 import { useTrialForm } from '../../contexts/TrialFormContext';
 import { BreedbaseListSelect } from '../common/BreedbaseListSelect';
-import { AccessionAutocomplete } from '../../../fieldmap/components/AccessionAutocomplete';
+import { AccessionAutocomplete } from '../../../autocomplete';
 import { normalizeListType, useListItems } from '../../hooks/useBreedbaseLists';
 import { StockType } from '../../types';
 
