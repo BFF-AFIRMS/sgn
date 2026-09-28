@@ -8,7 +8,6 @@ import { DesignInfoSection } from '../sections/DesignInfoSection';
 import { TrialLinkageSection } from '../sections/TrialLinkageSection';
 import { FieldMapSection } from '../sections/FieldMapSection';
 import { PlotNamingSection } from '../sections/PlotNamingSection';
-import { useBreedbaseLists } from '../../hooks/useBreedbaseLists';
 import { WorkflowAccordion, evaluateAccordionSync } from '../../../workflow_accordion';
 
 interface DesignDetailsStepProps {
@@ -22,7 +21,6 @@ export const DesignDetailsStep: React.FC<DesignDetailsStepProps> = ({ onOpenPrep
     const { setResult } = useDesignResult();
     const { validateTrialInfo, validateDesignInfo } = useTrialValidation();
     const { generateDesign, loading } = useDesignGenerator();
-    const { getListElements } = useBreedbaseLists(formData.stockType === 'cross' ? 'crosses' : formData.stockType === 'family_name' ? 'family_names' : 'accessions');
     const [validationError, setValidationError] = useState<string | null>(null);
 
     const sections = useMemo(() => [
@@ -36,7 +34,7 @@ export const DesignDetailsStep: React.FC<DesignDetailsStepProps> = ({ onOpenPrep
             id: 'step_design_info',
             title: 'Design Information',
             component: <DesignInfoSection onOpenPrepHelp={onOpenPrepHelp} />,
-            validate: () => validateDesignInfoSync(formData, getListElements)
+            validate: () => validateDesignInfoSync(formData)
         },
         {
             id: 'step_trial_linkage',
@@ -53,7 +51,7 @@ export const DesignDetailsStep: React.FC<DesignDetailsStepProps> = ({ onOpenPrep
             title: 'Custom Plot Naming',
             component: <PlotNamingSection />
         }
-    ], [onOpenPrepHelp, formData, getListElements]);
+    ], [onOpenPrepHelp, formData]);
 
     const evaluation = useMemo(() => evaluateAccordionSync(sections), [sections]);
 
@@ -71,14 +69,14 @@ export const DesignDetailsStep: React.FC<DesignDetailsStepProps> = ({ onOpenPrep
             return;
         }
 
-        const designCheck = await validateDesignInfo(formData, getListElements);
+        const designCheck = await validateDesignInfo(formData);
         if (!designCheck.valid) {
             setValidationError(designCheck.error || 'Stock list validation failed.');
             alert(designCheck.error || 'Stock list validation failed.');
             return;
         }
 
-        const { data: generated, error: genErr } = await generateDesign(formData, getListElements);
+        const { data: generated, error: genErr } = await generateDesign(formData);
         if (genErr) {
             setValidationError(genErr);
             alert(genErr);
