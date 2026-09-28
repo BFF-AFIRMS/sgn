@@ -17,8 +17,9 @@ export const TrialLinkageSection: React.FC = () => {
             })
                 .then(res => res.json())
                 .then(data => {
-                    if (Array.isArray(data?.trials)) {
-                        setPrecedingTrials(data.trials);
+                    const list = data?.list;
+                    if (Array.isArray(list)) {
+                        setPrecedingTrials(list);
                     }
                 })
                 .catch(() => {});
