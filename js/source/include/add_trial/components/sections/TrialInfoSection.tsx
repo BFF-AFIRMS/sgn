@@ -250,11 +250,16 @@ export const TrialInfoSection: React.FC = () => {
                         value={formData.plantsPerPlot}
                         onChange={e => updateField('plantsPerPlot', e.target.value)}
                     />
+                    <p className="tw:text-gray-500 tw:mt-1">
+                        <em>Creates plant entries for each plot. Ignore if not adding plant entries.</em>
+                    </p>
                     <div className="tw:mt-2 tw:flex tw:flex-col tw:gap-1.5">
                         <label className="tw:font-normal">
                             <input
                                 id="trial_create_plants_per_plot_inherit_treatments"
+                                name="trial_create_plants_per_plot_inherit_treatments"
                                 type="checkbox"
+                                disabled
                                 checked={formData.inheritTreatments}
                                 onChange={e => updateField('inheritTreatments', e.target.checked)}
                             />{' '}
@@ -263,6 +268,7 @@ export const TrialInfoSection: React.FC = () => {
                         <label className="tw:font-normal">
                             <input
                                 id="trial_create_rows_and_columns_to_plants"
+                                name="trial_create_rows_and_columns_to_plants"
                                 type="checkbox"
                                 checked={formData.assignRowColToPlants}
                                 onChange={e => updateField('assignRowColToPlants', e.target.checked)}
