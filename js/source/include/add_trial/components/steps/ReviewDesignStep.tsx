@@ -77,9 +77,9 @@ export const ReviewDesignStep: React.FC<ReviewDesignStepProps> = ({ FieldMapCont
     }, [result?.design_layout_view_html]);
 
     return (
-        <div className="tw:flex tw:flex-col tw:gap-4 tw:p-4">
-            <div className="page_title">
-                <h3 className="tw:font-bold tw:text-lg">Review the generated trial layout. Make sure to click Submit at the bottom of this page if you approve of the trial!</h3>
+        <div className="tw:flex tw:flex-col tw:gap-4">
+            <div id="pagetitle">
+                <h3>Review the generated trial layout. Make sure to click Submit at the bottom of this page if you approve of the trial!</h3>
             </div>
 
             {result?.warning_message && (
