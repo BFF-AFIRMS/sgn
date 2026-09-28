@@ -4,6 +4,14 @@ import { DraftData } from '../types';
 const MAX_DRAFTS = 10;
 const DRAFT_PREFIX = 'form_draft';
 
+const isFormDraft = (obj: any): obj is DraftData => {
+    return obj && typeof obj === 'object' && 'last_modified' in obj && 'max_step' in obj && 'data' in obj;
+};
+
+const isFunction = <T>(value: T | (() => T)): value is (() => T) => {
+    return typeof value === 'function';
+};
+
 export const cleanupOldDrafts = (): void => {
     if (typeof window === 'undefined' || !window.localStorage) return;
     try {
@@ -16,8 +24,8 @@ export const cleanupOldDrafts = (): void => {
                     const itemStr = localStorage.getItem(key);
                     if (itemStr) {
                         const item = JSON.parse(itemStr);
-                        if (item && typeof item === 'object') {
-                            lastModified = Number(item.last_modified) || 0;
+                        if (isFormDraft(item)) {
+                            lastModified = item.last_modified;
                         }
                     }
                 } catch {
@@ -53,7 +61,7 @@ export const initDraftId = (paramName: string = 'draft_id'): string => {
     }
 };
 
-export const useFormDraft = <T extends Record<string, any>>(
+export const useFormDraft = <T>(
     initialValues: T | (() => T)
 ) => {
     const [draftId] = useState<string>(() => initDraftId('draft_id'));
@@ -65,7 +73,7 @@ export const useFormDraft = <T extends Record<string, any>>(
             const saved = localStorage.getItem(draftKey);
             if (saved) {
                 const parsed = JSON.parse(saved);
-                if (parsed && typeof parsed === 'object') {
+                if (isFormDraft(parsed)) {
                     return parsed as DraftData<T>;
                 }
             }
@@ -76,7 +84,7 @@ export const useFormDraft = <T extends Record<string, any>>(
     }, [draftKey]);
 
     const [formData, setFormData] = useState<T>(() => {
-        const defaults = typeof initialValues === 'function' ? initialValues() : initialValues;
+        const defaults = isFunction(initialValues) ? initialValues() : initialValues;
         if (savedDraft?.data && typeof savedDraft.data === 'object') {
             return { ...defaults, ...savedDraft.data };
         }
