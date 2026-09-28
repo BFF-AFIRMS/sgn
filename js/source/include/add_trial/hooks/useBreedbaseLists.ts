@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 
 export interface BreedbaseListItem {
     id: string;
@@ -7,14 +7,17 @@ export interface BreedbaseListItem {
 
 type ListTuple = [number | string, string, ...unknown[]];
 
-export const normalizeListType = (t?: string): string => {
-    if (!t) return '';
-    const s = t.toLowerCase().trim();
-    if (s === 'cross' || s === 'crosses') return 'crosses';
-    if (s === 'family_name' || s === 'family_names') return 'family_names';
-    if (s === 'accession' || s === 'accessions') return 'accessions';
-    if (s === 'seedlot' || s === 'seedlots') return 'seedlots';
-    return s;
+const STOCK_TO_LIST_TYPE: Record<string, string> = {
+    accession: 'accessions',
+    cross: 'crosses',
+    family_name: 'family_names',
+    seedlot: 'seedlots',
+};
+
+export const normalizeListType = (type?: string): string => {
+    if (!type) return '';
+    const clean = type.toLowerCase().trim();
+    return STOCK_TO_LIST_TYPE[clean] ?? clean;
 };
 
 export const fetchListItems = async (listId: string): Promise<string[]> => {
@@ -61,6 +64,7 @@ export const useListItems = (listId?: string): { items: string[]; loading: boole
 export const useBreedbaseLists = (listType: string) => {
     const [lists, setLists] = useState<BreedbaseListItem[]>([]);
     const [loading, setLoading] = useState(false);
+
     const normalizedType = normalizeListType(listType);
 
     const loadLists = useCallback(async () => {
@@ -75,7 +79,9 @@ export const useBreedbaseLists = (listType: string) => {
             if (res.ok) {
                 const data: ListTuple[] = await res.json();
                 if (Array.isArray(data)) {
-                    setLists(data.map(([id, name]) => ({ id: String(id), name: String(name) })));
+                    setLists(data.map(
+                        ([id, name]) => ({ id: String(id), name })
+                    ));
                 } else {
                     setLists([]);
                 }

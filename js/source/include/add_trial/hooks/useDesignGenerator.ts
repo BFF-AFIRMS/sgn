@@ -20,12 +20,6 @@ export const useDesignGenerator = () => {
                 form.repStockListId ? fetchListItems(form.repStockListId) : Promise.resolve(null),
             ]);
 
-            const stockList = stockListItems ? JSON.stringify(stockListItems) : undefined;
-            const controlList = controlListItems ? JSON.stringify(controlListItems) : undefined;
-            const crbdControlList = crbdControlListItems ? JSON.stringify(crbdControlListItems) : undefined;
-            const unrepStockList = unrepStockListItems ? JSON.stringify(unrepStockListItems) : undefined;
-            const repStockList = repStockListItems ? JSON.stringify(repStockListItems) : undefined;
-
             // Format splitplot treatments
             const treatmentsMap: Record<string, string[]> = {};
             let subplotsPerPlot = 1;
@@ -101,11 +95,11 @@ export const useDesignGenerator = () => {
                 payload.append('greenhouse_num_plants', JSON.stringify(greenhousePlantsArray));
             }
 
-            if (stockList) payload.append('stock_list', stockList);
-            if (controlList) payload.append('control_list', controlList);
-            if (crbdControlList) payload.append('control_list_crbd', crbdControlList);
-            if (unrepStockList) payload.append('unreplicated_stock_list', unrepStockList);
-            if (repStockList) payload.append('replicated_stock_list', repStockList);
+            if (stockListItems) payload.append('stock_list', JSON.stringify(stockListItems));
+            if (controlListItems) payload.append('control_list', JSON.stringify(controlListItems));
+            if (crbdControlListItems) payload.append('control_list_crbd', JSON.stringify(crbdControlListItems));
+            if (unrepStockListItems) payload.append('unreplicated_stock_list', JSON.stringify(unrepStockListItems));
+            if (repStockListItems) payload.append('replicated_stock_list', JSON.stringify(repStockListItems));
 
             const res = await fetch('/ajax/trial/generate_experimental_design', {
                 method: 'POST',

@@ -2,7 +2,7 @@ import React from 'react';
 import { useTrialForm } from '../../contexts/TrialFormContext';
 import { BreedbaseListSelect } from '../common/BreedbaseListSelect';
 import { AccessionAutocomplete } from '../../../autocomplete';
-import { normalizeListType, useListItems } from '../../hooks/useBreedbaseLists';
+import { useListItems } from '../../hooks/useBreedbaseLists';
 import { StockType } from '../../types';
 
 interface DesignInfoSectionProps {
@@ -12,7 +12,6 @@ interface DesignInfoSectionProps {
 export const DesignInfoSection: React.FC<DesignInfoSectionProps> = ({ onOpenPrepHelp }) => {
     const { formData, updateField } = useTrialForm();
     const { designType, stockType } = formData;
-    const listCategory = normalizeListType(stockType);
     const { items: greenhouseStocks } = useListItems(formData.stockListId);
 
     const stockTypeLabels: Record<StockType, { singular: string; plural: string }> = {
@@ -50,7 +49,7 @@ export const DesignInfoSection: React.FC<DesignInfoSectionProps> = ({ onOpenPrep
                                 <BreedbaseListSelect
                                     id={unrepDivId}
                                     selectId={unrepSelectId}
-                                    listType={listCategory}
+                                    listType={stockType}
                                     value={formData.unrepStockListId}
                                     onChange={id => updateField('unrepStockListId', id)}
                                     placeholder="Required: e.g. 200"
@@ -65,7 +64,7 @@ export const DesignInfoSection: React.FC<DesignInfoSectionProps> = ({ onOpenPrep
                                 <BreedbaseListSelect
                                     id={repDivId}
                                     selectId={repSelectId}
-                                    listType={listCategory}
+                                    listType={stockType}
                                     value={formData.repStockListId}
                                     onChange={id => updateField('repStockListId', id)}
                                     placeholder="Required: e.g. 119"
@@ -92,7 +91,7 @@ export const DesignInfoSection: React.FC<DesignInfoSectionProps> = ({ onOpenPrep
                                 <BreedbaseListSelect
                                     id={stockListDivId}
                                     selectId={stockListSelectId}
-                                    listType={listCategory}
+                                    listType={stockType}
                                     value={formData.stockListId}
                                     onChange={id => updateField('stockListId', id)}
                                     placeholder="select a list"
