@@ -183,23 +183,6 @@ export const DesignInfoSection: React.FC<DesignInfoSectionProps> = ({ onOpenPrep
                         </div>
                     )}
 
-                    {designType === 'RRC' && (
-                        <div className="form-group form-group-sm">
-                            <label className="col-sm-7 control-label"><span className="tw:text-red-500 tw:mr-1">*</span>Number of rows: </label>
-                            <div className="col-sm-5">
-                                <input
-                                    id="fieldMap_row_number"
-                                    name="fieldMap_row_number"
-                                    type="text"
-                                    className="form-control"
-                                    placeholder="Will use number of blocks by default"
-                                    value={formData.fieldMapRowNumber}
-                                    onChange={e => updateField('fieldMapRowNumber', e.target.value)}
-                                />
-                            </div>
-                        </div>
-                    )}
-
                     {designType === 'DRRC' && (
                         <div className="form-group form-group-sm">
                             <label className="col-sm-7 control-label"><span className="tw:text-red-500 tw:mr-1">*</span>Number of Columns: </label>
