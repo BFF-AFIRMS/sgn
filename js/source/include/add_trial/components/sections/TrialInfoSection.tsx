@@ -195,47 +195,47 @@ export const TrialInfoSection: React.FC = () => {
             </div>
 
             <div className="form-group row">
-                <label className="col-sm-3 control-label">Plot Dimensions:</label>
-                <div className="col-sm-9 tw:flex tw:gap-4">
-                    <div className="tw:flex-1">
-                        <label>Width (m):</label>
-                        <input
-                            id="add_project_plot_width"
-                            name="add_project_plot_width"
-                            type="number"
-                            step="0.1"
-                            className="form-control"
-                            placeholder="Width"
-                            value={formData.plotWidth}
-                            onChange={e => updateField('plotWidth', e.target.value)}
-                        />
-                    </div>
-                    <div className="tw:flex-1">
-                        <label>Length (m):</label>
-                        <input
-                            id="add_project_plot_length"
-                            name="add_project_plot_length"
-                            type="number"
-                            step="0.1"
-                            className="form-control"
-                            placeholder="Length"
-                            value={formData.plotLength}
-                            onChange={e => updateField('plotLength', e.target.value)}
-                        />
-                    </div>
-                    <div className="tw:flex-1">
-                        <label>Field Size (ha):</label>
-                        <input
-                            id="new_trial_field_size"
-                            name="new_trial_field_size"
-                            type="number"
-                            step="0.1"
-                            className="form-control"
-                            placeholder="Field Size"
-                            value={formData.fieldSize}
-                            onChange={e => updateField('fieldSize', e.target.value)}
-                        />
-                    </div>
+                <label className="col-sm-3 control-label">Plot Width (m):</label>
+                <div className="col-sm-9">
+                    <input
+                        id="add_project_plot_width"
+                        name="add_project_plot_width"
+                        type="number"
+                        step="any"
+                        className="form-control"
+                        value={formData.plotWidth}
+                        onChange={e => updateField('plotWidth', e.target.value)}
+                    />
+                </div>
+            </div>
+
+            <div className="form-group row">
+                <label className="col-sm-3 control-label">Plot Length (m):</label>
+                <div className="col-sm-9">
+                    <input
+                        id="add_project_plot_length"
+                        name="add_project_plot_length"
+                        type="number"
+                        step="any"
+                        className="form-control"
+                        value={formData.plotLength}
+                        onChange={e => updateField('plotLength', e.target.value)}
+                    />
+                </div>
+            </div>
+
+            <div className="form-group row">
+                <label className="col-sm-3 control-label">Field Size (ha):</label>
+                <div className="col-sm-9">
+                    <input
+                        id="new_trial_field_size"
+                        name="new_trial_field_size"
+                        type="number"
+                        step="any"
+                        className="form-control"
+                        value={formData.fieldSize}
+                        onChange={e => updateField('fieldSize', e.target.value)}
+                    />
                 </div>
             </div>
 
