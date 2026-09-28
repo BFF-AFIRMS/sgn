@@ -55,15 +55,6 @@ export const BreedbaseListSelect: React.FC<BreedbaseListSelectProps> = ({
             >
                 <span className={`glyphicon glyphicon-refresh ${loading ? 'tw:animate-spin' : ''}`}></span>
             </button>
-            <a
-                href="/list/manage"
-                target="_blank"
-                rel="noreferrer"
-                className="btn btn-default btn-sm tw:whitespace-nowrap"
-                title="Manage lists in new tab"
-            >
-                Manage Lists
-            </a>
         </div>
     );
 };
