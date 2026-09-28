@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useTrialForm } from '../../contexts/TrialFormContext';
 import { useDesignResult } from '../../contexts/DesignResultContext';
-import { useTrialValidation, validateTrialInfoSync, validateDesignInfoSync } from '../../hooks/useTrialValidation';
+import { useTrialValidation, validateTrialInfoSync, validateDesignInfoSync, validateFieldMapInfoSync } from '../../hooks/useTrialValidation';
 import { useDesignGenerator } from '../../hooks/useDesignGenerator';
 import { TrialInfoSection } from '../sections/TrialInfoSection';
 import { DesignInfoSection } from '../sections/DesignInfoSection';
@@ -43,8 +43,9 @@ export const DesignDetailsStep: React.FC<DesignDetailsStepProps> = ({ onOpenPrep
         },
         {
             id: 'step_field_map',
-            title: 'Field Map Settings',
-            component: <FieldMapSection />
+            title: 'Field Map Information',
+            component: <FieldMapSection />,
+            validate: () => validateFieldMapInfoSync(formData)
         },
         {
             id: 'step_plot_naming',
