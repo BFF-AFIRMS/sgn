@@ -2,7 +2,7 @@ import React from 'react';
 import { useTrialForm } from '../../contexts/TrialFormContext';
 import { BreedbaseListSelect } from '../common/BreedbaseListSelect';
 import { AccessionAutocomplete } from '../../../fieldmap/components/AccessionAutocomplete';
-import { useBreedbaseLists } from '../../hooks/useBreedbaseLists';
+import { normalizeListType, useListItems } from '../../hooks/useBreedbaseLists';
 import { StockType } from '../../types';
 
 interface DesignInfoSectionProps {
@@ -12,10 +12,8 @@ interface DesignInfoSectionProps {
 export const DesignInfoSection: React.FC<DesignInfoSectionProps> = ({ onOpenPrepHelp }) => {
     const { formData, updateField } = useTrialForm();
     const { designType, stockType } = formData;
-
-    const { getListElements } = useBreedbaseLists(stockType === 'cross' ? 'crosses' : stockType === 'family_name' ? 'family_names' : 'accessions');
-
-    const listCategory = stockType === 'cross' ? 'crosses' : stockType === 'family_name' ? 'family_names' : 'accessions';
+    const listCategory = normalizeListType(stockType);
+    const { items: greenhouseStocks } = useListItems(formData.stockListId);
 
     const stockTypeLabels: Record<StockType, { singular: string; plural: string }> = {
         accession: { singular: 'Accession', plural: 'Accessions' },
@@ -441,7 +439,7 @@ export const DesignInfoSection: React.FC<DesignInfoSectionProps> = ({ onOpenPrep
                                         <h4 className="tw:font-bold">Number of Plants:</h4>
                                     </div>
                                     <div className="tw:max-h-60 tw:overflow-y-auto tw:mt-2">
-                                        {getListElements(formData.stockListId).map((name, i) => (
+                                        {greenhouseStocks.map((name, i) => (
                                             <div key={name} className="form-group form-group-sm">
                                                 <label className="col-sm-9 control-label">{name}: </label>
                                                 <div className="col-sm-3">
