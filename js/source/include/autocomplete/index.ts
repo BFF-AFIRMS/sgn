@@ -1,0 +1,1 @@
+export { AccessionAutocomplete } from './components/AccessionAutocomplete';
