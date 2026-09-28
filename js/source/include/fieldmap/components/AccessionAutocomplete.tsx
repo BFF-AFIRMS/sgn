@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 
 interface AccessionAutocompleteProps {
+    id?: string;
+    name?: string;
     value: string;
     onChange: (val: string) => void;
     placeholder?: string;
@@ -9,6 +11,8 @@ interface AccessionAutocompleteProps {
 }
 
 export const AccessionAutocomplete: React.FC<AccessionAutocompleteProps> = ({
+    id,
+    name,
     value,
     onChange,
     placeholder,
@@ -45,6 +49,8 @@ export const AccessionAutocomplete: React.FC<AccessionAutocompleteProps> = ({
     return (
         <div className="tw:relative">
             <input
+                id={id}
+                name={name}
                 type="text"
                 value={value}
                 onChange={e => { onChange(e.target.value); setShow(true); }}
