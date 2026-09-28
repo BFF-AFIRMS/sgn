@@ -96,7 +96,7 @@ export const DesignDetailsStep: React.FC<DesignDetailsStepProps> = ({ onOpenPrep
             onInput={onLockForward}
             onChange={onLockForward}
         >
-            <div className="page_title">
+            <div className="page_title tw:text-center">
                 <h3 className="tw:font-bold tw:text-lg">Enter trial details and design options</h3>
             </div>
             <div className="tw:text-red-500 tw:text-center">
