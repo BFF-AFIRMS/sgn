@@ -35,7 +35,7 @@ export const FieldMapSection: React.FC = () => {
                             <input
                                 id="fieldMap_row_number"
                                 name="fieldMap_row_number"
-                                type="number"
+                                type="text"
                                 className="form-control"
                                 placeholder="Defaults to number of blocks"
                                 value={formData.fieldMapRowNumber}

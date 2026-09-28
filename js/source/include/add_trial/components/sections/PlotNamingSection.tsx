@@ -31,7 +31,7 @@ export const PlotNamingSection: React.FC = () => {
                         <input
                             id="block_based"
                             type="radio"
-                            name="plot_num_scheme"
+                            name="plot_numbering_scheme"
                             value="block_based"
                             checked={formData.plotNumberingScheme === 'block_based'}
                             onChange={() => updateField('plotNumberingScheme', 'block_based' as PlotNumberingScheme)}
@@ -42,7 +42,7 @@ export const PlotNamingSection: React.FC = () => {
                         <input
                             id="consecutive"
                             type="radio"
-                            name="plot_num_scheme"
+                            name="plot_numbering_scheme"
                             value="consecutive"
                             checked={formData.plotNumberingScheme === 'consecutive'}
                             onChange={() => updateField('plotNumberingScheme', 'consecutive' as PlotNumberingScheme)}
@@ -90,7 +90,7 @@ export const PlotNamingSection: React.FC = () => {
                     <input
                         id="increment"
                         name="increment"
-                        type="number"
+                        type="text"
                         className="form-control"
                         value={formData.increment}
                         onChange={e => updateField('increment', e.target.value)}

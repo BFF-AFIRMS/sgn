@@ -97,7 +97,7 @@ export const TrialInfoSection: React.FC = () => {
 
             <div className="form-group row">
                 <label className="col-sm-3 control-label">
-                    <span className="tw:text-red-500 tw:mr-1">*</span>Locations:
+                    <span className="tw:text-red-500 tw:mr-1">*</span>Locations (One or More):
                 </label>
                 <div className="col-sm-9">
                     <select
@@ -186,6 +186,7 @@ export const TrialInfoSection: React.FC = () => {
                     <input
                         id="add_project_planting_date"
                         name="add_project_planting_date"
+                        title="planting_date"
                         type="date"
                         className="form-control"
                         value={formData.plantingDate}
@@ -200,8 +201,7 @@ export const TrialInfoSection: React.FC = () => {
                     <input
                         id="add_project_plot_width"
                         name="add_project_plot_width"
-                        type="number"
-                        step="any"
+                        type="text"
                         className="form-control"
                         value={formData.plotWidth}
                         onChange={e => updateField('plotWidth', e.target.value)}
@@ -215,8 +215,7 @@ export const TrialInfoSection: React.FC = () => {
                     <input
                         id="add_project_plot_length"
                         name="add_project_plot_length"
-                        type="number"
-                        step="any"
+                        type="text"
                         className="form-control"
                         value={formData.plotLength}
                         onChange={e => updateField('plotLength', e.target.value)}
@@ -230,8 +229,7 @@ export const TrialInfoSection: React.FC = () => {
                     <input
                         id="new_trial_field_size"
                         name="new_trial_field_size"
-                        type="number"
-                        step="any"
+                        type="text"
                         className="form-control"
                         value={formData.fieldSize}
                         onChange={e => updateField('fieldSize', e.target.value)}
@@ -245,7 +243,7 @@ export const TrialInfoSection: React.FC = () => {
                     <input
                         id="add_plant_entries"
                         name="add_plant_entries"
-                        type="number"
+                        type="text"
                         className="form-control"
                         value={formData.plantsPerPlot}
                         onChange={e => updateField('plantsPerPlot', e.target.value)}
@@ -282,6 +280,7 @@ export const TrialInfoSection: React.FC = () => {
                                 <label>Rows per Plot:</label>
                                 <input
                                     id="trial_create_rows_per_plot"
+                                    name="trial_create_rows_per_plot"
                                     type="number"
                                     className="form-control input-sm"
                                     value={formData.rowsPerPlot}
@@ -292,6 +291,7 @@ export const TrialInfoSection: React.FC = () => {
                                 <label>Columns per Plot:</label>
                                 <input
                                     id="trial_create_cols_per_plot"
+                                    name="trial_create_cols_per_plot"
                                     type="number"
                                     className="form-control input-sm"
                                     value={formData.colsPerPlot}
@@ -328,6 +328,7 @@ export const TrialInfoSection: React.FC = () => {
                 <div className="col-sm-9">
                     <select
                         id="select_stock_type"
+                        name="select_stock_type"
                         className="form-control"
                         value={formData.stockType}
                         onChange={e => updateField('stockType', e.target.value as StockType)}
@@ -366,6 +367,7 @@ export const TrialInfoSection: React.FC = () => {
                             <label className="tw:font-normal">
                                 <input
                                     id="use_same_layout"
+                                    name="use_same_layout"
                                     type="checkbox"
                                     checked={formData.useSameLayout}
                                     onChange={e => updateField('useSameLayout', e.target.checked)}
