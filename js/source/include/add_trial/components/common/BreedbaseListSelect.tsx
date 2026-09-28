@@ -23,9 +23,13 @@ export const BreedbaseListSelect: React.FC<BreedbaseListSelectProps> = ({
     const { lists, loading, loadLists } = useBreedbaseLists(listType);
 
     useEffect(() => {
-        const handleFocus = () => loadLists();
-        window.addEventListener('focus', handleFocus);
-        return () => window.removeEventListener('focus', handleFocus);
+        const handleReload = () => loadLists();
+        window.addEventListener('focus', handleReload);
+        jQuery('#list_dialog').on('hidden.bs.modal', handleReload);
+        return () => {
+            window.removeEventListener('focus', handleReload);
+            jQuery('#list_dialog').off('hidden.bs.modal', handleReload);
+        };
     }, [loadLists]);
 
     return (
