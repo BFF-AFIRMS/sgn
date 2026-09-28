@@ -14,8 +14,9 @@ export const TrialInfoSection: React.FC = () => {
         })
             .then(res => res.json())
             .then(data => {
-                if (Array.isArray(data?.trial_types)) {
-                    setTrialTypes(data.trial_types);
+                const list = data?.list;
+                if (Array.isArray(list)) {
+                    setTrialTypes(list);
                 }
             })
             .catch(() => {});
