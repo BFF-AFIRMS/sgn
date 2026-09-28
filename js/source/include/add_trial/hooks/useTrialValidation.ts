@@ -65,10 +65,6 @@ export const validateDesignInfoSync = (
         return { valid: false, error: 'Please specify maximum block size for Augmented design.' };
     }
 
-    if (form.designType === 'RRC' && (!form.fieldMapRowNumber || parseInt(form.fieldMapRowNumber, 10) < 1)) {
-        return { valid: false, error: 'Resolvable Row-Column (RRC) requires specifying Number of Rows in design.' };
-    }
-
     if (form.designType === 'DRRC' && (!form.colNumber || parseInt(form.colNumber, 10) < 1)) {
         return { valid: false, error: 'Doubly-Resolvable Row-Column (DRRC) requires specifying Number of Columns.' };
     }
@@ -123,6 +119,13 @@ export const validateDesignInfoSync = (
         return { valid: false, error: 'Number of seeds per plot is required when a seedlot list is selected.' };
     }
 
+    return { valid: true };
+};
+
+export const validateFieldMapInfoSync = (form: TrialFormData): { valid: boolean; error?: string } => {
+    if (form.designType === 'RRC' && (!form.fieldMapRowNumber || parseInt(form.fieldMapRowNumber, 10) < 1)) {
+        return { valid: false, error: 'Resolvable Row-Column (RRC) requires specifying Number of Rows in design.' };
+    }
     return { valid: true };
 };
 
