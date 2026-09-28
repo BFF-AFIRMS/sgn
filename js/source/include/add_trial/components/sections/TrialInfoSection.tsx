@@ -140,7 +140,7 @@ export const TrialInfoSection: React.FC = () => {
                         onChange={e => updateField('trialName', e.target.value)}
                     />
                     <p className="tw:text-gray-500 tw:mt-1">
-                        <em>Location abbreviation will automatically be appended if multiple locations are selected.</em>
+                        <em>Location abbreviation will automatically be added as a prefix if multiple locations are selected.</em>
                     </p>
                 </div>
             </div>

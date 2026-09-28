@@ -6,9 +6,9 @@ interface IntroStepProps {
 
 export const IntroStep: React.FC<IntroStepProps> = ({ onNext }) => {
     return (
-        <div className="tw:p-4">
-            <div className="page_title tw:mb-4">
-                <h3 className="tw:font-bold tw:text-lg">This workflow will guide you through designing a new trial in the database</h3>
+        <div>
+            <div id="pagetitle">
+                <h3>This workflow will guide you through designing a new trial in the database</h3>
             </div>
             <p>
                 A field trial represents a field where each plot has a globally unique plot name, a sequential plot number, and an accession representing the genotype tested in that plot.

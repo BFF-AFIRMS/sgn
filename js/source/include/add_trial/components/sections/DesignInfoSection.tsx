@@ -145,7 +145,7 @@ export const DesignInfoSection: React.FC<DesignInfoSectionProps> = ({ onOpenPrep
                         type="button"
                         className="btn btn-default btn-sm"
                         style={{ margin: '6px 0px 0px 0px' }}
-                        onClick={() => window.open('/list/manage', '_blank')}
+                        onClick={() => (window as any).show_lists?.()}
                     >
                         Manage Lists
                     </button>

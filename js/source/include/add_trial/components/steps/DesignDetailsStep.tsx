@@ -28,29 +28,29 @@ export const DesignDetailsStep: React.FC<DesignDetailsStepProps> = ({ onOpenPrep
     const sections = useMemo(() => [
         {
             id: 'step_trial_info',
-            title: '1. Trial Information',
+            title: 'Trial Information',
             component: <TrialInfoSection />,
             validate: () => validateTrialInfoSync(formData)
         },
         {
             id: 'step_design_info',
-            title: '2. Design Information',
+            title: 'Design Information',
             component: <DesignInfoSection onOpenPrepHelp={onOpenPrepHelp} />,
             validate: () => validateDesignInfoSync(formData, getListElements)
         },
         {
             id: 'step_trial_linkage',
-            title: '3. Trial Linkage (Optional)',
+            title: 'Trial Linkage',
             component: <TrialLinkageSection />
         },
         {
             id: 'step_field_map',
-            title: '4. Field Map Settings',
+            title: 'Field Map Settings',
             component: <FieldMapSection />
         },
         {
             id: 'step_plot_naming',
-            title: '5. Custom Plot Naming',
+            title: 'Custom Plot Naming',
             component: <PlotNamingSection />
         }
     ], [onOpenPrepHelp, formData, getListElements]);
@@ -92,12 +92,12 @@ export const DesignDetailsStep: React.FC<DesignDetailsStepProps> = ({ onOpenPrep
 
     return (
         <div
-            className="tw:flex tw:flex-col tw:gap-4 tw:p-4"
+            className="tw:flex tw:flex-col tw:gap-4"
             onInput={onLockForward}
             onChange={onLockForward}
         >
-            <div className="page_title tw:text-center">
-                <h3 className="tw:font-bold tw:text-lg">Enter trial details and design options</h3>
+            <div id="pagetitle">
+                <h3>Enter trial details and design options</h3>
             </div>
             <div className="tw:text-red-500 tw:text-center">
                 * Required fields
