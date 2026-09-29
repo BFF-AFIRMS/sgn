@@ -1,6 +1,5 @@
 import React, { useState, useMemo } from 'react';
 import { createRoot } from 'react-dom/client';
-import { FieldMapContainer } from './fieldmap';
 import { ServerProps } from '../include/add_trial/types';
 import { WorkflowPaged, WorkflowPagedStepController } from '../include/workflow_paged';
 import { TrialFormProvider, useTrialForm } from '../include/add_trial/contexts/TrialFormContext';
@@ -36,7 +35,7 @@ export const AddTrialApp: React.FC = () => {
             id: 'review',
             title: 'Review Designed Trial',
             content: ({ next }: WorkflowPagedStepController) => (
-                <ReviewDesignStep FieldMapContainer={FieldMapContainer} onSuccess={next} />
+                <ReviewDesignStep onSuccess={next} />
             )
         },
         {

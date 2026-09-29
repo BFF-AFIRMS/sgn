@@ -4,14 +4,13 @@ import { useDesignResult } from '../../contexts/DesignResultContext';
 import { useDesignGenerator } from '../../hooks/useDesignGenerator';
 import { useTrialSaver } from '../../hooks/useTrialSaver';
 import { designMapToObservationUnits } from '../../utils/designAdapters';
-import { FieldMapProps } from '../../../fieldmap/types';
+import { FieldMapContainer } from '../../../fieldmap';
 
 interface ReviewDesignStepProps {
-    FieldMapContainer: React.ComponentType<FieldMapProps>;
     onSuccess: () => void;
 }
 
-export const ReviewDesignStep: React.FC<ReviewDesignStepProps> = ({ FieldMapContainer, onSuccess }) => {
+export const ReviewDesignStep: React.FC<ReviewDesignStepProps> = ({ onSuccess }) => {
     const { formData, clearDraft } = useTrialForm();
     const {
         result,
