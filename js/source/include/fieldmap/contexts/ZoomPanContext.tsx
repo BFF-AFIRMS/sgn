@@ -158,9 +158,12 @@ export const ZoomPanProvider: React.FC<FieldMapContextProps> = ({ children }) =>
     }, []);
 
     const handleResetZoomPan = useCallback(() => {
-        setZoom(1);
-        setPan({ x: 0, y: 0 });
-    }, []);
+        updateZoomAndPan(1, { x: 0, y: 0 });
+    }, [updateZoomAndPan]);
+
+    useEffect(() => {
+        handleResetZoomPan();
+    }, [handleResetZoomPan]);
 
     return (
         <ZoomPanContext.Provider value={{

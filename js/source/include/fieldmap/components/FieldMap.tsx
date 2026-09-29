@@ -81,23 +81,23 @@ const FieldMap: React.FC<FieldMapProps> = ({
 
     return (
         <div className="tw:p-3.75">
-            {mode !== 'preview' && (
-                <>
-                    <FieldMapHeaderPanel />
-                    <FieldMapControlPanel />
-                </>
-            )}
+            {mode !== 'preview' && <>
+                <FieldMapHeaderPanel />
+                <FieldMapControlPanel />
+            </>}
 
             {selectedView === 'geofieldmap' ? (
                 <GeoFieldMap />
             ) : (
-                <div key="standard-fieldmap-panel" className="panel panel-default">
-                    <div className="panel-body tw:grid">
-                        <FieldMapSettingsPanel mode={mode} />
+                    <div key="standard-fieldmap-panel" className={mode !== 'preview' ? "panel panel-default" : ""}>
+                    <div className={mode !== 'preview' ? "panel-body tw:grid" : "tw:grid"}>
+                        {mode !== 'preview' && <>
+                            <FieldMapSettingsPanel mode={mode} />
+                        </>}
 
                         <div
                             ref={containerRef}
-                            className={`tw:relative tw:border tw:border-[#ddd] tw:bg-[#fcfcfc] tw:h-300 tw:flex tw:overflow-hidden tw:select-none ${isDragging ? 'tw:cursor-grabbing' : 'tw:cursor-grab'}`}
+                            className={`tw:relative tw:border tw:border-[#ddd] tw:bg-[#fcfcfc] ${mode !== 'preview' ? 'tw:h-300' : 'tw:h-200 panel panel-default'} tw:flex tw:overflow-hidden tw:select-none ${isDragging ? 'tw:cursor-grabbing' : 'tw:cursor-grab'}`}
                             onMouseDown={handleMouseDown}
                             onMouseMove={handleMouseMove}
                             onMouseUp={handleMouseUpOrLeave}
@@ -117,7 +117,9 @@ const FieldMap: React.FC<FieldMapProps> = ({
                                 </g>
                             </svg>
 
-                            <NorthArrow />
+                            {mode !== 'preview' && <>
+                                <NorthArrow />
+                            </>}
                             <ZoomControls />
 
                             <FieldMapTooltip />
