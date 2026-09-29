@@ -1,29 +1,29 @@
 import React, { useEffect, useState } from 'react';
 import { useTrialForm } from '../../contexts/TrialFormContext';
+import { fetchSelectOptions, HtmlSelectOption } from '../../../fetch';
 
 export const TrialLinkageSection: React.FC = () => {
     const { formData, updateField } = useTrialForm();
-    const [precedingTrials, setPrecedingTrials] = useState<Array<[number, string]>>([]);
+    const [precedingTrials, setPrecedingTrials] = useState<HtmlSelectOption[]>([]);
 
     useEffect(() => {
+        let isMounted = true;
         if (formData.trialSourced === 'yes' && formData.breedingProgram) {
-            fetch('/ajax/breeder/search', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: new URLSearchParams({
-                    'categories[]': 'trials',
-                    'data[breeding_programs][]': formData.breedingProgram
-                }).toString()
-            })
-                .then(res => res.json())
-                .then(data => {
-                    const list = data?.list;
-                    if (Array.isArray(list)) {
-                        setPrecedingTrials(list);
-                    }
-                })
-                .catch(() => {});
+            fetchSelectOptions('trials', {
+                breeding_program_name: formData.breedingProgram,
+                empty: false
+            }).then(options => {
+                if (!isMounted) {
+                    return;
+                }
+                setPrecedingTrials(options.filter(opt => opt.value));
+            });
+        } else {
+            setPrecedingTrials([]);
         }
+        return () => {
+            isMounted = false;
+        };
     }, [formData.trialSourced, formData.breedingProgram]);
 
     return (
@@ -61,7 +61,9 @@ export const TrialLinkageSection: React.FC = () => {
                                 }}
                             >
                                 {precedingTrials.map(t => (
-                                    <option key={t[0]} value={String(t[0])}>{t[1]}</option>
+                                    <option key={t.value} value={t.value} title={t.title}>
+                                        {t.label}
+                                    </option>
                                 ))}
                             </select>
                         </div>
