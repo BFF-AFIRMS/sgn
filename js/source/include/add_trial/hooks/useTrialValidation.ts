@@ -184,18 +184,16 @@ export const useTrialValidation = () => {
         }
 
         // Validate stock list server-side
+        const endpoints = {
+            'accession': { endpoint: '/ajax/trial/verify_stock_list', paramName: 'stock_list' },
+            'cross': { endpoint: '/ajax/trial/verify_cross_list', paramName: 'cross_list' },
+            'family_name': { endpoint: '/ajax/trial/verify_family_name_list', paramName: 'family_name_list' }
+        }
         const targetListId = form.designType === 'p-rep' ? form.repStockListId : form.stockListId;
         const elements = await fetchListItems(targetListId);
         if (elements.length > 0) {
-            let endpoint = '/ajax/trial/verify_stock_list';
-            let paramName = 'stock_list';
-            if (form.stockType === 'cross') {
-                endpoint = '/ajax/trial/verify_cross_list';
-                paramName = 'cross_list';
-            } else if (form.stockType === 'family_name') {
-                endpoint = '/ajax/trial/verify_family_name_list';
-                paramName = 'family_name_list';
-            }
+            const { endpoint, paramName } = endpoints[form.stockType];
+
             try {
                 const res = await fetch(endpoint, {
                     method: 'POST',

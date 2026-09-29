@@ -1,25 +1,17 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useTrialForm } from '../../contexts/TrialFormContext';
 import { DESIGN_TYPE_ALIASES, STANDARD_DESIGN_TYPES, DesignType, StockType } from '../../types';
+import { fetchSelectOptions, HtmlSelectOption } from '../../../fetch';
 
 export const TrialInfoSection: React.FC = () => {
     const { formData, updateField, serverProps } = useTrialForm();
-    const [trialTypes, setTrialTypes] = useState<Array<[number, string]>>([]);
+    const [trialTypes, setTrialTypes] = useState<HtmlSelectOption[]>([
+        { value: '', label: 'None', title: 'None' }
+    ]);
 
     useEffect(() => {
-        fetch('/ajax/breeder/search', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-            body: new URLSearchParams({ 'categories[]': 'trial_types' }).toString()
-        })
-            .then(res => res.json())
-            .then(data => {
-                const list = data?.list;
-                if (Array.isArray(list)) {
-                    setTrialTypes(list);
-                }
-            })
-            .catch(() => {});
+        fetchSelectOptions('trial_types')
+            .then(setTrialTypes);
     }, []);
 
     const yearOptions = useMemo(() => {
@@ -146,8 +138,8 @@ export const TrialInfoSection: React.FC = () => {
                 </div>
             </div>
 
-            <div className="form-group row">
-                <label className="col-sm-3 control-label">Trial Type:</label>
+            <div className="form-group">
+                <label className="col-sm-3 control-label">Trial Type: </label>
                 <div className="col-sm-9">
                     <select
                         id="add_project_type"
@@ -156,9 +148,10 @@ export const TrialInfoSection: React.FC = () => {
                         value={formData.trialType}
                         onChange={e => updateField('trialType', e.target.value)}
                     >
-                        <option value="">-- Select Trial Type (Optional) --</option>
                         {trialTypes.map(t => (
-                            <option key={t[0]} value={t[1]}>{t[1]}</option>
+                            <option key={t.title} value={t.value} title={t.title}>
+                                {t.label}
+                            </option>
                         ))}
                     </select>
                 </div>
