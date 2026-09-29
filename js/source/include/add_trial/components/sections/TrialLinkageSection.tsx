@@ -28,6 +28,10 @@ export const TrialLinkageSection: React.FC = () => {
 
     return (
         <div className="tw:flex tw:flex-col tw:gap-4">
+            <p>
+                Is your trial linked with other field trials, genotyping plates, or crossing experiments in the database? If you are unsure, you can skip this. This information can be added from the trial detail page after the trial is saved.
+            </p>
+
             <div className="well">
                 <div className="form-group row">
                     <label className="col-sm-5 control-label">Is this trial following-up a previous field trial?</label>
@@ -71,6 +75,10 @@ export const TrialLinkageSection: React.FC = () => {
                 )}
             </div>
 
+            <p>
+                If you go on to collect tissue samples for creating a 96 well plate for genotyping, when adding the genotyping plate (96 well plate layout) to the database you can use plot names or plant names or tissue sample names from this field trial. By doing so, we can create linkage between this field trial and the genotyping plate.
+            </p>
+
             <div className="well">
                 <div className="form-group row">
                     <label className="col-sm-5 control-label">Will this trial be genotyped?</label>
@@ -88,6 +96,10 @@ export const TrialLinkageSection: React.FC = () => {
                     </div>
                 </div>
             </div>
+
+            <p>
+                If you go on to perform crosses on this field trial, each cross can be linked to specific female and male plots. When you upload these crosses we can then automatically link this field trial to the crossing experiment in the database.
+            </p>
 
             <div className="well">
                 <div className="form-group row">
