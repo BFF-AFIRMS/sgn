@@ -140,7 +140,7 @@ export const WorkflowPaged: React.FC<WorkflowPagedProps> = ({
                         <li
                             key={s.id || idx}
                             className={`tw:table-cell tw:text-center tw:text-black tw:relative tw:text-[11px] ${
-                                isAccessible ? 'tw:cursor-pointer' : 'tw:cursor-not-allowed tw:opacity-60'
+                                isAccessible ? 'tw:cursor-pointer' : 'tw:cursor-not-allowed'
                             } ${
                                 isFocus ? 'workflow-focus' : ''
                             } ${isComplete ? 'workflow-complete' : ''}`}
@@ -158,7 +158,7 @@ export const WorkflowPaged: React.FC<WorkflowPagedProps> = ({
                                     />
                                 )}
                                 <div
-                                    className={`tw:relative tw:z-10 tw:flex tw:items-center tw:justify-center tw:w-10 tw:h-10 tw:rounded-full tw:border-4 tw:border-solid tw:text-[14px] tw:leading-none ${
+                                    className={`tw:relative tw:z-10 tw:flex tw:items-center tw:justify-center tw:w-12 tw:h-12 tw:rounded-full tw:border-4 tw:border-solid tw:text-[14px] tw:leading-none ${
                                         isComplete
                                             ? 'tw:border-[#5fba7d] tw:bg-[#5fba7d] tw:text-white'
                                             : isFocus
