@@ -112,7 +112,7 @@ export const ReviewDesignStep: React.FC<ReviewDesignStepProps> = ({ onSuccess })
                 <div className="tw:flex tw:justify-center">
                     <p className="tw:text-gray-600">Check to confirm that your design looks good. If there are any problems you can redo the randomization step.</p>
                 </div>
-                <div className="panel panel-default tw:m-0">
+                <div className="tw:m-0">
                     <FieldMapContainer
                         mode="preview"
                         initialUnits={currentUnits}
