@@ -235,6 +235,7 @@ export const PlotGridProvider: React.FC<FieldMapContextProps> = ({ trialId, auth
                 for (let c = cStart; cStep > 0 ? c <= cEnd : c >= cEnd; c += cStep) {
                     if (plotIdx < sortedPlots.length) {
                         const plot = sortedPlots[plotIdx];
+                        console.log(`r: ${r}, c: ${c}, plot: `, plot);
                         newPlotObject[plot.observationUnitDbId!] = {
                             ...plot,
                             observationUnitPosition: {
@@ -290,6 +291,10 @@ export const PlotGridProvider: React.FC<FieldMapContextProps> = ({ trialId, auth
             for (const [id, plot] of Object.entries(current)) {
                 const oldX = Number(plot.observationUnitPosition.positionCoordinateX);
                 const oldY = Number(plot.observationUnitPosition.positionCoordinateY);
+
+                const newX = oldY;
+                const newY = maxCol - oldX + minCol;
+                console.log(`plot: ${plot.observationUnitName}, old: ${oldX}, ${oldY}, new: ${newX}, ${newY}`);
 
                 rotated[id] = {
                     ...plot,

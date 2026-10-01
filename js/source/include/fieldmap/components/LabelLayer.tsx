@@ -27,6 +27,9 @@ export const LabelLayer: React.FC<LabelLayerProps> = ({ }) => {
                 const colCoord = bounds.minCol + axisIdx;
                 const colIdx = colCoord - renderBounds.minCol;
                 const displayX = (invertCols ? renderBounds.numCols - colIdx - 1 : colIdx) * 52 + 25;
+
+                console.log(`xAxis | colIdx: ${colIdx}, displayX: ${displayX}, colCoord: ${colCoord}, renderBounds: `, renderBounds);
+
                 return (
                     <React.Fragment key={`col-lbl-grp-${colIdx}`}>
                         <text x={displayX} y={-10} textAnchor="middle" fontSize="11" fontWeight="bold" fill="#000">
@@ -40,7 +43,12 @@ export const LabelLayer: React.FC<LabelLayerProps> = ({ }) => {
             })}
 
             {/* Secondary Column Axis Values (Top and Bottom) */}
-            {transformedSecondaryAxis?.xValues?.length && Array.from({ length: bounds.numCols }).map((_, axisIdx) => {
+            {
+                transformedSecondaryAxis?.xValues?.length && Array.from({ length: bounds.numCols }).map((_, axisIdx) => {
+                // if (axisIdx >= bounds.maxCol){
+                //     console.log(`axisIdx: ${axisIdx} is out of bounds`);
+                //     return null;
+                // }
                 const colCoord = bounds.minCol + axisIdx;
                 const colIdx = colCoord - renderBounds.minCol;
                 const displayX = (invertCols ? renderBounds.numCols - colIdx - 1 : colIdx) * 52 + 25;
@@ -49,6 +57,8 @@ export const LabelLayer: React.FC<LabelLayerProps> = ({ }) => {
                 if (axisValue === undefined) {
                     return null;
                 }
+
+                // console.log(`xAxis | axisIdx: ${axisIdx}, axisValue: ${axisValue}, displayX: ${displayX}, colCoord: ${colCoord}, renderBounds: `, renderBounds);
 
                 return (
                     <React.Fragment key={`sec-col-lbl-grp-${colIdx}`}>
@@ -92,6 +102,8 @@ export const LabelLayer: React.FC<LabelLayerProps> = ({ }) => {
             {gridMatrix.map((_, rowIdx) => {
                 const rowCoord = renderBounds.minRow + rowIdx;
                 const displayY = invertRows ? rowIdx : renderBounds.numRows - rowIdx - 1;
+
+                console.log(`yAxis | rowIdx: ${rowIdx}, displayY: ${displayY}, rowCoord: ${rowCoord}, renderBounds: `, renderBounds);
 
                 const isDataRow = rowCoord >= bounds.minRow && rowCoord <= bounds.maxRow;
                 if (!isDataRow) {
