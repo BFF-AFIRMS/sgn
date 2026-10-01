@@ -235,7 +235,6 @@ export const PlotGridProvider: React.FC<FieldMapContextProps> = ({ trialId, auth
                 for (let c = cStart; cStep > 0 ? c <= cEnd : c >= cEnd; c += cStep) {
                     if (plotIdx < sortedPlots.length) {
                         const plot = sortedPlots[plotIdx];
-                        console.log(`r: ${r}, c: ${c}, plot: `, plot);
                         newPlotObject[plot.observationUnitDbId!] = {
                             ...plot,
                             observationUnitPosition: {

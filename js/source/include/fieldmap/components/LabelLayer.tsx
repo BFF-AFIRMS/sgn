@@ -47,8 +47,7 @@ export const LabelLayer: React.FC<LabelLayerProps> = ({ }) => {
             })}
 
             {/* Secondary Column Axis Values (Top and Bottom) */}
-            {
-                transformedSecondaryAxis?.xValues?.length && Array.from({ length: bounds.numCols }).map((_, axisIdx) => {
+            {transformedSecondaryAxis?.xValues?.length && Array.from({ length: bounds.numCols }).map((_, axisIdx) => {
                 const colCoord = bounds.minCol + axisIdx;
                 const colIdx = colCoord - renderBounds.minCol;
                 const displayX = (invertCols ? renderBounds.numCols - colIdx - 1 : colIdx) * 52 + 25;
