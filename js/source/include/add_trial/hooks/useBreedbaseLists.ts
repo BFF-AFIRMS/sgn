@@ -28,7 +28,11 @@ export const fetchListItems = async (listId: string): Promise<string[]> => {
             const data = await res.json();
             if (Array.isArray(data)) {
                 return data.map(String);
+            } else {
+                throw new Error('Unexpected response format');
             }
+        } else {
+            throw new Error('Non-OK response');
         }
     } catch (e) {
         console.error(`Failed to fetch items for list ${listId}:`, e);
@@ -45,17 +49,11 @@ export const useListItems = (listId?: string): { items: string[]; loading: boole
             setItems([]);
             return;
         }
-        let isMounted = true;
         setLoading(true);
         fetchListItems(listId).then(data => {
-            if (isMounted) {
-                setItems(data);
-                setLoading(false);
-            }
+            setItems(data);
+            setLoading(false);
         });
-        return () => {
-            isMounted = false;
-        };
     }, [listId]);
 
     return { items, loading };
@@ -83,10 +81,10 @@ export const useBreedbaseLists = (listType: string) => {
                         ([id, name]) => ({ id: String(id), name })
                     ));
                 } else {
-                    setLists([]);
+                    throw new Error('Unexpected response format');
                 }
             } else {
-                setLists([]);
+                throw new Error('Non-OK response');
             }
         } catch (e) {
             console.error('Failed to load Breedbase lists', e);
