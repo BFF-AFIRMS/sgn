@@ -82,7 +82,7 @@ export const PlotGridProvider: React.FC<FieldMapContextProps> = ({ trialId, auth
     } = useModals();
 
     const [plotObject, setPlotObject] = useState<Record<string, Plot>>({});
-    const [bounds, setBounds] = useState({minCol: 0, maxCol: 0, minRow: 0, maxRow: 0, numCols: 0, numRows: 0});
+    const [bounds, setBounds] = useState({minCol: 1, maxCol: 1, minRow: 1, maxRow: 1, numCols: 1, numRows: 1});
     const [fillerAccessionId, setFillerAccessionId] = useState<string | undefined>(undefined);
     const [fillerAccessionName, setFillerAccessionName] = useState<string | undefined>(undefined);
     const [axisOrientation, setAxisOrientation] = useState<AxisOrientation>({
