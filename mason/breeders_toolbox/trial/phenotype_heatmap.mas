@@ -6,6 +6,7 @@ $has_col_and_row_numbers => undef
 $has_subplot_entries => undef
 $has_plant_entries => undef
 $trial_stock_type => undef
+$trial_plot_type => undef
 </%args>
 
 <& /util/import_css.mas, paths => ['fieldmap/leaflet-search.min.css', 'fieldmap/leaflet.css'] &>
@@ -22,6 +23,7 @@ jQuery(document).ready(function() {
         window.jsMod['fieldmap'].init('fieldmap_root', {
             trialId: '<% $trial_id %>',
             trialStockType: '<% $trial_stock_type %>',
+            trialPlotType: '<% $trial_plot_type %>',
             hasColAndRowNumbers: <% $has_col_and_row_numbers ? 'true' : 'false' %>,
             hasSubplotEntries: <% $has_subplot_entries ? 'true' : 'false' %>,
             hasPlantEntries: <% $has_plant_entries ? 'true' : 'false' %>,

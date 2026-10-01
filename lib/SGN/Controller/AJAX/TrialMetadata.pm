@@ -4476,12 +4476,12 @@ sub retrieve_plot_image : Chained('trial') PathPart('retrieve_plot_images') Args
       my $image_page_ref = "<a href=\"$image_page\">$image_name</a>";
 
       my $colorbox =
-        qq|<a href="$image_img"  class="stock_image_group" rel="gallery-figures"><img src="$small_image" alt="$image_description" onclick="close_view_plot_image_dialog()"/></a> |;
+        qq|<a href="$image_img"  class="stock_image_group" rel="gallery-figures"><img src="$small_image" alt="$image_description" class="stock-image" onclick="close_view_plot_image_dialog()"/></a> |;
       my $fhtml =
-        qq|<tr><td width=120>|
+        qq|<tr><td class="stock-image-cell">|
           . $colorbox
             . $image_page_ref
-              . "</td><td>"
+              . "</td><td class=\"stock-image-description-cell\">"
                 . $image_description
                   . "</td></tr>";
       if ( $count < 3 ) { $image_html .= $fhtml; }

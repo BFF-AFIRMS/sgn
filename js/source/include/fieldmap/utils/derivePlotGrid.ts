@@ -22,7 +22,7 @@ export const derivePlotGrid = (data: any[]): DerivedGridResult => {
             const rel = plot.observationUnitPosition?.observationLevelRelationships || [];
             const blockRel = rel.find((r: any) => r.levelName === 'block');
             const repRel = rel.find((r: any) => r.levelName === 'rep');
-            const plotRel = rel.find((r: any) => r.levelName === 'plot');
+            const plotRel = rel.find((r: any) => r.levelName === 'plot' || r.levelName === 'analysis_instance');
             const code = blockRel?.levelCode || repRel?.levelCode || plotRel?.levelCode || '1';
             y = parseInt(code);
             if (isNaN(y)) y = 1;
@@ -41,7 +41,9 @@ export const derivePlotGrid = (data: any[]): DerivedGridResult => {
         if (!isNaN(x)) { minX = Math.min(minX, x); maxX = Math.max(maxX, x); }
         if (!isNaN(y)) { minY = Math.min(minY, y); maxY = Math.max(maxY, y); }
 
-        if (plot.observationUnitPosition?.observationLevel?.levelName === 'plot') {
+        const levelName = plot.observationUnitPosition?.observationLevel?.levelName;
+
+        if (levelName === 'plot' || levelName === 'analysis_instance') {
             let type: Plot['type'] = 'data';
             if (plot.observationUnitPosition.entryType === 'filler' || plot.germplasmName === 'Filler') type = 'filler';
             else if (plot.observationUnitPosition.entryType === 'border') type = 'border';

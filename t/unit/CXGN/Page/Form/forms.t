@@ -12,6 +12,5 @@ $f->add_field(
     contents    => 'test1 contents',
     length      => 10,
 );
-
 #print STDERR $f->as_table_string();
-cmp_ok($f->as_table_string(), '=~', '<br/><div class="panel panel-default"><table class="table table-hover"> <tr><td></td><td><b>test1 contents', "test as_table_string");
+cmp_ok($f->as_table_string(), '=~', '<br/><div class="panel panel-default"><table class="table table-hover"> <tr><td class="static-form-label-cell"></td><td class="static-form-value-cell"><b>test1 contents', "test as_table_string");

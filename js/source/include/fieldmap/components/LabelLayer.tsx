@@ -185,6 +185,9 @@ export const LabelLayer: React.FC<LabelLayerProps> = ({ }) => {
                     }
 
                     let labelText = String(plot.observationUnitPosition?.observationLevel?.levelCode || '');
+                    if (plot.observationUnitPosition?.observationLevel?.levelName === 'analysis_instance' && plot.observationUnitPosition?.observationLevelRelationships && plot.observationUnitPosition.observationLevelRelationships.length > 2){
+                        labelText = String(plot.observationUnitPosition.observationLevelRelationships[2].levelCode);
+                    }
                     if (labelVar === 'germplasm') {
                         labelText = plot.germplasmName || plot.crossName || plot.additionalInfo?.familyName || '';
                         if (labelText === 'Filler') labelText = '';

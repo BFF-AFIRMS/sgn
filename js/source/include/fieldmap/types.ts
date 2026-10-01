@@ -1,6 +1,7 @@
 export interface FieldMapProps {
     trialId: string;
     trialStockType: string;
+    trialPlotType: string;
     hasColAndRowNumbers: boolean;
     hasSubplotEntries: boolean;
     hasPlantEntries: boolean;

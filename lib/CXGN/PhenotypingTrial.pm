@@ -169,6 +169,33 @@ sub get_trial_stock_type {
     }
 }
 
+=head2 function get_trial_plot_type()
+
+ Usage:
+ Desc:         Get plot type used in trial (plot or analysis_instance)
+ Ret:
+ Args:
+ Side Effects:
+ Example:
+
+=cut
+
+sub get_trial_plot_type {
+    my $self = shift;
+    my $analysis_metadata_json_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'analysis_metadata_json', 'project_property')->cvterm_id();
+
+    my $analysis_metadata_rs = $self->bcs_schema->resultset('Project::Project')
+        ->search( { 'me.project_id' => $self->get_trial_id() })
+        ->search_related('projectprops', { 'projectprops.type_id' => $analysis_metadata_json_cvterm_id } );
+
+    if ($analysis_metadata_rs->count() == 0) {
+        return 'plot';
+    }
+    else {
+        return 'analysis_instance';
+    }
+}
+
 =head2 get_stock_entry_summary
 
  Usage:        my $stock_entry_summary = $t->get_stock_entry_summary();

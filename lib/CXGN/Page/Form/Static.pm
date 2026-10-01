@@ -580,7 +580,7 @@ sub as_table_string {
     my $string = qq { <br/><div class="panel panel-default"><table class="table table-hover"> };
     foreach my $f ($self->get_fields()) { 
 	if (ref($f)!~/hidden/i) { 
-	    $string .=  "<tr><td>".($f->get_display_name || '')."</td><td><b>".($f->render || '')."</b></td></tr>\n";
+	    $string .=  "<tr><td class=\"static-form-label-cell\">".($f->get_display_name || '')."</td><td class=\"static-form-value-cell\"><b>".($f->render || '')."</b></td></tr>\n";
 	}
     }
     $string .= qq { </table></div> };

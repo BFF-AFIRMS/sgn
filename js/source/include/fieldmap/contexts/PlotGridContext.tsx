@@ -56,7 +56,7 @@ export interface PlotGridContextType {
 
 const PlotGridContext = createContext<PlotGridContextType | undefined>(undefined);
 
-export const PlotGridProvider: React.FC<FieldMapContextProps> = ({ trialId, authToken, children }) => {
+export const PlotGridProvider: React.FC<FieldMapContextProps> = ({ trialId, authToken, trialPlotType, children }) => {
     const {
         topBorder, setTopBorder,
         bottomBorder, setBottomBorder,
@@ -326,7 +326,7 @@ export const PlotGridProvider: React.FC<FieldMapContextProps> = ({ trialId, auth
         }
 
         const params = new URLSearchParams({
-            observationUnitLevelName: 'plot',
+            observationUnitLevelName: trialPlotType,
             pageSize: '10000',
         });
         activeTrialIds.forEach(id => params.append('studyDbIds', id));
