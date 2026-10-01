@@ -91,6 +91,7 @@ export const PlotNamingSection: React.FC = () => {
                             name="increment"
                             type="text"
                             className="form-control"
+                            placeholder="1"
                             value={formData.increment}
                             onChange={e => updateField('increment', e.target.value)}
                         />
