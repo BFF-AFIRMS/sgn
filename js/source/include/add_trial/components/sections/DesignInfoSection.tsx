@@ -21,7 +21,7 @@ export const DesignInfoSection: React.FC<DesignInfoSectionProps> = ({ onOpenPrep
     };
 
     const stockListSectionId = `show_list_of_${stockType}_section`;
-    const stockListDivId = `select_${stockType}_list`;
+    const stockListDivId = stockType === 'accession' ? 'select_list' : `select_${stockType}_list`;
     const stockListSelectId = `${stockListDivId}_list_select`;
 
     const unrepSectionId = `show_list_of_unrep_${stockType}`;
@@ -32,12 +32,12 @@ export const DesignInfoSection: React.FC<DesignInfoSectionProps> = ({ onOpenPrep
     const repDivId = `list_of_rep_${stockType}`;
     const repSelectId = `${repDivId}_list_select`;
 
-    const checkSectionId = `show_list_of_${stockType}_checks_section`;
-    const checkDivId = `list_of_${stockType}_checks_section`;
+    const checkSectionId = stockType === 'accession' ? 'show_list_of_checks_section' : `show_list_of_${stockType}_checks_section`;
+    const checkDivId = stockType === 'accession' ? 'list_of_checks_section' : `list_of_${stockType}_checks_section`;
     const checkSelectId = `${checkDivId}_list_select`;
 
-    const crbdCheckSectionId = `crbd_show_list_of_${stockType}_checks_section`;
-    const crbdCheckDivId = `crbd_list_of_${stockType}_checks_section`;
+    const crbdCheckSectionId = stockType === 'accession' ? 'crbd_show_list_of_checks_section' : `crbd_show_list_of_${stockType}_checks_section`;
+    const crbdCheckDivId = stockType === 'accession' ? 'crbd_list_of_checks_section' : `crbd_list_of_${stockType}_checks_section`;
     const crbdCheckSelectId = `${crbdCheckDivId}_list_select`;
 
     return (
