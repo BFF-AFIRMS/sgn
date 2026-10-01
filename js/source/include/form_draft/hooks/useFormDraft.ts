@@ -46,18 +46,22 @@ export const cleanupOldDrafts = (): void => {
 };
 
 export const initDraftId = (paramName: string = 'draft_id'): string => {
-    if (typeof window === 'undefined') return '';
+    const createNewId = () =>
+        Date.now() + '_' + Math.random().toString(36).substring(2, 7);
+
     try {
         const url = new URL(window.location.href);
-        let id = url.searchParams.get(paramName);
-        if (!id) {
-            id = Date.now() + '_' + Math.random().toString(36).substring(2, 7);
-            url.searchParams.set(paramName, id);
-            window.history.replaceState(null, '', url.toString());
+        const id = url.searchParams.get(paramName);
+        if (id) {
+            return id;
         }
-        return id;
+
+        const newId = createNewId();
+        url.searchParams.set(paramName, newId);
+        window.history.replaceState(null, '', url.toString());
+        return newId;
     } catch {
-        return Date.now() + '_' + Math.random().toString(36).substring(2, 7);
+        return createNewId();
     }
 };
 
@@ -68,7 +72,6 @@ export const useFormDraft = <T>(
     const draftKey = useMemo(() => `${DRAFT_PREFIX}${draftId}`, [draftId]);
 
     const savedDraft = useMemo(() => {
-        if (typeof window === 'undefined' || !window.localStorage) return null;
         try {
             const saved = localStorage.getItem(draftKey);
             if (saved) {
