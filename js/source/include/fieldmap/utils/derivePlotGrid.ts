@@ -73,6 +73,6 @@ export const derivePlotGrid = (data: any[]): DerivedGridResult => {
     
     return {
         plotObject: mapped,
-        bounds: {minCol: minX, maxCol: maxX, minRow: minY, maxRow: maxY, numCols: rows, numRows: cols}
+        bounds: {minCol: minX, maxCol: maxX, minRow: minY, maxRow: maxY, numCols: cols, numRows: rows}
     };
 };

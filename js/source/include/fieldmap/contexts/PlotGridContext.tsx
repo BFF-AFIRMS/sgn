@@ -277,13 +277,16 @@ export const PlotGridProvider: React.FC<FieldMapContextProps> = ({ trialId, auth
     }, []);
 
     const rotateLayout = useCallback(() => {
+        // Set axis orientation based on previous states of x and y
+        let oldXReversed = axisOrientation.x.reversed;
+        let oldYReversed = axisOrientation.y.reversed;
+        let newXReversed = (!oldXReversed && oldYReversed) || (oldXReversed && oldYReversed);
+        let newYReversed =  (!oldXReversed && !oldYReversed) || (!oldXReversed && oldYReversed);
         setAxisOrientation(prev => ({
-            x: prev.y,
-            y: {
-                source: prev.x.source,
-                reversed: !prev.x.reversed
-            }
+            x: {source: prev.y.source, reversed: newXReversed},
+            y: {source: prev.x.source, reversed: newYReversed}
         }));
+
         setNorthArrowAngle(prev => (prev + 90) % 360);
         const { minCol, maxCol } = bounds;
         setPlotObject(current => {
@@ -291,10 +294,6 @@ export const PlotGridProvider: React.FC<FieldMapContextProps> = ({ trialId, auth
             for (const [id, plot] of Object.entries(current)) {
                 const oldX = Number(plot.observationUnitPosition.positionCoordinateX);
                 const oldY = Number(plot.observationUnitPosition.positionCoordinateY);
-
-                const newX = oldY;
-                const newY = maxCol - oldX + minCol;
-                console.log(`plot: ${plot.observationUnitName}, old: ${oldX}, ${oldY}, new: ${newX}, ${newY}`);
 
                 rotated[id] = {
                     ...plot,
@@ -408,7 +407,7 @@ export const PlotGridProvider: React.FC<FieldMapContextProps> = ({ trialId, auth
         const addCols = cols - bounds.numCols;
         const newMaxRow = bounds.maxRow + addRows;
         const newMaxCol = bounds.maxCol + addCols;
-        setBounds(d => ({minCol: d.minCol, maxCol: newMaxCol, minRow: d.minRow, maxRow: newMaxRow, numRows: rows, numCols: cols }));
+        setBounds(b => ({minCol: b.minCol, maxCol: newMaxCol, minRow: b.minRow, maxRow: newMaxRow, numRows: rows, numCols: cols }));
 
         recalculateLayout(plotLayout);
     }, [trialId, plotList]);
