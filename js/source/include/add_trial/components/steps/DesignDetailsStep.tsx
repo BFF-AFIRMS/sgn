@@ -9,6 +9,7 @@ import { TrialLinkageSection } from '../sections/TrialLinkageSection';
 import { FieldMapSection } from '../sections/FieldMapSection';
 import { PlotNamingSection } from '../sections/PlotNamingSection';
 import { WorkflowAccordion, evaluateAccordionSync } from '../../../workflow_accordion';
+import { showWorkingModal, hideWorkingModal } from '../../../working_modal';
 
 interface DesignDetailsStepProps {
     onOpenPrepHelp: () => void;
@@ -63,29 +64,34 @@ export const DesignDetailsStep: React.FC<DesignDetailsStepProps> = ({ onOpenPrep
             return;
         }
 
-        const infoCheck = await validateTrialInfo(formData);
-        if (!infoCheck.valid) {
-            setValidationError(infoCheck.error || 'Trial name verification failed.');
-            alert(infoCheck.error || 'Trial name verification failed.');
-            return;
-        }
+        showWorkingModal();
+        try {
+            const infoCheck = await validateTrialInfo(formData);
+            if (!infoCheck.valid) {
+                setValidationError(infoCheck.error || 'Trial name verification failed.');
+                alert(infoCheck.error || 'Trial name verification failed.');
+                return;
+            }
 
-        const designCheck = await validateDesignInfo(formData);
-        if (!designCheck.valid) {
-            setValidationError(designCheck.error || 'Stock list validation failed.');
-            alert(designCheck.error || 'Stock list validation failed.');
-            return;
-        }
+            const designCheck = await validateDesignInfo(formData);
+            if (!designCheck.valid) {
+                setValidationError(designCheck.error || 'Stock list validation failed.');
+                alert(designCheck.error || 'Stock list validation failed.');
+                return;
+            }
 
-        const { data: generated, error: genErr } = await generateDesign(formData);
-        if (genErr) {
-            setValidationError(genErr);
-            alert(genErr);
-            return;
-        }
-        if (generated) {
-            setResult(generated);
-            onSuccess();
+            const { data: generated, error: genErr } = await generateDesign(formData);
+            if (genErr) {
+                setValidationError(genErr);
+                alert(genErr);
+                return;
+            }
+            if (generated) {
+                setResult(generated);
+                onSuccess();
+            }
+        } finally {
+            hideWorkingModal();
         }
     };
 
