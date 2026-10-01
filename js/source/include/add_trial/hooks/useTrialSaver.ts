@@ -1,9 +1,12 @@
 import { useState, useCallback } from 'react';
 import { TrialFormData } from '../types';
+import { useWorkingModal } from '../../working_modal';
 
 export const useTrialSaver = () => {
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
+
+    useWorkingModal(saving);
 
     const saveTrial = useCallback(async (
         form: TrialFormData,

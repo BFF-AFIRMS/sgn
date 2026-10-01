@@ -4,8 +4,12 @@ import { useDesignResult } from '../../contexts/DesignResultContext';
 export const CompleteStep: React.FC = () => {
     const { savedTrialId } = useDesignResult();
 
+    const handleComplete = () => {
+        window.location.href = '/breeders/trials';
+    };
+
     return (
-        <div>
+        <div className="workflow-complete-message workflow-message-show">
             <div id="pagetitle">
                 <h3>Complete! Your trial was saved in the database.</h3>
             </div>
@@ -20,13 +24,22 @@ export const CompleteStep: React.FC = () => {
             </ul>
             <br />
             <div className="tw:flex tw:justify-center tw:gap-3">
+                <button
+                    type="button"
+                    id="create_trial_success_complete_button"
+                    name="create_trial_success_complete_button"
+                    className="btn btn-primary"
+                    onClick={handleComplete}
+                >
+                    The trial was saved to the database with no errors! Click here to view trial
+                </button>
                 {savedTrialId && (
                     <a
-                        id="create_trial_success_complete_button"
+                        id="view_created_trial_link"
                         href={`/breeders/trial/${savedTrialId}`}
-                        className="btn btn-primary"
+                        className="btn btn-default"
                     >
-                        The trial was saved to the database with no errors! Click here to view trial
+                        View Trial Page
                     </a>
                 )}
                 <a href="/breeders/trials" className="btn btn-default">
