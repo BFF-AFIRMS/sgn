@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useTrialForm } from '../../contexts/TrialFormContext';
-import { DESIGN_TYPE_ALIASES, STANDARD_DESIGN_TYPES, DesignType, StockType } from '../../types';
+import { STANDARD_DESIGN_TYPES, DesignType, StockType } from '../../types';
 import { fetchSelectOptions, HtmlSelectOption } from '../../../fetch';
 
 export const TrialInfoSection: React.FC = () => {
@@ -47,11 +47,8 @@ export const TrialInfoSection: React.FC = () => {
         const ordered: Array<{ value: DesignType; label: string }> = [];
 
         for (const raw of serverProps.design_types) {
-            const cleanLower = raw.trim().toLowerCase();
-            const standardItem = STANDARD_DESIGN_TYPES.find(d => {
-                const aliases = DESIGN_TYPE_ALIASES[d.value] || [d.value.toLowerCase(), d.label.toLowerCase()];
-                return aliases.includes(cleanLower);
-            });
+            const type = raw.trim();
+            const standardItem = STANDARD_DESIGN_TYPES.find(d => d.label === type || d.value === type);
             if (standardItem && !seen.has(standardItem.value)) {
                 seen.add(standardItem.value);
                 ordered.push(standardItem);
