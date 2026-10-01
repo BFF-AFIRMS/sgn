@@ -291,15 +291,12 @@ export const PlotGridProvider: React.FC<FieldMapContextProps> = ({ trialId, auth
                 const oldX = Number(plot.observationUnitPosition.positionCoordinateX);
                 const oldY = Number(plot.observationUnitPosition.positionCoordinateY);
 
-                const newX = oldY;
-                const newY = maxCol - oldX + minCol;
-
                 rotated[id] = {
                     ...plot,
                     observationUnitPosition: {
                         ...plot.observationUnitPosition,
-                        positionCoordinateX: newX,
-                        positionCoordinateY: newY
+                        positionCoordinateX: oldY,
+                        positionCoordinateY: maxCol - oldX + minCol
                     }
                 };
             }
@@ -406,8 +403,8 @@ export const PlotGridProvider: React.FC<FieldMapContextProps> = ({ trialId, auth
         const addCols = cols - bounds.numCols;
         const newMaxRow = bounds.maxRow + addRows;
         const newMaxCol = bounds.maxCol + addCols;
-
         setBounds(d => ({minCol: d.minCol, maxCol: newMaxCol, minRow: d.minRow, maxRow: newMaxRow, numRows: rows, numCols: cols }));
+
         recalculateLayout(plotLayout);
     }, [trialId, plotList]);
 
