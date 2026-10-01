@@ -25,13 +25,13 @@ const defaultFormData: TrialFormData = {
     plotWidth: '',
     plotLength: '',
     fieldSize: '',
-    plantsPerPlot: '0',
+    plantsPerPlot: '',
     inheritTreatments: true,
     assignRowColToPlants: false,
     rowsPerPlot: '',
     colsPerPlot: '',
     stockType: 'accession',
-    designType: 'RCBD',
+    designType: 'CRD',
     useSameLayout: false,
     stockListId: '',
     controlListId: '',
@@ -41,8 +41,8 @@ const defaultFormData: TrialFormData = {
     seedlotListId: '',
     numSeedPerPlot: '',
     seedlotHash: {},
-    repCount: '2',
-    blockNumber: '2',
+    repCount: '',
+    blockNumber: '',
     blockSize: '',
     maxBlockSize: '',
     rowNumber: '',
@@ -51,7 +51,7 @@ const defaultFormData: TrialFormData = {
     colNumberPerBlock: '',
     rowInDesignNumber: '',
     colInDesignNumber: '',
-    noOfRepTimes: '4',
+    noOfRepTimes: '',
     noOfBlockSequence: '',
     noOfSubBlockSequence: '',
     greenhouseDefaultPlants: '1',
@@ -61,7 +61,7 @@ const defaultFormData: TrialFormData = {
     westcottCheck1: '',
     westcottCheck2: '',
     westcottCol: '',
-    westcottColBetweenCheck: '10',
+    westcottColBetweenCheck: '',
     trialSourced: 'no',
     sourceTrialIds: [],
     willBeGenotyped: 'no',
@@ -73,7 +73,7 @@ const defaultFormData: TrialFormData = {
     plotNumberingScheme: 'block_based',
     plotPrefix: '',
     startNumber: '1',
-    increment: '1'
+    increment: ''
 };
 
 const TrialFormContext = createContext<TrialFormContextType | undefined>(undefined);
@@ -102,7 +102,10 @@ export const TrialFormProvider: React.FC<{ serverProps: ServerProps; children: R
 
     const defaultData = useMemo(() => {
         const initial = { ...defaultFormData };
-        if (serverProps.breeding_programs?.length > 0) {
+        const preferredProgram = serverProps.breeding_programs?.find(p => Boolean(p[3]));
+        if (preferredProgram) {
+            initial.breedingProgram = preferredProgram[1];
+        } else if (serverProps.breeding_programs?.length > 0) {
             initial.breedingProgram = serverProps.breeding_programs[0][1];
         }
         if (availableDesignTypes.length > 0 && !availableDesignTypes.some(d => d.value === initial.designType)) {
