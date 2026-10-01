@@ -21,14 +21,17 @@ export const LabelLayer: React.FC<LabelLayerProps> = ({ }) => {
         labelSize,
     } = useLayoutConfig();
 
+    console.log("renderBounds:", renderBounds);
+    console.log("bounds:", bounds);
+
     return (
         <g style={{ pointerEvents: 'none' }}>
             {/* Column Axis Values (Top and Bottom) */}
             {Array.from({ length: bounds.numCols }).map((_, axisIdx) => {
-                const colCoord = axisOrientation.x.reversed ? bounds.maxCol - axisIdx : bounds.minCol + axisIdx;
+                const colCoord = bounds.minCol + axisIdx;
                 const colIdx = colCoord - renderBounds.minCol;
-                const displayX = (invertCols || axisOrientation.x.reversed ? renderBounds.numCols - colIdx - 1 : colIdx) * 52 + 25;
-
+                // TBD: Handle axis reversal
+                const displayX = (invertCols || axisOrientation.x.reversed ? colIdx : colIdx) * 52 + 25;
                 const isDataCol = colCoord >= bounds.minCol && colCoord <= bounds.maxCol;
                 if (!isDataCol) {
                     return null;
@@ -51,7 +54,6 @@ export const LabelLayer: React.FC<LabelLayerProps> = ({ }) => {
                 const colCoord = bounds.minCol + axisIdx;
                 const colIdx = colCoord - renderBounds.minCol;
                 const displayX = (invertCols ? renderBounds.numCols - colIdx - 1 : colIdx) * 52 + 25;
-
                 const isDataCol = colCoord >= bounds.minCol && colCoord <= bounds.maxCol;
                 if (!isDataCol) {
                     return null;
@@ -102,9 +104,8 @@ export const LabelLayer: React.FC<LabelLayerProps> = ({ }) => {
 
             {/* Row Axis Values (Left and Right) */}
             {gridMatrix.map((_, rowIdx) => {
-                const rowCoord = axisOrientation.y.reversed ? bounds.maxRow - rowIdx : bounds.minRow + rowIdx;
-                const displayY = (invertRows ? rowIdx : renderBounds.numRows - rowIdx - 1);
-
+                const rowCoord = renderBounds.minRow + rowIdx;
+                const displayY = invertRows || axisOrientation.y.reversed ? rowIdx : renderBounds.numRows - rowIdx - 1;
                 const isDataRow = rowCoord >= bounds.minRow && rowCoord <= bounds.maxRow;
                 if (!isDataRow) {
                     return null;
