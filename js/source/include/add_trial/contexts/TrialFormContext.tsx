@@ -11,6 +11,7 @@ export interface TrialFormContextType {
     maxStep: number;
     setMaxStep: React.Dispatch<React.SetStateAction<number>>;
     serverProps: ServerProps;
+    availableDesignTypes: Array<{ value: DesignType; label: string }>;
 }
 
 const defaultFormData: TrialFormData = {
@@ -81,24 +82,34 @@ export const TrialFormProvider: React.FC<{ serverProps: ServerProps; children: R
     serverProps,
     children
 }) => {
+    const availableDesignTypes = useMemo(() => {
+        if (!serverProps.design_types || serverProps.design_types.length === 0) {
+            return STANDARD_DESIGN_TYPES;
+        }
+        const seen = new Set<DesignType>();
+        const ordered: Array<{ value: DesignType; label: string }> = [];
+
+        for (const raw of serverProps.design_types) {
+            const type = raw.trim();
+            const standardItem = STANDARD_DESIGN_TYPES.find(d => d.label === type || d.value === type);
+            if (standardItem && !seen.has(standardItem.value)) {
+                seen.add(standardItem.value);
+                ordered.push(standardItem);
+            }
+        }
+        return ordered.length > 0 ? ordered : STANDARD_DESIGN_TYPES;
+    }, [serverProps.design_types]);
+
     const defaultData = useMemo(() => {
         const initial = { ...defaultFormData };
         if (serverProps.breeding_programs?.length > 0) {
             initial.breedingProgram = serverProps.breeding_programs[0][1];
         }
-        if (serverProps.design_types && serverProps.design_types.length > 0) {
-            const available = serverProps.design_types
-                .map(raw => {
-                    const type = raw.trim();
-                    return STANDARD_DESIGN_TYPES.find(d => d.label === type || d.value === type)?.value;
-                })
-                .filter((v): v is DesignType => Boolean(v));
-            if (available.length > 0 && !available.includes(initial.designType)) {
-                initial.designType = available[0];
-            }
+        if (availableDesignTypes.length > 0 && !availableDesignTypes.some(d => d.value === initial.designType)) {
+            initial.designType = availableDesignTypes[0].value;
         }
         return initial;
-    }, [serverProps]);
+    }, [serverProps.breeding_programs, availableDesignTypes]);
 
     const { formData, setFormData, clearDraft, draftId, maxStep, setMaxStep } = useFormDraft<TrialFormData>(defaultData);
 
@@ -115,7 +126,8 @@ export const TrialFormProvider: React.FC<{ serverProps: ServerProps; children: R
             draftId,
             maxStep,
             setMaxStep,
-            serverProps
+            serverProps,
+            availableDesignTypes
         }}>
             {children}
         </TrialFormContext.Provider>
