@@ -1,10 +1,13 @@
 import { useState, useCallback } from 'react';
 import { TrialFormData, DesignResultResponse } from '../types';
 import { fetchListItems } from './useBreedbaseLists';
+import { useWorkingModal } from '../../working_modal';
 
 export const useDesignGenerator = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+
+    useWorkingModal(loading);
 
     const generateDesign = useCallback(async (
         form: TrialFormData

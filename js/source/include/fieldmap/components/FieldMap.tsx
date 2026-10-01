@@ -23,6 +23,7 @@ import { useView, ViewProvider } from '../contexts/ViewContext';
 import { HeatmapProvider } from '../contexts/HeatmapContext';
 import { GeoFieldMap } from './GeoFieldMap';
 import { SecondaryAxisModal } from '../modals/SecondaryAxisModal';
+import { useWorkingModal } from '../../working_modal';
 
 declare global {
     interface JQuery {
@@ -53,16 +54,10 @@ const FieldMap: React.FC<FieldMapProps> = ({
         setShowDownloadCSVModal,
     } = useModals();
 
-    useEffect(() => {
-        if (loading) {
-            jQuery("#working_modal").modal("show");
-        } else {
-            jQuery("#working_modal").modal("hide");
-        }
-    }, [loading]);
+    useWorkingModal(loading);
 
     const { 
-        zoom, pan, isDragging, containerRef, 
+        zoom, pan, isDragging, containerRef,
         handleMouseDown, handleMouseMove, handleMouseUpOrLeave
     } = useZoomPan();
 
