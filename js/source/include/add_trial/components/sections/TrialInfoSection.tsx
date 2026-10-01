@@ -1,10 +1,10 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useTrialForm } from '../../contexts/TrialFormContext';
-import { STANDARD_DESIGN_TYPES, DesignType, StockType } from '../../types';
+import { DesignType, StockType } from '../../types';
 import { fetchSelectOptions, HtmlSelectOption } from '../../../fetch';
 
 export const TrialInfoSection: React.FC = () => {
-    const { formData, updateField, serverProps } = useTrialForm();
+    const { formData, updateField, serverProps, availableDesignTypes } = useTrialForm();
     const [trialTypes, setTrialTypes] = useState<HtmlSelectOption[]>([
         { value: '', label: 'None', title: 'None' }
     ]);
@@ -38,30 +38,6 @@ export const TrialInfoSection: React.FC = () => {
             }
         }
     }, [filteredLocations, formData.locations, updateField]);
-
-    const availableDesignTypes = useMemo(() => {
-        if (!serverProps.design_types || serverProps.design_types.length === 0) {
-            return STANDARD_DESIGN_TYPES;
-        }
-        const seen = new Set<DesignType>();
-        const ordered: Array<{ value: DesignType; label: string }> = [];
-
-        for (const raw of serverProps.design_types) {
-            const type = raw.trim();
-            const standardItem = STANDARD_DESIGN_TYPES.find(d => d.label === type || d.value === type);
-            if (standardItem && !seen.has(standardItem.value)) {
-                seen.add(standardItem.value);
-                ordered.push(standardItem);
-            }
-        }
-        return ordered.length > 0 ? ordered : STANDARD_DESIGN_TYPES;
-    }, [serverProps.design_types]);
-
-    useEffect(() => {
-        if (availableDesignTypes.length > 0 && !availableDesignTypes.some(d => d.value === formData.designType)) {
-            updateField('designType', availableDesignTypes[0].value);
-        }
-    }, [availableDesignTypes, formData.designType, updateField]);
 
     return (
         <div className="tw:flex tw:flex-col tw:gap-3.5">
