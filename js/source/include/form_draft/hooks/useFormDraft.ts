@@ -1,15 +1,15 @@
 import { useEffect, useCallback, useState, useMemo } from 'react';
 import { DraftData } from '../types';
+import { isFunction } from '../../functions';
 
 const MAX_DRAFTS = 10;
 const DRAFT_PREFIX = 'form_draft';
 
 const isFormDraft = (obj: any): obj is DraftData => {
-    return obj && typeof obj === 'object' && 'last_modified' in obj && 'max_step' in obj && 'data' in obj;
-};
-
-const isFunction = <T>(value: T | (() => T)): value is (() => T) => {
-    return typeof value === 'function';
+    return typeof obj === 'object' &&
+        'last_modified' in obj &&
+        'max_step' in obj &&
+        'data' in obj;
 };
 
 export const cleanupOldDrafts = (): void => {
