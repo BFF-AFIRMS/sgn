@@ -20,24 +20,24 @@ export const DesignInfoSection: React.FC<DesignInfoSectionProps> = ({ onOpenPrep
         family_name: { singular: 'Family Name', plural: 'Family Names' },
     };
 
-    const stockListSectionId = stockType === 'cross' ? 'show_list_of_cross_section' : stockType === 'family_name' ? 'show_list_of_family_name_section' : 'show_list_of_accession_section';
-    const stockListDivId = stockType === 'cross' ? 'select_cross_list' : stockType === 'family_name' ? 'select_family_name_list' : 'select_list';
+    const stockListSectionId = `show_list_of_${stockType}_section`;
+    const stockListDivId = `select_${stockType}_list`;
     const stockListSelectId = `${stockListDivId}_list_select`;
 
-    const unrepSectionId = stockType === 'cross' ? 'show_list_of_unrep_cross' : stockType === 'family_name' ? 'show_list_of_unrep_family_name' : 'show_list_of_unrep_accession';
-    const unrepDivId = stockType === 'cross' ? 'list_of_unrep_cross' : stockType === 'family_name' ? 'list_of_unrep_family_name' : 'list_of_unrep_accession';
+    const unrepSectionId = `show_list_of_unrep_${stockType}`;
+    const unrepDivId = `list_of_unrep_${stockType}`;
     const unrepSelectId = `${unrepDivId}_list_select`;
 
-    const repSectionId = stockType === 'cross' ? 'show_list_of_rep_cross' : stockType === 'family_name' ? 'show_list_of_rep_family_name' : 'show_list_of_rep_accession';
-    const repDivId = stockType === 'cross' ? 'list_of_rep_cross' : stockType === 'family_name' ? 'list_of_rep_family_name' : 'list_of_rep_accession';
+    const repSectionId = `show_list_of_rep_${stockType}`;
+    const repDivId = `list_of_rep_${stockType}`;
     const repSelectId = `${repDivId}_list_select`;
 
-    const checkSectionId = stockType === 'cross' ? 'show_list_of_cross_checks_section' : stockType === 'family_name' ? 'show_list_of_family_name_checks_section' : 'show_list_of_checks_section';
-    const checkDivId = stockType === 'cross' ? 'list_of_cross_checks_section' : stockType === 'family_name' ? 'list_of_family_name_checks_section' : 'list_of_checks_section';
+    const checkSectionId = `show_list_of_${stockType}_checks_section`;
+    const checkDivId = `list_of_${stockType}_checks_section`;
     const checkSelectId = `${checkDivId}_list_select`;
 
-    const crbdCheckSectionId = stockType === 'cross' ? 'crbd_show_list_of_cross_checks_section' : stockType === 'family_name' ? 'crbd_show_list_of_family_name_checks_section' : 'crbd_show_list_of_checks_section';
-    const crbdCheckDivId = stockType === 'cross' ? 'crbd_list_of_cross_checks_section' : stockType === 'family_name' ? 'crbd_list_of_family_name_checks_section' : 'crbd_list_of_checks_section';
+    const crbdCheckSectionId = `crbd_show_list_of_${stockType}_checks_section`;
+    const crbdCheckDivId = `crbd_list_of_${stockType}_checks_section`;
     const crbdCheckSelectId = `${crbdCheckDivId}_list_select`;
 
     return (
