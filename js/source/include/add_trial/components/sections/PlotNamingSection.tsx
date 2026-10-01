@@ -22,83 +22,81 @@ export const PlotNamingSection: React.FC = () => {
                     </div>
                 </div>
             </div>
-            {formData.showPlotNamingOptions && (
-                <>
-            <div className="form-group row">
-                <label className="col-sm-3 control-label">Numbering Scheme:</label>
-                <div className="col-sm-9 tw:flex tw:flex-col tw:gap-1.5">
-                    <label className="tw:font-normal">
+            {formData.showPlotNamingOptions && <>
+                <div className="form-group row">
+                    <label className="col-sm-3 control-label">Numbering Scheme:</label>
+                    <div className="col-sm-9 tw:flex tw:flex-col tw:gap-1.5">
+                        <label className="tw:font-normal">
+                            <input
+                                id="block_based"
+                                type="radio"
+                                name="plot_numbering_scheme"
+                                value="block_based"
+                                checked={formData.plotNumberingScheme === 'block_based'}
+                                onChange={() => updateField('plotNumberingScheme', 'block_based' as PlotNumberingScheme)}
+                            />{' '}
+                            Block-based plot numbers (increment leading digit for every block, e.g. 101, 201)
+                        </label>
+                        <label className="tw:font-normal">
+                            <input
+                                id="consecutive"
+                                type="radio"
+                                name="plot_numbering_scheme"
+                                value="consecutive"
+                                checked={formData.plotNumberingScheme === 'consecutive'}
+                                onChange={() => updateField('plotNumberingScheme', 'consecutive' as PlotNumberingScheme)}
+                            />{' '}
+                            Consecutive plot numbers throughout the blocks (e.g. 1, 2, 3...)
+                        </label>
+                    </div>
+                </div>
+
+                <div className="form-group row">
+                    <label className="col-sm-3 control-label">Plot Prefix:</label>
+                    <div className="col-sm-9">
                         <input
-                            id="block_based"
-                            type="radio"
-                            name="plot_numbering_scheme"
-                            value="block_based"
-                            checked={formData.plotNumberingScheme === 'block_based'}
-                            onChange={() => updateField('plotNumberingScheme', 'block_based' as PlotNumberingScheme)}
-                        />{' '}
-                        Block-based plot numbers (increment leading digit for every block, e.g. 101, 201)
-                    </label>
-                    <label className="tw:font-normal">
+                            id="plot_prefix"
+                            name="plot_prefix"
+                            type="text"
+                            className="form-control"
+                            placeholder="Optional prefix"
+                            value={formData.plotPrefix}
+                            onChange={e => updateField('plotPrefix', e.target.value)}
+                        />
+                    </div>
+                </div>
+
+                <div className="form-group row">
+                    <label className="col-sm-3 control-label">Plot Start Number:</label>
+                    <div className="col-sm-9">
+                        <select
+                            id="start_number"
+                            name="start_number"
+                            className="form-control"
+                            value={formData.startNumber}
+                            onChange={e => updateField('startNumber', e.target.value)}
+                        >
+                            <option value="1">1</option>
+                            <option value="101">101</option>
+                            <option value="1001">1001</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div className="form-group row">
+                    <label className="col-sm-3 control-label">Plot Number Increment:</label>
+                    <div className="col-sm-9">
                         <input
-                            id="consecutive"
-                            type="radio"
-                            name="plot_numbering_scheme"
-                            value="consecutive"
-                            checked={formData.plotNumberingScheme === 'consecutive'}
-                            onChange={() => updateField('plotNumberingScheme', 'consecutive' as PlotNumberingScheme)}
-                        />{' '}
-                        Consecutive plot numbers throughout the blocks (e.g. 1, 2, 3...)
-                    </label>
+                            id="increment"
+                            name="increment"
+                            type="text"
+                            className="form-control"
+                            value={formData.increment}
+                            onChange={e => updateField('increment', e.target.value)}
+                        />
+                    </div>
                 </div>
-            </div>
-
-            <div className="form-group row">
-                <label className="col-sm-3 control-label">Plot Prefix:</label>
-                <div className="col-sm-9">
-                    <input
-                        id="plot_prefix"
-                        name="plot_prefix"
-                        type="text"
-                        className="form-control"
-                        placeholder="Optional prefix"
-                        value={formData.plotPrefix}
-                        onChange={e => updateField('plotPrefix', e.target.value)}
-                    />
-                </div>
-            </div>
-
-            <div className="form-group row">
-                <label className="col-sm-3 control-label">Plot Start Number:</label>
-                <div className="col-sm-9">
-                    <select
-                        id="start_number"
-                        name="start_number"
-                        className="form-control"
-                        value={formData.startNumber}
-                        onChange={e => updateField('startNumber', e.target.value)}
-                    >
-                        <option value="1">1</option>
-                        <option value="101">101</option>
-                        <option value="1001">1001</option>
-                    </select>
-                </div>
-            </div>
-
-            <div className="form-group row">
-                <label className="col-sm-3 control-label">Plot Number Increment:</label>
-                <div className="col-sm-9">
-                    <input
-                        id="increment"
-                        name="increment"
-                        type="text"
-                        className="form-control"
-                        value={formData.increment}
-                        onChange={e => updateField('increment', e.target.value)}
-                    />
-                </div>
-            </div>
-                </>
-            )}
+            </>}
         </div>
     );
 };
