@@ -32,7 +32,6 @@ export interface PlotGridContextType {
     recalculateLayout: (layout: 'serpentine' | 'zigzag') => void;
     mutatePlot: (plotId: string | Plot, updatedFields: Partial<Plot>) => void;
 
-    dimensions: { rows: number; cols: number, minX: number, maxX: number, minY: number, maxY: number };
     applyDimensions: (rowsInput: string, colsInput: string, fillerAccessionInput?: string) => Promise<void>;
 
     fillerAccessionId: string | undefined;
@@ -83,7 +82,7 @@ export const PlotGridProvider: React.FC<FieldMapContextProps> = ({ trialId, auth
     } = useModals();
 
     const [plotObject, setPlotObject] = useState<Record<string, Plot>>({});
-    const [dimensions, setDimensions] = useState({ rows: 0, cols: 0, minX: 0, maxX: 0, minY: 0, maxY: 0 });
+    const [bounds, setBounds] = useState({minCol: 0, maxCol: 0, minRow: 0, maxRow: 0, numCols: 0, numRows: 0});
     const [fillerAccessionId, setFillerAccessionId] = useState<string | undefined>(undefined);
     const [fillerAccessionName, setFillerAccessionName] = useState<string | undefined>(undefined);
     const [axisOrientation, setAxisOrientation] = useState<AxisOrientation>({
@@ -116,17 +115,6 @@ export const PlotGridProvider: React.FC<FieldMapContextProps> = ({ trialId, auth
         });
         return overlaps;
     }, [plotList]);
-
-    const bounds = useMemo(() => {
-        return {
-            minCol: dimensions.minX,
-            maxCol: dimensions.maxX || 1,
-            minRow: dimensions.minY,
-            maxRow: dimensions.maxY || 1,
-            numRows: dimensions.rows || 1,
-            numCols: dimensions.cols || 1
-        };
-    }, [dimensions]);
 
     /**
      * Computed bounds including borders
@@ -166,11 +154,11 @@ export const PlotGridProvider: React.FC<FieldMapContextProps> = ({ trialId, auth
 
         const {
             plotObject,
-            dimensions: { rows, cols, minX, maxX, minY, maxY }
+            bounds,
         } = derivePlotGrid(data);
 
         setPlotObject(plotObject);
-        setDimensions({ rows, cols, minX, maxX, minY, maxY });
+        setBounds(bounds);
     }, []);
 
     const gridMatrix = useMemo(() => {
@@ -237,15 +225,14 @@ export const PlotGridProvider: React.FC<FieldMapContextProps> = ({ trialId, auth
 
             const newPlotObject: Record<string, Plot> = {};
             let plotIdx = 0;
-            for (let r = dimensions.minY; r <= dimensions.maxY; r++) {
-                const relativeRow = 1 + r - dimensions.minY;
+            for (let r = bounds.minRow; r <= bounds.maxRow; r++) {
+                const relativeRow = 1 + r - bounds.minRow;
                 const swap_columns = layout === 'serpentine' && (relativeRow % 2 === 0);
-                const cStart = swap_columns ? dimensions.maxX : dimensions.minX;
-                const cEnd = swap_columns ? dimensions.minX: dimensions.maxX;
+                const cStart = swap_columns ? bounds.maxCol : bounds.minCol;
+                const cEnd = swap_columns ? bounds.minCol: bounds.maxCol;
                 const cStep = swap_columns ? -1: 1;
 
                 for (let c = cStart; cStep > 0 ? c <= cEnd : c >= cEnd; c += cStep) {
-                    console.log(`r: ${r}, c: ${c}`);
                     if (plotIdx < sortedPlots.length) {
                         const plot = sortedPlots[plotIdx];
                         newPlotObject[plot.observationUnitDbId!] = {
@@ -262,7 +249,7 @@ export const PlotGridProvider: React.FC<FieldMapContextProps> = ({ trialId, auth
             }
             return newPlotObject;
         });
-    }, [dimensions, bounds]);
+    }, [bounds]);
 
     const transposeLayout = useCallback(() => {
         // Reflection over diagonal (α′ = 2(θ_line) - α) = 2(45) - α = 90 - α
@@ -285,7 +272,7 @@ export const PlotGridProvider: React.FC<FieldMapContextProps> = ({ trialId, auth
             }
             return transposed;
         });
-        setDimensions(d => ({ rows: d.cols, cols: d.rows, minX: d.minY, maxX: d.maxY, minY: d.minX, maxY: d.maxX }));
+        setBounds(b => ({ minCol: b.minRow, maxCol: b.maxRow, minRow: b.minCol, maxRow: b.maxCol, numRows: b.numCols, numCols: b.numRows }));
     }, []);
 
     const rotateLayout = useCallback(() => {
@@ -318,7 +305,7 @@ export const PlotGridProvider: React.FC<FieldMapContextProps> = ({ trialId, auth
             }
             return rotated;
         });
-        setDimensions(d => ({ rows: d.cols, cols: d.rows, minX: d.minY, maxX: d.maxY, minY: d.minX, maxY: d.maxX }));
+        setBounds(b => ({ minCol: b.minRow, maxCol: b.maxRow, minRow: b.minCol, maxRow: b.maxCol, numRows: b.numCols, numCols: b.numRows }));
     }, [bounds]);
 
     const fetchObservationUnits = useCallback(async () => {
@@ -415,14 +402,12 @@ export const PlotGridProvider: React.FC<FieldMapContextProps> = ({ trialId, auth
             setFillerAccessionId(accessionId);
         }
 
-        const addRows = rows - dimensions.rows;
-        const addCols = cols - dimensions.cols;
-        const newMinY = dimensions.minY;
-        const newMaxY = dimensions.maxY + addRows;
-        const newMinX = dimensions.minX;
-        const newMaxX = dimensions.maxX + addCols;
+        const addRows = rows - bounds.numRows;
+        const addCols = cols - bounds.numCols;
+        const newMaxRow = bounds.maxRow + addRows;
+        const newMaxCol = bounds.maxCol + addCols;
 
-        setDimensions(d => ({ rows: rows, cols: cols, minX: d.minX, maxX: newMaxX, minY: d.minY, maxY: newMaxY }));
+        setBounds(d => ({minCol: d.minCol, maxCol: newMaxCol, minRow: d.minRow, maxRow: newMaxRow, numRows: rows, numCols: cols }));
         recalculateLayout(plotLayout);
     }, [trialId, plotList]);
 
@@ -450,9 +435,8 @@ export const PlotGridProvider: React.FC<FieldMapContextProps> = ({ trialId, auth
             return { label, values };
         };
 
-        const { cols, rows } = dimensions;
-        const dispX = getAxisDisplay(axisOrientation.x, cols || bounds.numCols);
-        const dispY = getAxisDisplay(axisOrientation.y, rows || bounds.numRows);
+        const dispX = getAxisDisplay(axisOrientation.x, bounds.numCols);
+        const dispY = getAxisDisplay(axisOrientation.y, bounds.numRows);
 
         return {
             xLabel: dispX.label,
@@ -460,7 +444,7 @@ export const PlotGridProvider: React.FC<FieldMapContextProps> = ({ trialId, auth
             xValues: dispX.values,
             yValues: dispY.values
         };
-    }, [hasSecondaryAxis, secondaryAxis, axisOrientation, dimensions, bounds]);
+    }, [hasSecondaryAxis, secondaryAxis, axisOrientation, bounds]);
 
     useEffect(() => {
         fetchObservationUnits();
@@ -470,7 +454,6 @@ export const PlotGridProvider: React.FC<FieldMapContextProps> = ({ trialId, auth
         <PlotGridContext.Provider value={{
             plotList,
             overlappingPlots,
-            dimensions,
             bounds,
             renderBounds,
             svgDimensions,

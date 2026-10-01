@@ -1,15 +1,9 @@
 import { Plot } from '../types';
+import {GridBounds} from '../contexts/PlotGridContext';
 
 export interface DerivedGridResult {
     plotObject: Record<string, Plot>;
-    dimensions: {
-        rows: number;
-        cols: number;
-        minX: number;
-        maxX: number;
-        minY: number;
-        maxY: number;
-    };
+    bounds: GridBounds;
 }
 
 export const derivePlotGrid = (data: any[]): DerivedGridResult => {
@@ -79,6 +73,6 @@ export const derivePlotGrid = (data: any[]): DerivedGridResult => {
     
     return {
         plotObject: mapped,
-        dimensions: { rows, cols, minX, maxX, minY, maxY }
+        bounds: {minCol: minX, maxCol: maxX, minRow: minY, maxRow: maxY, numCols: rows, numRows: cols}
     };
 };
