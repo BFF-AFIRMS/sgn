@@ -20,18 +20,23 @@ export const DesignInfoSection: React.FC<DesignInfoSectionProps> = ({ onOpenPrep
         family_name: { singular: 'Family Name', plural: 'Family Names' },
     };
 
+    const stockListSectionId = stockType === 'cross' ? 'show_list_of_cross_section' : stockType === 'family_name' ? 'show_list_of_family_name_section' : 'show_list_of_accession_section';
     const stockListDivId = stockType === 'cross' ? 'select_cross_list' : stockType === 'family_name' ? 'select_family_name_list' : 'select_list';
     const stockListSelectId = `${stockListDivId}_list_select`;
 
+    const unrepSectionId = stockType === 'cross' ? 'show_list_of_unrep_cross' : stockType === 'family_name' ? 'show_list_of_unrep_family_name' : 'show_list_of_unrep_accession';
     const unrepDivId = stockType === 'cross' ? 'list_of_unrep_cross' : stockType === 'family_name' ? 'list_of_unrep_family_name' : 'list_of_unrep_accession';
     const unrepSelectId = `${unrepDivId}_list_select`;
 
+    const repSectionId = stockType === 'cross' ? 'show_list_of_rep_cross' : stockType === 'family_name' ? 'show_list_of_rep_family_name' : 'show_list_of_rep_accession';
     const repDivId = stockType === 'cross' ? 'list_of_rep_cross' : stockType === 'family_name' ? 'list_of_rep_family_name' : 'list_of_rep_accession';
     const repSelectId = `${repDivId}_list_select`;
 
+    const checkSectionId = stockType === 'cross' ? 'show_list_of_cross_checks_section' : stockType === 'family_name' ? 'show_list_of_family_name_checks_section' : 'show_list_of_checks_section';
     const checkDivId = stockType === 'cross' ? 'list_of_cross_checks_section' : stockType === 'family_name' ? 'list_of_family_name_checks_section' : 'list_of_checks_section';
     const checkSelectId = `${checkDivId}_list_select`;
 
+    const crbdCheckSectionId = stockType === 'cross' ? 'crbd_show_list_of_cross_checks_section' : stockType === 'family_name' ? 'crbd_show_list_of_family_name_checks_section' : 'crbd_show_list_of_checks_section';
     const crbdCheckDivId = stockType === 'cross' ? 'crbd_list_of_cross_checks_section' : stockType === 'family_name' ? 'crbd_list_of_family_name_checks_section' : 'crbd_list_of_checks_section';
     const crbdCheckSelectId = `${crbdCheckDivId}_list_select`;
 
@@ -41,7 +46,7 @@ export const DesignInfoSection: React.FC<DesignInfoSectionProps> = ({ onOpenPrep
             <div className="well well-sm">
                 {designType === 'p-rep' ? (
                     <>
-                        <div className="form-group form-group-sm">
+                        <div className="form-group form-group-sm" id={unrepSectionId}>
                             <label className="col-sm-7 control-label">
                                 <span className="tw:text-red-500 tw:mr-1">*</span>List of unreplicated {stockTypeLabels[stockType].singular.toLowerCase()}:
                             </label>
@@ -56,7 +61,7 @@ export const DesignInfoSection: React.FC<DesignInfoSectionProps> = ({ onOpenPrep
                                 />
                             </div>
                         </div>
-                        <div className="form-group form-group-sm">
+                        <div className="form-group form-group-sm" id={repSectionId}>
                             <label className="col-sm-7 control-label">
                                 <span className="tw:text-red-500 tw:mr-1">*</span>List of replicated {stockTypeLabels[stockType].singular.toLowerCase()}:
                             </label>
@@ -83,7 +88,7 @@ export const DesignInfoSection: React.FC<DesignInfoSectionProps> = ({ onOpenPrep
                             <h4 className="tw:font-bold">Which {stockTypeLabels[stockType].plural.toLowerCase()} will be in the field?</h4>
                         </div>
                         <hr />
-                        <div className="form-group form-group-sm">
+                        <div className="form-group form-group-sm" id={stockListSectionId}>
                             <label className="col-sm-7 control-label">
                                 <span className="tw:text-red-500 tw:mr-1">*</span>List of {stockTypeLabels[stockType].plural.toLowerCase()} to include:
                             </label>
@@ -99,7 +104,7 @@ export const DesignInfoSection: React.FC<DesignInfoSectionProps> = ({ onOpenPrep
                             </div>
                         </div>
                         {(designType === 'Augmented' || designType === 'MAD') && (
-                            <div className="form-group form-group-sm">
+                            <div className="form-group form-group-sm" id={checkSectionId}>
                                 <label className="col-sm-7 control-label">
                                     <span className="tw:text-red-500 tw:mr-1">*</span>List of checks to include:
                                 </label>
@@ -116,7 +121,7 @@ export const DesignInfoSection: React.FC<DesignInfoSectionProps> = ({ onOpenPrep
                             </div>
                         )}
                         {['RCBD', 'CRD', 'Alpha', 'Lattice', 'RRC', 'DRRC', 'URDD'].includes(designType) && (
-                            <div className="form-group form-group-sm">
+                            <div className="form-group form-group-sm" id={crbdCheckSectionId}>
                                 <label className="col-sm-7 control-label">
                                     List of checks to include. Checks list should be {stockType === 'accession' ? 'separate from accessions' : 'accessions'} list. (optional): 
                                 </label>
@@ -152,7 +157,7 @@ export const DesignInfoSection: React.FC<DesignInfoSectionProps> = ({ onOpenPrep
             {/* Design-specific numeric parameters */}
             <div id="design_info">
                     {['CRD', 'Alpha', 'Lattice', 'DRRC'].includes(designType) && (
-                        <div className="form-group form-group-sm">
+                        <div className="form-group form-group-sm" id="rep_count_section">
                             <label className="col-sm-7 control-label"><span className="tw:text-red-500 tw:mr-1">*</span>Number of replicates: </label>
                             <div className="col-sm-5">
                                 <input
@@ -168,7 +173,7 @@ export const DesignInfoSection: React.FC<DesignInfoSectionProps> = ({ onOpenPrep
                     )}
 
                     {['RCBD', 'RRC', 'URDD', 'splitplot'].includes(designType) && (
-                        <div className="form-group form-group-sm">
+                        <div className="form-group form-group-sm" id="block_number_section">
                             <label className="col-sm-7 control-label">Number of blocks: </label>
                             <div className="col-sm-5">
                                 <input
@@ -184,7 +189,7 @@ export const DesignInfoSection: React.FC<DesignInfoSectionProps> = ({ onOpenPrep
                     )}
 
                     {designType === 'DRRC' && (
-                        <div className="form-group form-group-sm">
+                        <div className="form-group form-group-sm" id="col_number_section">
                             <label className="col-sm-7 control-label"><span className="tw:text-red-500 tw:mr-1">*</span>Number of Columns: </label>
                             <div className="col-sm-5">
                                 <input
@@ -200,7 +205,7 @@ export const DesignInfoSection: React.FC<DesignInfoSectionProps> = ({ onOpenPrep
                     )}
 
                     {designType === 'Alpha' && (
-                        <div className="form-group form-group-sm">
+                        <div className="form-group form-group-sm" id="block_size_section">
                             <label className="col-sm-7 control-label"><span className="tw:text-red-500 tw:mr-1">*</span>Block size: </label>
                             <div className="col-sm-5">
                                 <input
@@ -217,7 +222,7 @@ export const DesignInfoSection: React.FC<DesignInfoSectionProps> = ({ onOpenPrep
 
                     {designType === 'Augmented' && (
                         <>
-                        <div className="form-group form-group-sm">
+                        <div className="form-group form-group-sm" id="max_block_size_section">
                             <label className="col-sm-7 control-label"><span className="tw:text-red-500 tw:mr-1">*</span>Maximum block size: </label>
                             <div className="col-sm-5">
                                 <input
@@ -230,7 +235,7 @@ export const DesignInfoSection: React.FC<DesignInfoSectionProps> = ({ onOpenPrep
                                 />
                             </div>
                         </div>
-                            <div className="form-group form-group-sm">
+                            <div className="form-group form-group-sm" id="row_number_per_block_section">
                                 <label className="col-sm-7 control-label">Number of Rows Per Block (Optional): </label>
                                 <div className="col-sm-5">
                                     <input
@@ -248,7 +253,7 @@ export const DesignInfoSection: React.FC<DesignInfoSectionProps> = ({ onOpenPrep
 
                     {designType === 'MAD' && (
                         <>
-                            <div className="form-group form-group-sm">
+                            <div className="form-group form-group-sm" id="row_number_section">
                                 <label className="col-sm-7 control-label"><span className="tw:text-red-500 tw:mr-1">*</span>Number of field rows: </label>
                                 <div className="col-sm-5">
                                     <input
@@ -261,7 +266,7 @@ export const DesignInfoSection: React.FC<DesignInfoSectionProps> = ({ onOpenPrep
                                     />
                                 </div>
                             </div>
-                            <div className="form-group form-group-sm">
+                            <div className="form-group form-group-sm" id="col_number_section">
                                 <label className="col-sm-7 control-label"><span className="tw:text-red-500 tw:mr-1">*</span>Number of Columns: </label>
                                 <div className="col-sm-5">
                                     <input
@@ -274,7 +279,7 @@ export const DesignInfoSection: React.FC<DesignInfoSectionProps> = ({ onOpenPrep
                                     />
                                 </div>
                             </div>
-                            <div className="form-group form-group-sm">
+                            <div className="form-group form-group-sm" id="col_number_per_block_section">
                                 <label className="col-sm-7 control-label">Number of Columns per Block (2 or 4): </label>
                                 <div className="col-sm-5">
                                     <input
@@ -287,7 +292,7 @@ export const DesignInfoSection: React.FC<DesignInfoSectionProps> = ({ onOpenPrep
                                     />
                                 </div>
                             </div>
-                            <div className="form-group form-group-sm">
+                            <div className="form-group form-group-sm" id="row_number_per_block_section">
                                 <label className="col-sm-7 control-label">Number of Rows Per Block (Optional): </label>
                                 <div className="col-sm-5">
                                     <input
@@ -305,7 +310,7 @@ export const DesignInfoSection: React.FC<DesignInfoSectionProps> = ({ onOpenPrep
 
                     {(designType === 'p-rep' || designType === 'URDD') && (
                         <>
-                            <div className="form-group form-group-sm">
+                            <div className="form-group form-group-sm" id="show_no_of_row_in_design">
                                 <label className="col-sm-7 control-label">Number of rows in design: </label>
                                 <div className="col-sm-5">
                                     <div className="input-group">
@@ -322,7 +327,7 @@ export const DesignInfoSection: React.FC<DesignInfoSectionProps> = ({ onOpenPrep
                                     </div>
                                 </div>
                             </div>
-                            <div className="form-group form-group-sm">
+                            <div className="form-group form-group-sm" id="show_no_of_col_in_design">
                                 <label className="col-sm-7 control-label">Number of columns in design : </label>
                                 <div className="col-sm-5">
                                     <div className="input-group">
@@ -344,7 +349,7 @@ export const DesignInfoSection: React.FC<DesignInfoSectionProps> = ({ onOpenPrep
 
                     {designType === 'p-rep' && (
                         <>
-                            <div className="form-group form-group-sm">
+                            <div className="form-group form-group-sm" id="show_no_of_rep_times">
                                 <label className="col-sm-7 control-label">Number of times replicated accessions are replicated: </label>
                                 <div className="col-sm-5">
                                     <div className="input-group">
@@ -361,7 +366,7 @@ export const DesignInfoSection: React.FC<DesignInfoSectionProps> = ({ onOpenPrep
                                     </div>
                                 </div>
                             </div>
-                            <div className="form-group form-group-sm">
+                            <div className="form-group form-group-sm" id="show_no_of_block_sequence">
                                 <label className="col-sm-7 control-label">Block sequence: </label>
                                 <div className="col-sm-5">
                                     <div className="input-group">
@@ -378,7 +383,7 @@ export const DesignInfoSection: React.FC<DesignInfoSectionProps> = ({ onOpenPrep
                                     </div>
                                 </div>
                             </div>
-                            <div className="form-group form-group-sm">
+                            <div className="form-group form-group-sm" id="show_no_of_sub_block_sequence">
                                 <label className="col-sm-7 control-label">Sub-block sequence: </label>
                                 <div className="col-sm-5">
                                     <div className="input-group">
@@ -400,7 +405,7 @@ export const DesignInfoSection: React.FC<DesignInfoSectionProps> = ({ onOpenPrep
 
                     {designType === 'greenhouse' && (
                         <>
-                            <div className="form-group form-group-sm">
+                            <div className="form-group form-group-sm" id="greenhouse_default_num_plants_per_accession">
                                 <label className="col-sm-7 control-label">Default Number of Plants: </label>
                                 <div className="col-sm-5">
                                     <input
@@ -415,12 +420,12 @@ export const DesignInfoSection: React.FC<DesignInfoSectionProps> = ({ onOpenPrep
                                 </div>
                             </div>
                             {formData.stockListId && (
-                                <div className="form-group form-group-sm">
+                                <div className="form-group form-group-sm" id="greenhouse_num_plants_per_accession_section">
                                     <hr />
                                     <div className="tw:flex tw:justify-center">
-                                        <h4 className="tw:font-bold">Number of Plants:</h4>
+                                         <h4 className="tw:font-bold">Number of Plants:</h4>
                                     </div>
-                                    <div className="tw:max-h-60 tw:overflow-y-auto tw:mt-2">
+                                    <div className="tw:max-h-60 tw:overflow-y-auto tw:mt-2" id="greenhouse_num_plants_per_accession">
                                         {greenhouseStocks.map((name, i) => (
                                             <div key={name} className="form-group form-group-sm">
                                                 <label className="col-sm-9 control-label">{name}: </label>
@@ -450,7 +455,7 @@ export const DesignInfoSection: React.FC<DesignInfoSectionProps> = ({ onOpenPrep
                     )}
 
                     {designType === 'splitplot' && (
-                        <>
+                        <div id="create_trial_with_treatment_section">
                             {formData.treatments.map((t, idx) => (
                                 <div key={idx} className="form-group form-group-sm">
                                     <label className="col-sm-7 control-label">Treatment {idx + 1}: </label>
@@ -495,7 +500,7 @@ export const DesignInfoSection: React.FC<DesignInfoSectionProps> = ({ onOpenPrep
                                     </button>
                                 </div>
                             </div>
-                            <div className="form-group form-group-sm">
+                            <div className="form-group form-group-sm" id="num_plants_per_plot_section">
                                 <label className="col-sm-7 control-label"><span className="tw:text-red-500 tw:mr-1">*</span>Number of Plants Per Treatment: </label>
                                 <div className="col-sm-5">
                                     <input
@@ -508,12 +513,12 @@ export const DesignInfoSection: React.FC<DesignInfoSectionProps> = ({ onOpenPrep
                                     />
                                 </div>
                             </div>
-                        </>
+                        </div>
                     )}
 
                     {designType === 'Westcott' && (
                         <>
-                            <div className="form-group form-group-sm">
+                            <div className="form-group form-group-sm" id="westcott_check_1_section">
                                 <label className="col-sm-7 control-label"><span className="tw:text-red-500 tw:mr-1">*</span>Name of Check 1: </label>
                                 <div className="col-sm-5">
                                     <AccessionAutocomplete
@@ -526,7 +531,7 @@ export const DesignInfoSection: React.FC<DesignInfoSectionProps> = ({ onOpenPrep
                                     />
                                 </div>
                             </div>
-                            <div className="form-group form-group-sm">
+                            <div className="form-group form-group-sm" id="westcott_check_2_section">
                                 <label className="col-sm-7 control-label"><span className="tw:text-red-500 tw:mr-1">*</span>Name of Check 2: </label>
                                 <div className="col-sm-5">
                                     <AccessionAutocomplete
@@ -539,9 +544,9 @@ export const DesignInfoSection: React.FC<DesignInfoSectionProps> = ({ onOpenPrep
                                     />
                                 </div>
                             </div>
-                            <div className="form-group form-group-sm">
+                            <div className="form-group form-group-sm" id="westcott_num_col_section">
                                 <label className="col-sm-7 control-label"><span className="tw:text-red-500 tw:mr-1">*</span>Number of Columns: </label>
-                                <div className="col-sm-5">
+                                <div className="col-sm-5" id="westcott_num_col">
                                     <input
                                         id="westcott_col"
                                         name="westcott_col"
@@ -553,9 +558,9 @@ export const DesignInfoSection: React.FC<DesignInfoSectionProps> = ({ onOpenPrep
                                     />
                                 </div>
                             </div>
-                            <div className="form-group form-group-sm">
+                            <div className="form-group form-group-sm" id="westcott_num_col_between_check_section">
                                 <label className="col-sm-7 control-label">Number of columns between two check columns (Optional): </label>
-                                <div className="col-sm-5">
+                                <div className="col-sm-5" id="westcott_num_col_between_check">
                                     <input
                                         id="westcott_col_between_check"
                                         name="westcott_col_between_check"
