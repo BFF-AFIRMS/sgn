@@ -136,7 +136,7 @@ export const PlotGridProvider: React.FC<FieldMapContextProps> = ({ trialId, auth
             numRows: rMaxRow - rMinRow + 1,
             numCols: rMaxCol - rMinCol + 1
         };
-    }, [bounds, topBorder, bottomBorder, leftBorder, rightBorder]);
+    }, [bounds, topBorder, bottomBorder, leftBorder, rightBorder, invertCols, invertRows]);
 
     const svgDimensions = useMemo(() => {
         const extraWidth = hasSecondaryAxis ? 140 : 50;
