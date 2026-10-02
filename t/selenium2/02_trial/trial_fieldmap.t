@@ -23,7 +23,7 @@ use Selenium::Firefox::Profile;
 my $profile = Selenium::Firefox::Profile->new;
 $profile->set_preference( 'browser.download.folderList', 2 );
 $profile->set_preference( 'browser.download.dir', '/downloads' );
-$profile->set_preference( 'browser.helperApps.neverAsk.saveToDisk', 'application/csv;text/csv,image/png' );
+$profile->set_preference( 'browser.helperApps.neverAsk.saveToDisk', 'application/csv,text/csv,image/png' );
 $profile->set_preference( 'dom.disable_open_during_load', \0 );
 
 my $driver = Selenium::Remote::Driver->new(
@@ -531,10 +531,10 @@ sub test_download_heatmap_image_ok {
 	);
 
 	# Wait for asynchronous image.onload, canvas drawing, and download link click
-	ok(wait_until {
+	ok((wait_until {
 		my $info = $t->driver->execute_script('return window.__lastHeatmapDownload;');
 		return defined $info && $info->{hrefLength} > 100;
-	} timeout => 15, interval => 0.5, "Wait for heatmap image download data to be generated for '$expected_label'");
+	} timeout => 15, interval => 0.5), "Wait for heatmap image download data to be generated for '$expected_label'");
 
 	my $dl_info = $t->driver->execute_script('return window.__lastHeatmapDownload;');
 	is($dl_info->{download}, "${expected_label}_heatmap.png", "Verify download filename attribute is '${expected_label}_heatmap.png'");
@@ -543,7 +543,7 @@ sub test_download_heatmap_image_ok {
 
 	# Wait for file to be written to disk in download directory
 	my $found_file = '';
-	ok(wait_until {
+	ok((wait_until {
 		if (opendir(my $dh, $download_dir)) {
 			my @matches = grep { /_heatmap\.png$/ } readdir($dh);
 			closedir($dh);
@@ -556,7 +556,7 @@ sub test_download_heatmap_image_ok {
 			}
 		}
 		return 0;
-	} timeout => 15, interval => 0.5, "Verify heatmap PNG file was downloaded to disk for '$expected_label'");
+	} timeout => 15, interval => 0.5), "Verify heatmap PNG file was downloaded to disk for '$expected_label'");
 
 	if ($found_file && -e $found_file) {
 		open my $fh, '<:raw', $found_file or die "Could not open downloaded file '$found_file': $!";
