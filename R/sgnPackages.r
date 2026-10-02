@@ -218,12 +218,11 @@ if (length(newGitPaths) > 0) {
 
 if (length(newBioc) > 0 ) {
     BiocManager::install(newBioc,
-             suppressUpdates=TRUE,
-             suppressAutoUpdate=TRUE,
+             update=FALSE,
              ask=FALSE,
              quiet=FALSE,
              verbose=FALSE,
-             siteRepos=cranSite)
+             site_repository=cranSite)
 } else {
   message('No new bioconductor packages to install.')
 }
