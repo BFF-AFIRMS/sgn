@@ -99,7 +99,7 @@ export const LabelLayer: React.FC<LabelLayerProps> = ({ }) => {
             {Array.from({ length: bounds.numRows }).map((_, axisIdx) => {
                 // Reminder: Y render display direction is top to bottom, But y labels orientation is bottom to top
                 let rowCoord = axisOrientation.y.reversed ? bounds.minRow + axisIdx: bounds.maxRow - axisIdx;
-                rowCoord = invertCols ? bounds.maxRow - rowCoord + 1: rowCoord;
+                rowCoord = invertRows ? bounds.maxRow - rowCoord + 1: rowCoord;
                 const rowIdx = invertRows ? (bounds.minRow - renderBounds.minRow) + axisIdx : (renderBounds.maxRow - bounds.maxRow) + axisIdx;
                 const displayY = rowIdx * 52 + 30;
 
