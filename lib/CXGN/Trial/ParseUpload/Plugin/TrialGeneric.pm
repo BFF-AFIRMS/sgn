@@ -175,15 +175,15 @@ sub _validate_with_plugin {
             push @error_messages, "Row $row: is_a_control value of <strong>$is_a_control</strong> is invalid.  It must be blank (not a control), 0 (not a control), or 1 (is a control).";
         }
 
-        # Range Number / Row Number / Col Number: must be a positive integer, if provided
-        if ($range_number && !($range_number =~ /^\d+?$/)) {
-            push @error_messages, "Row $row: range_number <strong>$range_number</strong> must be a positive integer.";
+        # Stake Number/Set Number: must be a positive integer, if provided
+        if ($range_number && !($range_number =~ /^-?\d+?$/)) {
+            push @error_messages, "Row $row: range_number <strong>$range_number</strong> must be an integer.";
         }
-        if ($row_number && !($row_number =~ /^\d+?$/)) {
-            push @error_messages, "Row $row: row_number <strong>$row_number</strong> must be a positive integer.";
+        if ($row_number && !($row_number =~ /^-?\d+?$/)) {
+            push @error_messages, "Row $row: row_number <strong>$row_number</strong> must be an integer.";
         }
-        if ($col_number && !($col_number =~ /^\d+?$/)) {
-            push @error_messages, "Row $row: col_number <strong>$col_number</strong> must be a positive integer.";
+        if ($col_number && !($col_number =~ /^-?\d+?$/)) {
+            push @error_messages, "Row $row: col_number <strong>$col_number</strong> must be an integer.";
         }
         if ($stake_number && !($stake_number =~ /^\d+?$/)) {
             push @error_messages, "Row $row: stake_number <strong>$stake_number</strong> must be a positive integer.";

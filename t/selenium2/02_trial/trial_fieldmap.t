@@ -47,6 +47,12 @@ my $LABEL_Y_OFFSET                  = 30;
 my $LABEL_Y_OFFSET_STAGGERED_TOP    = 20;
 my $LABEL_Y_OFFSET_STAGGERED_BOTTOM = 40;
 
+# Axis layout offsets relative to grid bounds
+my $X_VAL_TOP_OFFSET_Y    = -10;
+my $X_VAL_BOTTOM_OFFSET_Y = 20;
+my $Y_VAL_LEFT_OFFSET_X   = -20;
+my $Y_VAL_RIGHT_OFFSET_X  = 20;
+
 # Secondary axis layout offsets relative to grid bounds
 my $SEC_X_LABEL_TOP_OFFSET_Y    = -42;
 my $SEC_X_LABEL_BOTTOM_OFFSET_Y = 52;
@@ -223,6 +229,24 @@ sub find_sec_y_label_ok {
 	my $grid_h = $num_rows * $CELL_SIZE;
 	my $x = ($side eq 'left') ? $SEC_Y_LABEL_LEFT_OFFSET_X : ($grid_w + $SEC_Y_LABEL_RIGHT_OFFSET_X);
 	my $y = $grid_h / 2;
+	return find_svg_text_ok($text, $x, $y);
+}
+
+# Verify X axis column tick value text at top or bottom
+sub find_x_val_ok {
+	my ($text, $col, $num_rows, $side) = @_;
+	my $x = $col * $CELL_SIZE + $CELL_HALF;
+	my $grid_h = defined $num_rows ? $num_rows * $CELL_SIZE : 0;
+	my $y = ($side eq 'top') ? $X_VAL_TOP_OFFSET_Y : ($grid_h + $X_VAL_BOTTOM_OFFSET_Y);
+	return find_svg_text_ok($text, $x, $y);
+}
+
+# Verify Y axis row tick value text at left or right
+sub find_y_val_ok {
+	my ($text, $row, $num_cols, $side) = @_;
+	my $grid_w = defined $num_cols ? $num_cols * $CELL_SIZE : 0;
+	my $x = ($side eq 'left') ? $Y_VAL_LEFT_OFFSET_X : ($grid_w + $Y_VAL_RIGHT_OFFSET_X);
+	my $y = $row * $CELL_SIZE + $LABEL_Y_OFFSET;
 	return find_svg_text_ok($text, $x, $y);
 }
 
@@ -1281,6 +1305,15 @@ $t->while_logged_in_as("curator", sub {
 	find_north_arrow_ok(0);
 
 	# =========================================================================
+	# Primary Axis Rendering
+	# =========================================================================
+
+	find_x_val_ok('1', 0, undef, 'top');
+	find_x_val_ok('1', 0, 3, 'bottom');
+	find_y_val_ok('3', 0, undef, 'left');
+	find_y_val_ok('3', 0, 7, 'right');
+
+	# =========================================================================
 	# Secondary Axis Configuration & Rendering
 	# =========================================================================
 	set_secondary_axis('Test X Label', 'Test Y Label', 'tx1,tx2,tx3,tx4', 'ty1,ty2,ty3,ty4');
@@ -1290,9 +1323,9 @@ $t->while_logged_in_as("curator", sub {
 	find_sec_y_label_ok('Test Y Label', 7, 3, 'left');
 	find_sec_y_label_ok('Test Y Label', 7, 3, 'right');
 
-	find_sec_x_val_ok('tx1', 0, 3, 'top');
+	find_sec_x_val_ok('tx1', 0, undef, 'top');
 	find_sec_x_val_ok('tx1', 0, 3, 'bottom');
-	find_sec_y_val_ok('ty3', 0, 7, 'left');
+	find_sec_y_val_ok('ty3', 0, undef, 'left');
 	find_sec_y_val_ok('ty3', 0, 7, 'right');
 
 	# =========================================================================
@@ -1302,8 +1335,34 @@ $t->while_logged_in_as("curator", sub {
 	$t->click_ok('//button[@title="Rotate"]', 'xpath', 'Click Rotate button');
 	find_plot_label_ok('103', 0, 0);
 	find_plot_label_ok('207', 1, 6);
+	find_x_val_ok('1', 0, undef, 'top');
+	find_y_val_ok('1', 0, undef, 'left');
+	find_sec_x_val_ok('ty3', 2, 7, 'bottom');
 	find_sec_y_val_ok('tx3', 2, 3, 'right');
 	find_north_arrow_ok(90);
+
+	# Rotate layout 180 degrees clockwise
+	$t->click_ok('//button[@title="Rotate"]', 'xpath', 'Click Rotate button');
+	find_plot_label_ok('103', 6, 0);
+	find_x_val_ok('1', 6, undef, 'top');
+	find_y_val_ok('1', 0, undef, 'left');
+	find_sec_x_val_ok('tx1', 6, undef, 'top');
+	find_sec_y_val_ok('ty1', 0, undef, 'left');
+	find_north_arrow_ok(180);
+
+	# Rotate layout 270 degrees clockwise
+	$t->click_ok('//button[@title="Rotate"]', 'xpath', 'Click Rotate button');
+	find_plot_label_ok('103', 2, 6);
+	find_x_val_ok('1', 2, undef, 'top');
+	find_y_val_ok('1', 6, undef, 'left');
+	find_sec_x_val_ok('ty1', 2, undef, 'top');
+	find_sec_y_val_ok('tx1', 6, undef, 'left');
+	find_north_arrow_ok(270);
+
+	# Rotate layout 360 (0) degrees clockwise
+	$t->click_ok('//button[@title="Rotate"]', 'xpath', 'Click Rotate button');
+	# Rotate layout back to 90 degrees clockwise for remainder of tests
+	$t->click_ok('//button[@title="Rotate"]', 'xpath', 'Click Rotate button');
 
 	# Transpose layout across diagonal axis
 	$t->click_ok('//button[@title="Transpose Display"]', 'xpath', 'Click Transpose Display button');
@@ -1320,19 +1379,40 @@ $t->while_logged_in_as("curator", sub {
 
 	# Toggle top, left, and bottom border layers
 	$t->click_ok('//label[contains(text(),"Top")]/input', 'xpath', 'Click Top checkbox');
-	find_plot_cell_ok(3, 3, $border_fill);
+	find_plot_cell_ok(1, 0, $border_fill);
+	find_x_val_ok('1', 6, undef, 'top');
+	find_y_val_ok('1', 1, undef, 'left');
+	find_sec_x_val_ok('tx1', 6, undef, 'top');
+	find_sec_y_val_ok('ty1', 1, undef, 'left');
 
 	$t->click_ok('//label[contains(text(),"Left")]/input', 'xpath', 'Click Left checkbox');
 	find_plot_cell_ok(0, 1, $border_fill);
+	find_x_val_ok('1', 7, undef, 'top');
+	find_sec_x_val_ok('tx1', 7, undef, 'top');
 
 	$t->click_ok('//label[contains(text(),"Bottom")]/input', 'xpath', 'Click Bottom checkbox');
-	find_plot_cell_ok(2, 0, $border_fill);
+	find_plot_cell_ok(1, 4, $border_fill);
+	find_y_val_ok('1', 1, undef, 'left');
+	find_sec_y_val_ok('ty1', 1, undef, 'left');
 	$t->click_ok('//label[contains(text(),"Bottom")]/input', 'xpath', 'Click Bottom checkbox');
 
 	$t->click_ok('//button[@title="Rotate"]', 'xpath', 'Click Rotate button');
 	$t->click_ok('//label[contains(text(),"Right")]/input', 'xpath', 'Click Right checkbox');
-	find_plot_cell_ok(4, 6, $border_fill);
-	find_sec_x_val_ok('ty3', 3, undef, 'top');
+	find_plot_cell_ok(4, 1, $border_fill);
+	find_x_val_ok('1', 1, undef, 'top');
+	find_sec_x_val_ok('ty1', 1, undef, 'top');
+	find_y_val_ok('1', 1, undef, 'left');
+	find_sec_y_val_ok('tx1', 1, undef, 'left');
+
+	# Restore Rows, Invert Columns
+	$t->click_ok('//label[contains(text(),"Invert Rows")]/input', 'xpath', 'Click Invert Rows checkbox');
+	$t->click_ok('//label[contains(text(),"Invert Columns")]/input', 'xpath', 'Click Invert Columns checkbox');
+
+	find_plot_cell_ok(0, 1, $border_fill);
+	find_plot_cell_ok(1, 0, $border_fill);
+	find_plot_label_ok('103', 3, 7);
+	find_x_val_ok('1', 3, undef, 'top');
+	find_y_val_ok('1', 7, undef, 'left');
 
 	# =========================================================================
 	# Dimension Adjustments & Grid Layout Recalculation
