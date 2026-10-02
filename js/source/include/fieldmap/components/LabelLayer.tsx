@@ -28,10 +28,9 @@ export const LabelLayer: React.FC<LabelLayerProps> = ({ }) => {
         <g style={{ pointerEvents: 'none' }}>
             {/* Column Axis Values (Top and Bottom) */}
             {Array.from({ length: bounds.numCols }).map((_, axisIdx) => {
-                const colCoord = bounds.minCol + axisIdx;
-                const colIdx = colCoord - renderBounds.minCol;
-                // TBD: Handle axis reversal
-                const displayX = (invertCols || axisOrientation.x.reversed ? colIdx : colIdx) * 52 + 25;
+                const colCoord = invertCols || axisOrientation.x.reversed ? bounds.maxCol - axisIdx : bounds.minCol + axisIdx;
+                const colIdx = bounds.minCol + axisIdx - renderBounds.minCol;
+                const displayX = colIdx * 52 + 25;
                 const isDataCol = colCoord >= bounds.minCol && colCoord <= bounds.maxCol;
                 if (!isDataCol) {
                     return null;
@@ -103,9 +102,11 @@ export const LabelLayer: React.FC<LabelLayerProps> = ({ }) => {
             )}
 
             {/* Row Axis Values (Left and Right) */}
-            {gridMatrix.map((_, rowIdx) => {
-                const rowCoord = renderBounds.minRow + rowIdx;
-                const displayY = invertRows || axisOrientation.y.reversed ? rowIdx : renderBounds.numRows - rowIdx - 1;
+            {Array.from({ length: bounds.numRows }).map((_, axisIdx) => {
+                // Reminder: Y render display direction is top to bottom, But y labels orientation is bottom to top
+                const rowCoord = invertRows || axisOrientation.y.reversed ? bounds.minRow + axisIdx: bounds.maxRow - axisIdx;
+                const rowIdx = axisIdx + (renderBounds.maxRow - bounds.maxRow);
+                const displayY = rowIdx * 52 + 30;
                 const isDataRow = rowCoord >= bounds.minRow && rowCoord <= bounds.maxRow;
                 if (!isDataRow) {
                     return null;
@@ -113,10 +114,10 @@ export const LabelLayer: React.FC<LabelLayerProps> = ({ }) => {
 
                 return (
                     <React.Fragment key={`row-lbl-grp-${rowIdx}`}>
-                        <text x={-20} y={displayY * 52 + 30} textAnchor="middle" fontSize="11" fontWeight="bold" fill="#000">
+                        <text x={-20} y={displayY} textAnchor="middle" fontSize="11" fontWeight="bold" fill="#000">
                             {rowCoord}
                         </text>
-                        <text x={renderBounds.numCols * 52 + 20} y={displayY * 52 + 30} textAnchor="middle" fontSize="11" fontWeight="bold" fill="#000">
+                        <text x={renderBounds.numCols * 52 + 20} y={displayY} textAnchor="middle" fontSize="11" fontWeight="bold" fill="#000">
                             {rowCoord}
                         </text>
                     </React.Fragment>
