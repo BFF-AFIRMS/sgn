@@ -28,8 +28,9 @@ export const LabelLayer: React.FC<LabelLayerProps> = ({ }) => {
         <g style={{ pointerEvents: 'none' }}>
             {/* Column Axis Values (Top and Bottom) */}
             {Array.from({ length: bounds.numCols }).map((_, axisIdx) => {
-                const colCoord = invertCols || axisOrientation.x.reversed ? bounds.maxCol - axisIdx : bounds.minCol + axisIdx;
-                const colIdx = bounds.minCol + axisIdx - renderBounds.minCol;
+                let colCoord = axisOrientation.x.reversed ? bounds.maxCol - axisIdx : bounds.minCol + axisIdx;
+                colCoord = invertCols ? bounds.maxCol - colCoord + 1: colCoord;
+                const colIdx = invertCols ? (renderBounds.maxCol - bounds.maxCol) + axisIdx : (bounds.minCol - renderBounds.minCol) + axisIdx;
                 const displayX = colIdx * 52 + 25;
                 const isDataCol = colCoord >= bounds.minCol && colCoord <= bounds.maxCol;
                 if (!isDataCol) {
@@ -104,8 +105,9 @@ export const LabelLayer: React.FC<LabelLayerProps> = ({ }) => {
             {/* Row Axis Values (Left and Right) */}
             {Array.from({ length: bounds.numRows }).map((_, axisIdx) => {
                 // Reminder: Y render display direction is top to bottom, But y labels orientation is bottom to top
-                const rowCoord = invertRows || axisOrientation.y.reversed ? bounds.minRow + axisIdx: bounds.maxRow - axisIdx;
-                const rowIdx = axisIdx + (renderBounds.maxRow - bounds.maxRow);
+                let rowCoord = axisOrientation.y.reversed ? bounds.minRow + axisIdx: bounds.maxRow - axisIdx;
+                rowCoord = invertCols ? bounds.maxRow - rowCoord + 1: rowCoord;
+                const rowIdx = invertRows ? (bounds.minRow - renderBounds.minRow) + axisIdx : (renderBounds.maxRow - bounds.maxRow) + axisIdx;
                 const displayY = rowIdx * 52 + 30;
                 const isDataRow = rowCoord >= bounds.minRow && rowCoord <= bounds.maxRow;
                 if (!isDataRow) {
