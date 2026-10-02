@@ -21,9 +21,6 @@ export const LabelLayer: React.FC<LabelLayerProps> = ({ }) => {
         labelSize,
     } = useLayoutConfig();
 
-    console.log("renderBounds:", renderBounds);
-    console.log("bounds:", bounds);
-
     return (
         <g style={{ pointerEvents: 'none' }}>
             {/* Column Axis Values (Top and Bottom) */}
@@ -32,10 +29,6 @@ export const LabelLayer: React.FC<LabelLayerProps> = ({ }) => {
                 colCoord = invertCols ? bounds.maxCol - colCoord + 1: colCoord;
                 const colIdx = invertCols ? (renderBounds.maxCol - bounds.maxCol) + axisIdx : (bounds.minCol - renderBounds.minCol) + axisIdx;
                 const displayX = colIdx * 52 + 25;
-                const isDataCol = colCoord >= bounds.minCol && colCoord <= bounds.maxCol;
-                if (!isDataCol) {
-                    return null;
-                }
 
                 return (
                     <React.Fragment key={`col-lbl-grp-${colIdx}`}>
@@ -109,10 +102,6 @@ export const LabelLayer: React.FC<LabelLayerProps> = ({ }) => {
                 rowCoord = invertCols ? bounds.maxRow - rowCoord + 1: rowCoord;
                 const rowIdx = invertRows ? (bounds.minRow - renderBounds.minRow) + axisIdx : (renderBounds.maxRow - bounds.maxRow) + axisIdx;
                 const displayY = rowIdx * 52 + 30;
-                const isDataRow = rowCoord >= bounds.minRow && rowCoord <= bounds.maxRow;
-                if (!isDataRow) {
-                    return null;
-                }
 
                 return (
                     <React.Fragment key={`row-lbl-grp-${rowIdx}`}>
