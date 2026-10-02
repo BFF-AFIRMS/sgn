@@ -3,7 +3,7 @@ import { usePlotGrid } from './PlotGridContext';
 import { FieldMapContextProps } from '../types';
 
 const CLICK_DRAG_THRESHOLD = 1;
-const PAN_MAX_EMPTY_SPACE = 200;
+const PAN_MAX_EMPTY_SPACE = 0;
 
 export interface ZoomPanContextType {
 	zoom: number;
@@ -71,10 +71,13 @@ export const ZoomPanProvider: React.FC<FieldMapContextProps> = ({ children }) =>
             };
         }
 
-        const maxPanX = PAN_MAX_EMPTY_SPACE;
-        const minPanX = rect.width - (svgWidth * clampedZoom) - PAN_MAX_EMPTY_SPACE;
-        const maxPanY = PAN_MAX_EMPTY_SPACE;
-        const minPanY = rect.height - (svgHeight * clampedZoom) - PAN_MAX_EMPTY_SPACE;
+        const contentWidth = svgWidth * clampedZoom;
+        const contentHeight = svgHeight * clampedZoom;
+
+        const minPanX = Math.min(0, rect.width - contentWidth) - PAN_MAX_EMPTY_SPACE;
+        const maxPanX = Math.max(0, rect.width - contentWidth) + PAN_MAX_EMPTY_SPACE;
+        const minPanY = Math.min(0, rect.height - contentHeight) - PAN_MAX_EMPTY_SPACE;
+        const maxPanY = Math.max(0, rect.height - contentHeight) + PAN_MAX_EMPTY_SPACE;
 
         setZoom(clampedZoom);
         setPan({
