@@ -130,6 +130,7 @@ sub _R_installdeps {
         print $_;
         $rout .= $_;
     }
+    close $proc;
 
     if( $? ) {
 	_handle_errors($?);
