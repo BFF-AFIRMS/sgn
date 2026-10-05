@@ -1001,376 +1001,376 @@ $t->while_logged_in_as("curator", sub {
 	$t->click_ok('pheno_heatmap_onswitch', 'id', 'Open fieldmap section');
 	$t->wait_for_working_dialog();
 	$t->find_element_ok('//*[@id="' . $svg_id . '"]', 'xpath', 'Find fieldmap SVG');
-	# $t->find_element_ok('//div[@id="legend_list"]//span[contains(normalize-space(),"Checks")]', 'xpath', 'Find Checks item in legend');
-	# $t->find_element_ok('//div[@id="legend_list"]//span[contains(normalize-space(),"Checks")]//span[contains(@class,"tw:bg-[#6a5acd]")]', 'xpath', 'Find purple swatch for Checks in legend');
-	# ok(!scalar(@{$t->driver->find_elements('//button[contains(text(),"Download Heatmap Image")]', 'xpath')}), 'Download Heatmap Image button is not visible in Field Layout view');
+	$t->find_element_ok('//div[@id="legend_list"]//span[contains(normalize-space(),"Checks")]', 'xpath', 'Find Checks item in legend');
+	$t->find_element_ok('//div[@id="legend_list"]//span[contains(normalize-space(),"Checks")]//span[contains(@class,"tw:bg-[#6a5acd]")]', 'xpath', 'Find purple swatch for Checks in legend');
+	ok(!scalar(@{$t->driver->find_elements('//button[contains(text(),"Download Heatmap Image")]', 'xpath')}), 'Download Heatmap Image button is not visible in Field Layout view');
 
-	# # =========================================================================
-	# # Zoom & Pan Controls (Buttons, Mouse Wheel, Mouse Drag)
-	# # =========================================================================
-	# my $tf = get_svg_transform();
-	# is($tf->{zoom}, 1, 'Initial zoom is 1');
-	# is($tf->{x}, 0, 'Initial pan X is 0');
-	# is($tf->{y}, 0, 'Initial pan Y is 0');
+	# =========================================================================
+	# Zoom & Pan Controls (Buttons, Mouse Wheel, Mouse Drag)
+	# =========================================================================
+	my $tf = get_svg_transform();
+	is($tf->{zoom}, 1, 'Initial zoom is 1');
+	is($tf->{x}, 0, 'Initial pan X is 0');
+	is($tf->{y}, 0, 'Initial pan Y is 0');
 
-	# # Test Zoom In button (scale by 1.2x each click)
-	# $t->click_ok('//button[@title="Zoom In"]', 'xpath', 'Click Zoom In button');
-	# $tf = get_svg_transform();
-	# cmp_ok(abs($tf->{zoom} - 1.2), '<', 0.05, 'Zoom level is ~1.2 after Zoom In');
+	# Test Zoom In button (scale by 1.2x each click)
+	$t->click_ok('//button[@title="Zoom In"]', 'xpath', 'Click Zoom In button');
+	$tf = get_svg_transform();
+	cmp_ok(abs($tf->{zoom} - 1.2), '<', 0.05, 'Zoom level is ~1.2 after Zoom In');
 
-	# $t->click_ok('//button[@title="Zoom In"]', 'xpath', 'Click Zoom In button again');
-	# $tf = get_svg_transform();
-	# cmp_ok(abs($tf->{zoom} - 1.44), '<', 0.05, 'Zoom level is ~1.44 after second Zoom In');
+	$t->click_ok('//button[@title="Zoom In"]', 'xpath', 'Click Zoom In button again');
+	$tf = get_svg_transform();
+	cmp_ok(abs($tf->{zoom} - 1.44), '<', 0.05, 'Zoom level is ~1.44 after second Zoom In');
 
-	# # Test Zoom Out button (scale down by 1.2x)
-	# $t->click_ok('//button[@title="Zoom Out"]', 'xpath', 'Click Zoom Out button');
-	# $tf = get_svg_transform();
-	# cmp_ok(abs($tf->{zoom} - 1.2), '<', 0.05, 'Zoom level is ~1.2 after Zoom Out');
+	# Test Zoom Out button (scale down by 1.2x)
+	$t->click_ok('//button[@title="Zoom Out"]', 'xpath', 'Click Zoom Out button');
+	$tf = get_svg_transform();
+	cmp_ok(abs($tf->{zoom} - 1.2), '<', 0.05, 'Zoom level is ~1.2 after Zoom Out');
 
-	# # Test Reset View button
-	# $t->click_ok('//button[@title="Reset View"]', 'xpath', 'Click Reset View button');
-	# $tf = get_svg_transform();
-	# is($tf->{zoom}, 1, 'Zoom reset to 1');
-	# is($tf->{x}, 0, 'Pan X reset to 0');
-	# is($tf->{y}, 0, 'Pan Y reset to 0');
+	# Test Reset View button
+	$t->click_ok('//button[@title="Reset View"]', 'xpath', 'Click Reset View button');
+	$tf = get_svg_transform();
+	is($tf->{zoom}, 1, 'Zoom reset to 1');
+	is($tf->{x}, 0, 'Pan X reset to 0');
+	is($tf->{y}, 0, 'Pan Y reset to 0');
 
-	# # Test mouse wheel zooming (negative deltaY zooms in, positive zooms out)
-	# mouse_wheel_zoom(-100);
-	# $tf = get_svg_transform();
-	# cmp_ok(abs($tf->{zoom} - 1.1), '<', 0.05, 'Zoom level is ~1.1 after wheel zoom in');
+	# Test mouse wheel zooming (negative deltaY zooms in, positive zooms out)
+	mouse_wheel_zoom(-100);
+	$tf = get_svg_transform();
+	cmp_ok(abs($tf->{zoom} - 1.1), '<', 0.05, 'Zoom level is ~1.1 after wheel zoom in');
 
-	# mouse_wheel_zoom(100);
-	# $tf = get_svg_transform();
-	# cmp_ok(abs($tf->{zoom} - 1.0), '<', 0.05, 'Zoom level is ~1.0 after wheel zoom out');
+	mouse_wheel_zoom(100);
+	$tf = get_svg_transform();
+	cmp_ok(abs($tf->{zoom} - 1.0), '<', 0.05, 'Zoom level is ~1.0 after wheel zoom out');
 
-	# $t->click_ok('//button[@title="Reset View"]', 'xpath', 'Click Reset View button after wheel zoom');
-	# $tf = get_svg_transform();
-	# is($tf->{zoom}, 1, 'Zoom reset to 1 after wheel zoom');
-	# is($tf->{x}, 0, 'Pan X reset to 0 after wheel zoom');
-	# is($tf->{y}, 0, 'Pan Y reset to 0 after wheel zoom');
+	$t->click_ok('//button[@title="Reset View"]', 'xpath', 'Click Reset View button after wheel zoom');
+	$tf = get_svg_transform();
+	is($tf->{zoom}, 1, 'Zoom reset to 1 after wheel zoom');
+	is($tf->{x}, 0, 'Pan X reset to 0 after wheel zoom');
+	is($tf->{y}, 0, 'Pan Y reset to 0 after wheel zoom');
 
-	# # Test mouse click-and-drag panning
-	# drag_svg(60, 40);
-	# $tf = get_svg_transform();
-	# cmp_ok(abs($tf->{x} - 60), '<', 2, 'Pan X moved by ~60px after drag');
-	# cmp_ok(abs($tf->{y} - 40), '<', 2, 'Pan Y moved by ~40px after drag');
+	# Test mouse click-and-drag panning
+	drag_svg(60, 40);
+	$tf = get_svg_transform();
+	cmp_ok(abs($tf->{x} - 60), '<', 2, 'Pan X moved by ~60px after drag');
+	cmp_ok(abs($tf->{y} - 40), '<', 2, 'Pan Y moved by ~40px after drag');
 
-	# $t->click_ok('//button[@title="Reset View"]', 'xpath', 'Click Reset View button after drag');
-	# $tf = get_svg_transform();
-	# is($tf->{zoom}, 1, 'Zoom reset to 1 after drag');
-	# is($tf->{x}, 0, 'Pan X reset to 0 after drag');
-	# is($tf->{y}, 0, 'Pan Y reset to 0 after drag');
+	$t->click_ok('//button[@title="Reset View"]', 'xpath', 'Click Reset View button after drag');
+	$tf = get_svg_transform();
+	is($tf->{zoom}, 1, 'Zoom reset to 1 after drag');
+	is($tf->{x}, 0, 'Pan X reset to 0 after drag');
+	is($tf->{y}, 0, 'Pan Y reset to 0 after drag');
 
-	# # =========================================================================
-	# # Interactive Hover Tooltip (Field Layout View)
-	# # =========================================================================
-	# hover_plot_cell(0, 2);
-	# $t->find_element_ok('//div[contains(@class,"fieldmap-tooltip")]', 'xpath', 'Tooltip is visible on plot hover');
-	# $t->find_element_ok('//div[contains(@class,"fieldmap-tooltip")]//strong[contains(text(),"Plot Name:")]/parent::div[contains(.,"CASS_6Genotypes_103")]', 'xpath', 'Tooltip displays Plot Name');
-	# $t->find_element_ok('//div[contains(@class,"fieldmap-tooltip")]//strong[contains(text(),"Plot Number:")]/parent::div[contains(.,"103")]', 'xpath', 'Tooltip displays Plot Number');
-	# $t->find_element_ok('//div[contains(@class,"fieldmap-tooltip")]//strong[contains(text(),"Block Number:")]/parent::div[contains(.,"1")]', 'xpath', 'Tooltip displays Block Number');
-	# $t->find_element_ok('//div[contains(@class,"fieldmap-tooltip")]//strong[contains(text(),"Rep Number:")]/parent::div[contains(.,"1")]', 'xpath', 'Tooltip displays Rep Number');
-	# $t->find_element_ok('//div[contains(@class,"fieldmap-tooltip")]//strong[contains(text(),"Accession Name:")]/parent::div[contains(.,"IITA-TMS-IBA980581")]', 'xpath', 'Tooltip displays Accession Name');
+	# =========================================================================
+	# Interactive Hover Tooltip (Field Layout View)
+	# =========================================================================
+	hover_plot_cell(0, 2);
+	$t->find_element_ok('//div[contains(@class,"fieldmap-tooltip")]', 'xpath', 'Tooltip is visible on plot hover');
+	$t->find_element_ok('//div[contains(@class,"fieldmap-tooltip")]//strong[contains(text(),"Plot Name:")]/parent::div[contains(.,"CASS_6Genotypes_103")]', 'xpath', 'Tooltip displays Plot Name');
+	$t->find_element_ok('//div[contains(@class,"fieldmap-tooltip")]//strong[contains(text(),"Plot Number:")]/parent::div[contains(.,"103")]', 'xpath', 'Tooltip displays Plot Number');
+	$t->find_element_ok('//div[contains(@class,"fieldmap-tooltip")]//strong[contains(text(),"Block Number:")]/parent::div[contains(.,"1")]', 'xpath', 'Tooltip displays Block Number');
+	$t->find_element_ok('//div[contains(@class,"fieldmap-tooltip")]//strong[contains(text(),"Rep Number:")]/parent::div[contains(.,"1")]', 'xpath', 'Tooltip displays Rep Number');
+	$t->find_element_ok('//div[contains(@class,"fieldmap-tooltip")]//strong[contains(text(),"Accession Name:")]/parent::div[contains(.,"IITA-TMS-IBA980581")]', 'xpath', 'Tooltip displays Accession Name');
 
-	# # Hover over check plot and verify updated tooltip contents
-	# hover_plot_cell(4, 2);
-	# $t->find_element_ok('//div[contains(@class,"fieldmap-tooltip")]//strong[contains(text(),"Plot Name:")]/parent::div[contains(.,"CASS_6Genotypes_107")]', 'xpath', 'Tooltip displays check Plot Name');
-	# $t->find_element_ok('//div[contains(@class,"fieldmap-tooltip")]//strong[contains(text(),"Plot Number:")]/parent::div[contains(.,"107")]', 'xpath', 'Tooltip displays check Plot Number');
-	# $t->find_element_ok('//div[contains(@class,"fieldmap-tooltip")]//strong[contains(text(),"Accession Name:")]/parent::div[contains(.,"TMEB693")]', 'xpath', 'Tooltip displays check Accession Name');
+	# Hover over check plot and verify updated tooltip contents
+	hover_plot_cell(4, 2);
+	$t->find_element_ok('//div[contains(@class,"fieldmap-tooltip")]//strong[contains(text(),"Plot Name:")]/parent::div[contains(.,"CASS_6Genotypes_107")]', 'xpath', 'Tooltip displays check Plot Name');
+	$t->find_element_ok('//div[contains(@class,"fieldmap-tooltip")]//strong[contains(text(),"Plot Number:")]/parent::div[contains(.,"107")]', 'xpath', 'Tooltip displays check Plot Number');
+	$t->find_element_ok('//div[contains(@class,"fieldmap-tooltip")]//strong[contains(text(),"Accession Name:")]/parent::div[contains(.,"TMEB693")]', 'xpath', 'Tooltip displays check Accession Name');
 
-	# # Unhover dismisses tooltip
-	# unhover_plot_cell(4, 2);
-	# ok(!scalar(@{$t->driver->find_elements('//div[contains(@class,"fieldmap-tooltip")]', 'xpath')}), 'Tooltip dismissed after unhover');
+	# Unhover dismisses tooltip
+	unhover_plot_cell(4, 2);
+	ok(!scalar(@{$t->driver->find_elements('//div[contains(@class,"fieldmap-tooltip")]', 'xpath')}), 'Tooltip dismissed after unhover');
 
-	# # =========================================================================
-	# # Plot Cell Coloring ("Color By" Options)
-	# # =========================================================================
-	# find_plot_cell_ok(0, 2);
-	# find_plot_cell_ok(6, 0);
+	# =========================================================================
+	# Plot Cell Coloring ("Color By" Options)
+	# =========================================================================
+	find_plot_cell_ok(0, 2);
+	find_plot_cell_ok(6, 0);
 
-	# # Default parity coloring (even block vs odd block fills)
-	# find_plot_cell_ok(0, 2, $odd_block_fill);
-	# find_plot_cell_ok(0, 1, $even_block_fill);
-	# find_plot_cell_ok(0, 0, $odd_block_fill);
-	# find_plot_cell_ok(4, 2, $check_fill);
+	# Default parity coloring (even block vs odd block fills)
+	find_plot_cell_ok(0, 2, $odd_block_fill);
+	find_plot_cell_ok(0, 1, $even_block_fill);
+	find_plot_cell_ok(0, 0, $odd_block_fill);
+	find_plot_cell_ok(4, 2, $check_fill);
 
-	# # Color by Block
-	# set_color_by('block');
-	# find_plot_cell_ok(0, 2, $palette[0]);
-	# find_plot_cell_ok(1, 2, $palette[0]);
-	# find_plot_cell_ok(0, 1, $palette[1]);
-	# find_plot_cell_ok(0, 0, $palette[2]);
-	# find_plot_cell_ok(4, 2, $check_fill);
+	# Color by Block
+	set_color_by('block');
+	find_plot_cell_ok(0, 2, $palette[0]);
+	find_plot_cell_ok(1, 2, $palette[0]);
+	find_plot_cell_ok(0, 1, $palette[1]);
+	find_plot_cell_ok(0, 0, $palette[2]);
+	find_plot_cell_ok(4, 2, $check_fill);
 
-	# # Color by Germplasm (Accession)
-	# set_color_by('germplasm');
-	# find_plot_cell_ok(0, 2, $palette[4]);
-	# find_plot_cell_ok(1, 2, $palette[3]);
-	# find_plot_cell_ok(2, 2, $palette[2]);
-	# find_plot_cell_ok(3, 2, $palette[1]);
-	# find_plot_cell_ok(0, 1, $palette[0]);
-	# find_plot_cell_ok(4, 2, $check_fill);
+	# Color by Germplasm (Accession)
+	set_color_by('germplasm');
+	find_plot_cell_ok(0, 2, $palette[4]);
+	find_plot_cell_ok(1, 2, $palette[3]);
+	find_plot_cell_ok(2, 2, $palette[2]);
+	find_plot_cell_ok(3, 2, $palette[1]);
+	find_plot_cell_ok(0, 1, $palette[0]);
+	find_plot_cell_ok(4, 2, $check_fill);
 
-	# # Color by Family Name & Cross Name (falls back to even_block_fill when not set)
-	# set_color_by('family_name');
-	# find_plot_cell_ok(0, 2, $even_block_fill);
+	# Color by Family Name & Cross Name (falls back to even_block_fill when not set)
+	set_color_by('family_name');
+	find_plot_cell_ok(0, 2, $even_block_fill);
 
-	# set_color_by('cross_name');
-	# find_plot_cell_ok(0, 2, $even_block_fill);
+	set_color_by('cross_name');
+	find_plot_cell_ok(0, 2, $even_block_fill);
 
-	# # Reset back to Parity
-	# set_color_by('parity');
-	# find_plot_cell_ok(0, 2, $odd_block_fill);
-	# find_plot_cell_ok(0, 1, $even_block_fill);
+	# Reset back to Parity
+	set_color_by('parity');
+	find_plot_cell_ok(0, 2, $odd_block_fill);
+	find_plot_cell_ok(0, 1, $even_block_fill);
 
-	# # =========================================================================
-	# # Plot Cell Labeling ("Label By" Options & Font Size)
-	# # =========================================================================
-	# # Label by Germplasm (Accession) with staggered vertical text positioning
-	# set_label_by('germplasm');
-	# set_label_size(14);
-	# find_plot_label_ok('IITA-TMS-IBA980581', 0, 2, font_size => 14, staggered => 1);
-	# find_plot_label_ok('IITA-TMS-IBA980002', 1, 2, font_size => 14, staggered => 1);
-	# find_plot_label_ok('IITA-TMS-IBA30572', 2, 2, font_size => 14, staggered => 1);
-	# find_plot_label_ok('BLANK', 0, 1, font_size => 14, staggered => 1);
+	# =========================================================================
+	# Plot Cell Labeling ("Label By" Options & Font Size)
+	# =========================================================================
+	# Label by Germplasm (Accession) with staggered vertical text positioning
+	set_label_by('germplasm');
+	set_label_size(14);
+	find_plot_label_ok('IITA-TMS-IBA980581', 0, 2, font_size => 14, staggered => 1);
+	find_plot_label_ok('IITA-TMS-IBA980002', 1, 2, font_size => 14, staggered => 1);
+	find_plot_label_ok('IITA-TMS-IBA30572', 2, 2, font_size => 14, staggered => 1);
+	find_plot_label_ok('BLANK', 0, 1, font_size => 14, staggered => 1);
 
-	# # Label by Block
-	# set_label_by('block');
-	# find_plot_label_ok('1', 0, 2, font_size => 14);
-	# find_plot_label_ok('2', 0, 1, font_size => 14);
-	# find_plot_label_ok('3', 0, 0, font_size => 14);
+	# Label by Block
+	set_label_by('block');
+	find_plot_label_ok('1', 0, 2, font_size => 14);
+	find_plot_label_ok('2', 0, 1, font_size => 14);
+	find_plot_label_ok('3', 0, 0, font_size => 14);
 
-	# # Label by Family Name & Cross Name (verify no inappropriate labels rendered)
-	# set_label_by('family_name');
-	# ok(!scalar(@{$t->driver->find_elements('//*[local-name()="svg" and @id="' . $svg_id . '"]//*[local-name()="text" and text()="IITA-TMS-IBA980581"]', 'xpath')}), 'No accession labels found when labeled by family');
-	# ok(!scalar(@{$t->driver->find_elements('//*[local-name()="svg" and @id="' . $svg_id . '"]//*[local-name()="text" and text()="101"]', 'xpath')}), 'No plot number labels found when labeled by family');
+	# Label by Family Name & Cross Name (verify no inappropriate labels rendered)
+	set_label_by('family_name');
+	ok(!scalar(@{$t->driver->find_elements('//*[local-name()="svg" and @id="' . $svg_id . '"]//*[local-name()="text" and text()="IITA-TMS-IBA980581"]', 'xpath')}), 'No accession labels found when labeled by family');
+	ok(!scalar(@{$t->driver->find_elements('//*[local-name()="svg" and @id="' . $svg_id . '"]//*[local-name()="text" and text()="101"]', 'xpath')}), 'No plot number labels found when labeled by family');
 
-	# set_label_by('cross_name');
-	# ok(!scalar(@{$t->driver->find_elements('//*[local-name()="svg" and @id="' . $svg_id . '"]//*[local-name()="text" and text()="IITA-TMS-IBA980581"]', 'xpath')}), 'No accession labels found when labeled by cross');
-	# ok(!scalar(@{$t->driver->find_elements('//*[local-name()="svg" and @id="' . $svg_id . '"]//*[local-name()="text" and text()="101"]', 'xpath')}), 'No plot number labels found when labeled by cross');
+	set_label_by('cross_name');
+	ok(!scalar(@{$t->driver->find_elements('//*[local-name()="svg" and @id="' . $svg_id . '"]//*[local-name()="text" and text()="IITA-TMS-IBA980581"]', 'xpath')}), 'No accession labels found when labeled by cross');
+	ok(!scalar(@{$t->driver->find_elements('//*[local-name()="svg" and @id="' . $svg_id . '"]//*[local-name()="text" and text()="101"]', 'xpath')}), 'No plot number labels found when labeled by cross');
 
-	# # Reset back to Plot Number labeling
-	# set_label_size(10);
-	# set_label_by('plot_number');
-	# find_plot_label_ok('103', 0, 2);
-	# find_plot_label_ok('201', 0, 1);
-	# find_plot_label_ok('301', 0, 0);
+	# Reset back to Plot Number labeling
+	set_label_size(10);
+	set_label_by('plot_number');
+	find_plot_label_ok('103', 0, 2);
+	find_plot_label_ok('201', 0, 1);
+	find_plot_label_ok('301', 0, 0);
 
-	# # =========================================================================
-	# # Assayed Trait Heatmap View
-	# # =========================================================================
-	# set_layout_view('cass sink leaf|3-phosphoglyceric acid|ug/g|week 16|COMP:0000013');
-	# $t->find_element_ok('//div[@id="legend_list"]//span[contains(.,"Low trait value (cass sink leaf|3-phosphoglyceric acid|ug/g|week 16|COMP:0000013)")]', 'xpath', 'Find low trait value text in legend');
-	# $t->find_element_ok('//div[@id="legend_list"]//span[contains(text(),"High trait value")]', 'xpath', 'Find high trait value text in legend');
-	# $t->find_element_ok('//div[@id="legend_list"]//div[contains(@style,"linear-gradient")]', 'xpath', 'Find color gradient bar in legend');
-	# $t->find_element_ok('//button[contains(text(),"Download Heatmap Image")]', 'xpath', 'Find Download Heatmap Image button');
-	# $t->find_element_ok('//button[contains(text(),"Delete Selected Trait")]', 'xpath', 'Find Delete Selected Trait button');
+	# =========================================================================
+	# Assayed Trait Heatmap View
+	# =========================================================================
+	set_layout_view('cass sink leaf|3-phosphoglyceric acid|ug/g|week 16|COMP:0000013');
+	$t->find_element_ok('//div[@id="legend_list"]//span[contains(.,"Low trait value (cass sink leaf|3-phosphoglyceric acid|ug/g|week 16|COMP:0000013)")]', 'xpath', 'Find low trait value text in legend');
+	$t->find_element_ok('//div[@id="legend_list"]//span[contains(text(),"High trait value")]', 'xpath', 'Find high trait value text in legend');
+	$t->find_element_ok('//div[@id="legend_list"]//div[contains(@style,"linear-gradient")]', 'xpath', 'Find color gradient bar in legend');
+	$t->find_element_ok('//button[contains(text(),"Download Heatmap Image")]', 'xpath', 'Find Download Heatmap Image button');
+	$t->find_element_ok('//button[contains(text(),"Delete Selected Trait")]', 'xpath', 'Find Delete Selected Trait button');
 
-	# # Verify plot fill colors match heatmap gradient values
-	# find_plot_cell_ok(0, 2, '#910d0d');
-	# find_plot_cell_ok(2, 2, '#8b0000');
-	# find_plot_cell_ok(0, 1, '#a9afaf');
-	# find_plot_cell_ok(5, 0, '#ffffff');
+	# Verify plot fill colors match heatmap gradient values
+	find_plot_cell_ok(0, 2, '#910d0d');
+	find_plot_cell_ok(2, 2, '#8b0000');
+	find_plot_cell_ok(0, 1, '#a9afaf');
+	find_plot_cell_ok(5, 0, '#ffffff');
 
-	# # Interactive Hover Tooltip in Heatmap View
-	# hover_plot_cell(0, 2);
-	# $t->find_element_ok('//div[contains(@class,"fieldmap-tooltip")]//strong[contains(text(),"Trait Name:")]', 'xpath', 'Tooltip displays Trait Name header in heatmap view');
-	# $t->find_element_ok('//div[contains(@class,"fieldmap-tooltip")]//strong[contains(text(),"Trait Name:")]/parent::div[contains(.,"cass sink leaf|3-phosphoglyceric acid")]', 'xpath', 'Tooltip displays Trait Name in heatmap view');
-	# $t->find_element_ok('//div[contains(@class,"fieldmap-tooltip")]//strong[contains(text(),"Trait Value:")]', 'xpath', 'Tooltip displays Trait Value in heatmap view');
-	# unhover_plot_cell(0, 2);
-	# ok(!scalar(@{$t->driver->find_elements('//div[contains(@class,"fieldmap-tooltip")]', 'xpath')}), 'Tooltip dismissed after unhover in heatmap view');
+	# Interactive Hover Tooltip in Heatmap View
+	hover_plot_cell(0, 2);
+	$t->find_element_ok('//div[contains(@class,"fieldmap-tooltip")]//strong[contains(text(),"Trait Name:")]', 'xpath', 'Tooltip displays Trait Name header in heatmap view');
+	$t->find_element_ok('//div[contains(@class,"fieldmap-tooltip")]//strong[contains(text(),"Trait Name:")]/parent::div[contains(.,"cass sink leaf|3-phosphoglyceric acid")]', 'xpath', 'Tooltip displays Trait Name in heatmap view');
+	$t->find_element_ok('//div[contains(@class,"fieldmap-tooltip")]//strong[contains(text(),"Trait Value:")]', 'xpath', 'Tooltip displays Trait Value in heatmap view');
+	unhover_plot_cell(0, 2);
+	ok(!scalar(@{$t->driver->find_elements('//div[contains(@class,"fieldmap-tooltip")]', 'xpath')}), 'Tooltip dismissed after unhover in heatmap view');
 
-	# # =========================================================================
-	# # Print Field Map Action (Heatmap View)
-	# # =========================================================================
-	# test_print_field_map_ok('cass sink leaf|3-phosphoglyceric acid|ug/g|week 16|COMP:0000013');
+	# =========================================================================
+	# Print Field Map Action (Heatmap View)
+	# =========================================================================
+	test_print_field_map_ok('cass sink leaf|3-phosphoglyceric acid|ug/g|week 16|COMP:0000013');
 
-	# # =========================================================================
-	# # Heatmap PNG Image Download Action
-	# # =========================================================================
-	# test_download_heatmap_image_ok('cass sink leaf|3-phosphoglyceric acid|ug/g|week 16|COMP:0000013');
+	# =========================================================================
+	# Heatmap PNG Image Download Action
+	# =========================================================================
+	test_download_heatmap_image_ok('cass sink leaf|3-phosphoglyceric acid|ug/g|week 16|COMP:0000013');
 
-	# # =========================================================================
-	# # Spatial Corrections Heatmap Views
-	# # =========================================================================
-	# # Verify Spatial Corrections optgroup and options exist
-	# $t->find_element_ok('//optgroup[@label="Spatial Corrections"]', 'xpath', 'Find Spatial Corrections optgroup');
-	# $t->find_element_ok('//optgroup[@label="Spatial Corrections"]/option[@value="' . $spatial_trait_id . ' (corrected)"]', 'xpath', 'Find corrected option');
-	# $t->find_element_ok('//optgroup[@label="Spatial Corrections"]/option[@value="' . $spatial_trait_id . ' (adjustment)"]', 'xpath', 'Find adjustment option');
+	# =========================================================================
+	# Spatial Corrections Heatmap Views
+	# =========================================================================
+	# Verify Spatial Corrections optgroup and options exist
+	$t->find_element_ok('//optgroup[@label="Spatial Corrections"]', 'xpath', 'Find Spatial Corrections optgroup');
+	$t->find_element_ok('//optgroup[@label="Spatial Corrections"]/option[@value="' . $spatial_trait_id . ' (corrected)"]', 'xpath', 'Find corrected option');
+	$t->find_element_ok('//optgroup[@label="Spatial Corrections"]/option[@value="' . $spatial_trait_id . ' (adjustment)"]', 'xpath', 'Find adjustment option');
 
-	# # Select (adjustment) view
-	# set_layout_view("$spatial_trait_id (adjustment)");
-	# $t->find_element_ok('//div[@id="legend_list"]//span[contains(text(),"Low trait value") and contains(.,"(adjustment)")]', 'xpath', 'Verify legend displays adjustment view label');
-	# $t->find_element_ok('//div[@id="legend_list"]//div[contains(@style,"linear-gradient")]', 'xpath', 'Verify heatmap gradient bar in adjustment view');
-	# find_plot_cell_ok(0, 2, '#00008b');
+	# Select (adjustment) view
+	set_layout_view("$spatial_trait_id (adjustment)");
+	$t->find_element_ok('//div[@id="legend_list"]//span[contains(text(),"Low trait value") and contains(.,"(adjustment)")]', 'xpath', 'Verify legend displays adjustment view label');
+	$t->find_element_ok('//div[@id="legend_list"]//div[contains(@style,"linear-gradient")]', 'xpath', 'Verify heatmap gradient bar in adjustment view');
+	find_plot_cell_ok(0, 2, '#00008b');
 
-	# # Select (corrected) view
-	# set_layout_view("$spatial_trait_id (corrected)");
-	# $t->find_element_ok('//div[@id="legend_list"]//span[contains(text(),"Low trait value") and contains(.,"(corrected)")]', 'xpath', 'Verify legend displays corrected view label');
-	# test_download_heatmap_image_ok('cass sink leaf|3-phosphoglyceric acid|ug/g|week 16|COMP:0000013 (corrected)');
+	# Select (corrected) view
+	set_layout_view("$spatial_trait_id (corrected)");
+	$t->find_element_ok('//div[@id="legend_list"]//span[contains(text(),"Low trait value") and contains(.,"(corrected)")]', 'xpath', 'Verify legend displays corrected view label');
+	test_download_heatmap_image_ok('cass sink leaf|3-phosphoglyceric acid|ug/g|week 16|COMP:0000013 (corrected)');
 
-	# # Switch back to raw Assayed Trait view
-	# set_layout_view($spatial_trait_id);
-	# find_plot_cell_ok(0, 2, '#910d0d');
+	# Switch back to raw Assayed Trait view
+	set_layout_view($spatial_trait_id);
+	find_plot_cell_ok(0, 2, '#910d0d');
 
-	# # =========================================================================
-	# # Controls & Check Plots Panel
-	# # =========================================================================
-	# $t->find_element_ok('//button[contains(text(),"View Controls")]', 'xpath', 'Find View Controls button in heatmap view');
-	# $t->click_ok('//button[contains(text(),"View Controls")]', 'xpath', 'Click View Controls button');
+	# =========================================================================
+	# Controls & Check Plots Panel
+	# =========================================================================
+	$t->find_element_ok('//button[contains(text(),"View Controls")]', 'xpath', 'Find View Controls button in heatmap view');
+	$t->click_ok('//button[contains(text(),"View Controls")]', 'xpath', 'Click View Controls button');
 
-	# # Verify control dropdown is displayed
-	# $t->find_element_ok('//select[option[contains(text(),"checks and plot numbers")]]', 'xpath', 'Find control plots dropdown');
+	# Verify control dropdown is displayed
+	$t->find_element_ok('//select[option[contains(text(),"checks and plot numbers")]]', 'xpath', 'Find control plots dropdown');
 
-	# # Select the control plot
-	# $t->click_option_ok('//select[option[contains(.,"checks and plot numbers")]]/option[contains(.,"CASS_6Genotypes_107")]', 'xpath', 'Select CASS_6Genotypes_107 control plot');
+	# Select the control plot
+	$t->click_option_ok('//select[option[contains(.,"checks and plot numbers")]]/option[contains(.,"CASS_6Genotypes_107")]', 'xpath', 'Select CASS_6Genotypes_107 control plot');
 
-	# # Verify relationship text
-	# $t->find_element_ok('//span[contains(.,"Plot: CASS_6Genotypes_107 contains Check: TMEB693")]', 'xpath', 'Verify control relationship text displayed');
+	# Verify relationship text
+	$t->find_element_ok('//span[contains(.,"Plot: CASS_6Genotypes_107 contains Check: TMEB693")]', 'xpath', 'Verify control relationship text displayed');
 
-	# # Deselect control plot and verify relationship text clears
-	# $t->click_option_ok('//select[option[contains(text(),"checks and plot numbers")]]/option[@value=""]', 'xpath', 'Select default checks and plot numbers option');
-	# ok(!scalar(@{$t->driver->find_elements('//span[contains(text(),"contains Check:")]', 'xpath')}), 'Control relationship text is cleared');
+	# Deselect control plot and verify relationship text clears
+	$t->click_option_ok('//select[option[contains(text(),"checks and plot numbers")]]/option[@value=""]', 'xpath', 'Select default checks and plot numbers option');
+	ok(!scalar(@{$t->driver->find_elements('//span[contains(text(),"contains Check:")]', 'xpath')}), 'Control relationship text is cleared');
 
-	# # Re-select and test Hide button
-	# $t->click_option_ok('//select[option[contains(.,"checks and plot numbers")]]/option[contains(.,"CASS_6Genotypes_107")]', 'xpath', 'Re-select CASS_6Genotypes_107 control plot');
-	# $t->find_element_ok('//span[contains(.,"Plot: CASS_6Genotypes_107 contains Check: TMEB693")]', 'xpath', 'Verify control relationship text displayed again');
-	# $t->click_ok('//button[contains(@class,"btn-default") and text()="Hide"]', 'xpath', 'Click Hide controls button');
-	# $t->find_element_ok('//button[contains(text(),"View Controls")]', 'xpath', 'Verify View Controls button reappears');
-	# ok(!scalar(@{$t->driver->find_elements('//select[option[contains(text(),"checks and plot numbers")]]', 'xpath')}), 'Control dropdown is hidden after clicking Hide');
+	# Re-select and test Hide button
+	$t->click_option_ok('//select[option[contains(.,"checks and plot numbers")]]/option[contains(.,"CASS_6Genotypes_107")]', 'xpath', 'Re-select CASS_6Genotypes_107 control plot');
+	$t->find_element_ok('//span[contains(.,"Plot: CASS_6Genotypes_107 contains Check: TMEB693")]', 'xpath', 'Verify control relationship text displayed again');
+	$t->click_ok('//button[contains(@class,"btn-default") and text()="Hide"]', 'xpath', 'Click Hide controls button');
+	$t->find_element_ok('//button[contains(text(),"View Controls")]', 'xpath', 'Verify View Controls button reappears');
+	ok(!scalar(@{$t->driver->find_elements('//select[option[contains(text(),"checks and plot numbers")]]', 'xpath')}), 'Control dropdown is hidden after clicking Hide');
 
-	# # =========================================================================
-	# # Phenotype Measurement Suppression Workflow
-	# # =========================================================================
-	# # Open plot details modal and suppress phenotype value
-	# click_plot_cell_ok(0, 2);
-	# $t->find_element_ok('//div[contains(@class,"show")]//h4[contains(@class,"modal-title") and contains(text(),"Plot Details")]', 'xpath', 'Plot details modal is open');
-	# $t->click_ok('//div[contains(@class,"show")]//a[contains(text(),"Replace")]', 'xpath', 'Click Replace tab in plot details modal');
-	# $t->click_ok('//div[contains(@class,"show")]//button[contains(text(),"Suppress Current Trait Value")]', 'xpath', 'Click Suppress Current Trait Value button');
-	# $t->find_element_ok('//div[contains(@class,"show")]//h4[contains(@class,"modal-title") and contains(text(),"Suppress Plot Phenotype Measurement")]', 'xpath', 'Suppress phenotype modal is open');
-	# $t->find_element_ok('//div[contains(@class,"show")]//div[strong[contains(text(),"Plot Name:")]]', 'xpath', 'Verify plot name in suppress modal');
-	# $t->click_ok('//div[contains(@class,"show")]//button[contains(@class,"btn-danger") and contains(text(),"Suppress Phenotype")]', 'xpath', 'Click Suppress Phenotype button');
-	# my $alert_text = $t->get_alert_text();
-	# $t->accept_alert_ok('Accept alert after suppressing phenotype');
-	# is($alert_text, 'Phenotype was suppressed successfully!', 'Verify alert text for successful suppression');
-	# $t->wait_for_network_idle();
+	# =========================================================================
+	# Phenotype Measurement Suppression Workflow
+	# =========================================================================
+	# Open plot details modal and suppress phenotype value
+	click_plot_cell_ok(0, 2);
+	$t->find_element_ok('//div[contains(@class,"show")]//h4[contains(@class,"modal-title") and contains(text(),"Plot Details")]', 'xpath', 'Plot details modal is open');
+	$t->click_ok('//div[contains(@class,"show")]//a[contains(text(),"Replace")]', 'xpath', 'Click Replace tab in plot details modal');
+	$t->click_ok('//div[contains(@class,"show")]//button[contains(text(),"Suppress Current Trait Value")]', 'xpath', 'Click Suppress Current Trait Value button');
+	$t->find_element_ok('//div[contains(@class,"show")]//h4[contains(@class,"modal-title") and contains(text(),"Suppress Plot Phenotype Measurement")]', 'xpath', 'Suppress phenotype modal is open');
+	$t->find_element_ok('//div[contains(@class,"show")]//div[strong[contains(text(),"Plot Name:")]]', 'xpath', 'Verify plot name in suppress modal');
+	$t->click_ok('//div[contains(@class,"show")]//button[contains(@class,"btn-danger") and contains(text(),"Suppress Phenotype")]', 'xpath', 'Click Suppress Phenotype button');
+	my $alert_text = $t->get_alert_text();
+	$t->accept_alert_ok('Accept alert after suppressing phenotype');
+	is($alert_text, 'Phenotype was suppressed successfully!', 'Verify alert text for successful suppression');
+	$t->wait_for_network_idle();
 
-	# # Attempt re-suppression on already-suppressed plot to verify the server has recorded our change
-	# # and prevents duplicate suppression
-	# click_plot_cell_ok(0, 2);
-	# $t->find_element_ok('//div[contains(@class,"show")]//h4[contains(@class,"modal-title") and contains(text(),"Plot Details")]', 'xpath', 'Plot details modal is open');
-	# $t->click_ok('//div[contains(@class,"show")]//a[contains(text(),"Replace")]', 'xpath', 'Click Replace tab in plot details modal');
-	# $t->click_ok('//div[contains(@class,"show")]//button[contains(text(),"Suppress Current Trait Value")]', 'xpath', 'Click Suppress Current Trait Value button');
-	# $t->find_element_ok('//div[contains(@class,"show")]//h4[contains(@class,"modal-title") and contains(text(),"Suppress Plot Phenotype Measurement")]', 'xpath', 'Suppress phenotype modal is open');
-	# $t->find_element_ok('//div[contains(@class,"show")]//div[strong[contains(text(),"Plot Name:")]]', 'xpath', 'Verify plot name in suppress modal');
-	# $t->click_ok('//div[contains(@class,"show")]//button[contains(@class,"btn-danger") and contains(text(),"Suppress Phenotype")]', 'xpath', 'Click Suppress Phenotype button');
-	# $alert_text = $t->get_alert_text();
-	# $t->accept_alert_ok('Accept alert after suppressing phenotype');
-	# is($alert_text, 'This plot phenotype has already been suppressed.', 'Verify alert text for already suppressed phenotype');
-	# $t->click_ok('//div[contains(@class,"show")]//button[contains(@class,"btn-danger") and contains(text(),"Suppress Phenotype")]/preceding-sibling::button[contains(text(),"Close")]', 'xpath', 'Click Close button in suppress modal');
-	# $t->click_ok('//div[contains(@class,"show")]//button[contains(text(),"Close")]', 'xpath', 'Click Close button in plot details modal');
+	# Attempt re-suppression on already-suppressed plot to verify the server has recorded our change
+	# and prevents duplicate suppression
+	click_plot_cell_ok(0, 2);
+	$t->find_element_ok('//div[contains(@class,"show")]//h4[contains(@class,"modal-title") and contains(text(),"Plot Details")]', 'xpath', 'Plot details modal is open');
+	$t->click_ok('//div[contains(@class,"show")]//a[contains(text(),"Replace")]', 'xpath', 'Click Replace tab in plot details modal');
+	$t->click_ok('//div[contains(@class,"show")]//button[contains(text(),"Suppress Current Trait Value")]', 'xpath', 'Click Suppress Current Trait Value button');
+	$t->find_element_ok('//div[contains(@class,"show")]//h4[contains(@class,"modal-title") and contains(text(),"Suppress Plot Phenotype Measurement")]', 'xpath', 'Suppress phenotype modal is open');
+	$t->find_element_ok('//div[contains(@class,"show")]//div[strong[contains(text(),"Plot Name:")]]', 'xpath', 'Verify plot name in suppress modal');
+	$t->click_ok('//div[contains(@class,"show")]//button[contains(@class,"btn-danger") and contains(text(),"Suppress Phenotype")]', 'xpath', 'Click Suppress Phenotype button');
+	$alert_text = $t->get_alert_text();
+	$t->accept_alert_ok('Accept alert after suppressing phenotype');
+	is($alert_text, 'This plot phenotype has already been suppressed.', 'Verify alert text for already suppressed phenotype');
+	$t->click_ok('//div[contains(@class,"show")]//button[contains(@class,"btn-danger") and contains(text(),"Suppress Phenotype")]/preceding-sibling::button[contains(text(),"Close")]', 'xpath', 'Click Close button in suppress modal');
+	$t->click_ok('//div[contains(@class,"show")]//button[contains(text(),"Close")]', 'xpath', 'Click Close button in plot details modal');
 
-	# # =========================================================================
-	# # Assayed Trait Deletion Workflow
-	# # =========================================================================
-	# # Open modal and test cancel/close
-	# $t->click_ok('//button[contains(text(),"Delete Selected Trait")]', 'xpath', 'Click Delete Selected Trait button to test cancel');
-	# $t->find_element_ok('//div[contains(@class,"show")]//h4[contains(@class,"modal-title") and contains(text(),"Assayed Trait Deletion")]', 'xpath', 'Assayed Trait Deletion modal is open');
-	# $t->find_element_ok('//div[contains(@class,"show")]//p[contains(text(),"Are you sure you want to delete this assayed trait?")]', 'xpath', 'Verify delete trait warning text');
-	# $t->click_ok('//div[contains(@class,"show")]//button[contains(text(),"Close")]', 'xpath', 'Click Close button in Delete Trait modal');
-	# ok(!scalar(@{$t->driver->find_elements('//div[contains(@class,"show")]//h4[contains(text(),"Assayed Trait Deletion")]', 'xpath')}), 'Delete Trait modal is closed');
+	# =========================================================================
+	# Assayed Trait Deletion Workflow
+	# =========================================================================
+	# Open modal and test cancel/close
+	$t->click_ok('//button[contains(text(),"Delete Selected Trait")]', 'xpath', 'Click Delete Selected Trait button to test cancel');
+	$t->find_element_ok('//div[contains(@class,"show")]//h4[contains(@class,"modal-title") and contains(text(),"Assayed Trait Deletion")]', 'xpath', 'Assayed Trait Deletion modal is open');
+	$t->find_element_ok('//div[contains(@class,"show")]//p[contains(text(),"Are you sure you want to delete this assayed trait?")]', 'xpath', 'Verify delete trait warning text');
+	$t->click_ok('//div[contains(@class,"show")]//button[contains(text(),"Close")]', 'xpath', 'Click Close button in Delete Trait modal');
+	ok(!scalar(@{$t->driver->find_elements('//div[contains(@class,"show")]//h4[contains(text(),"Assayed Trait Deletion")]', 'xpath')}), 'Delete Trait modal is closed');
 
-	# # Open modal and confirm deletion
-	# $t->click_ok('//button[contains(text(),"Delete Selected Trait")]', 'xpath', 'Click Delete Selected Trait button to confirm deletion');
-	# $t->find_element_ok('//div[contains(@class,"show")]//h4[contains(@class,"modal-title") and contains(text(),"Assayed Trait Deletion")]', 'xpath', 'Assayed Trait Deletion modal is open again');
-	# $t->click_ok('//div[contains(@class,"show")]//button[contains(@class,"btn-danger") and contains(text(),"Delete Trait")]', 'xpath', 'Click Delete Trait confirm button in modal');
-	# $alert_text = $t->get_alert_text();
-	# $t->accept_alert_ok('Accept alert after deleting trait');
-	# is($alert_text, 'Trait deleted successfully!', 'Verify alert text for successful trait deletion');
-	# $t->wait_for_network_idle();
+	# Open modal and confirm deletion
+	$t->click_ok('//button[contains(text(),"Delete Selected Trait")]', 'xpath', 'Click Delete Selected Trait button to confirm deletion');
+	$t->find_element_ok('//div[contains(@class,"show")]//h4[contains(@class,"modal-title") and contains(text(),"Assayed Trait Deletion")]', 'xpath', 'Assayed Trait Deletion modal is open again');
+	$t->click_ok('//div[contains(@class,"show")]//button[contains(@class,"btn-danger") and contains(text(),"Delete Trait")]', 'xpath', 'Click Delete Trait confirm button in modal');
+	$alert_text = $t->get_alert_text();
+	$t->accept_alert_ok('Accept alert after deleting trait');
+	is($alert_text, 'Trait deleted successfully!', 'Verify alert text for successful trait deletion');
+	$t->wait_for_network_idle();
 
-	# # Verify trait is removed and layout view resets to fieldmap
-	# ok(!scalar(@{$t->driver->find_elements('//label[contains(text(),"Select Layout View:")]/following-sibling::select//option[contains(text(),"cass sink leaf|3-phosphoglyceric acid")]', 'xpath')}), 'Deleted trait option is no longer in Select Layout View dropdown');
-	# ok(!scalar(@{$t->driver->find_elements('//div[@id="legend_list"]//span[contains(.,"Low trait value")]', 'xpath')}), 'Low trait value legend not present after trait deletion');
-	# ok(!scalar(@{$t->driver->find_elements('//div[@id="legend_list"]//div[contains(@style,"linear-gradient")]', 'xpath')}), 'Gradient bar not present after trait deletion');
-	# ok(!scalar(@{$t->driver->find_elements('//button[contains(text(),"Delete Selected Trait")]', 'xpath')}), 'Delete Selected Trait button not present after trait deletion');
-	# ok(!scalar(@{$t->driver->find_elements('//button[contains(text(),"Download Heatmap Image")]', 'xpath')}), 'Download Heatmap Image button not present after trait deletion');
-	# ok(!scalar(@{$t->driver->find_elements('//button[contains(text(),"View Controls")]', 'xpath')}), 'View Controls button not present in Field Layout view');
-	# find_plot_cell_ok(0, 2, $odd_block_fill);
-	# find_plot_cell_ok(0, 1, $even_block_fill);
-	# find_plot_cell_ok(4, 2, $check_fill);
+	# Verify trait is removed and layout view resets to fieldmap
+	ok(!scalar(@{$t->driver->find_elements('//label[contains(text(),"Select Layout View:")]/following-sibling::select//option[contains(text(),"cass sink leaf|3-phosphoglyceric acid")]', 'xpath')}), 'Deleted trait option is no longer in Select Layout View dropdown');
+	ok(!scalar(@{$t->driver->find_elements('//div[@id="legend_list"]//span[contains(.,"Low trait value")]', 'xpath')}), 'Low trait value legend not present after trait deletion');
+	ok(!scalar(@{$t->driver->find_elements('//div[@id="legend_list"]//div[contains(@style,"linear-gradient")]', 'xpath')}), 'Gradient bar not present after trait deletion');
+	ok(!scalar(@{$t->driver->find_elements('//button[contains(text(),"Delete Selected Trait")]', 'xpath')}), 'Delete Selected Trait button not present after trait deletion');
+	ok(!scalar(@{$t->driver->find_elements('//button[contains(text(),"Download Heatmap Image")]', 'xpath')}), 'Download Heatmap Image button not present after trait deletion');
+	ok(!scalar(@{$t->driver->find_elements('//button[contains(text(),"View Controls")]', 'xpath')}), 'View Controls button not present in Field Layout view');
+	find_plot_cell_ok(0, 2, $odd_block_fill);
+	find_plot_cell_ok(0, 1, $even_block_fill);
+	find_plot_cell_ok(4, 2, $check_fill);
 
-	# # =========================================================================
-	# # North Arrow Orientation Configuration
-	# # =========================================================================
-	# find_north_arrow_ok(0);
+	# =========================================================================
+	# North Arrow Orientation Configuration
+	# =========================================================================
+	find_north_arrow_ok(0);
 
-	# set_north_arrow_angle(45);
-	# find_north_arrow_ok(45);
+	set_north_arrow_angle(45);
+	find_north_arrow_ok(45);
 
-	# set_north_arrow_angle(135);
-	# find_north_arrow_ok(135);
+	set_north_arrow_angle(135);
+	find_north_arrow_ok(135);
 
-	# set_north_arrow_angle(0);
-	# find_north_arrow_ok(0);
+	set_north_arrow_angle(0);
+	find_north_arrow_ok(0);
 
-	# # =========================================================================
-	# # Primary Axis Rendering
-	# # =========================================================================
+	# =========================================================================
+	# Primary Axis Rendering
+	# =========================================================================
 
-	# find_x_val_ok('1', 0, undef, 'top');
-	# find_x_val_ok('1', 0, 3, 'bottom');
-	# find_y_val_ok('3', 0, undef, 'left');
-	# find_y_val_ok('3', 0, 7, 'right');
+	find_x_val_ok('1', 0, undef, 'top');
+	find_x_val_ok('1', 0, 3, 'bottom');
+	find_y_val_ok('3', 0, undef, 'left');
+	find_y_val_ok('3', 0, 7, 'right');
 
 	# =========================================================================
 	# Secondary Axis Configuration & Rendering
 	# =========================================================================
 	set_secondary_axis('Test X Label', 'Test Y Label', 'tx1,tx2,tx3,tx4', 'ty1,ty2,ty3,ty4');
 
-	# find_sec_x_label_ok('Test X Label', 7, 3, 'top');
-	# find_sec_x_label_ok('Test X Label', 7, 3, 'bottom');
-	# find_sec_y_label_ok('Test Y Label', 7, 3, 'left');
-	# find_sec_y_label_ok('Test Y Label', 7, 3, 'right');
+	find_sec_x_label_ok('Test X Label', 7, 3, 'top');
+	find_sec_x_label_ok('Test X Label', 7, 3, 'bottom');
+	find_sec_y_label_ok('Test Y Label', 7, 3, 'left');
+	find_sec_y_label_ok('Test Y Label', 7, 3, 'right');
 
-	# find_sec_x_val_ok('tx1', 0, undef, 'top');
-	# find_sec_x_val_ok('tx1', 0, 3, 'bottom');
-	# find_sec_y_val_ok('ty3', 0, undef, 'left');
-	# find_sec_y_val_ok('ty3', 0, 7, 'right');
+	find_sec_x_val_ok('tx1', 0, undef, 'top');
+	find_sec_x_val_ok('tx1', 0, 3, 'bottom');
+	find_sec_y_val_ok('ty3', 0, undef, 'left');
+	find_sec_y_val_ok('ty3', 0, 7, 'right');
 
-	# # =========================================================================
-	# # Layout Transformations & Border Inset Layers
-	# # =========================================================================
-	# # Rotate layout 90 degrees clockwise
-	# $t->click_ok('//button[@title="Rotate"]', 'xpath', 'Click Rotate button');
-	# find_plot_label_ok('103', 0, 0);
-	# find_plot_label_ok('207', 1, 6);
-	# find_x_val_ok('1', 0, undef, 'top');
-	# find_y_val_ok('1', 0, undef, 'left');
-	# find_sec_x_val_ok('ty3', 2, 7, 'bottom');
-	# find_sec_y_val_ok('tx3', 2, 3, 'right');
-	# find_north_arrow_ok(90);
+	# =========================================================================
+	# Layout Transformations & Border Inset Layers
+	# =========================================================================
+	# Rotate layout 90 degrees clockwise
+	$t->click_ok('//button[@title="Rotate"]', 'xpath', 'Click Rotate button');
+	find_plot_label_ok('103', 0, 0);
+	find_plot_label_ok('207', 1, 6);
+	find_x_val_ok('1', 0, undef, 'top');
+	find_y_val_ok('1', 0, undef, 'left');
+	find_sec_x_val_ok('ty3', 2, 7, 'bottom');
+	find_sec_y_val_ok('tx3', 2, 3, 'right');
+	find_north_arrow_ok(90);
 
-	# # Rotate layout 180 degrees clockwise
-	# $t->click_ok('//button[@title="Rotate"]', 'xpath', 'Click Rotate button');
-	# find_plot_label_ok('103', 6, 0);
-	# find_x_val_ok('1', 6, undef, 'top');
-	# find_y_val_ok('1', 0, undef, 'left');
-	# find_sec_x_val_ok('tx1', 6, undef, 'top');
-	# find_sec_y_val_ok('ty1', 0, undef, 'left');
-	# find_north_arrow_ok(180);
+	# Rotate layout 180 degrees clockwise
+	$t->click_ok('//button[@title="Rotate"]', 'xpath', 'Click Rotate button');
+	find_plot_label_ok('103', 6, 0);
+	find_x_val_ok('1', 6, undef, 'top');
+	find_y_val_ok('1', 0, undef, 'left');
+	find_sec_x_val_ok('tx1', 6, undef, 'top');
+	find_sec_y_val_ok('ty1', 0, undef, 'left');
+	find_north_arrow_ok(180);
 
-	# # Rotate layout 270 degrees clockwise
-	# $t->click_ok('//button[@title="Rotate"]', 'xpath', 'Click Rotate button');
-	# find_plot_label_ok('103', 2, 6);
-	# find_x_val_ok('1', 2, undef, 'top');
-	# find_y_val_ok('1', 6, undef, 'left');
-	# find_sec_x_val_ok('ty1', 2, undef, 'top');
-	# find_sec_y_val_ok('tx1', 6, undef, 'left');
-	# find_north_arrow_ok(270);
+	# Rotate layout 270 degrees clockwise
+	$t->click_ok('//button[@title="Rotate"]', 'xpath', 'Click Rotate button');
+	find_plot_label_ok('103', 2, 6);
+	find_x_val_ok('1', 2, undef, 'top');
+	find_y_val_ok('1', 6, undef, 'left');
+	find_sec_x_val_ok('ty1', 2, undef, 'top');
+	find_sec_y_val_ok('tx1', 6, undef, 'left');
+	find_north_arrow_ok(270);
 
-	# # Rotate layout 360 (0) degrees clockwise
-	# $t->click_ok('//button[@title="Rotate"]', 'xpath', 'Click Rotate button');
+	# Rotate layout 360 (0) degrees clockwise
+	$t->click_ok('//button[@title="Rotate"]', 'xpath', 'Click Rotate button');
 	# Rotate layout back to 90 degrees clockwise for remainder of tests
 	$t->click_ok('//button[@title="Rotate"]', 'xpath', 'Click Rotate button');
 
@@ -1518,7 +1518,6 @@ $t->while_logged_in_as("curator", sub {
 	$t->send_keys_ok('//div[contains(@class,"show")]//label[contains(text(),"New Plot Name")]/following-sibling::input', 'xpath', 'CASS_6Genotypes_206_renamed', 'Set New Plot Name input to CASS_6Genotypes_206_renamed', clear => 1);
 	$t->click_ok('//div[contains(@class,"show")]//button[contains(text(),"Update")]', 'xpath', 'Click Update Accession button with custom plot name');
 	$t->click_ok('//div[contains(@class,"show")]//button[contains(text(),"Override")]', 'xpath', 'Click override button in modal');
-	# This test fails?
 	$t->accept_alert_ok('Accept alert after updating accession and plot name');
 	$t->wait_for_network_idle();
 
@@ -1622,7 +1621,6 @@ $t->while_logged_in_as("curator", sub {
 	ok($plot_206_id, "Found stock ID for plot 206: $plot_206_id");
 
 	# Hook window.open to track URLs passed from PlotLayer double click
-	# This test fails?
 	setup_window_open_handler();
 	$t->driver->execute_script('window.__lastOpenedUrl = null;');
 
@@ -1885,24 +1883,18 @@ EOSQL
 	$t->click_option_ok('//label[contains(text(),"Plot Layout:")]/following-sibling::select/option[@value="serpentine"]', 'xpath', 'Select Serpentine plot layout');
 
 	# Expand dimensions to 6 columns x 4 rows (24 cells total for 21 plots = 3 empty slots)
-
-	print STDERR "\n\nSLEEPING\n\n";
-	sleep(300);
-	set_dimensions(6, 4);
-	# This test fails
+	set_dimensions(6, 4, undef, 0);
 	ok(!scalar(@{$t->driver->find_elements('//*[local-name()="svg" and @id="' . $svg_id . '"]//*[local-name()="g" and @transform="translate(0, 0)"]/*[local-name()="rect"]', 'xpath')}), 'Empty space cell (0, 0) has no rect');
 
 	# Test invalid filler accession error handling
-	set_dimensions(6, 4, 'NONEXISTENT_FILLER_ACCESSION_XYZ');
+	set_dimensions(6, 4, 'NONEXISTENT_FILLER_ACCESSION_XYZ', 0);
 	my $invalid_filler_alert = $t->get_alert_text();
 	like($invalid_filler_alert, qr/(?:not exist|not found|error)/i, 'Verify alert text when filler accession does not exist');
 	$t->accept_alert_ok('Accept invalid filler accession alert');
-	# This test fails
 	ok(!scalar(@{$t->driver->find_elements('//*[local-name()="svg" and @id="' . $svg_id . '"]//*[local-name()="g" and @transform="translate(0, 0)"]/*[local-name()="rect"]', 'xpath')}), 'Empty space cell (0, 0) still has no rect after invalid filler accession');
 
 	# Apply valid filler accession and verify filler plots rendered
 	set_dimensions(6, 4, 'IITA-TMS-IBA980581');
-	# This test fails
 	find_plot_cell_ok(0, 0, $border_fill);
 	find_plot_cell_ok(1, 0, $border_fill);
 	find_plot_cell_ok(2, 0, $border_fill);

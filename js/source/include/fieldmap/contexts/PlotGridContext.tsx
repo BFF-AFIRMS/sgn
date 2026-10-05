@@ -19,6 +19,10 @@ export interface AxisOrientation {
     readonly x: { source: 'x' | 'y'; reversed: boolean };
     readonly y: { source: 'x' | 'y'; reversed: boolean };
 }
+export interface AxisOrientationInput {
+    readonly x?: string;
+    readonly y?: string;
+}
 
 export interface PlotGridContextType {
     plotList: Plot[];
@@ -42,6 +46,8 @@ export interface PlotGridContextType {
     transposeLayout: () => void;
     rotateLayout: () => void;
     axisOrientation: AxisOrientation;
+    setAxisOrientation: (input?: AxisOrientationInput) => void;
+    loadAxisOrientation: () => void;
 
     plotStructure: PlotStructureNode | null;
     setPlotStructure: React.Dispatch<React.SetStateAction<PlotStructureNode | null>>;
@@ -87,10 +93,51 @@ export const PlotGridProvider: React.FC<FieldMapContextProps> = ({ trialId, auth
     const [bounds, setBounds] = useState({minCol: 1, maxCol: 1, minRow: 1, maxRow: 1, numCols: 1, numRows: 1});
     const [fillerAccessionId, setFillerAccessionId] = useState<string | undefined>(undefined);
     const [fillerAccessionName, setFillerAccessionName] = useState<string | undefined>(undefined);
-    const [axisOrientation, setAxisOrientation] = useState<AxisOrientation>({
+    const [axisOrientation, setAxisOrientationState] = useState<AxisOrientation>({
         x: { source: 'x', reversed: false },
         y: { source: 'y', reversed: false }
     });
+    const setAxisOrientation = useCallback((input?: AxisOrientationInput) => {
+
+        let orientation: AxisOrientation = {
+            x: { source: 'x', reversed: false},
+            y: { source: 'y', reversed: false},
+        };
+        if (!input) {
+            setAxisOrientationState(orientation);
+            return;
+        }
+
+        const x = input.x?.trim();
+        const y = input.y?.trim();
+
+        if (x && x == 'reversed'){
+            orientation.x.reversed = true;
+        }
+        if (y && y == 'reversed'){
+            orientation.y.reversed = true;
+        }
+        setAxisOrientationState(orientation);
+    }, []);
+
+    const loadAxisOrientation = useCallback(async () => {
+        try {
+            const response = await fetch(`/ajax/breeders/trial/${trialId}/axis_orientation`);
+            const body = await response.json();
+            if (body) {
+                setAxisOrientation({
+                    x: body.x_axis_orientation,
+                    y: body.y_axis_orientation,
+                });
+            }
+        } catch (e) {
+            console.error('Error loading axis orientation:', e);
+        }
+    }, [trialId, setAxisOrientation]);
+
+    useEffect(() => {
+        loadAxisOrientation();
+    }, [loadAxisOrientation]);
 
     const [plotStructure, setPlotStructure] = useState<PlotStructureNode | null>(null);
     const [plotContentCache, setPlotContentCache] = useState<Record<string, string[]>>({});
@@ -149,11 +196,7 @@ export const PlotGridProvider: React.FC<FieldMapContextProps> = ({ trialId, auth
 
 
     const parsePlotData = useCallback((data: any[]) => {
-        setAxisOrientation({
-            x: { source: 'x', reversed: false },
-            y: { source: 'y', reversed: false }
-        });
-
+        loadAxisOrientation();
         const {
             plotObject,
             bounds,
@@ -273,7 +316,7 @@ export const PlotGridProvider: React.FC<FieldMapContextProps> = ({ trialId, auth
     const transposeLayout = useCallback(() => {
         // Reflection over diagonal (α′ = 2(θ_line) - α) = 2(45) - α = 90 - α
         setNorthArrowAngle(prev => (90 - prev) % 360);
-        setAxisOrientation(prev => ({
+        setAxisOrientationState(prev => ({
             x: prev.y,
             y: prev.x
         }));
@@ -300,7 +343,7 @@ export const PlotGridProvider: React.FC<FieldMapContextProps> = ({ trialId, auth
         let oldYReversed = axisOrientation.y.reversed;
         let newXReversed = (!oldXReversed && oldYReversed) || (oldXReversed && oldYReversed);
         let newYReversed =  (!oldXReversed && !oldYReversed) || (!oldXReversed && oldYReversed);
-        setAxisOrientation(prev => ({
+        setAxisOrientationState(prev => ({
             x: {source: prev.y.source, reversed: newXReversed},
             y: {source: prev.x.source, reversed: newYReversed}
         }));
@@ -486,6 +529,8 @@ export const PlotGridProvider: React.FC<FieldMapContextProps> = ({ trialId, auth
             rotateLayout,
             recalculateLayout,
             axisOrientation,
+            loadAxisOrientation,
+            setAxisOrientation,
             plotStructure,
             setPlotStructure,
             plotContentCache,
