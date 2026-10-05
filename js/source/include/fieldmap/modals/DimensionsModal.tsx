@@ -20,6 +20,7 @@ export const DimensionsModal: React.FC<DimensionsModalProps> = ({}) => {
     const [dimRowsInput, setDimRowsInput] = useState('');
     const [dimColsInput, setDimColsInput] = useState('');
     const [fillerAccessionInput, setFillerAccessionInput] = useState('');
+    const [keepPlotLocations, setkeepPlotLocations] = useState(true);
 
     useEffect(() => {
         setDimRowsInput((bounds.numRows || '').toString());
@@ -27,7 +28,7 @@ export const DimensionsModal: React.FC<DimensionsModalProps> = ({}) => {
     }, [bounds, show]);
 
     const handleApplyDimensions = async () => {
-        await applyDimensions(dimRowsInput, dimColsInput, fillerAccessionInput);
+        await applyDimensions(dimRowsInput, dimColsInput, keepPlotLocations, fillerAccessionInput);
         setShow(false);
     };
 
@@ -53,6 +54,12 @@ export const DimensionsModal: React.FC<DimensionsModalProps> = ({}) => {
                         <div className="form-group">
                             <label>Filler Accession (Optional):</label>
                             <AccessionAutocomplete value={fillerAccessionInput} onChange={setFillerAccessionInput} className="form-control" />
+                        </div>
+                        <div className="form-check tw:flex tw:items-center">
+                            <label className="form-check-label">
+                                <input type="checkbox" className="form-check-input tw:mr-2!" checked={keepPlotLocations} onChange={e => setkeepPlotLocations(e.target.checked)} />
+                                Keep original locations of plots
+                            </label>
                         </div>
                     </div>
                     <div className="modal-footer">

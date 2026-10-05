@@ -63,7 +63,7 @@ export const FieldMapSettingsPanel: React.FC<FieldMapSettingsPanelProps> = ({ })
                     onChange={e => {
                         const nextLayout = e.target.value as PlotLayout;
                         setPlotLayout(nextLayout);
-                        recalculateLayout(nextLayout);
+                        recalculateLayout(nextLayout, true);
                     }}
                     disabled={displayLinkedTrials}
                 >

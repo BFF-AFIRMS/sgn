@@ -29,10 +29,10 @@ export interface PlotGridContextType {
     gridMatrix: Plot[][];
 
     fetchObservationUnits: () => Promise<void>;
-    recalculateLayout: (layout: 'serpentine' | 'zigzag') => void;
+    recalculateLayout: (layout: 'serpentine' | 'zigzag', keepPlotLocations: boolean, layoutBounds?: GridBounds) => void;
     mutatePlot: (plotId: string | Plot, updatedFields: Partial<Plot>) => void;
 
-    applyDimensions: (rowsInput: string, colsInput: string, fillerAccessionInput?: string) => Promise<void>;
+    applyDimensions: (rowsInput: string, colsInput: string, keepPlotLocations: boolean, fillerAccessionInput?: string) => Promise<void>;
 
     fillerAccessionId: string | undefined;
     setFillerAccessionId: React.Dispatch<React.SetStateAction<string | undefined>>;
@@ -203,7 +203,9 @@ export const PlotGridProvider: React.FC<FieldMapContextProps> = ({ trialId, auth
         return matrix;
     }, [bounds, renderBounds, plotList, fillerAccessionId]);
 
-    const recalculateLayout = useCallback((layout: 'serpentine' | 'zigzag') => {
+    const recalculateLayout = useCallback((layout: 'serpentine' | 'zigzag', keepPlotLocations: boolean, layoutBounds?: GridBounds) => {
+
+        layoutBounds ??= bounds;
         setPlotObject(currentPlots => {
 
             const plotsArr = Object.values(currentPlots).filter(p => !!p.observationUnitDbId);
@@ -225,16 +227,31 @@ export const PlotGridProvider: React.FC<FieldMapContextProps> = ({ trialId, auth
                 return codeA - codeB;
             });
 
+            let plotsByRowCol = new Map();
+            plotsArr.forEach(p => {
+                const col = p.observationUnitPosition.positionCoordinateX;
+                const row = p.observationUnitPosition.positionCoordinateY;
+                if (!plotsByRowCol.has(row)) {
+                    plotsByRowCol.set(row, new Map());
+                }
+                plotsByRowCol.get(row).set(col, p);
+
+            });
+
             const newPlotObject: Record<string, Plot> = {};
             let plotIdx = 0;
-            for (let r = bounds.minRow; r <= bounds.maxRow; r++) {
-                const relativeRow = 1 + r - bounds.minRow;
+            for (let r = layoutBounds.minRow; r <= layoutBounds.maxRow; r++) {
+                const relativeRow = 1 + r - layoutBounds.minRow;
                 const swap_columns = layout === 'serpentine' && (relativeRow % 2 === 0);
-                const cStart = swap_columns ? bounds.maxCol : bounds.minCol;
-                const cEnd = swap_columns ? bounds.minCol: bounds.maxCol;
+                const cStart = swap_columns ? layoutBounds.maxCol : layoutBounds.minCol;
+                const cEnd = swap_columns ? layoutBounds.minCol: layoutBounds.maxCol;
                 const cStep = swap_columns ? -1: 1;
 
                 for (let c = cStart; cStep > 0 ? c <= cEnd : c >= cEnd; c += cStep) {
+
+                    if (keepPlotLocations && (!plotsByRowCol.has(r) || !plotsByRowCol.get(r).has(c))){
+                        continue;
+                    }
                     if (plotIdx < sortedPlots.length) {
                         const plot = sortedPlots[plotIdx];
                         newPlotObject[plot.observationUnitDbId!] = {
@@ -376,7 +393,7 @@ export const PlotGridProvider: React.FC<FieldMapContextProps> = ({ trialId, auth
         });
     }, []);
 
-    const applyDimensions = useCallback(async (rowsInput: string, colsInput: string, fillerAccessionInput?: string) => {
+    const applyDimensions = useCallback(async (rowsInput: string, colsInput: string, keepPlotLocations: boolean, fillerAccessionInput?: string) => {
         const rows = parseInt(rowsInput) || 0;
         const cols = parseInt(colsInput) || 0;
         const numRealPlots = plotList.length;
@@ -408,9 +425,10 @@ export const PlotGridProvider: React.FC<FieldMapContextProps> = ({ trialId, auth
         const addCols = cols - bounds.numCols;
         const newMaxRow = bounds.maxRow + addRows;
         const newMaxCol = bounds.maxCol + addCols;
-        setBounds(b => ({minCol: b.minCol, maxCol: newMaxCol, minRow: b.minRow, maxRow: newMaxRow, numRows: rows, numCols: cols }));
-
-        recalculateLayout(plotLayout);
+        const newBounds = {minCol: bounds.minCol, maxCol: newMaxCol, minRow: bounds.minRow, maxRow: newMaxRow, numRows: rows, numCols: cols };
+        setBounds(newBounds);
+        // Pass newBounds to function manually, otherwise state might not update in time
+        recalculateLayout(plotLayout, keepPlotLocations, newBounds);
     }, [trialId, plotList]);
 
     const transformedSecondaryAxis = useMemo(() => {
