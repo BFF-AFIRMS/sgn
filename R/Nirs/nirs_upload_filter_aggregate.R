@@ -40,16 +40,26 @@ raw.spectra.temp <- raw.spectra %>%
 #### Dynamic window size for some specific dataset - to increase size over 100 if necessary and return an error ####
 window.increase.global <<- TRUE;
 window.size.global <<- 100;
+chisq95 <- qchisq(.95, df = length(wls))
 
 while (window.increase.global) {
   if (window.size.global > 5000) {
     message("Window size exceeded 5000. Exiting loop.")
     spec.plot <- NULL
+    spectra.tagged <- NULL
     break
   }
   tryCatch(
     expr = {
         spec.plot <- plot_spectra(raw.spectra.temp, num.col.before.spectra = 3, window.size = window.size.global)    
+        #### Identify outliers ####
+        spectra.tagged <- raw.spectra %>%
+          drop_na(observationUnitId, starts_with("nirs_spectra")) %>% # allows for case that no device type is present
+          filter_spectra(., filter = F, return.distances = T,
+                        num.col.before.spectra = 2, # observationUnitId, device_type
+                        window.size = window.size.global) %>%
+          mutate(outlier = ifelse(.data$h.distances > chisq95, T, F)) %>%
+          dplyr::select(observationUnitId, device_type, outlier, starts_with("nirs_spectra."))
         window.increase.global <<- FALSE;
     },
     error = function(e){
@@ -63,15 +73,6 @@ while (window.increase.global) {
 
 #### Output plot ####
 ggsave(plot = spec.plot, filename = args[4], units = "in", height = 7, width = 10)
-#### Identify outliers ####
-chisq95 <- qchisq(.95, df = length(wls))
-spectra.tagged <- raw.spectra %>%
-  drop_na(observationUnitId, starts_with("nirs_spectra")) %>% # allows for case that no device type is present
-  filter_spectra(., filter = F, return.distances = T,
-                num.col.before.spectra = 2, # observationUnitId, device_type
-                window.size = window.size.global) %>% 
-  mutate(outlier = ifelse(.data$h.distances > chisq95, T, F)) %>%
-  dplyr::select(observationUnitId, device_type, outlier, starts_with("nirs_spectra."))
 #### Generate CSV with outlier metadata ####
   if(sum(spectra.tagged$outlier > 0)){
     outlier.df <- spectra.tagged %>%
