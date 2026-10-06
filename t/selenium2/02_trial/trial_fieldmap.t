@@ -246,7 +246,7 @@ sub find_sec_y_val_ok {
 
 # Open the Change Dimensions modal and apply new column and row dimensions
 sub set_dimensions {
-	my ($columns, $rows, $filler_accession) = @_;
+	my ($columns, $rows, $filler_accession, $keep_plot_locations) = @_;
 	$t->click_ok('//button[@title="Change Dimensions"]', 'xpath', 'Click Change Dimensions button');
 	if (defined $columns) {
 		$t->send_keys_ok('//label[contains(text(),"Columns")]/following-sibling::input', 'xpath', $columns, "Set Columns input to $columns", clear => 1);
@@ -256,6 +256,16 @@ sub set_dimensions {
 	}
 	if (defined $filler_accession) {
 		$t->send_keys_ok('//div[contains(@class,"show")]//label[contains(text(),"Filler Accession")]/following-sibling::div//input', 'xpath', $filler_accession, "Set Filler Accession input to $filler_accession", clear => 1);
+	}
+	if (defined $keep_plot_locations){
+		my $keep_locations_xpath = '//label[contains(text(),"Keep original locations of plots")]/input';
+		my $keep_locations_selected = $t->find_element($keep_locations_xpath, 'xpath', 'Find keep locations checkbox')->is_selected();
+		if ($keep_plot_locations && !$keep_locations_selected) {
+			$t->click_ok($keep_locations_xpath, 'xpath', 'Check Keep original locations of plots');
+		}
+		elsif (!$keep_plot_locations && $keep_locations_selected){
+			$t->click_ok($keep_locations_xpath, 'xpath', 'Uncheck Keep original locations of plots');
+		}
 	}
 	$t->click_ok('//div[contains(@class,"show")]//button[contains(text(),"Apply")]', 'xpath', 'Click Apply button');
 }
@@ -1356,10 +1366,18 @@ $t->while_logged_in_as("curator", sub {
 	find_plot_cell_ok(4, 6, $border_fill);
 	find_sec_x_val_ok('ty3', 3, undef, 'top');
 
-	set_dimensions(4, undef);
+	# Change dimensions allowing plots to move to new locations
+	set_dimensions(4, undef, undef, 0);
 	find_plot_label_ok('301', 4, 3);
 	find_plot_label_ok('307', 3, 4);
 	find_north_arrow_ok(90);
+
+	# Test changing dimensions, keeping plots in original locations
+	set_dimensions(6, 10, undef, 1);
+	find_plot_label_ok('301', 4, 3);
+	find_plot_label_ok('307', 3, 4);
+	# Set dimensions to expected values for rest of tests
+	set_dimensions(4, undef, undef, 1);
 
 	# =========================================================================
 	# Spatial Layout CSV Export Customization
