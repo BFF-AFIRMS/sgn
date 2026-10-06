@@ -1,0 +1,53 @@
+#!/usr/bin/env perl
+
+=head1 NAME
+
+AddAxisOrientationProjectProp.pm
+
+=head1 SYNOPSIS
+
+mx-run AddAxisOrientationProjectProp [options] -H hostname -D dbname -u username [-F]
+
+this is a subclass of L<CXGN::Metadata::Dbpatch>
+see the perldoc of parent class for more details.
+
+=head1 DESCRIPTION
+
+This patch adds the 'x_axis_orientation' and 'y_axis_orientation' cvterms to the 'project_property' cv.
+
+=head1 AUTHOR
+
+Katherine Eaton <kmeaton1@ualberta.ca>
+
+=head1 COPYRIGHT & LICENSE
+
+Copyright 2026 University of Alberta
+
+This program is free software; you can redistribute it and/or modify
+it under the same terms as Perl itself.
+
+=cut
+
+package AddAxisOrientationProjectProp;
+
+use Moose;
+use Bio::Chado::Schema;
+extends 'CXGN::Metadata::Dbpatch';
+
+has '+description' => ( default => 'Adds the x_axis_orientation and y_axis_orientation cvterms to the project_property cv.' );
+
+sub patch {
+    my $self=shift;
+
+    print STDOUT "Executing the patch:\n " . $self->name . ".\n\nDescription:\n  " . $self->description . ".\n\nExecuted by:\n " . $self->username . " .";
+    print STDOUT "\nChecking if this db_patch was executed before or if previous db_patches have been executed.\n";
+    print STDOUT "\nExecuting the SQL commands.\n";
+
+    my $schema = Bio::Chado::Schema->connect( sub { $self->dbh->clone } );
+	$schema->resultset("Cv::Cvterm")->create_with({ name => 'x_axis_orientation', cv => 'project_property' });
+	$schema->resultset("Cv::Cvterm")->create_with({ name => 'y_axis_orientation', cv => 'project_property' });
+
+    print "You're done!\n";
+}
+
+1;
