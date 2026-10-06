@@ -467,6 +467,8 @@ sub retrieve_plot_info {
     my $plant_of_subplot_cvterm_id = $self->cvterm_id('plant_of_subplot');
     my $tissue_sample_of_cvterm_id = $self->cvterm_id('tissue_sample_of');
     my $seed_transaction_cvterm_id = $self->cvterm_id('seed transaction');
+    my $collection_of_cvterm_id = $self->cvterm_id('collection_of');
+    my $offspring_of_cvterm_id = $self->cvterm_id('offspring_of');
 
     # cvterm trial layout
     my $plot_number_cvterm_id = $self->cvterm_id('plot number');
@@ -750,21 +752,29 @@ sub retrieve_plot_info {
     # Seedlots
 
     my $query = "
-    select plot.stock_id, seedlot.uniquename, seedlot.stock_id, seedlot_parent.parent_id, plot_to_seedlot.value
+    select plot.stock_id, seedlot.uniquename, seedlot.stock_id, seedlot_parent.parent_id, plot_to_seedlot.value, seedlot_offspring.subject_id
     from stock as plot
-    join stock_relationship as plot_to_seedlot on (plot.stock_id = plot_to_seedlot.subject_id and plot_to_seedlot.type_id = $seed_transaction_cvterm_id)
+    join stock_relationship as plot_to_seedlot on (
+        plot.stock_id = plot_to_seedlot.subject_id
+        and plot_to_seedlot.type_id = $seed_transaction_cvterm_id
+    )
     join stock as seedlot on (seedlot.stock_id = plot_to_seedlot.object_id)
     left join (
-        select subject_id as seedlot_id, object_id as parent_id
-        from stock_relationship
-        join stock on (object_id = stock_id and stock.type_id = any (?))
+        select object_id as seedlot_id, subject_id as parent_id, collection_of.type_id
+        from stock_relationship as collection_of
+        join stock as seedlot on (object_id = stock_id)
+        where collection_of.type_id = $collection_of_cvterm_id
     ) as seedlot_parent on (seedlot.stock_id = seedlot_parent.seedlot_id)
+    left join stock_relationship as seedlot_offspring on (
+        seedlot_offspring.object_id = seedlot_parent.parent_id
+        and seedlot_offspring.type_id = $offspring_of_cvterm_id
+    )
     where plot.stock_id = any (?)
     order by plot.stock_id, seedlot.stock_id;";
 
     my $sth = $schema->storage()->dbh()->prepare($query);
-    $sth->execute(\@$source_primary_stock_type_ids, \@plot_ids);
-    while (my ($plot_id, $seedlot_name, $seedlot_id, $seedlot_parent_id, $transaction_string) = $sth->fetchrow_array()) {
+    $sth->execute(\@plot_ids);
+    while (my ($plot_id, $seedlot_name, $seedlot_id, $seedlot_parent_id, $transaction_string, $seedlot_offspring_id) = $sth->fetchrow_array()) {
 
         my $transaction = decode_json $transaction_string;
         $design_info->{$plot_id}->{"seedlot_name"} = $seedlot_name;
@@ -773,14 +783,38 @@ sub retrieve_plot_info {
         $design_info->{$plot_id}->{"weight_gram_seed_per_plot"} = $transaction->{weight_gram};
         $design_info->{$plot_id}->{"seed_transaction_operator"} = $transaction->{operator};
 
-        # # Optional validation, check if seedlot parent is same as plot parent
-        if ($self->get_verify_layout){
+        # If not defined yet, assume we haven't checked if seedlot parent matches plot parent
+        $design_info->{$plot_id}->{"seedlot_parent_match"}  //= 0;
+        my $seedlot_match = $design_info->{$plot_id}->{"seedlot_parent_match"};
+
+        # Optional validation, note if seedlot parent is same as plot parent
+        if ($self->get_verify_layout && !$seedlot_match){
             my $plot_parent_id = $parents->{$plot_id}->{id};
-            if ( $plot_parent_id != $seedlot_parent_id ){
-                push @{$verify_errors->{errors}->{layout_errors}}, "Seedlot: $seedlot_name does not have the same parent: $seedlot_parent_id as the plot: $plot_parent_id.";
+            # Option 1: Simple match, parents are exactly the same
+            if ($seedlot_parent_id == $seedlot_parent_id){
+                $seedlot_match = 1;
+            }
+            # Option 2: Plot parent is accession, seedlot parent is cross
+            #           Check if the plots parent is an offspring of the seedlots parent
+            elsif (defined $seedlot_offspring_id && $seedlot_offspring_id == $plot_parent_id) {
+                $seedlot_match = 1;
+            }
+            $design_info->{$plot_id}->{"seedlot_parent_match"} = $seedlot_match;
+        }
+    }
+
+    # Optional validation, final check if seedlot parent matched the plot parent
+    if ($self->get_verify_layout){
+        foreach my $plot_id (@plot_ids){
+            if (!$design_info->{$plot_id}->{"seedlot_parent_match"}){
+                my $seedlot_name = $design_info->{$plot_id}->{"seedlot_name"};
+                my $parent_name = $parents->{$plot_id}->{name};
+                my $plot_name = $design_info->{$plot_id}->{plot_name};
+                push @{$verify_errors->{errors}->{layout_errors}}, "Plot: $plot_name, does not have the same parent ($parent_name) as its seedlot ($seedlot_name).";
             }
         }
     }
+
 
     # Optional validation: report if any plot isn't linked to a seedlot
     if ($self->get_verify_layout){
