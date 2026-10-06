@@ -1801,18 +1801,18 @@ EOSQL
 	$t->click_option_ok('//label[contains(text(),"Plot Layout:")]/following-sibling::select/option[@value="serpentine"]', 'xpath', 'Select Serpentine plot layout');
 
 	# Expand dimensions to 6 columns x 4 rows (24 cells total for 21 plots = 3 empty slots)
-	set_dimensions(6, 4);
+	set_dimensions(6, 4, undef, 0);
 	ok(!scalar(@{$t->driver->find_elements('//*[local-name()="svg" and @id="' . $svg_id . '"]//*[local-name()="g" and @transform="translate(0, 0)"]/*[local-name()="rect"]', 'xpath')}), 'Empty space cell (0, 0) has no rect');
 
 	# Test invalid filler accession error handling
-	set_dimensions(6, 4, 'NONEXISTENT_FILLER_ACCESSION_XYZ');
+	set_dimensions(6, 4, 'NONEXISTENT_FILLER_ACCESSION_XYZ', 0);
 	my $invalid_filler_alert = $t->get_alert_text();
 	like($invalid_filler_alert, qr/(?:not exist|not found|error)/i, 'Verify alert text when filler accession does not exist');
 	$t->accept_alert_ok('Accept invalid filler accession alert');
 	ok(!scalar(@{$t->driver->find_elements('//*[local-name()="svg" and @id="' . $svg_id . '"]//*[local-name()="g" and @transform="translate(0, 0)"]/*[local-name()="rect"]', 'xpath')}), 'Empty space cell (0, 0) still has no rect after invalid filler accession');
 
 	# Apply valid filler accession and verify filler plots rendered
-	set_dimensions(6, 4, 'IITA-TMS-IBA980581');
+	set_dimensions(6, 4, 'IITA-TMS-IBA980581', 0);
 	find_plot_cell_ok(0, 0, $border_fill);
 	find_plot_cell_ok(1, 0, $border_fill);
 	find_plot_cell_ok(2, 0, $border_fill);
