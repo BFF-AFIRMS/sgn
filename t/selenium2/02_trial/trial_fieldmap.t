@@ -1600,12 +1600,13 @@ $t->while_logged_in_as("curator", sub {
 	# =========================================================================
 	# Column Inversion, Layout Rotation, & North Arrow Tracking
 	# =========================================================================
+
 	$t->click_ok('//label[contains(text(),"Invert Columns")]/input', 'xpath', 'Click Invert Columns checkbox');
-	find_plot_label_ok('207', 1, 2);
+	find_plot_label_ok('207', 1, 3);
 	find_north_arrow_ok(270);
 
 	$t->click_ok('//button[@title="Rotate"]', 'xpath', 'Click Rotate button');
-	find_plot_label_ok('207', 5, 0);
+	find_plot_label_ok('207', 3, 1);
 	find_north_arrow_ok(0);
 
 	# =========================================================================
