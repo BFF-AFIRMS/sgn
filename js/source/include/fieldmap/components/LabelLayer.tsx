@@ -10,7 +10,8 @@ export const LabelLayer: React.FC<LabelLayerProps> = ({ }) => {
         renderBounds,
         gridMatrix,
         overlappingPlots,
-        transformedSecondaryAxis
+        transformedSecondaryAxis,
+        axisOrientation,
     } = usePlotGrid();
 
     const {
@@ -24,9 +25,11 @@ export const LabelLayer: React.FC<LabelLayerProps> = ({ }) => {
         <g style={{ pointerEvents: 'none' }}>
             {/* Column Axis Values (Top and Bottom) */}
             {Array.from({ length: bounds.numCols }).map((_, axisIdx) => {
-                const colCoord = bounds.minCol + axisIdx;
-                const colIdx = colCoord - renderBounds.minCol;
-                const displayX = (invertCols ? renderBounds.numCols - colIdx - 1 : colIdx) * 52 + 25;
+                let colCoord = (axisOrientation.x.reversed && !invertCols || !axisOrientation.x.reversed && invertCols)
+                    ? bounds.maxCol - axisIdx
+                    : bounds.minCol + axisIdx;
+                const colIdx = invertCols ? (renderBounds.maxCol - bounds.maxCol) + axisIdx : (bounds.minCol - renderBounds.minCol) + axisIdx;
+                const displayX = colIdx * 52 + 25;
                 return (
                     <React.Fragment key={`col-lbl-grp-${colIdx}`}>
                         <text x={displayX} y={-10} textAnchor="middle" fontSize="11" fontWeight="bold" fill="#000">
@@ -44,6 +47,11 @@ export const LabelLayer: React.FC<LabelLayerProps> = ({ }) => {
                 const colCoord = bounds.minCol + axisIdx;
                 const colIdx = colCoord - renderBounds.minCol;
                 const displayX = (invertCols ? renderBounds.numCols - colIdx - 1 : colIdx) * 52 + 25;
+
+                const isDataCol = colCoord >= bounds.minCol && colCoord <= bounds.maxCol;
+                if (!isDataCol) {
+                    return null;
+                }
 
                 const axisValue = transformedSecondaryAxis.xValues?.[axisIdx];
                 if (axisValue === undefined) {
@@ -89,9 +97,12 @@ export const LabelLayer: React.FC<LabelLayerProps> = ({ }) => {
             )}
 
             {/* Row Axis Values (Left and Right) */}
-            {gridMatrix.map((_, rowIdx) => {
-                const rowCoord = renderBounds.minRow + rowIdx;
-                const displayY = invertRows ? rowIdx : renderBounds.numRows - rowIdx - 1;
+            {Array.from({ length: bounds.numRows }).map((_, axisIdx) => {
+                let rowCoord = (axisOrientation.y.reversed && !invertRows || !axisOrientation.y.reversed && invertRows)
+                    ? bounds.minRow + axisIdx
+                    : bounds.maxRow - axisIdx;
+                const rowIdx = invertRows ? (bounds.minRow - renderBounds.minRow) + axisIdx : (renderBounds.maxRow - bounds.maxRow) + axisIdx;
+                const displayY = rowIdx * 52 + 30;
 
                 const isDataRow = rowCoord >= bounds.minRow && rowCoord <= bounds.maxRow;
                 if (!isDataRow) {
@@ -100,10 +111,10 @@ export const LabelLayer: React.FC<LabelLayerProps> = ({ }) => {
 
                 return (
                     <React.Fragment key={`row-lbl-grp-${rowIdx}`}>
-                        <text x={-20} y={displayY * 52 + 30} textAnchor="middle" fontSize="11" fontWeight="bold" fill="#000">
+                        <text x={-20} y={displayY} textAnchor="middle" fontSize="11" fontWeight="bold" fill="#000">
                             {rowCoord}
                         </text>
-                        <text x={renderBounds.numCols * 52 + 20} y={displayY * 52 + 30} textAnchor="middle" fontSize="11" fontWeight="bold" fill="#000">
+                        <text x={renderBounds.numCols * 52 + 20} y={displayY} textAnchor="middle" fontSize="11" fontWeight="bold" fill="#000">
                             {rowCoord}
                         </text>
                     </React.Fragment>

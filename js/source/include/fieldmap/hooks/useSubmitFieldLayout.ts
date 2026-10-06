@@ -16,7 +16,9 @@ export const useSubmitFieldLayout = () => {
 		fillerAccessionId,
 		fillerAccessionName,
 		fetchObservationUnits,
-		transformedSecondaryAxis: secondaryAxis
+		transformedSecondaryAxis: secondaryAxis,
+		axisOrientation,
+		loadAxisOrientation,
 	} = usePlotGrid();
 
 	const {
@@ -155,14 +157,24 @@ export const useSubmitFieldLayout = () => {
 			})
 		});
 
+		const axisOrientationRequest = fetch(`/ajax/breeders/trial/${trialId}/axis_orientation`, {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+			body: buildParams({
+				x_axis_orientation: axisOrientation.x.reversed ? 'reversed' : 'forward',
+				y_axis_orientation: axisOrientation.y.reversed ? 'reversed' : 'forward',
+			})
+		});
+
 		try {
-			await Promise.all([putRequest, postRequest, northArrowRequest, secondaryAxisRequest]);
+			await Promise.all([putRequest, postRequest, northArrowRequest, secondaryAxisRequest, axisOrientationRequest]);
 			await fetch(`/ajax/breeders/trial/${trialId}/refresh_cache`, { method: 'POST' });
 
 			alert('Field Plot layout submitted successfully!');
 			fetchObservationUnits();
 			loadNorthArrowAngle();
 			loadSecondaryAxis();
+			loadAxisOrientation();
 		} catch (e) {
 			console.error('Error submitting layout metadata:', e);
 			alert('Error submitting layout metadata.');
@@ -174,6 +186,7 @@ export const useSubmitFieldLayout = () => {
 		invertCols, topBorder, leftBorder, rightBorder,
 		bottomBorder, plotLayout, colorVar, labelVar,
 		labelSize, northArrowAngle, secondaryAxis, maxLevelCode,
+		axisOrientation, loadAxisOrientation,
 		fetchObservationUnits, loadNorthArrowAngle, loadSecondaryAxis, setLoading
 	]);
 
