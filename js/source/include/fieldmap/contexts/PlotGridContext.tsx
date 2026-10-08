@@ -37,7 +37,6 @@ export interface PlotGridContextType {
     recalculateLayout: (layout: 'serpentine' | 'zigzag', preserveGaps: boolean) => void;
     mutatePlot: (plotId: string | Plot, updatedFields: Partial<Plot>) => void;
 
-    dimensions: { rows: number; cols: number };
     applyDimensions: (rowsInput: string, colsInput: string, preserveGaps: boolean, fillerAccessionInput?: string) => Promise<void>;
 
     fillerAccessionId: string | undefined;
