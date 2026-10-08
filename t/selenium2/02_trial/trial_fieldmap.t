@@ -993,6 +993,7 @@ $f->bcs_schema->resultset('Project::Projectprop')->create({
 # -----------------------------------------------------------------------------
 
 $t->while_logged_in_as("curator", sub {
+
 	# =========================================================================
 	# Navigation & Initial Field Map Loading
 	# =========================================================================
@@ -1299,6 +1300,128 @@ $t->while_logged_in_as("curator", sub {
 	find_plot_cell_ok(0, 2, $odd_block_fill);
 	find_plot_cell_ok(0, 1, $even_block_fill);
 	find_plot_cell_ok(4, 2, $check_fill);
+
+	# =========================================================================
+	# Spatial Layout with Rows and Columns Starting Above 1
+	# =========================================================================
+	my $layout_upload_csv = 'plot_name,row_number,col_number
+	CASS_6Genotypes_103,2,2
+	CASS_6Genotypes_104,2,3
+	CASS_6Genotypes_105,2,4
+	CASS_6Genotypes_106,2,5
+	CASS_6Genotypes_107,2,6
+	CASS_6Genotypes_201,3,2
+	CASS_6Genotypes_202,3,3
+	CASS_6Genotypes_203,3,4
+	CASS_6Genotypes_204,3,5
+	CASS_6Genotypes_205,3,6
+	CASS_6Genotypes_206,3,7
+	CASS_6Genotypes_207,3,8
+	CASS_6Genotypes_301,4,2
+	CASS_6Genotypes_302,4,3
+	CASS_6Genotypes_303,4,4
+	CASS_6Genotypes_304,4,5
+	CASS_6Genotypes_305,4,6
+	CASS_6Genotypes_306,4,7
+	CASS_6Genotypes_307,4,8';
+	# Trim leading whitespace
+	$layout_upload_csv =~ s/^[ ]+//mg;
+	my $filename = 'spatial_layout_upload_positive.csv';
+	my $breedbase_layout_file_path = "/selenium/downloads/$filename";
+	open(FH, '>', $breedbase_layout_file_path ) or die $!;
+	print FH $layout_upload_csv;
+	close(FH);
+
+	# Upload the spatial layout file
+	my $selenium_layout_file_path = "/downloads/$filename";
+	$t->click_ok('heatmap_upload_trial_coords_link', 'id', 'Click Upload Spatial Layout');
+	$t->send_keys_ok('trial_coordinates_uploaded_file', 'id', $selenium_layout_file_path, 'Select Spatial Layout File Path');
+	$t->click_ok("upload_trial_coords_ok_button", "id", "Submit Spatial Layout Upload ");
+	$t->click_ok("trial_coord_upload_success_dialog_message_cancel", "id", "Close Success Message");
+	$t->wait_for_network_idle();
+
+	# Refresh page
+	$t->get_ok('/breeders/trial/165', 'Navigate to trial page');
+	$t->click_ok('pheno_heatmap_onswitch', 'id', 'Open fieldmap section');
+	$t->wait_for_working_dialog();
+	$t->find_element_ok('//*[@id="' . $svg_id . '"]', 'xpath', 'Find fieldmap SVG');
+
+	# Check axis coordinates
+	find_plot_label_ok('103', 0, 2);
+	find_plot_label_ok('307', 6, 0);
+	find_x_val_ok('2', 0, 0, 'top');
+	find_x_val_ok('8', 6, 3, 'bottom');
+	find_y_val_ok('2', 2, 0, 'left');
+	find_y_val_ok('4', 0, 7, 'right');
+
+	# =========================================================================
+	# Spatial Layout with Rows and Columns Starting Below 0
+	# =========================================================================
+	my $layout_upload_csv = 'plot_name,row_number,col_number
+	CASS_6Genotypes_103,-1,-2
+	CASS_6Genotypes_104,-1,-1
+	CASS_6Genotypes_105,-1,0
+	CASS_6Genotypes_106,-1,1
+	CASS_6Genotypes_107,-1,2
+	CASS_6Genotypes_201,0,-2
+	CASS_6Genotypes_202,0,-1
+	CASS_6Genotypes_203,0,0
+	CASS_6Genotypes_204,0,1
+	CASS_6Genotypes_205,0,2
+	CASS_6Genotypes_206,0,3
+	CASS_6Genotypes_207,0,4
+	CASS_6Genotypes_301,1,-2
+	CASS_6Genotypes_302,1,-1
+	CASS_6Genotypes_303,1,0
+	CASS_6Genotypes_304,1,1
+	CASS_6Genotypes_305,1,2
+	CASS_6Genotypes_306,1,3
+	CASS_6Genotypes_307,1,4';
+	# Trim leading whitespace
+	$layout_upload_csv =~ s/^[ ]+//mg;
+	my $filename = 'spatial_layout_upload_negative.csv';
+	my $breedbase_layout_file_path = "/selenium/downloads/$filename";
+	open(FH, '>', $breedbase_layout_file_path ) or die $!;
+	print FH $layout_upload_csv;
+	close(FH);
+
+	# Upload the spatial layout file
+	my $selenium_layout_file_path = "/downloads/$filename";
+	$t->click_ok('heatmap_upload_trial_coords_link', 'id', 'Click Upload Spatial Layout');
+	$t->send_keys_ok('trial_coordinates_uploaded_file', 'id', $selenium_layout_file_path, 'Select Negative Spatial Layout File Path');
+	$t->click_ok("upload_trial_coords_ok_button", "id", "Submit Negative Spatial Layout Upload ");
+	$t->click_ok("trial_coord_upload_success_dialog_message_cancel", "id", "Close Success Message");
+	$t->wait_for_network_idle();
+
+	# Refresh page
+	$t->get_ok('/breeders/trial/165', 'Navigate to trial page');
+	$t->click_ok('pheno_heatmap_onswitch', 'id', 'Open fieldmap section');
+	$t->wait_for_working_dialog();
+	$t->find_element_ok('//*[@id="' . $svg_id . '"]', 'xpath', 'Find fieldmap SVG');
+
+	# Check axis coordinates
+	find_plot_label_ok('103', 0, 2);
+	find_plot_label_ok('307', 6, 0);
+	find_x_val_ok('-2', 0, 0, 'top');
+	find_x_val_ok('0', 2, 0, 'top');
+	find_x_val_ok('4', 6, 3, 'bottom');
+	find_y_val_ok('-1', 2, 0, 'left');
+	find_y_val_ok('0', 1, 0, 'left');
+	find_y_val_ok('1', 0, 7, 'right');
+
+	# =========================================================================
+	# Delete Spatial Layout
+	# =========================================================================
+	$t->click_ok("delete_field_map_hm_link", "id", "Click Delete Spatial Layout");
+    $t->accept_alert_ok("Confirm Delete Spatial Layout");
+	$t->wait_for_working_dialog();
+	#$t->accept_alert_ok("Accept Success Dialog Box");
+
+	# Refresh page
+	$t->get_ok('/breeders/trial/165', 'Navigate to trial page');
+	$t->click_ok('pheno_heatmap_onswitch', 'id', 'Open fieldmap section');
+	$t->wait_for_working_dialog();
+	$t->find_element_ok('//*[@id="' . $svg_id . '"]', 'xpath', 'Find fieldmap SVG');
 
 	# =========================================================================
 	# North Arrow Orientation Configuration
