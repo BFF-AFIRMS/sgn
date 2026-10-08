@@ -56,6 +56,9 @@ userResponse <- unlist(strsplit(traits, split = ",", fixed = T))
 userResponse <- userResponse[!userResponse == "notes"] # x[ !x == 'A'] # remove notes from userResponse
 rownames(userPheno) <- userPheno$observationUnitName
 userPheno$germplasmName <- as.factor(userPheno$germplasmName)
+# Normalize row and column to start at a value of 1
+userPheno$rowNumber <- userPheno$rowNumber - (min(userPheno$rowNumber) - 1)
+userPheno$colNumber <- userPheno$colNumber - (min(userPheno$colNumber) - 1)
 userPheno$R <- as.factor(userPheno$rowNumber)
 userPheno$C <- as.factor(userPheno$colNumber)
 
