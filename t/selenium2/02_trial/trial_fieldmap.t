@@ -1367,7 +1367,7 @@ $t->while_logged_in_as("curator", sub {
 	find_sec_x_val_ok('ty3', 3, undef, 'top');
 
 	# Change dimensions allowing plots to move to new locations
-	set_dimensions(4, undef, undef, 0);
+	set_dimensions(4, 7, undef, 0);
 	find_plot_label_ok('301', 4, 3);
 	find_plot_label_ok('307', 3, 4);
 	find_north_arrow_ok(90);
@@ -1377,7 +1377,7 @@ $t->while_logged_in_as("curator", sub {
 	find_plot_label_ok('301', 4, 3);
 	find_plot_label_ok('307', 3, 4);
 	# Set dimensions to expected values for rest of tests
-	set_dimensions(4, undef, undef, 1);
+	set_dimensions(4, 7, undef, 1);
 
 	# =========================================================================
 	# Spatial Layout CSV Export Customization
