@@ -1354,12 +1354,26 @@ $t->while_logged_in_as("curator", sub {
 	ok(!scalar(@{$t->driver->find_elements('//div[contains(@class,"show")]//h4[contains(text(),"Change Layout Dimensions")]', 'xpath')}), 'Change Layout Dimensions modal is closed');
 
 	# Test invalid dimensions error handling (rows * cols < total plots)
+	my $keep_locations_xpath = '//label[contains(text(),"Keep original locations of plots")]/input';
 	$t->click_ok('//button[@title="Change Dimensions"]', 'xpath', 'Click Change Dimensions button to test invalid dimensions');
 	$t->send_keys_ok('//label[contains(text(),"Columns")]/following-sibling::input', 'xpath', '2', 'Set Columns input to 2 (invalid)', clear => 1);
 	$t->send_keys_ok('//label[contains(text(),"Rows")]/following-sibling::input', 'xpath', '2', 'Set Rows input to 2 (invalid)', clear => 1);
+	my $keep_locations_elem = $t->driver->find_element($keep_locations_xpath, 'xpath');
+	$t->click_ok($keep_locations_xpath, 'xpath', 'Uncheck Keep Plot Locations') if $keep_locations_elem->is_selected();
 	$t->click_ok('//div[contains(@class,"show")]//button[contains(text(),"Apply")]', 'xpath', 'Click Apply button with invalid dimensions');
 	my $invalid_dim_alert = $t->get_alert_text();
 	is($invalid_dim_alert, "Those are not valid dimensions.\nPlease select dimensions that can accommodate your current plots.", 'Verify alert text for invalid dimensions');
+	$t->accept_alert_ok('Accept invalid dimensions alert');
+
+	# Test invalid dimensions when keeping plot locations and trying to reduce dimensions
+	$t->click_ok('//button[@title="Change Dimensions"]', 'xpath', 'Click Change Dimensions button to test invalid reduction');
+	$t->send_keys_ok('//label[contains(text(),"Columns")]/following-sibling::input', 'xpath', '2', 'Set Columns input to 2 (invalid)', clear => 1);
+	$t->send_keys_ok('//label[contains(text(),"Rows")]/following-sibling::input', 'xpath', '2', 'Set Rows input to 2 (invalid)', clear => 1);
+	my $keep_locations_elem = $t->driver->find_element($keep_locations_xpath, 'xpath');
+	$t->click_ok($keep_locations_xpath, 'xpath', 'Check Keep Plot Locations') unless $keep_locations_elem->is_selected();
+	$t->click_ok('//div[contains(@class,"show")]//button[contains(text(),"Apply")]', 'xpath', 'Click Apply button with invalid dimensions');
+	my $invalid_dim_alert = $t->get_alert_text();
+	is($invalid_dim_alert, "You cannot reduce dimensions if you want to keep plot locations.\nPlease select dimensions that can accommodate your current plots.", 'Verify alert text for invalid dimension reduction');
 	$t->accept_alert_ok('Accept invalid dimensions alert');
 
 	# Verify grid layout was unchanged by the invalid dimensions attempt
