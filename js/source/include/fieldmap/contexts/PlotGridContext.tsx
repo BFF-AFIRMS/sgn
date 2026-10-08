@@ -403,6 +403,10 @@ export const PlotGridProvider: React.FC<FieldMapContextProps> = ({ trialId, auth
         const cols = parseInt(colsInput) || 0;
         const numRealPlots = plotList.length;
 
+        if (keepPlotLocations && (rows < dimensions.rows || cols < dimensions.cols)){
+            alert('You cannot reduce dimensions if you want to keep plot locations.\nPlease select dimensions that can accommodate your current plots.');
+            return;
+        }
         if (cols * rows < numRealPlots) {
             alert('Those are not valid dimensions.\nPlease select dimensions that can accommodate your current plots.');
             return;
@@ -427,7 +431,9 @@ export const PlotGridProvider: React.FC<FieldMapContextProps> = ({ trialId, auth
         }
 
         setDimensions({ rows, cols });
-        recalculateLayout(plotLayout, keepPlotLocations, rows, cols);
+        if (!keepPlotLocations){
+            recalculateLayout(plotLayout, keepPlotLocations, rows, cols);
+        }
     }, [trialId, plotList]);
 
     const transformedSecondaryAxis = useMemo(() => {
