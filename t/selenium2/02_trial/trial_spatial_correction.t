@@ -14,6 +14,7 @@ $t->while_logged_in_as('curator', sub {
 
     my $trial_name = 'Spatial.Correction.Trial';
     my $analysis_name = 'Spatial Correction Analysis';
+    my $analysis_negative_name = 'Spatial Correction Analysis Negative';
     my $model_name = 'Spatial Correction Model';
     my $trial_filename = $f->config->{basepath} . '/t/data/trial/spatial_correction_trial.xlsx';
     my $phenotypes_filename = $f->config->{basepath} . '/t/data/trial/spatial_correction_phenotypes.xlsx';
@@ -78,6 +79,18 @@ $t->while_logged_in_as('curator', sub {
     my $observed_analysis_name = $t->get_attribute("trial_name", "id", "innerHTML", "get analysis name");
     like($observed_analysis_name, qr/$analysis_name/, "confirm analysis name is $analysis_name");
 
+    # Confirm expected values
+    $t->click_ok('trial_raw_data_onswitch', 'id', 'Open Analysis Results');
+    $t->click_ok('raw_data_trait_select_button', 'id', 'Click submit to get values');
+    $t->click_ok('//table[@aria-describedby="raw_trait_data_table_info"]/thead/tr[1]/th[2]', 'xpath', 'Sort table by observation unit name');
+
+    my $row_1 = $t->get_attribute_ok('//table[@id="raw_trait_data_table"]/tbody/tr[1]', 'xpath', 'innerHTML', 'Get first row of analysis results');
+    like($row_1, qr/Spatial Correction Analysis_Spatial.Correction.Test-rep1-test_accession1_2/i, "First row has expected plot name");
+    like($row_1, qr/<td>0, /i, "First row has expected trait value 0");
+    my $row_2 = $t->get_attribute_ok('//table[@id="raw_trait_data_table"]/tbody/tr[2]', 'xpath', 'innerHTML', 'Get second row of analysis results');
+    like($row_2, qr/Spatial Correction Analysis_Spatial.Correction.Test-rep1-test_accession2_1/i, "Second row has expected plot name");
+    like($row_2, qr/34.37280902/i, "Second row has expected trait value 34.37280902");
+
     # Open model page
     my $model_id = $schema->resultset('NaturalDiversity::NdProtocol')->find({ name => $model_name })->nd_protocol_id();
     $t->get_ok("/analyses_model/$model_id", 'Navigate to model page');
@@ -85,6 +98,70 @@ $t->while_logged_in_as('curator', sub {
     my $observed_model_name = $t->get_attribute("model_name", "id", "innerHTML", "get model name");
     like($observed_model_name, qr/$model_name/, "confirm model name is $model_name");
 
+    # =========================================================================
+    # Spatial Correction with Negative Row and Column Numbers
+    # =========================================================================
+    $t->get_ok("/breeders/trial/$trial_id", 'Navigate to trial page');
+    $t->wait_for_network_idle();
+    $t->click_ok('pheno_heatmap_onswitch', 'id', 'Open fieldmap section');
+    $t->wait_for_working_dialog();
+
+    # Upload spatial layout with negative rows and column numbers
+    my $spatial_layout_path = $f->config->{basepath} . '/t/data/trial/spatial_correction_trial_negative_layout.csv';
+    $t->driver()->upload_file($spatial_layout_path);
+    $t->click_ok('heatmap_upload_trial_coords_link', 'id', 'Click Upload Spatial Layout');
+    $t->send_keys_ok('trial_coordinates_uploaded_file', 'id', $spatial_layout_path, 'Select Spatial Layout File Path');
+    $t->click_ok("upload_trial_coords_ok_button", "id", "Submit Spatial Layout Upload ");
+    $t->click_ok("trial_coord_upload_success_dialog_message_cancel", "id", "Close Success Message");
+    $t->wait_for_network_idle();
+
+    # Refresh page
+    $t->get_ok("/breeders/trial/$trial_id", 'Navigate to trial page');
+    $t->click_ok('pheno_heatmap_onswitch', 'id', 'Open fieldmap section');
+    $t->wait_for_working_dialog();
+
+    # Run Spatial Correction
+    $t->click_ok('calculate_spatial_correction', 'id', 'click Calculate Spatial Correction');
+    $t->click_ok('confirm_calculating_spatial_correction', 'id', 'click Confirm');
+    $t->click_ok('check_quality_prepare_button', 'id', 'click Accept and continue');
+    $t->click_ok('correct_spatial', 'id', 'click Run Spatial Correction');
+    $t->click_ok('confirm_store_spatial_correction', 'id', 'click Store Spatial Correction');
+    $t->accept_alert_ok('Accept alert that spatial correction was already run');
+
+    # Save Spatial Correction as Stored Analysis
+    $t->click_ok('store_analysis_intro_button', 'id', 'click Go to Next Step');
+    $t->click_ok('//select[@id="generic_save_analysis_analysis_to_save"]/option[@value="yes"]', 'xpath', 'select Yes to save analysis results');
+    $t->send_keys_ok('generic_save_analysis_analysis_name', 'id', $analysis_negative_name, 'enter Analysis Name');
+    $t->send_keys_ok('generic_save_analysis_analysis_description', 'id', $analysis_negative_name, 'enter Analysis Description');
+    $t->click_ok('generic_save_analysis_next', 'id', 'click Go to Next Step');
+
+    $t->click_ok("//select[\@id='save_new_analysis_model_id']/option[\@title='$model_name']", 'xpath', 'Select Model to Use');
+    $t->click_ok('generic_save_analysis_submit_button', 'id', 'Click Save Analysis Results And/Or Model');
+
+    # Verify alert appears that the analysis/model has been saved
+    $t->wait_for_alert_appear();
+    my $analysis_saved_alert = $t->get_alert_text();
+    is($analysis_saved_alert, 'Analysis and/or model saved!', 'Verify alert text that analysis/model saved');
+    $t->accept_alert_ok('Accept analysis/model saved alert');
+
+    # Open analysis page
+    my $analysis_id = $schema->resultset('Project::Project')->find({ name => $analysis_negative_name })->project_id();
+    $t->get_ok("/analyses/$analysis_id", 'Navigate to negative analysis page');
+    $t->wait_for_network_idle();
+    my $observed_analysis_name = $t->get_attribute("trial_name", "id", "innerHTML", "get analysis name");
+    like($observed_analysis_name, qr/$analysis_name/, "confirm analysis name is $analysis_negative_name");
+
+    # Confirm expected values
+    $t->click_ok('trial_raw_data_onswitch', 'id', 'Open Analysis Results');
+    $t->click_ok('raw_data_trait_select_button', 'id', 'Click submit to get values');
+    $t->click_ok('//table[@aria-describedby="raw_trait_data_table_info"]/thead/tr[1]/th[2]', 'xpath', 'Sort table by observation unit name');
+
+    my $row_1 = $t->get_attribute_ok('//table[@id="raw_trait_data_table"]/tbody/tr[1]', 'xpath', 'innerHTML', 'Get first row of analysis results');
+    like($row_1, qr/Spatial Correction Analysis Negative_Spatial.Correction.Test-rep1-test_accession1_2/i, "First row has expected plot name");
+    like($row_1, qr/<td>0, /i, "First row has expected trait value 0");
+    my $row_2 = $t->get_attribute_ok('//table[@id="raw_trait_data_table"]/tbody/tr[2]', 'xpath', 'innerHTML', 'Get second row of analysis results');
+    like($row_2, qr/Spatial Correction Analysis Negative_Spatial.Correction.Test-rep1-test_accession2_1/i, "Second row has expected plot name");
+    like($row_2, qr/34.37280902/i, "Second row has expected trait value 34.37280902");
 });
 
 $t->driver->quit();

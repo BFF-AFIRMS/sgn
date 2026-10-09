@@ -444,14 +444,14 @@ sub _validate_with_plugin {
     if ($rep_number && !($rep_number =~ /^\d+?$/)){
       push @error_messages, "Row $row_name: rep_number <b>$rep_number</b> must be a positive integer.";
     }
-    if ($range_number && !($range_number =~ /^\d+?$/)){
-      push @error_messages, "Row $row_name: range_number <b>$range_number</b> must be a positive integer.";
+    if ($range_number && !($range_number =~ /^-?\d+?$/)){
+      push @error_messages, "Row $row_name: range_number <b>$range_number</b> must be an integer.";
     }
-    if ($row_number && !($row_number =~ /^\d+?$/)){
-      push @error_messages, "Row $row_name: row_number <b>$row_number</b> must be a positive integer.";
+    if ($row_number && !($row_number =~ /^-?\d+?$/)){
+      push @error_messages, "Row $row_name: row_number <b>$row_number</b> must be an integer.";
     }
-    if ($col_number && !($col_number =~ /^\d+?$/)){
-      push @error_messages, "Row $row_name: col_number <b>$col_number</b> must be a positive integer.";
+    if ($col_number && !($col_number =~ /^-?\d+?$/)){
+      push @error_messages, "Row $row_name: col_number <b>$col_number</b> must be an integer.";
     }
 
     ## SEEDLOT CHECKS
