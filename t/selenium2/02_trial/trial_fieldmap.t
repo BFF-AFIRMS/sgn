@@ -4,6 +4,7 @@ use warnings;
 
 use Test::More;
 
+use Try::Tiny;
 use File::Copy;
 use JSON;
 use SGN::Model::Cvterm;
@@ -552,8 +553,14 @@ sub test_download_heatmap_image_ok {
 				if (-s $candidate > 0) {
 					$found_file = $candidate;
 					return 1;
+				} else {
+					warn "Found heatmap PNG file '$candidate' but it is empty";
 				}
+			} else {
+				warn "No heatmap PNG files found in download directory '$download_dir'";
 			}
+		} else {
+			warn "Could not open download directory '$download_dir': $!";
 		}
 		return 0;
 	} timeout => 15, interval => 0.5), "Verify heatmap PNG file was downloaded to disk for '$expected_label'");
@@ -1897,7 +1904,13 @@ EOSQL
 	$t->click_ok('upload_images_link', 'id', 'Click Add New Image button to open upload modal');
 
 	# Upload and verify image file
-	my $upload_path = eval { $t->driver->upload_file($temp_image) } || $temp_image;
+	my $upload_path;
+	try {
+		$upload_path = $t->driver->upload_file($temp_image);
+	} catch {
+		die "Failed to upload $temp_image: $_";
+	};
+
 	$t->send_keys_ok('upload_images_file_input', 'id', $upload_path, 'Input image filename');
 	$t->driver->execute_script(q{
 		document.getElementById('upload_images_file_input').dispatchEvent(new Event('input', { bubbles: true }));
