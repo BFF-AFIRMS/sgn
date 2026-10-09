@@ -21,7 +21,7 @@ export const DimensionsModal: React.FC<DimensionsModalProps> = ({}) => {
     const [dimRowsInput, setDimRowsInput] = useState('');
     const [dimColsInput, setDimColsInput] = useState('');
     const [fillerAccessionInput, setFillerAccessionInput] = useState('');
-    const [keepPlotLocations, setKeepPlotLocations] = useState(true);
+    const [preserveGaps, setPreserveGaps] = useState(true);
 
     useEffect(() => {
         setDimRowsInput((dimensions?.rows || bounds.numRows || '').toString());
@@ -29,7 +29,7 @@ export const DimensionsModal: React.FC<DimensionsModalProps> = ({}) => {
     }, [dimensions, bounds, show]);
 
     const handleApplyDimensions = async () => {
-        await applyDimensions(dimRowsInput, dimColsInput, keepPlotLocations, fillerAccessionInput);
+        await applyDimensions(dimRowsInput, dimColsInput, preserveGaps, fillerAccessionInput);
         setShow(false);
     };
 
@@ -58,8 +58,8 @@ export const DimensionsModal: React.FC<DimensionsModalProps> = ({}) => {
                         </div>
                         <div className="form-check tw:flex tw:items-center">
                             <label className="form-check-label">
-                                <input type="checkbox" className="form-check-input tw:mr-2!" checked={keepPlotLocations} onChange={e => setKeepPlotLocations(e.target.checked)} />
-                                Keep original locations of plots
+                                <input type="checkbox" className="form-check-input tw:mr-2!" checked={preserveGaps} onChange={e => setPreserveGaps(e.target.checked)} />
+                                Preserve gaps between plots
                             </label>
                         </div>       
                     </div>

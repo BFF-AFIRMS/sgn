@@ -29,11 +29,11 @@ export interface PlotGridContextType {
     gridMatrix: Plot[][];
 
     fetchObservationUnits: () => Promise<void>;
-    recalculateLayout: (layout: 'serpentine' | 'zigzag', keepPlotLocations: boolean) => void;
+    recalculateLayout: (layout: 'serpentine' | 'zigzag', preserveGaps: boolean) => void;
     mutatePlot: (plotId: string | Plot, updatedFields: Partial<Plot>) => void;
 
     dimensions: { rows: number; cols: number };
-    applyDimensions: (rowsInput: string, colsInput: string, keepPlotLocations: boolean, fillerAccessionInput?: string) => Promise<void>;
+    applyDimensions: (rowsInput: string, colsInput: string, preserveGaps: boolean, fillerAccessionInput?: string) => Promise<void>;
 
     fillerAccessionId: string | undefined;
     setFillerAccessionId: React.Dispatch<React.SetStateAction<string | undefined>>;
@@ -213,7 +213,7 @@ export const PlotGridProvider: React.FC<FieldMapContextProps> = ({ trialId, auth
         return matrix;
     }, [bounds, renderBounds, plotList, fillerAccessionId]);
 
-    const recalculateLayout = useCallback((layout: 'serpentine' | 'zigzag', keepPlotLocations: boolean, rows?: number, cols?: number) => {
+    const recalculateLayout = useCallback((layout: 'serpentine' | 'zigzag', preserveGaps: boolean, rows?: number, cols?: number) => {
         setPlotObject(currentPlots => {
             rows = rows ?? dimensions.rows ?? bounds.numRows;
             cols = cols ?? dimensions.cols ?? bounds.numCols;
@@ -259,7 +259,7 @@ export const PlotGridProvider: React.FC<FieldMapContextProps> = ({ trialId, auth
                         const plot = sortedPlots[plotIdx];
                         const currentCol = swap_columns ? (minC + cols - 1 - c) : (minC + c);
 
-                        if (keepPlotLocations && (!plotsByRowCol.has(currentRow) || !plotsByRowCol.get(currentRow).has(currentCol))){
+                        if (preserveGaps && (!plotsByRowCol.has(currentRow) || !plotsByRowCol.get(currentRow).has(currentCol))){
                             continue;
                         }
                         newPlotObject[plot.observationUnitDbId!] = {
@@ -398,12 +398,12 @@ export const PlotGridProvider: React.FC<FieldMapContextProps> = ({ trialId, auth
         });
     }, []);
 
-    const applyDimensions = useCallback(async (rowsInput: string, colsInput: string, keepPlotLocations: boolean, fillerAccessionInput?: string) => {
+    const applyDimensions = useCallback(async (rowsInput: string, colsInput: string, preserveGaps: boolean, fillerAccessionInput?: string) => {
         const rows = parseInt(rowsInput) || 0;
         const cols = parseInt(colsInput) || 0;
         const numRealPlots = plotList.length;
 
-        if (keepPlotLocations && (rows < dimensions.rows || cols < dimensions.cols)){
+        if (preserveGaps && (rows < dimensions.rows || cols < dimensions.cols)){
             alert('You cannot reduce dimensions if you want to keep plot locations.\nPlease select dimensions that can accommodate your current plots.');
             return;
         }
@@ -431,8 +431,8 @@ export const PlotGridProvider: React.FC<FieldMapContextProps> = ({ trialId, auth
         }
 
         setDimensions({ rows, cols });
-        if (!keepPlotLocations){
-            recalculateLayout(plotLayout, keepPlotLocations, rows, cols);
+        if (!preserveGaps){
+            recalculateLayout(plotLayout, preserveGaps, rows, cols);
         }
     }, [trialId, plotList]);
 

@@ -246,7 +246,7 @@ sub find_sec_y_val_ok {
 
 # Open the Change Dimensions modal and apply new column and row dimensions
 sub set_dimensions {
-	my ($columns, $rows, $filler_accession, $keep_plot_locations) = @_;
+	my ($columns, $rows, $filler_accession, $preserve_gaps) = @_;
 	$t->click_ok('//button[@title="Change Dimensions"]', 'xpath', 'Click Change Dimensions button');
 	if (defined $columns) {
 		$t->send_keys_ok('//label[contains(text(),"Columns")]/following-sibling::input', 'xpath', $columns, "Set Columns input to $columns", clear => 1);
@@ -257,14 +257,14 @@ sub set_dimensions {
 	if (defined $filler_accession) {
 		$t->send_keys_ok('//div[contains(@class,"show")]//label[contains(text(),"Filler Accession")]/following-sibling::div//input', 'xpath', $filler_accession, "Set Filler Accession input to $filler_accession", clear => 1);
 	}
-	if (defined $keep_plot_locations){
-		my $keep_locations_xpath = '//label[contains(text(),"Keep original locations of plots")]/input';
-		my $keep_locations_selected = $t->find_element($keep_locations_xpath, 'xpath', 'Find keep locations checkbox')->is_selected();
-		if ($keep_plot_locations && !$keep_locations_selected) {
-			$t->click_ok($keep_locations_xpath, 'xpath', 'Check Keep original locations of plots');
+	if (defined $preserve_gaps){
+		my $preserve_gaps_xpath = '//label[contains(text(),"Preserve gaps between plots")]/input';
+		my $preserve_gaps_selected = $t->find_element($preserve_gaps_xpath, 'xpath', 'Find preserve gaps checkbox')->is_selected();
+		if ($preserve_gaps && !$preserve_gaps_selected) {
+			$t->click_ok($preserve_gaps_xpath, 'xpath', 'Check Preserve gaps between plots');
 		}
-		elsif (!$keep_plot_locations && $keep_locations_selected){
-			$t->click_ok($keep_locations_xpath, 'xpath', 'Uncheck Keep original locations of plots');
+		elsif (!$preserve_gaps && $preserve_gaps_selected){
+			$t->click_ok($preserve_gaps_xpath, 'xpath', 'Uncheck Preserve gaps between plots');
 		}
 	}
 	$t->click_ok('//div[contains(@class,"show")]//button[contains(text(),"Apply")]', 'xpath', 'Click Apply button');
@@ -1354,12 +1354,12 @@ $t->while_logged_in_as("curator", sub {
 	ok(!scalar(@{$t->driver->find_elements('//div[contains(@class,"show")]//h4[contains(text(),"Change Layout Dimensions")]', 'xpath')}), 'Change Layout Dimensions modal is closed');
 
 	# Test invalid dimensions error handling (rows * cols < total plots)
-	my $keep_locations_xpath = '//label[contains(text(),"Keep original locations of plots")]/input';
+	my $preserve_gaps_xpath = '//label[contains(text(),"Preserve gaps between plots")]/input';
 	$t->click_ok('//button[@title="Change Dimensions"]', 'xpath', 'Click Change Dimensions button to test invalid dimensions');
 	$t->send_keys_ok('//label[contains(text(),"Columns")]/following-sibling::input', 'xpath', '2', 'Set Columns input to 2 (invalid)', clear => 1);
 	$t->send_keys_ok('//label[contains(text(),"Rows")]/following-sibling::input', 'xpath', '2', 'Set Rows input to 2 (invalid)', clear => 1);
-	my $keep_locations_elem = $t->driver->find_element($keep_locations_xpath, 'xpath');
-	$t->click_ok($keep_locations_xpath, 'xpath', 'Uncheck Keep Plot Locations') if $keep_locations_elem->is_selected();
+	my $preserve_gaps_elem = $t->driver->find_element($preserve_gaps_xpath, 'xpath');
+	$t->click_ok($preserve_gaps_xpath, 'xpath', 'Uncheck Preserve Gaps') if $preserve_gaps_elem->is_selected();
 	$t->click_ok('//div[contains(@class,"show")]//button[contains(text(),"Apply")]', 'xpath', 'Click Apply button with invalid dimensions');
 	my $invalid_dim_alert = $t->get_alert_text();
 	is($invalid_dim_alert, "Those are not valid dimensions.\nPlease select dimensions that can accommodate your current plots.", 'Verify alert text for invalid dimensions');
@@ -1369,11 +1369,11 @@ $t->while_logged_in_as("curator", sub {
 	$t->click_ok('//button[@title="Change Dimensions"]', 'xpath', 'Click Change Dimensions button to test invalid reduction');
 	$t->send_keys_ok('//label[contains(text(),"Columns")]/following-sibling::input', 'xpath', '2', 'Set Columns input to 2 (invalid)', clear => 1);
 	$t->send_keys_ok('//label[contains(text(),"Rows")]/following-sibling::input', 'xpath', '2', 'Set Rows input to 2 (invalid)', clear => 1);
-	my $keep_locations_elem = $t->driver->find_element($keep_locations_xpath, 'xpath');
-	$t->click_ok($keep_locations_xpath, 'xpath', 'Check Keep Plot Locations') unless $keep_locations_elem->is_selected();
+	my $preserve_gaps_elem = $t->driver->find_element($preserve_gaps_xpath, 'xpath');
+	$t->click_ok($preserve_gaps_xpath, 'xpath', 'Check Preserve Gaps') unless $preserve_gaps_elem->is_selected();
 	$t->click_ok('//div[contains(@class,"show")]//button[contains(text(),"Apply")]', 'xpath', 'Click Apply button with invalid dimensions');
 	my $invalid_dim_alert = $t->get_alert_text();
-	is($invalid_dim_alert, "You cannot reduce dimensions if you want to keep plot locations.\nPlease select dimensions that can accommodate your current plots.", 'Verify alert text for invalid dimension reduction');
+	is($invalid_dim_alert, "You cannot reduce dimensions if you want to preserve gaps.\nPlease select dimensions that can accommodate your current plots.", 'Verify alert text for invalid dimension reduction');
 	$t->accept_alert_ok('Accept invalid dimensions alert');
 
 	# Verify grid layout was unchanged by the invalid dimensions attempt
