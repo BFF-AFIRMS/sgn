@@ -4,6 +4,7 @@ use warnings;
 
 use Test::More;
 
+use Try::Tiny;
 use File::Copy;
 use JSON;
 use SGN::Model::Cvterm;
@@ -1907,7 +1908,8 @@ EOSQL
 		$upload_path = $t->driver->upload_file($temp_image);
 	} catch {
 		die "Failed to upload $temp_image: $_";
-	}
+	};
+
 	$t->send_keys_ok('upload_images_file_input', 'id', $upload_path, 'Input image filename');
 	$t->driver->execute_script(q{
 		document.getElementById('upload_images_file_input').dispatchEvent(new Event('input', { bubbles: true }));
