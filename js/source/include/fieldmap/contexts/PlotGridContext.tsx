@@ -404,7 +404,7 @@ export const PlotGridProvider: React.FC<FieldMapContextProps> = ({ trialId, auth
         const numRealPlots = plotList.length;
 
         if (preserveGaps && (rows < dimensions.rows || cols < dimensions.cols)){
-            alert('You cannot reduce dimensions if you want to keep plot locations.\nPlease select dimensions that can accommodate your current plots.');
+            alert('You cannot reduce dimensions if you want to preserve gaps.\nPlease select dimensions that can accommodate your current plots.');
             return;
         }
         if (cols * rows < numRealPlots) {
