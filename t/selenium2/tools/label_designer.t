@@ -96,6 +96,7 @@ $t->while_logged_in_as("submitter", sub {
         "select a text font size to '6'")->click();
 
     $t->find_element_ok("d3-add", "id", "add QRcode")->click();
+    $t->wait_for_working_dialog();
 
     $t->find_element_ok("element1", "id", "click on new QRcode element")->click();
 
@@ -154,6 +155,7 @@ $t->while_logged_in_as("submitter", sub {
 
     $t->driver->find_element("//button[\@title='Select a data source for the labels']")->click();
     $t->driver->find_element("//li[\@data-original-index='5']")->click();
+    $t->wait_for_working_dialog();
 
     $t->find_element_ok("label_designer_data_level","id", "select a data level")->click();
     $t->find_element_ok(
