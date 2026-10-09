@@ -4,7 +4,7 @@
   (global.GraphicalFilter = factory());
 }(this, (function () { 'use strict';
 
-const MISSING_DATA_SYMBOL = 'N/A';
+const MISSING_DATA_SYMBOL = 'NA';
 
 function GraphicalFilter(brapi_node,trait_accessor,table_col_accessor,table_col_order,group_key_accessor){
   "use strict";
