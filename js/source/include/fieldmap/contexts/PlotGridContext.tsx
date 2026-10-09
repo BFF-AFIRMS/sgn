@@ -63,6 +63,8 @@ export const PlotGridProvider: React.FC<FieldMapContextProps> = ({ trialId, auth
         leftBorder, setLeftBorder,
         rightBorder, setRightBorder,
         plotLayout,
+        invertCols,
+        invertRows,
         setInvertCols,
         setInvertRows,
         setPlotLayout,
@@ -133,10 +135,10 @@ export const PlotGridProvider: React.FC<FieldMapContextProps> = ({ trialId, auth
      */
     const renderBounds = useMemo(() => {
         const { minCol, maxCol, minRow, maxRow } = bounds;
-        const rMinCol = leftBorder ? minCol - 1 : minCol;
-        const rMaxCol = rightBorder ? maxCol + 1 : maxCol;
-        const rMinRow = bottomBorder ? minRow - 1 : minRow;
-        const rMaxRow = topBorder ? maxRow + 1 : maxRow;
+        const rMinCol = ((leftBorder && !invertCols) || (rightBorder && invertCols)) ? minCol - 1 : minCol;
+        const rMaxCol = ((rightBorder && !invertCols) || (leftBorder && invertCols)) ? maxCol + 1 : maxCol;
+        const rMinRow = ((bottomBorder && !invertRows) || (topBorder && invertRows)) ? minRow - 1 : minRow;
+        const rMaxRow = ((topBorder && !invertRows) || (bottomBorder && invertRows)) ? maxRow + 1 : maxRow;
 
         return {
             minCol: rMinCol,
@@ -146,7 +148,7 @@ export const PlotGridProvider: React.FC<FieldMapContextProps> = ({ trialId, auth
             numRows: rMaxRow - rMinRow + 1,
             numCols: rMaxCol - rMinCol + 1
         };
-    }, [bounds, topBorder, bottomBorder, leftBorder, rightBorder]);
+    }, [bounds, topBorder, bottomBorder, leftBorder, rightBorder, invertCols, invertRows]);
 
     const svgDimensions = useMemo(() => {
         const extraWidth = hasSecondaryAxis ? 140 : 50;

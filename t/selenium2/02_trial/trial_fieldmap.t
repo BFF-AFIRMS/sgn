@@ -1330,13 +1330,13 @@ $t->while_logged_in_as("curator", sub {
 
 	# Toggle top, left, and bottom border layers
 	$t->click_ok('//label[contains(text(),"Top")]/input', 'xpath', 'Click Top checkbox');
-	find_plot_cell_ok(3, 3, $border_fill);
+	find_plot_cell_ok(1, 0, $border_fill);
 
 	$t->click_ok('//label[contains(text(),"Left")]/input', 'xpath', 'Click Left checkbox');
 	find_plot_cell_ok(0, 1, $border_fill);
 
 	$t->click_ok('//label[contains(text(),"Bottom")]/input', 'xpath', 'Click Bottom checkbox');
-	find_plot_cell_ok(2, 0, $border_fill);
+	find_plot_cell_ok(1, 4, $border_fill);
 	$t->click_ok('//label[contains(text(),"Bottom")]/input', 'xpath', 'Click Bottom checkbox');
 
 	$t->click_ok('//button[@title="Rotate"]', 'xpath', 'Click Rotate button');
@@ -1382,14 +1382,14 @@ $t->while_logged_in_as("curator", sub {
 
 	# Change dimensions allowing plots to move to new locations
 	set_dimensions(4, 7, undef, 0);
-	find_plot_label_ok('301', 4, 3);
-	find_plot_label_ok('307', 3, 4);
+	find_plot_label_ok('301', 4, 4);
+	find_plot_label_ok('307', 3, 5);
 	find_north_arrow_ok(90);
 
 	# Test changing dimensions, keeping plots in original locations
 	set_dimensions(6, 10, undef, 1);
-	find_plot_label_ok('301', 4, 3);
-	find_plot_label_ok('307', 3, 4);
+	find_plot_label_ok('301', 4, 4);
+	find_plot_label_ok('307', 3, 5);
 	# Set dimensions to expected values for rest of tests
 	set_dimensions(4, 7, undef, 1);
 
@@ -1419,7 +1419,7 @@ $t->while_logged_in_as("curator", sub {
 	# =========================================================================
 	# Plot Details Modal & Accession Replacement (Curator Override)
 	# =========================================================================
-	click_plot_cell_ok(3, 2);
+	click_plot_cell_ok(3, 3);
 	$t->find_element_ok('//div[contains(@class,"show")]//h4[contains(@class,"modal-title") and contains(.,"CASS_6Genotypes_206")]', 'xpath', 'Verify initial plot name CASS_6Genotypes_206 in modal header');
 	$t->find_element_ok('//div[contains(@class,"show")]//tr[td[contains(text(),"Accession")]]/td[2][contains(text(),"IITA-TMS-IBA30572")]', 'xpath', 'Verify accession name IITA-TMS-IBA30572 is displayed in the details modal');
 	$t->find_element_ok('//tr[td[contains(text(),"Plot Number")]]/td[2][contains(text(),"206")]', 'xpath', 'Verify plot number 206 is displayed in the details modal');
@@ -1435,7 +1435,7 @@ $t->while_logged_in_as("curator", sub {
 
 	# Verify updated accession in plot details
 	$t->wait_for_network_idle();
-	click_plot_cell_ok(3, 2);
+	click_plot_cell_ok(3, 3);
 	$t->find_element_ok('//div[contains(@class,"show")]//tr[td[contains(text(),"Accession")]]/td[2][contains(text(),"XG120015")]', 'xpath', 'Verify accession name XG120015 is displayed in the details modal');
 	$t->find_element_ok('//div[contains(@class,"show")]//h4[contains(@class,"modal-title") and contains(.,"CASS_6Genotypes_206")]', 'xpath', 'Verify plot name remains CASS_6Genotypes_206 when new plot name is omitted');
 	$t->click_ok('//div[contains(@class,"show")]//button[contains(text(),"Close")]', 'xpath', 'Click Close button in details modal');
@@ -1443,7 +1443,7 @@ $t->while_logged_in_as("curator", sub {
 	# =========================================================================
 	# Custom Plot Renaming on Accession Change
 	# =========================================================================
-	click_plot_cell_ok(3, 2);
+	click_plot_cell_ok(3, 3);
 	$t->find_element_ok('//div[contains(@class,"show")]//h4[contains(@class,"modal-title") and contains(.,"CASS_6Genotypes_206")]', 'xpath', 'Verify plot name before custom renaming');
 	$t->click_ok('//div[contains(@class,"show")]//a[contains(text(),"Replace")]', 'xpath', 'Click Replace Accession tab for custom renaming');
 	$t->send_keys_ok('//div[contains(@class,"show")]//label[contains(normalize-space(),"Accession")]/following-sibling::div//input', 'xpath', 'IITA-TMS-IBA30572', 'Set New Accession Name input to IITA-TMS-IBA30572', clear => 1);
@@ -1454,7 +1454,7 @@ $t->while_logged_in_as("curator", sub {
 	$t->wait_for_network_idle();
 
 	# Verify updated plot name and accession in plot details
-	click_plot_cell_ok(3, 2);
+	click_plot_cell_ok(3, 3);
 	$t->find_element_ok('//div[contains(@class,"show")]//h4[contains(@class,"modal-title") and contains(.,"CASS_6Genotypes_206_renamed")]', 'xpath', 'Verify updated plot name CASS_6Genotypes_206_renamed in modal header');
 	$t->find_element_ok('//div[contains(@class,"show")]//tr[td[contains(text(),"Accession")]]/td[2][contains(text(),"IITA-TMS-IBA30572")]', 'xpath', 'Verify accession name IITA-TMS-IBA30572 in details modal');
 	$t->click_ok('//div[contains(@class,"show")]//button[contains(text(),"Close")]', 'xpath', 'Click Close button in details modal');
@@ -1462,7 +1462,7 @@ $t->while_logged_in_as("curator", sub {
 	# =========================================================================
 	# Accession Autocomplete Dropdown Interaction (Plot Details Modal)
 	# =========================================================================
-	click_plot_cell_ok(3, 2);
+	click_plot_cell_ok(3, 3);
 	$t->find_element_ok('//div[contains(@class,"show")]//h4[contains(@class,"modal-title") and contains(text(),"Plot Details")]', 'xpath', 'Plot details modal is open for autocomplete testing');
 	$t->click_ok('//div[contains(@class,"show")]//a[contains(text(),"Replace")]', 'xpath', 'Click Replace Accession tab for autocomplete test');
 
@@ -1559,7 +1559,7 @@ $t->while_logged_in_as("curator", sub {
 	my $orig_handle = $t->driver->get_current_window_handle();
 	my @handles_before = @{$t->driver->get_window_handles()};
 
-	double_click_plot_cell_ok(3, 2);
+	double_click_plot_cell_ok(3, 3);
 
 	# Wait past the 250ms single-click timer
 	sleep(1);
@@ -1593,19 +1593,19 @@ $t->while_logged_in_as("curator", sub {
 	}
 
 	# Verify normal single click still opens details modal afterwards
-	click_plot_cell_ok(3, 2);
+	click_plot_cell_ok(3, 3);
 	$t->find_element_ok('//div[contains(@class,"show")]//h4[contains(@class,"modal-title") and contains(.,"CASS_6Genotypes_206")]', 'xpath', 'Plot details modal opens on single click after double-click test');
 	$t->click_ok('//div[contains(@class,"show")]//button[contains(text(),"Close")]', 'xpath', 'Close plot details modal');
 
 	# =========================================================================
 	# Column Inversion, Layout Rotation, & North Arrow Tracking
 	# =========================================================================
-	$t->click_ok('//label[contains(text(),"Invert Columns")]/input', 'xpath', 'Click Invert Columns checkbox');
-	find_plot_label_ok('207', 1, 2);
-	find_north_arrow_ok(270);
 
+	$t->click_ok('//label[contains(text(),"Invert Columns")]/input', 'xpath', 'Click Invert Columns checkbox');
+	find_plot_label_ok('207', 1, 3);
+	find_north_arrow_ok(270);
 	$t->click_ok('//button[@title="Rotate"]', 'xpath', 'Click Rotate button');
-	find_plot_label_ok('207', 5, 0);
+	find_plot_label_ok('207', 5, 1);
 	find_north_arrow_ok(0);
 
 	# =========================================================================
@@ -1894,7 +1894,7 @@ EOSQL
 	$t->find_element_ok('//*[@id="' . $svg_id . '"]', 'xpath', 'Find fieldmap SVG');
 
 	# Click plot cell to open details modal
-	click_plot_cell_ok(3, 2);
+	click_plot_cell_ok(3, 3);
 	$t->find_element_ok('//div[contains(@class,"show")]//h4[contains(@class,"modal-title") and contains(text(),"Plot Details")]', 'xpath', 'Plot details modal is open');
 	$t->find_element_ok('//h5[contains(text(),"Plot Contents & Structure Hierarchy:")]', 'xpath', 'Verify Plot Contents & Structure Hierarchy heading');
 
