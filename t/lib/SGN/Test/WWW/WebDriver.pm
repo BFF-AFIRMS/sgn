@@ -64,6 +64,7 @@ use Selenium::Remote::Driver;
 use Selenium::Waiter qw(wait_until);
 use Selenium::Remote::WDKeys 'KEYS';
 use Selenium::Remote::Commands;
+use Selenium::Remote::Spec;
 use Time::HiRes qw(time);
 
 has 'host' => ( is => 'rw',
@@ -109,10 +110,12 @@ has 'js_logs' => (
     default => sub { [] },
 );
 
-$Selenium::Remote::Commands::COMMANDS{'uploadFile'} = {
-    method => 'POST',
-    url    => '/session/:sessionId/se/file',
+Selenium::Remote::Spec::get_spec();
+$Selenium::Remote::Spec::spec_parsed->{'uploadFile'} = {
+    method             => 'POST',
+    url                => '/session/:sessionId/se/file',
     no_content_success => 0,
+    description        => 'Upload File',
 };
 
 sub collect_js_logs {
