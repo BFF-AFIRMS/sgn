@@ -23,6 +23,7 @@ use Selenium::Firefox::Profile;
 # -----------------------------------------------------------------------------
 my $profile = Selenium::Firefox::Profile->new;
 $profile->set_preference( 'browser.download.folderList', 2 );
+$profile->set_preference( 'browser.download.dir', '/downloads' );
 $profile->set_preference( 'browser.helperApps.neverAsk.saveToDisk', 'application/csv,text/csv,image/png' );
 $profile->set_preference( 'dom.disable_open_during_load', \0 );
 
