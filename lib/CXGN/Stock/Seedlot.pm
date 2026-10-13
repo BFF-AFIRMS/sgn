@@ -697,14 +697,85 @@ sub verify_seedlot_plot_compatibility {
     my $seedlot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "seedlot", "stock_type")->cvterm_id();
     my $plot_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "plot_of", "stock_relationship")->cvterm_id();
     my $collection_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "collection_of", "stock_relationship")->cvterm_id();
+    my $offspring_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "offspring_of", "stock_relationship")->cvterm_id();
+
+    my $plot_info;
+    my $seedlot_to_plots;
+
     foreach (@pairs){
         my $seedlot_name = $_->[0];
         my $plot_name = $_->[1];
+        $plot_info->{$plot_name}->{"seedlot_name"} = $seedlot_name;
+        push @{$seedlot_to_plots->{$seedlot_name}}, $plot_name;
+    }
 
-        #The plot is linked to one accession via 'plot_of'. That accession is then linked to many seedlots via 'collection_of'. Here we can check if the provided seedlot is one of the seedlots linked to the plot's accession.
-        my $seedlot_rs = $schema->resultset("Stock::Stock")->search({'me.uniquename'=>$plot_name, 'me.type_id'=>$plot_cvterm_id})->search_related('stock_relationship_subjects', {'stock_relationship_subjects.type_id'=>$plot_of_cvterm_id})->search_related('object')->search_related('stock_relationship_subjects', {'stock_relationship_subjects_2.type_id'=>$collection_of_cvterm_id})->search_related('object', {'object_2.uniquename'=>$seedlot_name, 'object_2.type_id'=>$seedlot_cvterm_id});
-        if (!$seedlot_rs->first){
-            $error .= "The seedlot: $seedlot_name is not linked to the same accession as the plot: $plot_name . ";
+    # -------------------------------------------------------------------------
+    # Get parent material of plots (ex. accession, cross, family_name)
+    my $plot_parent_rs = $schema->resultset("Stock::Stock")
+        ->search({'me.uniquename'=> {-in => [keys %$plot_info]}, 'me.type_id'=>$plot_cvterm_id})
+        ->search_related(
+            'stock_relationship_subjects',
+            {'stock_relationship_subjects.type_id'=>$plot_of_cvterm_id},
+            {join => 'object', '+select' => ['object.uniquename', 'me.uniquename'], '+as' => ['parent_name', 'plot_name'] }
+        );
+    my $parent_to_plots;
+    while (my $record = $plot_parent_rs->next()){
+        my $parent_name = $record->get_column("parent_name");
+        my $plot_name = $record->get_column("plot_name");
+        $plot_info->{$plot_name}->{"plot_parent"} = $parent_name;
+        push @{$parent_to_plots->{$parent_name}}, $plot_name;
+    }
+
+    # -------------------------------------------------------------------------
+    # Get parent material of seedlots (ex. accession, cross, family_name)
+    my $seedlot_parent_rs = $schema->resultset("Stock::Stock")
+        ->search({'me.uniquename'=> {-in => [keys %$seedlot_to_plots]}, 'me.type_id'=>$seedlot_cvterm_id})
+        ->search_related(
+            'stock_relationship_objects',
+            {'stock_relationship_objects.type_id'=>$collection_of_cvterm_id},
+            {join => 'subject', '+select' => ['subject.uniquename', 'me.uniquename'], '+as' => ['parent_name', 'seedlot_name'] }
+        );
+    while (my $record = $seedlot_parent_rs->next()){
+        my $parent_name = $record->get_column("parent_name");
+        my $seedlot_name = $record->get_column("seedlot_name");
+        foreach my $plot_name (@{$seedlot_to_plots->{$seedlot_name}}){
+            $plot_info->{$plot_name}->{"seedlot_parent"} = $parent_name;
+        }
+    }
+
+    # -------------------------------------------------------------------------
+    # Get optional crosses of plot parents (where they are considered 'offspring_of')
+    # Handles the case in which a plot parent is an accession, but a seedlot
+    # parent is a cross, which has produced the plot accessions as offspring
+
+    my $offspring_rs = $schema->resultset("Stock::Stock")
+        ->search({'me.uniquename'=> {-in => [ keys %$parent_to_plots ]}})
+        ->search_related(
+            'stock_relationship_subjects',
+            {'stock_relationship_subjects.type_id'=>$offspring_of_cvterm_id},
+            {join => 'object', '+select' => ['object.uniquename', 'me.uniquename'], '+as' => ['cross_name', 'plot_parent_name'] }
+        );
+    while (my $record = $offspring_rs->next()){
+        my $cross_name = $record->get_column("cross_name");
+        my $plot_parent_name = $record->get_column("plot_parent_name");
+        foreach my $plot_name (@{$parent_to_plots->{$plot_parent_name}}){
+            $plot_info->{$plot_name}->{"plot_cross"} = $cross_name;
+        }
+    }
+
+    # -------------------------------------------------------------------------
+    # Final check if plot and seedlot parents are equal
+
+    foreach my $plot_name (keys %$plot_info){
+        my $plot_parent = $plot_info->{$plot_name}->{"plot_parent"};
+        my $seedlot_parent = $plot_info->{$plot_name}->{"seedlot_parent"};
+        my $seedlot_name = $plot_info->{$plot_name}->{"seedlot_name"};
+        my $plot_cross = $plot_info->{$plot_name}->{"plot_cross"} || '';
+
+        # Option 1: Simple match, parents are exactly the same
+        # Option 2: Seedlot parent is cross, plot parent is an offspring of that cross
+        if ( $plot_parent ne $seedlot_parent && $plot_cross ne $seedlot_parent){
+            $error .= "The seedlot: $seedlot_name is not linked to the same parent as the plot: $plot_name . ";
         }
     }
     if ($error){
@@ -833,14 +904,19 @@ sub verify_seedlot_accessions_crosses {
     }
 
     my %seen_accession_names;
+    my %seen_seedlot_names;
     foreach (@pairs){
+        $seen_seedlot_names{$_->[0]}++;
         $seen_accession_names{$_->[1]}++;
     }
+
+    # /home/production/cxgn/sgn/bin/upload_multiple_trial_design.pl
     my $accession_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'accession', 'stock_type')->cvterm_id();
     my $cross_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'cross', 'stock_type')->cvterm_id();
     my $synonym_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'stock_synonym', 'stock_property')->cvterm_id();
     my $seedlot_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "seedlot", "stock_type")->cvterm_id();
     my $collection_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "collection_of", "stock_relationship")->cvterm_id();
+    my $offspring_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "offspring_of", "stock_relationship")->cvterm_id();
 
     my @accessions = keys %seen_accession_names;
     my $acc_synonym_rs = $schema->resultset("Stock::Stock")->search({
@@ -852,6 +928,46 @@ sub verify_seedlot_accessions_crosses {
     my %acc_synonyms_lookup;
     while (my $r=$acc_synonym_rs->next){
         $acc_synonyms_lookup{$r->get_column('synonym')}->{$r->uniquename} = $r->stock_id;
+    }
+
+    # -------------------------------------------------------------------------
+    # Get parent material of seedlots (ex. accession, cross)
+
+    my $seedlot_parent_rs = $schema->resultset("Stock::Stock")
+        ->search({'me.uniquename'=> {-in => [ keys %seen_seedlot_names]}, 'me.type_id'=>$seedlot_cvterm_id})
+        ->search_related(
+            'stock_relationship_objects',
+            {'stock_relationship_objects.type_id'=>$collection_of_cvterm_id},
+            {join => 'subject', '+select' => ['subject.uniquename', 'me.uniquename'], '+as' => ['parent_name', 'seedlot_name'] }
+        );
+    my $seedlot_info;
+    my $parent_to_seedlots;
+    while (my $record = $seedlot_parent_rs->next()){
+        my $parent_name = $record->get_column("parent_name");
+        my $seedlot_name = $record->get_column("seedlot_name");
+        $seedlot_info->{$seedlot_name}->{"parent"} = $parent_name;
+        push @{$parent_to_seedlots->{$parent_name}}, $seedlot_name;
+    }
+
+    # -------------------------------------------------------------------------
+    # Get optional crosses of accessions (where they are considered 'offspring_of')
+    # Handles the case in which a seedlot parent is a cros which has produced the
+    # accessions as offspring.
+
+    my $offspring_rs = $schema->resultset("Stock::Stock")
+        ->search({'me.uniquename'=> {-in => [ keys %$parent_to_seedlots ]}})
+        ->search_related(
+            'stock_relationship_objects',
+            {'stock_relationship_objects.type_id'=>$offspring_of_cvterm_id},
+            {join => 'subject', '+select' => ['subject.uniquename', 'me.uniquename'], '+as' => ['offspring_name', 'cross_name'] }
+        );
+    while (my $record = $offspring_rs->next()){
+        my $cross_name = $record->get_column("cross_name");
+        my $offspring_name = $record->get_column("offspring_name");
+        my @seedlots = @{$parent_to_seedlots->{$cross_name}};
+        foreach my $seedlot_name (@seedlots){
+            push @{$seedlot_info->{$seedlot_name}->{"offspring"}}, $offspring_name;
+        }
     }
 
     foreach (@pairs){
@@ -866,8 +982,16 @@ sub verify_seedlot_accessions_crosses {
             $accession_name = $accession_names[0];
         }
 
-        my $seedlot_rs = $schema->resultset("Stock::Stock")->search({'me.uniquename'=>$seedlot_name, 'me.type_id'=>$seedlot_cvterm_id})->search_related('stock_relationship_objects', {'stock_relationship_objects.type_id'=>$collection_of_cvterm_id})->search_related('subject', {'subject.uniquename'=>$accession_name, 'subject.type_id'=>[$accession_cvterm_id, $cross_cvterm_id]});
-        if (!$seedlot_rs->first){
+        my $seedlot_parent = $seedlot_info->{$seedlot_name}->{"parent"};
+        my $cross_offspring = $seedlot_info->{$seedlot_name}->{"offspring"};
+        #print STDERR "accession_name: $accession_name, seedlot_name: $seedlot_name, cross_offspring: " . Dumper(@cross_offspring) . "\n";
+
+        # Option 1. Exact match between accession and seedlot parent
+        # Option 2. Accession is an offspring of the seedlot's parent cross
+        if (! (
+            $accession_name eq $seedlot_parent
+            ||(defined $cross_offspring && grep { $_ eq $accession_name } @$cross_offspring)
+        )){
             $error .= "The seedlot: $seedlot_name is not linked to the accession/cross_unique_id: $accession_name.";
         }
     }
