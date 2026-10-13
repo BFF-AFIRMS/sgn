@@ -435,7 +435,7 @@ sub accept_alert {
     my $options = $self->_extract_basic_args(@args);
 
     return wait_until {
-        $self->screenshot("accept_alert");
+        $self->screenshot("accept_alert", 1);
         $self->driver->accept_alert();
     } timeout => $options->{timeout};
 }
@@ -628,10 +628,14 @@ sub wait_for_network_idle {
     die "Network traffic did not stop in time";
 }
 
+=item screenshot
+Takes a screenshot of the current browser window. If an alert is expected, it will not attempt to capture the screenshot. The screenshot and any alert text are saved in the '/screenshots' directory.
+=cut
 sub screenshot {
     my $self = shift;
     my $action = _sanitize_action(shift);
-
+    my $alert_expected = shift;
+    
     my $dir = '/screenshots';
     mkdir $dir unless -d $dir;
 
@@ -646,6 +650,10 @@ sub screenshot {
         print $fh $alert_text;
         close $fh;
     } catch {
+        if ($alert_expected) {
+            return;
+        }
+
         # Otherwise, capture screenshot
         try {
             $self->driver->capture_screenshot("$dir/$filename.png", { 'full' => 1 });
