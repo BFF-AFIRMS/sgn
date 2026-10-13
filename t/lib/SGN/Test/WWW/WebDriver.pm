@@ -67,6 +67,8 @@ use Selenium::Remote::Commands;
 use Selenium::Remote::Spec;
 use Time::HiRes qw(time);
 
+my $JS_LOGGING = 0;
+
 has 'host' => ( is => 'rw',
 	      isa => 'Str',
 		default => sub { $ENV{SGN_TEST_SERVER} },
@@ -120,7 +122,7 @@ $Selenium::Remote::Spec::spec_parsed->{'uploadFile'} = {
 
 sub collect_js_logs {
     my $self = shift;
-    return unless $self->{driver};
+    return unless $self->{driver} && $JS_LOGGING;
 
     my $header = _sanitize_action(shift);
 
