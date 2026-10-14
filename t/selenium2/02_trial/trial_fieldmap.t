@@ -1844,6 +1844,7 @@ EOSQL
 	# =========================================================================
 	# Configure trial with subplots (1 subplot per plot)
 	$t->click_ok('trial_design_section_onswitch', 'id', 'Open trial design section');
+	$t->find_element_ok('//table[@id="trial_controls_table"]//thead//tr//th[contains(text(),"Attribute")]', 'xpath', 'Wait until Attribute column header is in trial design table');
 	$t->click_ok('trial_subplots_onswitch', 'id', 'Open subplots section');
 	$t->click_ok('create_subplot_entries_button', 'id', 'Click Add subplot entries button');
 	$t->send_keys_ok('add_subplots_per_plot_num', 'id', '1', 'Set number of subplots per plot to 1');
@@ -1853,6 +1854,7 @@ EOSQL
 
 	# Configure subplots with plants (3 rows x 3 columns = 9 plants per subplot)
 	$t->click_ok('trial_design_section_onswitch', 'id', 'Re-open trial design section');
+	$t->find_element_ok('//table[@id="trial_controls_table"]//thead//tr//th[contains(text(),"Attribute")]', 'xpath', 'Wait until Attribute column header is in trial design table');
 	$t->click_ok('trial_plants_onswitch', 'id', 'Open plants section');
 	$t->click_ok('create_plant_entries_subplots_button', 'id', 'Click Add plant entries button for subplots');
 	$t->send_keys_ok('add_plants_per_subplot_num', 'id', '9', 'Set number of plants per subplot to 9');
