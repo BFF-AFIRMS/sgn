@@ -56,7 +56,7 @@ export interface PlotGridContextType {
 
 const PlotGridContext = createContext<PlotGridContextType | undefined>(undefined);
 
-export const PlotGridProvider: React.FC<FieldMapContextProps> = ({ trialId, authToken, trialPlotType, children }) => {
+export const PlotGridProvider: React.FC<FieldMapContextProps> = ({ trialId, authToken, trialPlotType, initialUnits, mode = 'full', children }) => {
     const {
         topBorder, setTopBorder,
         bottomBorder, setBottomBorder,
@@ -319,6 +319,7 @@ export const PlotGridProvider: React.FC<FieldMapContextProps> = ({ trialId, auth
     }, [bounds]);
 
     const fetchObservationUnits = useCallback(async () => {
+        if (!trialId || mode === 'preview') return;
         setLoading(true);
         const headers: Record<string, string> = {};
         if (authToken) {
@@ -453,8 +454,12 @@ export const PlotGridProvider: React.FC<FieldMapContextProps> = ({ trialId, auth
     }, [hasSecondaryAxis, secondaryAxis, axisOrientation, dimensions, bounds]);
 
     useEffect(() => {
-        fetchObservationUnits();
-    }, [activeTrialIds]);
+        if (initialUnits && initialUnits.length > 0) {
+            parsePlotData(initialUnits);
+        } else if (trialId && mode !== 'preview') {
+            fetchObservationUnits();
+        }
+    }, [activeTrialIds, initialUnits, trialId, mode]);
 
     return (
         <PlotGridContext.Provider value={{

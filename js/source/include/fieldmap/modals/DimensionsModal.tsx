@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { AccessionAutocomplete } from '../components/AccessionAutocomplete';
+import { AccessionAutocomplete } from '../../autocomplete';
 import { useModals } from '../contexts/ModalsContext';
 import { usePlotGrid } from '../contexts/PlotGridContext';
 
