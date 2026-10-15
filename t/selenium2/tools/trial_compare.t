@@ -3,7 +3,7 @@ use strict;
 
 use lib 't/lib';
 
-use Test::More 'tests' => 26;
+use Test::More;
 use SGN::Test::WWW::WebDriver;
 
 use Selenium::Waiter qw(wait_until);
@@ -14,26 +14,24 @@ $d->while_logged_in_as('submitter', sub {
     $d->get_ok('/tools');  # something else than the index page, which has a dialog that messes up the test
 
     # Create a new trail list for comparison test
-    my $lists = $d->find_element_ok("navbar_lists", "id", "find navbar list button");
-    $lists->click();
+    $d->click_ok("navbar_lists", "id", "find navbar list button");
 
-    my $add_list_input = $d->find_element_ok("add_list_input", "id", "find add list input");
-    $add_list_input->send_keys("new_trial_list");
+    $d->send_keys_ok("add_list_input", "id", "new_trial_list", "find add list input");
 
-    my $add_list_button = $d->find_element_ok("add_list_button", "id", "find add list button");
-    $add_list_button->click();
+    $d->click_ok("add_list_button", "id", "click add list button");
 
-    $d->find_element_ok(
+    $d->send_keys_ok(
          '//div[@id="private_list_data_table_wrapper"]//input[@type="search"]',
          "xpath",
-         "find search in table and find 'new_trial_list'")->send_keys("new_trial_list");
+         "new_trial_list",
+         "find search in table and find 'new_trial_list'");
 
-    $d->find_element_ok("view_list_new_trial_list", "id", "view new list test")->click();
+    $d->click_ok("view_list_new_trial_list", "id", "view new list test");
 
-    $d->find_element_ok("updateListDescField", "id", "add trial test list description")->send_keys("new_trial_list_description");
+    $d->send_keys_ok("updateListDescField", "id", "new_trial_list_description", "add trial test list description");
 
-    $d->find_element_ok("updateListDescButton", "id", "find update List Desc Button")->click();
-    wait_until { $d->driver()->accept_alert(); };
+    $d->click_ok("updateListDescButton", "id", "click update List Desc Button");
+    $d->accept_alert_ok("accept update list description alert");
     $d->wait_for_alert_dismissed();
 
     my $trials_list = "Kasese solgs trial\ntrial2 NaCRRI";
@@ -41,61 +39,62 @@ $d->while_logged_in_as('submitter', sub {
 
     sleep(1); # Determined empirically; needed so the following button click will register
 
-    $d->find_element_ok("dialog_add_list_item_button", "id", "find dialog_add_list_item_button test")->click();
+    $d->click_ok("dialog_add_list_item_button", "id", "click dialog_add_list_item_button test");
     wait_until { 
         my @rows = $d->driver->find_elements('//table[@id="list_item_dialog_datatable"]/tbody/tr', "xpath");
         return scalar @rows == 2;
     };
 
-    $d->find_element_ok("type_select", "id", "find select of type list")->click();
-    $d->find_element_ok(
+    $d->click_ok("type_select", "id", "click select of type list");
+    $d->click_ok(
         '//select[@id="type_select"]/option[@name="trials"]',
         "xpath",
-        "select 'trials' as type list")->click();
+        "select 'trials' as type list");
 
-    $d->find_element_ok("list_item_dialog_validate", "id", "find and click validate 'trails' type list")->click();
-    wait_until { $d->accept_alert_ok("accept validation alert"); };
+    $d->click_ok("list_item_dialog_validate", "id", "find and click validate 'trails' type list");
+    $d->accept_alert_ok("accept validation alert");
 
     $d->wait_for_working_dialog();
 
-    $d->find_element_ok("close_list_item_dialog", "id", "find close list item dialog")->click();
+    $d->click_ok("close_list_item_dialog", "id", "click close list item dialog");
 
-    $d->find_element_ok("close_list_dialog_button", "id", "find close dialog button")->click();
+    $d->click_ok("close_list_dialog_button", "id", "click close dialog button");
 
     # Change page to trial comparison
     $d->get_ok("/tools/trial/comparison/list");
 
-    $d->find_element_ok("trials_list_select", "id", "find trials select")->click();
+    $d->click_ok("trials_list_select", "id", "click trials select");
 
-    $d->find_element_ok(
+    $d->click_ok(
         '//select[@id="trials_list_select"]/option[contains(text(), "new_trial_list")]',
         "xpath",
-        "select 'new_trial_list' as list")->click();
+        "select 'new_trial_list' as list");
     
     $d->wait_for_spinner("trials-loading-spinner", "id");
 
-    $d->find_element_ok("unit_select", "id", "find select plot observation level")->click();
-
-    $d->find_element_ok(
+    $d->click_ok("unit_select", "id", "click select plot observation level");
+    
+    $d->click_ok(
         '//select[@id="unit_select"]/option[@value="plot"]',
         "xpath",
-        "select plot observation level")->click();
+        "select plot observation level");
     
     $d->wait_for_spinner("trials-loading-spinner", "id");
 
-    $d->find_element_ok("trait_select", "id", "find trait select");
-    $d->find_element_ok(
+    $d->click_ok("trait_select", "id", "click trait select");
+    $d->click_ok(
         '//select[@id="trait_select"]/option[contains(text(), "dry matter content percentage|CO_334:0000092")]',
         "xpath",
-        "select 'new_trial_list' as list")->click();
+        "select 'dry matter content percentage' as trait");
     
     # Check trial names on axis of created plot
-    my $plot_view = $d->find_element_ok(
+    my $plot_view = $d->get_attribute_ok(
         '//div[@id="tc-grid"]',
         'xpath',
-        'find a content of plot')->get_attribute('innerHTML');
+        'innerHTML',
+        'find a content of plot');
 
-    ok($plot_view =~ /trial2 NaCRRI/, "Verify if test_accession1 on pedigree panel");
+    ok($plot_view =~ /trial2 NaCRRI/, "Verify if 'trial2 NaCRRI' on pedigree panel");
     ok($plot_view =~ /Kasese solgs trial/, "Verify if 'Kasese solgs trial' on pedigree panel");
 
 });

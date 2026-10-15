@@ -63,7 +63,11 @@ use File::Spec::Functions;
 use Selenium::Remote::Driver;
 use Selenium::Waiter qw(wait_until);
 use Selenium::Remote::WDKeys 'KEYS';
+use Selenium::Remote::Commands;
+use Selenium::Remote::Spec;
 use Time::HiRes qw(time);
+
+my $JS_LOGGING = 0;
 
 has 'host' => ( is => 'rw',
 	      isa => 'Str',
@@ -108,9 +112,17 @@ has 'js_logs' => (
     default => sub { [] },
 );
 
+Selenium::Remote::Spec::get_spec();
+$Selenium::Remote::Spec::spec_parsed->{'uploadFile'} = {
+    method             => 'POST',
+    url                => '/session/:sessionId/se/file',
+    no_content_success => 0,
+    description        => 'Upload File',
+};
+
 sub collect_js_logs {
     my $self = shift;
-    return unless $self->{driver};
+    return unless $self->{driver} && $JS_LOGGING;
 
     my $header = _sanitize_action(shift);
 
@@ -423,7 +435,7 @@ sub accept_alert {
     my $options = $self->_extract_basic_args(@args);
 
     return wait_until {
-        $self->screenshot("accept_alert");
+        $self->screenshot("accept_alert", 1);
         $self->driver->accept_alert();
     } timeout => $options->{timeout};
 }
@@ -530,7 +542,7 @@ sub wait_for_alert_appear {
         my $alert_text;
 
         try {
-            $self->screenshot("wait_for_alert_appear");
+            $self->screenshot("wait_for_alert_appear", 1);
             $alert_text = $self->driver->get_alert_text();
         } catch {
             $alert_text = undef;
@@ -549,7 +561,7 @@ sub wait_for_alert_dismissed {
         my $alert_text;
 
         try {
-            $self->screenshot("wait_for_alert_dismissed");
+            $self->screenshot("wait_for_alert_dismissed", 1);
             $alert_text = $self->driver->get_alert_text();
         } catch {
             $alert_text = undef;
@@ -616,10 +628,14 @@ sub wait_for_network_idle {
     die "Network traffic did not stop in time";
 }
 
+=item screenshot
+Takes a screenshot of the current browser window. If an alert is expected, it will not attempt to capture the screenshot. The screenshot and any alert text are saved in the '/screenshots' directory.
+=cut
 sub screenshot {
     my $self = shift;
     my $action = _sanitize_action(shift);
-
+    my $alert_expected = shift;
+    
     my $dir = '/screenshots';
     mkdir $dir unless -d $dir;
 
@@ -634,6 +650,10 @@ sub screenshot {
         print $fh $alert_text;
         close $fh;
     } catch {
+        if ($alert_expected) {
+            return;
+        }
+
         # Otherwise, capture screenshot
         try {
             $self->driver->capture_screenshot("$dir/$filename.png", { 'full' => 1 });
