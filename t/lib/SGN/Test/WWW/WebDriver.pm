@@ -542,7 +542,7 @@ sub wait_for_alert_appear {
         my $alert_text;
 
         try {
-            $self->screenshot("wait_for_alert_appear");
+            $self->screenshot("wait_for_alert_appear", 1);
             $alert_text = $self->driver->get_alert_text();
         } catch {
             $alert_text = undef;
@@ -561,7 +561,7 @@ sub wait_for_alert_dismissed {
         my $alert_text;
 
         try {
-            $self->screenshot("wait_for_alert_dismissed");
+            $self->screenshot("wait_for_alert_dismissed", 1);
             $alert_text = $self->driver->get_alert_text();
         } catch {
             $alert_text = undef;
