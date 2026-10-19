@@ -111,12 +111,11 @@ else {
 # Export TEST_DB_NAME variable for future bash sessions (interactive testing)
 my $bashrc_filepath = '/home/sgn/.bashrc';
 if (-e $bashrc_filepath){
-    # First delete any pre-existing lines that contain TEST_DB_NAME
+    # Delete any pre-existing lines that contain TEST_DB_NAME (in place)
     edit_file_lines sub { $_ = '' if /TEST_DB_NAME/ }, $bashrc_filepath;
-    append_file($bashrc_filepath, "TEST_DB_NAME=$dbname\n");
-} else {
-    write_file($bashrc_filepath, "TEST_DB_NAME=$dbname\n");
 }
+# Note: append_file will create the file if it does not already exist
+append_file($bashrc_filepath, "TEST_DB_NAME=$dbname\n");
 
 print STDERR "# Writing a .pgpass file... ";
 # format = hostname:port:database:username:password
