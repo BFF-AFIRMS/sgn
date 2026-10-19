@@ -9,10 +9,10 @@ use CXGN::Pedigree::AddCrossingtrial;
 use CXGN::Pedigree::AddProgeny;
 use CXGN::Trial::ParseUpload;
 use CXGN::Trial::TrialCreate;
-use Excel::Writer::XLSX;
 use JSON;
 use SGN::Test::Fixture;
 use SGN::Model::Cvterm;
+use Shared::File qw |csv_to_xlsx|;
 use Test::More;
 use Test::WWW::Mechanize;
 
@@ -140,22 +140,7 @@ seedlot_trial,$breeding_program_name,$location_name,2026,,RCBD,Description of se
 seedlot_trial,$breeding_program_name,$location_name,2026,,RCBD,Description of seedlot trial,misc_trial,accession,,,,,,seedlot_trial_plot_3,test_accession1,3,1,0,3,1,1,3,seedlot_accession,3,0,
 ";
 my $trial_xlsx = '/tmp/accession_trial_layout_with_seedlot_from_cross.xlsx';
-my $workbook  = Excel::Writer::XLSX->new($trial_xlsx);
-my $worksheet = $workbook->add_worksheet();
-my @csv_lines = split("\n", $trial_layout_csv);
-
-my $row = 0;
-foreach my $line (@csv_lines) {
-    if (!$line) { next; }
-    my @record = split(",", $line);
-    my $col = 0;
-    foreach my $value (@record) {
-        $worksheet->write( $row, $col, $value );
-        $col++;
-    }
-    $row++;
-}
-$workbook->close();
+csv_to_xlsx($trial_layout_csv, $trial_xlsx);
 ok(-e $trial_xlsx, "Create trial multi upload xlsx");
 
 # -----------------------------------------------------------------------------
@@ -227,6 +212,29 @@ while (my ($key, $data) = each(%$parsed_data)){
 
     is($seedlot->get_current_count_property(), -13, "Seedlot count is -13 seeds for " . $data->{seedlot_name});
 }
+
+# -----------------------------------------------------------------------------
+# Create trial with bad seedlot-parent combination
+
+# Create trial spreadsheet
+my $bad_trial_layout_csv = "
+trial_name,breeding_program,location,year,transplanting_date,design_type,description,trial_type,trial_stock_type,plot_width,plot_length,field_size,planting_date,harvest_date,plot_name,accession_name,plot_number,block_number,is_a_control,rep_number,range_number,row_number,col_number,seedlot_name,num_seed_per_plot,weight_gram_seed_per_plot,entry_number
+bad_seedlot_trial,$breeding_program_name,$location_name,2026,,RCBD,Description of bad seedlot trial,misc_trial,accession,,,,,,bad_seedlot_trial_plot_1,test_accession3,1,1,0,1,1,1,1,seedlot_cross_op,3,0,
+";
+my $bad_trial_xlsx = '/tmp/accession_trial_layout_with_bad_seedlot.xlsx';
+csv_to_xlsx($bad_trial_layout_csv, $bad_trial_xlsx);
+ok(-e $bad_trial_xlsx, "Create trial multi upload xlsx");
+
+# Upload trial
+my $parser  = CXGN::Trial::ParseUpload->new(chado_schema=> $schema, filename => $bad_trial_xlsx);
+$parser->load_plugin('MultipleTrialDesignGeneric');
+$parser->parse();
+ok(unlink($bad_trial_xlsx), 'Delete temporary bad trial xlsx');
+my $parse_errors = $parser->get_parse_errors();
+
+# Check for expected errors
+is($parse_errors->{error_messages}->[0], 'The seedlot: seedlot_cross_op is not linked to the accession/cross_unique_id: test_accession3.');
+
 
 $f->clean_up_db();
 done_testing();
