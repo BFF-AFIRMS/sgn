@@ -101,7 +101,7 @@ my $test_accession_id = $schema->resultset('Stock::Stock')->find({ uniquename =>
 my $seedlot_biparental = CXGN::Stock::Seedlot->new( schema => $schema);
 $seedlot_biparental->uniquename("seedlot_accession");
 $seedlot_biparental->location_code($location_name);
-$seedlot_biparental->cross_stock_id($test_accession_id);
+$seedlot_biparental->accession_stock_id($test_accession_id);
 $seedlot_biparental->breeding_program_id($breeding_program_id);
 ok($seedlot_biparental->store(), 'Create accession seedlot');
 
@@ -180,7 +180,6 @@ my $trial_create = CXGN::Trial::TrialCreate->new({
 	trial_location 		=> $trial_data->{location},
     operator 			=> "janedoe",
 });
-my $save = $trial_create->save_trial();
 ok($trial_create->save_trial(), "Create trial with 3 seeds per plot");
 
 my $trial_id = $schema->resultset('Project::Project')->find({ name => 'seedlot_trial' })->project_id();
@@ -193,7 +192,7 @@ my $seedlot_upload_csv = "seedlot_name,plot_name,num_seed_per_plot,weight_gram_s
 seedlot_cross_op,seedlot_trial_plot_1,10,,
 seedlot_cross_biparental,seedlot_trial_plot_2,10,,
 seedlot_accession,seedlot_trial_plot_3,10,,";
-my $seedlot_file_path = my $trial_file_path = "/tmp/accession_trial_layout_with_seedlot_upload.csv";
+my $seedlot_file_path = "/tmp/accession_trial_layout_with_seedlot_upload.csv";
 open(FH, '>', $seedlot_file_path ) or die $!;
 print FH $seedlot_upload_csv;
 close(FH);
