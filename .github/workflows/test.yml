@@ -54,7 +54,7 @@ jobs:
         uses: actions/checkout@v6
         with:
           repository: bff-afirms/breedbase_dockerfile
-          ref: bff-afirms
+          ref: chore/332-selenium-update
           submodules: recursive
       
       - name: Cleanup breedbase_dockerfile
