@@ -10,7 +10,7 @@ use Data::Dumper;
 
 use Pod::Usage;
 use Getopt::Long;
-use File::Slurp;
+use File::Slurp qw(append_file edit_file_lines write_file);
 use Config::Any;
 
 use File::Basename qw(dirname);
@@ -106,6 +106,16 @@ else {
     $dbname = join "_", map { $now->$_ } (qw | year month day hour minute |);
     $dbname = 'test_db_'.$dbname;
     $dbname .= $$;
+}
+
+# Export TEST_DB_NAME variable for future bash sessions (interactive testing)
+my $bashrc_filepath = '/home/sgn/.bashrc';
+if (-e $bashrc_filepath){
+    # First delete any pre-existing lines that contain TEST_DB_NAME
+    edit_file_lines sub { $_ = '' if /TEST_DB_NAME/ }, $bashrc_filepath;
+    append_file($bashrc_filepath, "TEST_DB_NAME=$dbname\n");
+} else {
+    write_file($bashrc_filepath, "TEST_DB_NAME=$dbname\n");
 }
 
 print STDERR "# Writing a .pgpass file... ";
