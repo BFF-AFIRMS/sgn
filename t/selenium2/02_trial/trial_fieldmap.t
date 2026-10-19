@@ -246,7 +246,7 @@ sub find_sec_y_val_ok {
 
 # Open the Change Dimensions modal and apply new column and row dimensions
 sub set_dimensions {
-	my ($columns, $rows, $filler_accession) = @_;
+	my ($columns, $rows, $filler_accession, $preserve_gaps) = @_;
 	$t->click_ok('//button[@title="Change Dimensions"]', 'xpath', 'Click Change Dimensions button');
 	if (defined $columns) {
 		$t->send_keys_ok('//label[contains(text(),"Columns")]/following-sibling::input', 'xpath', $columns, "Set Columns input to $columns", clear => 1);
@@ -256,6 +256,16 @@ sub set_dimensions {
 	}
 	if (defined $filler_accession) {
 		$t->send_keys_ok('//div[contains(@class,"show")]//label[contains(text(),"Filler Accession")]/following-sibling::div//input', 'xpath', $filler_accession, "Set Filler Accession input to $filler_accession", clear => 1);
+	}
+	if (defined $preserve_gaps){
+		my $preserve_gaps_xpath = '//label[contains(text(),"Preserve gaps between plots")]/input';
+		my $preserve_gaps_selected = $t->find_element($preserve_gaps_xpath, 'xpath', 'Find preserve gaps checkbox')->is_selected();
+		if ($preserve_gaps && !$preserve_gaps_selected) {
+			$t->click_ok($preserve_gaps_xpath, 'xpath', 'Check Preserve gaps between plots');
+		}
+		elsif (!$preserve_gaps && $preserve_gaps_selected){
+			$t->click_ok($preserve_gaps_xpath, 'xpath', 'Uncheck Preserve gaps between plots');
+		}
 	}
 	$t->click_ok('//div[contains(@class,"show")]//button[contains(text(),"Apply")]', 'xpath', 'Click Apply button');
 }
@@ -1344,22 +1354,44 @@ $t->while_logged_in_as("curator", sub {
 	ok(!scalar(@{$t->driver->find_elements('//div[contains(@class,"show")]//h4[contains(text(),"Change Layout Dimensions")]', 'xpath')}), 'Change Layout Dimensions modal is closed');
 
 	# Test invalid dimensions error handling (rows * cols < total plots)
+	my $preserve_gaps_xpath = '//label[contains(text(),"Preserve gaps between plots")]/input';
 	$t->click_ok('//button[@title="Change Dimensions"]', 'xpath', 'Click Change Dimensions button to test invalid dimensions');
 	$t->send_keys_ok('//label[contains(text(),"Columns")]/following-sibling::input', 'xpath', '2', 'Set Columns input to 2 (invalid)', clear => 1);
 	$t->send_keys_ok('//label[contains(text(),"Rows")]/following-sibling::input', 'xpath', '2', 'Set Rows input to 2 (invalid)', clear => 1);
+	my $preserve_gaps_elem = $t->driver->find_element($preserve_gaps_xpath, 'xpath');
+	$t->click_ok($preserve_gaps_xpath, 'xpath', 'Uncheck Preserve Gaps') if $preserve_gaps_elem->is_selected();
 	$t->click_ok('//div[contains(@class,"show")]//button[contains(text(),"Apply")]', 'xpath', 'Click Apply button with invalid dimensions');
 	my $invalid_dim_alert = $t->get_alert_text();
 	is($invalid_dim_alert, "Those are not valid dimensions.\nPlease select dimensions that can accommodate your current plots.", 'Verify alert text for invalid dimensions');
+	$t->accept_alert_ok('Accept invalid dimensions alert');
+
+	# Test invalid dimensions when keeping plot locations and trying to reduce dimensions
+	$t->click_ok('//button[@title="Change Dimensions"]', 'xpath', 'Click Change Dimensions button to test invalid reduction');
+	$t->send_keys_ok('//label[contains(text(),"Columns")]/following-sibling::input', 'xpath', '2', 'Set Columns input to 2 (invalid)', clear => 1);
+	$t->send_keys_ok('//label[contains(text(),"Rows")]/following-sibling::input', 'xpath', '2', 'Set Rows input to 2 (invalid)', clear => 1);
+	my $preserve_gaps_elem = $t->driver->find_element($preserve_gaps_xpath, 'xpath');
+	$t->click_ok($preserve_gaps_xpath, 'xpath', 'Check Preserve Gaps') unless $preserve_gaps_elem->is_selected();
+	$t->click_ok('//div[contains(@class,"show")]//button[contains(text(),"Apply")]', 'xpath', 'Click Apply button with invalid dimensions');
+	my $invalid_dim_alert = $t->get_alert_text();
+	is($invalid_dim_alert, "You cannot reduce dimensions if you want to preserve gaps.\nPlease select dimensions that can accommodate your current plots.", 'Verify alert text for invalid dimension reduction');
 	$t->accept_alert_ok('Accept invalid dimensions alert');
 
 	# Verify grid layout was unchanged by the invalid dimensions attempt
 	find_plot_cell_ok(4, 6, $border_fill);
 	find_sec_x_val_ok('ty3', 3, undef, 'top');
 
-	set_dimensions(4, undef);
+	# Change dimensions allowing plots to move to new locations
+	set_dimensions(4, 7, undef, 0);
 	find_plot_label_ok('301', 4, 3);
 	find_plot_label_ok('307', 3, 4);
 	find_north_arrow_ok(90);
+
+	# Test changing dimensions, keeping plots in original locations
+	set_dimensions(6, 10, undef, 1);
+	find_plot_label_ok('301', 4, 3);
+	find_plot_label_ok('307', 3, 4);
+	# Set dimensions to expected values for rest of tests
+	set_dimensions(4, 7, undef, 1);
 
 	# =========================================================================
 	# Spatial Layout CSV Export Customization
@@ -1783,18 +1815,18 @@ EOSQL
 	$t->click_option_ok('//label[contains(text(),"Plot Layout:")]/following-sibling::select/option[@value="serpentine"]', 'xpath', 'Select Serpentine plot layout');
 
 	# Expand dimensions to 6 columns x 4 rows (24 cells total for 21 plots = 3 empty slots)
-	set_dimensions(6, 4);
+	set_dimensions(6, 4, undef, 0);
 	ok(!scalar(@{$t->driver->find_elements('//*[local-name()="svg" and @id="' . $svg_id . '"]//*[local-name()="g" and @transform="translate(0, 0)"]/*[local-name()="rect"]', 'xpath')}), 'Empty space cell (0, 0) has no rect');
 
 	# Test invalid filler accession error handling
-	set_dimensions(6, 4, 'NONEXISTENT_FILLER_ACCESSION_XYZ');
+	set_dimensions(6, 4, 'NONEXISTENT_FILLER_ACCESSION_XYZ', 0);
 	my $invalid_filler_alert = $t->get_alert_text();
 	like($invalid_filler_alert, qr/(?:not exist|not found|error)/i, 'Verify alert text when filler accession does not exist');
 	$t->accept_alert_ok('Accept invalid filler accession alert');
 	ok(!scalar(@{$t->driver->find_elements('//*[local-name()="svg" and @id="' . $svg_id . '"]//*[local-name()="g" and @transform="translate(0, 0)"]/*[local-name()="rect"]', 'xpath')}), 'Empty space cell (0, 0) still has no rect after invalid filler accession');
 
 	# Apply valid filler accession and verify filler plots rendered
-	set_dimensions(6, 4, 'IITA-TMS-IBA980581');
+	set_dimensions(6, 4, 'IITA-TMS-IBA980581', 0);
 	find_plot_cell_ok(0, 0, $border_fill);
 	find_plot_cell_ok(1, 0, $border_fill);
 	find_plot_cell_ok(2, 0, $border_fill);
