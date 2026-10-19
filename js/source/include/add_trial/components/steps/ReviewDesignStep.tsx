@@ -1,10 +1,12 @@
-import React, { useMemo, useEffect } from 'react';
+import React, { useMemo, useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useTrialForm } from '../../contexts/TrialFormContext';
 import { useDesignResult } from '../../contexts/DesignResultContext';
 import { useDesignGenerator } from '../../hooks/useDesignGenerator';
 import { useTrialSaver } from '../../hooks/useTrialSaver';
 import { designMapToObservationUnits } from '../../utils/designAdapters';
 import { FieldMapContainer } from '../../../fieldmap';
+import { AddTreatmentsModal } from '../../modals/AddTreatmentsModal';
 
 interface ReviewDesignStepProps {
     onSuccess: () => void;
@@ -22,6 +24,8 @@ export const ReviewDesignStep: React.FC<ReviewDesignStepProps> = ({ onSuccess })
     } = useDesignResult();
     const { generateDesign, loading: regenerating, error: regenError } = useDesignGenerator();
     const { saveTrial, saving, error: saveError } = useTrialSaver();
+    const [showTreatmentModal, setShowTreatmentModal] = useState(false);
+    const [treatmentsPortalTarget, setTreatmentsPortalTarget] = useState<HTMLElement | null>(null);
 
     const currentDesign = parsedDesigns[selectedLocationIndex] || parsedDesigns[0] || {};
     const currentUnits = useMemo(() => {
@@ -38,6 +42,52 @@ export const ReviewDesignStep: React.FC<ReviewDesignStepProps> = ({ onSuccess })
             });
         }
     }, [result, regenerating, formData, generateDesign, setResult]);
+
+    useEffect(() => {
+        const target = document.getElementById('trial_design_confirm_treatments');
+        if (target) {
+            target.innerHTML = '';
+            setTreatmentsPortalTarget(target);
+        } else {
+            setTreatmentsPortalTarget(null);
+        }
+    }, [result?.design_info_view_html]);
+
+    const confirmedTreatments = useMemo(() => {
+        if (!result?.design_json) return [];
+        try {
+            const raw = JSON.parse(result.design_json);
+            const designArray = Array.isArray(raw) ? raw : [raw];
+            const list: Array<{ name: string; type?: string; stocks: string[] }> = [];
+            const seen = new Map<string, { type?: string; stocks: Set<string> }>();
+
+            for (let i = 0; i < designArray.length; i++) {
+                const dh = typeof designArray[i] === 'string' ? JSON.parse(designArray[i] as string) : designArray[i];
+                const treatments = dh?.treatments as Record<string, { new_treatment_stocks?: string[]; new_treatment_type?: string }> | undefined;
+                if (treatments && typeof treatments === 'object') {
+                    for (const [key, val] of Object.entries(treatments)) {
+                        if (!seen.has(key)) {
+                            seen.set(key, {
+                                type: val.new_treatment_type,
+                                stocks: new Set(val.new_treatment_stocks || [])
+                            });
+                        } else {
+                            const entry = seen.get(key)!;
+                            (val.new_treatment_stocks || []).forEach(s => entry.stocks.add(s));
+                        }
+                    }
+                }
+            }
+
+            for (const [name, entry] of seen.entries()) {
+                list.push({ name, type: entry.type, stocks: Array.from(entry.stocks) });
+            }
+
+            return list;
+        } catch {
+            return [];
+        }
+    }, [result?.design_json]);
 
     const handleRedo = async () => {
         const { data: generated, error: err } = await generateDesign(formData);
@@ -133,7 +183,7 @@ export const ReviewDesignStep: React.FC<ReviewDesignStepProps> = ({ onSuccess })
                 />
             )}
 
-            <div className="tw:flex tw:justify-center tw:my-2">
+            <div className="tw:flex tw:justify-center tw:gap-3 tw:my-2">
                 <button
                     type="button"
                     id="redo_trial_layout_button"
@@ -142,6 +192,16 @@ export const ReviewDesignStep: React.FC<ReviewDesignStepProps> = ({ onSuccess })
                     onClick={handleRedo}
                 >
                     {regenerating ? 'Regenerating...' : 'Redo Randomization'}
+                </button>
+                <button
+                    type="button"
+                    id="add_trial_treatments_button"
+                    name="new_trial_add_treatments"
+                    className="btn btn-default btn-lg"
+                    disabled={regenerating || saving}
+                    onClick={() => setShowTreatmentModal(true)}
+                >
+                    + Add Field Treatments
                 </button>
             </div>
 
@@ -159,6 +219,21 @@ export const ReviewDesignStep: React.FC<ReviewDesignStepProps> = ({ onSuccess })
                 />
             )}
 
+            {treatmentsPortalTarget && createPortal(
+                confirmedTreatments.length === 0 ? (
+                    <span>None added. Treatments and management regimes can be added on the trial detail page.</span>
+                ) : (
+                    <ul className="tw:list-disc tw:pl-5 tw:my-1 tw:space-y-1">
+                        {confirmedTreatments.map(t => (
+                            <li key={t.name}>
+                                Treatment: <strong>{t.name}</strong>{t.type && ` (${t.type})`} &mdash; Plots: {t.stocks.join(', ')}
+                            </li>
+                        ))}
+                    </ul>
+                ),
+                treatmentsPortalTarget
+            )}
+
             <br />
             <div className="tw:flex tw:justify-center">
                 <button
@@ -172,6 +247,11 @@ export const ReviewDesignStep: React.FC<ReviewDesignStepProps> = ({ onSuccess })
                     {saving ? 'Saving Trial...' : 'Confirm (Save Trial in Database)'}
                 </button>
             </div>
+
+            <AddTreatmentsModal
+                show={showTreatmentModal}
+                onClose={() => setShowTreatmentModal(false)}
+            />
         </div>
     );
 };

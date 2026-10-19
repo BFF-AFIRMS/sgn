@@ -38,6 +38,15 @@ export interface SplitplotTreatment {
     value: string;
 }
 
+export interface FieldTrialTreatment {
+    new_treatment_stocks: string[];
+    new_treatment_type: string;
+    new_treatment_date: string;
+    new_treatment_year: string;
+    new_treatment_planting_date: string;
+    new_treatment_description: string;
+}
+
 export interface TrialFormData {
     trialName: string;
     breedingProgram: string;
