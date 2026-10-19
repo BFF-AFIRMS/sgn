@@ -102,7 +102,7 @@ export const PlotGridProvider: React.FC<FieldMapContextProps> = ({ trialId, auth
 
     const setAxisOrientation = useCallback((input?: AxisOrientationInput) => {
 
-        let orientation: AxisOrientation = {
+        const orientation: AxisOrientation = {
             x: { source: 'x', reversed: false},
             y: { source: 'y', reversed: false},
         };
@@ -114,10 +114,10 @@ export const PlotGridProvider: React.FC<FieldMapContextProps> = ({ trialId, auth
         const x = input.x?.trim();
         const y = input.y?.trim();
 
-        if (x && x == 'reversed'){
+        if (x === 'reversed'){
             orientation.x.reversed = true;
         }
-        if (y && y == 'reversed'){
+        if (y === 'reversed'){
             orientation.y.reversed = true;
         }
         setAxisOrientationState(orientation);
@@ -352,13 +352,9 @@ export const PlotGridProvider: React.FC<FieldMapContextProps> = ({ trialId, auth
 
     const rotateLayout = useCallback(() => {
         // Set axis orientation based on previous states of x and y
-        let oldXReversed = axisOrientation.x.reversed;
-        let oldYReversed = axisOrientation.y.reversed;
-        let newXReversed = (!oldXReversed && oldYReversed) || (oldXReversed && oldYReversed);
-        let newYReversed =  (!oldXReversed && !oldYReversed) || (!oldXReversed && oldYReversed);
         setAxisOrientationState(prev => ({
-            x: {source: prev.y.source, reversed: newXReversed},
-            y: {source: prev.x.source, reversed: newYReversed}
+            x: {source: prev.y.source, reversed: axisOrientation.y.reversed},
+            y: {source: prev.x.source, reversed: !axisOrientation.x.reversed}
         }));
         setNorthArrowAngle(prev => (prev + 90) % 360);
         const { minCol, maxCol } = bounds;
