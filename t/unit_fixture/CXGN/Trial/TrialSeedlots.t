@@ -133,11 +133,16 @@ ok($progeny_biparental->add_progeny(), 'Add progeny to cross_biparental');
 # -----------------------------------------------------------------------------
 # Create trial multi upload file
 
+# This test covers two parent relationship possibilities:
+# - 1. Direct: Plot accession is exactly the same as the seedlot source accession
+# - 2. Nested: Plot accession is a progeny of a cross (from which a cross seedlot is collected)
 my $trial_layout_csv = "
 trial_name,breeding_program,location,year,transplanting_date,design_type,description,trial_type,trial_stock_type,plot_width,plot_length,field_size,planting_date,harvest_date,plot_name,accession_name,plot_number,block_number,is_a_control,rep_number,range_number,row_number,col_number,seedlot_name,num_seed_per_plot,weight_gram_seed_per_plot,entry_number
 seedlot_trial,$breeding_program_name,$location_name,2026,,RCBD,Description of seedlot trial,misc_trial,accession,,,,,,seedlot_trial_plot_1,cross_op_accession_001,1,1,0,1,1,1,1,seedlot_cross_op,3,0,
 seedlot_trial,$breeding_program_name,$location_name,2026,,RCBD,Description of seedlot trial,misc_trial,accession,,,,,,seedlot_trial_plot_2,cross_biparental_accession_001,2,1,0,2,1,1,2,seedlot_cross_biparental,3,0,
 seedlot_trial,$breeding_program_name,$location_name,2026,,RCBD,Description of seedlot trial,misc_trial,accession,,,,,,seedlot_trial_plot_3,test_accession1,3,1,0,3,1,1,3,seedlot_accession,3,0,
+seedlot_trial,$breeding_program_name,$location_name,2026,,RCBD,Description of seedlot trial,misc_trial,accession,,,,,,seedlot_trial_plot_4,test_accession3,4,1,0,3,1,1,4,,,,
+seedlot_trial,$breeding_program_name,$location_name,2026,,RCBD,Description of seedlot trial,misc_trial,accession,,,,,,seedlot_trial_plot_5,test_accession3,5,1,0,3,1,1,5,,,,
 ";
 my $trial_xlsx = '/tmp/accession_trial_layout_with_seedlot_from_cross.xlsx';
 csv_to_xlsx($trial_layout_csv, $trial_xlsx);
@@ -191,6 +196,7 @@ my $parser = CXGN::Trial::ParseUpload->new(
 );
 $parser->load_plugin('TrialUsedSeedlotsGeneric');
 my $parsed_data = $parser->parse();
+ok(unlink($seedlot_file_path), 'Delete temporary seedlot upload csv');
 
 while (my ($key, $data) = each(%$parsed_data)){
     my $transaction = CXGN::Stock::Seedlot::Transaction->new(schema => $schema);
@@ -214,12 +220,42 @@ while (my ($key, $data) = each(%$parsed_data)){
 }
 
 # -----------------------------------------------------------------------------
-# Create trial with bad seedlot-parent combination
+# Test adding seedlots with bad seedlot-parent combination
+
+# Attempt to upload seeds from seedlot_cross_op to plots which contains test_accession3
+# test_accession3 is not a progeny of this seedlot cross, and so an error will be raised
+my $bad_seedlot_upload_csv = "seedlot_name,plot_name,num_seed_per_plot,weight_gram_seed_per_plot,description
+seedlot_cross_op,seedlot_trial_plot_4,1,,
+seedlot_accession,seedlot_trial_plot_5,1,,";
+my $bad_seedlot_file_path = "/tmp/accession_trial_layout_with_bad_seedlot_upload.csv";
+open(FH, '>', $bad_seedlot_file_path ) or die $!;
+print FH $bad_seedlot_upload_csv;
+close(FH);
+
+# Parse the seed transactions
+my $parser = CXGN::Trial::ParseUpload->new(
+    chado_schema => $schema,
+    filename => $bad_seedlot_file_path,
+    trial_id => $trial_id,
+    trial_stock_type =>'accession'
+);
+$parser->load_plugin('TrialUsedSeedlotsGeneric');
+$parser->parse();
+ok(unlink($bad_seedlot_file_path), 'Delete temporary bad seedlot upload csv');
+
+# Check for expected errors
+my $bad_seedlot_parse_errors = $parser->get_parse_errors()->{error_messages}->[0];
+like($bad_seedlot_parse_errors, qr/The seedlot: seedlot_cross_op is not linked to the same parent as the plot: seedlot_trial_plot_4/i, 'Caught bad relationship between cross seedlot and plot.');
+like($bad_seedlot_parse_errors, qr/The seedlot: seedlot_accession is not linked to the same parent as the plot: seedlot_trial_plot_5/i, 'Caught bad relationship between accession seedlot and plot.');
+
+# -----------------------------------------------------------------------------
+# Test uploading trial with bad seedlot-parent combination
 
 # Create trial spreadsheet
 my $bad_trial_layout_csv = "
 trial_name,breeding_program,location,year,transplanting_date,design_type,description,trial_type,trial_stock_type,plot_width,plot_length,field_size,planting_date,harvest_date,plot_name,accession_name,plot_number,block_number,is_a_control,rep_number,range_number,row_number,col_number,seedlot_name,num_seed_per_plot,weight_gram_seed_per_plot,entry_number
 bad_seedlot_trial,$breeding_program_name,$location_name,2026,,RCBD,Description of bad seedlot trial,misc_trial,accession,,,,,,bad_seedlot_trial_plot_1,test_accession3,1,1,0,1,1,1,1,seedlot_cross_op,3,0,
+bad_seedlot_trial,$breeding_program_name,$location_name,2026,,RCBD,Description of bad seedlot trial,misc_trial,accession,,,,,,bad_seedlot_trial_plot_2,test_accession3,2,1,0,1,1,1,2,seedlot_accession,3,0,
 ";
 my $bad_trial_xlsx = '/tmp/accession_trial_layout_with_bad_seedlot.xlsx';
 csv_to_xlsx($bad_trial_layout_csv, $bad_trial_xlsx);
@@ -230,11 +266,10 @@ my $parser  = CXGN::Trial::ParseUpload->new(chado_schema=> $schema, filename => 
 $parser->load_plugin('MultipleTrialDesignGeneric');
 $parser->parse();
 ok(unlink($bad_trial_xlsx), 'Delete temporary bad trial xlsx');
-my $parse_errors = $parser->get_parse_errors();
 
 # Check for expected errors
-is($parse_errors->{error_messages}->[0], 'The seedlot: seedlot_cross_op is not linked to the accession/cross_unique_id: test_accession3.');
-
-
+my $bad_trial_parse_errors = $parser->get_parse_errors()->{error_messages}->[0];
+like($bad_trial_parse_errors, qr/The seedlot: seedlot_cross_op is not linked to the accession\/cross_unique_id: test_accession3./i, 'Caught bad cross seedlot relationship during trial upload ');
+like($bad_trial_parse_errors, qr/The seedlot: seedlot_accession is not linked to the accession\/cross_unique_id: test_accession3./i, 'Caught bad accession seedlot relationship during trial upload ');
 $f->clean_up_db();
 done_testing();
