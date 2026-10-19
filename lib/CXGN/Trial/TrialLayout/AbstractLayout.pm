@@ -791,7 +791,7 @@ sub retrieve_plot_info {
         if ($self->get_verify_layout && !$seedlot_match){
             my $plot_parent_id = $parents->{$plot_id}->{id};
             # Option 1: Simple match, parents are exactly the same
-            if ($seedlot_parent_id == $seedlot_parent_id){
+            if ($seedlot_parent_id == $plot_parent_id){
                 $seedlot_match = 1;
             }
             # Option 2: Plot parent is accession, seedlot parent is cross
