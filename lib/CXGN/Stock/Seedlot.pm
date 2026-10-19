@@ -775,7 +775,7 @@ sub verify_seedlot_plot_compatibility {
         # Option 1: Simple match, parents are exactly the same
         # Option 2: Seedlot parent is cross, plot parent is an offspring of that cross
         if ( $plot_parent ne $seedlot_parent && $plot_cross ne $seedlot_parent){
-            $error .= "The seedlot: $seedlot_name is not linked to the same parent as the plot: $plot_name . ";
+            $error .= "The seedlot: $seedlot_name is not linked to the same parent as the plot: $plot_name.";
         }
     }
     if ($error){

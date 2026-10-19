@@ -806,7 +806,7 @@ sub retrieve_plot_info {
     # Optional validation, final check if seedlot parent matched the plot parent
     if ($self->get_verify_layout){
         foreach my $plot_id (@plot_ids){
-            if (!$design_info->{$plot_id}->{"seedlot_parent_match"}){
+            if (defined $design_info->{$plot_id}->{"seedlot_name"} && !$design_info->{$plot_id}->{"seedlot_parent_match"}){
                 my $seedlot_name = $design_info->{$plot_id}->{"seedlot_name"};
                 my $parent_name = $parents->{$plot_id}->{name};
                 my $plot_name = $design_info->{$plot_id}->{plot_name};
