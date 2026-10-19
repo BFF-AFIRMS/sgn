@@ -1439,6 +1439,37 @@ $t->while_logged_in_as("curator", sub {
 	find_sec_y_val_ok('ty3', 0, 7, 'right');
 
 	# =========================================================================
+	# Plot Details Coordinates
+	# =========================================================================
+	my $details_coordinates_xpath = '//div[contains(@class,"show")]//tr[td[contains(text(),"Coordinates")]]/td[2]';
+	my $details_close_xpath = '//div[contains(@class,"show")]//button[contains(text(),"Close")]';
+
+	# Normal plot coordinates
+	click_plot_cell_ok(2, 1);
+	$t->find_element_ok($details_coordinates_xpath . '[contains(text(),"3 / 2")]' , 'xpath', 'Verify plot CASS_6Genotypes_203 has coordinates 3 / 2');
+	$t->click_ok($details_close_xpath, 'xpath', 'Click Close button in details modal');
+
+	# Plot coordinates after inverting rows and columns
+	$t->click_ok('//label[contains(text(),"Invert Rows")]/input', 'xpath', 'Check Invert Rows checkbox');
+	$t->click_ok('//label[contains(text(),"Invert Columns")]/input', 'xpath', 'Check Invert Columns checkbox');
+	click_plot_cell_ok(4, 1);
+	$t->find_element_ok($details_coordinates_xpath . '[contains(text(),"3 / 2")]' , 'xpath', 'Verify plot CASS_6Genotypes_203 still has coordinates 3 / 2 after inverting');
+	$t->click_ok($details_close_xpath, 'xpath', 'Click Close button in details modal');
+
+	# Plot coordinates after rotating
+	$t->click_ok('//label[contains(text(),"Invert Rows")]/input', 'xpath', 'Unheck Invert Rows checkbox');
+	$t->click_ok('//label[contains(text(),"Invert Columns")]/input', 'xpath', 'Unheck Invert Columns checkbox');
+	$t->click_ok('//button[@title="Rotate"]', 'xpath', 'Click Rotate button');
+	click_plot_cell_ok(1, 2);
+	$t->find_element_ok($details_coordinates_xpath . '[contains(text(),"2 / 3")]' , 'xpath', 'Verify plot CASS_6Genotypes_203 has new coordinates 2 / 3 after rotating');
+	$t->click_ok($details_close_xpath, 'xpath', 'Click Close button in details modal');
+
+	# Reset rotation
+	$t->click_ok('//button[@title="Rotate"]', 'xpath', 'Click Rotate button');
+	$t->click_ok('//button[@title="Rotate"]', 'xpath', 'Click Rotate button');
+	$t->click_ok('//button[@title="Rotate"]', 'xpath', 'Click Rotate button');
+
+	# =========================================================================
 	# Layout Transformations & Border Inset Layers
 	# =========================================================================
 	# Rotate layout 90 degrees clockwise
