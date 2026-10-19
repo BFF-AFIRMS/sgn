@@ -699,8 +699,8 @@ sub verify_seedlot_plot_compatibility {
     my $collection_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "collection_of", "stock_relationship")->cvterm_id();
     my $offspring_of_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, "offspring_of", "stock_relationship")->cvterm_id();
 
-    my $plot_info;
-    my $seedlot_to_plots;
+    my $plot_info = {};
+    my $seedlot_to_plots = {};
 
     foreach (@pairs){
         my $seedlot_name = $_->[0];
@@ -718,7 +718,7 @@ sub verify_seedlot_plot_compatibility {
             {'stock_relationship_subjects.type_id'=>$plot_of_cvterm_id},
             {join => 'object', '+select' => ['object.uniquename', 'me.uniquename'], '+as' => ['parent_name', 'plot_name'] }
         );
-    my $parent_to_plots;
+    my $parent_to_plots = {};
     while (my $record = $plot_parent_rs->next()){
         my $parent_name = $record->get_column("parent_name");
         my $plot_name = $record->get_column("plot_name");
@@ -940,8 +940,8 @@ sub verify_seedlot_accessions_crosses {
             {'stock_relationship_objects.type_id'=>$collection_of_cvterm_id},
             {join => 'subject', '+select' => ['subject.uniquename', 'me.uniquename'], '+as' => ['parent_name', 'seedlot_name'] }
         );
-    my $seedlot_info;
-    my $parent_to_seedlots;
+    my $seedlot_info = {};
+    my $parent_to_seedlots = {};
     while (my $record = $seedlot_parent_rs->next()){
         my $parent_name = $record->get_column("parent_name");
         my $seedlot_name = $record->get_column("seedlot_name");
