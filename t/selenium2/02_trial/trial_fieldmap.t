@@ -6,6 +6,7 @@ use Test::More;
 
 use Try::Tiny;
 use File::Copy;
+use File::Slurp;
 use JSON;
 use SGN::Model::Cvterm;
 use SGN::Test::WWW::WebDriver;
@@ -1282,6 +1283,102 @@ $t->while_logged_in_as("curator", sub {
 	find_plot_cell_ok(0, 2, $odd_block_fill);
 	find_plot_cell_ok(0, 1, $even_block_fill);
 	find_plot_cell_ok(4, 2, $check_fill);
+
+	# =========================================================================
+	# Download Plot Order
+	# =========================================================================
+	my $CASS_6Genotypes_layout_csv = 'plot_name,row_number,col_number
+	CASS_6Genotypes_103,1,1
+	CASS_6Genotypes_104,1,2
+	CASS_6Genotypes_105,1,3
+	CASS_6Genotypes_106,1,4
+	CASS_6Genotypes_107,1,5
+	CASS_6Genotypes_201,2,1
+	CASS_6Genotypes_202,2,2
+	CASS_6Genotypes_203,2,3
+	CASS_6Genotypes_204,2,4
+	CASS_6Genotypes_205,2,5
+	CASS_6Genotypes_206,2,6
+	CASS_6Genotypes_207,2,7
+	CASS_6Genotypes_301,3,1
+	CASS_6Genotypes_302,3,2
+	CASS_6Genotypes_303,3,3
+	CASS_6Genotypes_304,3,4
+	CASS_6Genotypes_305,3,5
+	CASS_6Genotypes_306,3,6
+	CASS_6Genotypes_307,3,7';
+	# Trim leading whitespace
+	$CASS_6Genotypes_layout_csv =~ s/^[ ]+//mg;
+	my $filename = 'CASS_6Genotypes_spatial_layout.csv';
+	my $breedbase_layout_file_path = "/selenium/downloads/$filename";
+	write_file($breedbase_layout_file_path, $CASS_6Genotypes_layout_csv);
+
+	# Upload the spatial layout file
+	my $selenium_layout_file_path = "/downloads/$filename";
+	$t->click_ok('heatmap_upload_trial_coords_link', 'id', 'Click Upload Spatial Layout');
+	$t->send_keys_ok('trial_coordinates_uploaded_file', 'id', $selenium_layout_file_path, 'Select Spatial Layout File Path');
+	$t->click_ok("upload_trial_coords_ok_button", "id", "Submit Spatial Layout Upload ");
+	$t->click_ok("trial_coord_upload_success_dialog_message_cancel", "id", "Close Success Message");
+	$t->wait_for_network_idle();
+
+	# Refresh page
+	$t->get_ok('/breeders/trial/165', 'Navigate to trial page');
+	$t->click_ok('pheno_heatmap_onswitch', 'id', 'Open fieldmap section');
+	$t->wait_for_working_dialog();
+	$t->find_element_ok('//*[@id="' . $svg_id . '"]', 'xpath', 'Find fieldmap SVG');
+
+	# Inverted Rows and Columns + Top and Left Borders + Starting Corner = Bottom Left
+	$t->click_ok('//label[contains(text(),"Invert Rows")]/input', 'xpath', 'Enable Invert Rows checkbox');
+	$t->click_ok('//label[contains(text(),"Invert Columns")]/input', 'xpath', 'Enable Invert Columns checkbox');
+	$t->click_ok('//label[contains(text(),"Top")]/input', 'xpath', 'Enable Top Border checkbox');
+	$t->click_ok('//label[contains(text(),"Left")]/input', 'xpath', 'Enable Left Border checkbox');
+	$t->click_ok('//label[contains(text(),"Include Borders")]/input', 'xpath', "Enable Include Borders for Download Plot Order");
+	$t->click_ok('//label[contains(text(),"Include Gaps")]/input', 'xpath', "Enable Include Gaps for Download Plot Order");
+	$t->click_ok('//label[contains(text(),"Starting Corner")]/following-sibling::select[1]/option[@value="bottom_left"]', 'xpath', "Select Starting Corner Bottom Left");
+	my $plot_order_file_path = "$download_dir/planting_order_165.csv";
+	if (-e $plot_order_file_path) {
+		unlink $plot_order_file_path or die "Could not delete existing file '$plot_order_file_path': $!";
+	}
+	$t->click_ok('//button[contains(text(),"Generate & Download File")]', 'xpath', "Click Generate and Download File");
+	ok((wait_until {-e $plot_order_file_path;} timeout => 15, interval => 1), "Wait for file '$plot_order_file_path' to be downloaded");
+
+	# Check expected values
+	my $plot_order_content = read_file($plot_order_file_path);
+	like($plot_order_content, qr/1,border,,,,,,,,3,8,,,/, "Left Border Exists in Row 3, Column 8");
+	like($plot_order_content, qr/18,gap,,,,,,,,1,7,,,/, "Gap Exists in Row 1, Column 7");
+	like($plot_order_content, qr/19,gap,,,,,,,,1,6,,,/, "Gap Exists in Row 1, Column 6");
+	like($plot_order_content, qr/25,border,,,,,,,,0,8,,,/, "Top and Left Border Exists in Row 0, Column 8");
+	like($plot_order_content, qr/32,border,,,,,,,,0,1,,,/, "Top Border Exists in Row 0, Column 0");
+
+	# Non-Inverted Rows and Columns + Starting Corner = Top Right
+	$t->click_ok('//label[contains(text(),"Invert Rows")]/input', 'xpath', 'Disable Invert Rows checkbox');
+	$t->click_ok('//label[contains(text(),"Invert Columns")]/input', 'xpath', 'Disable Invert Columns checkbox');
+	$t->click_ok('//button[@title="Rotate"]', 'xpath', 'Click Rotate button');
+	$t->click_ok('//label[contains(text(),"Starting Corner")]/following-sibling::select[1]/option[@value="top_right"]', 'xpath', "Select Starting Corner Top Right");
+	my $plot_order_file_path = "$download_dir/planting_order_165.csv";
+	if (-e $plot_order_file_path) {
+		unlink $plot_order_file_path or die "Could not delete existing file '$plot_order_file_path': $!";
+	}
+	$t->click_ok('//button[contains(text(),"Generate & Download File")]', 'xpath', "Click Generate and Download File");
+	ok((wait_until {-e $plot_order_file_path;} timeout => 15, interval => 1), "Wait for file '$plot_order_file_path' to be downloaded");
+
+	# Check expected values
+	$plot_order_content = read_file($plot_order_file_path);
+	like($plot_order_content, qr/1,border,,,,,,,,4,7,,,/, "Top Border Exists in Row 4, Column 7");
+	like($plot_order_content, qr/8,border,,,,,,,,4,0,,,/, "Top and Left Border Exists in Row 4, Column 0");
+	like($plot_order_content, qr/25,gap,,,,,,,,1,7,,,/, "Gap Exists in Row 1, Column 7");
+	like($plot_order_content, qr/26,gap,,,,,,,,1,6,,,/, "Gap Exists in Row 1, Column 6");
+	like($plot_order_content, qr/32,border,,,,,,,,1,0,,,/, "Left Border Exists in Row 1, Column 0");
+
+	# Delete spatial layout
+	$t->click_ok("delete_field_map_hm_link", "id", "Click Delete Spatial Layout");
+	$t->accept_alert_ok("Confirm Delete Spatial Layout");
+	$t->wait_for_working_dialog();
+	# Refresh page
+	$t->get_ok('/breeders/trial/165', 'Navigate to trial page');
+	$t->click_ok('pheno_heatmap_onswitch', 'id', 'Open fieldmap section');
+	$t->wait_for_working_dialog();
+	$t->find_element_ok('//*[@id="' . $svg_id . '"]', 'xpath', 'Find fieldmap SVG');
 
 	# =========================================================================
 	# North Arrow Orientation Configuration
