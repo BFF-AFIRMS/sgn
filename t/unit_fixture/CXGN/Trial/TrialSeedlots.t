@@ -98,12 +98,12 @@ ok($seedlot_biparental->store(), 'Create biparental seedlot');
 
 # Create accession seedlot
 my $test_accession_id = $schema->resultset('Stock::Stock')->find({ uniquename => 'test_accession1' })->stock_id;
-my $seedlot_biparental = CXGN::Stock::Seedlot->new( schema => $schema);
-$seedlot_biparental->uniquename("seedlot_accession");
-$seedlot_biparental->location_code($location_name);
-$seedlot_biparental->accession_stock_id($test_accession_id);
-$seedlot_biparental->breeding_program_id($breeding_program_id);
-ok($seedlot_biparental->store(), 'Create accession seedlot');
+my $seedlot_accession = CXGN::Stock::Seedlot->new( schema => $schema);
+$seedlot_accession->uniquename("seedlot_accession");
+$seedlot_accession->location_code($location_name);
+$seedlot_accession->accession_stock_id($test_accession_id);
+$seedlot_accession->breeding_program_id($breeding_program_id);
+ok($seedlot_accession->store(), 'Create accession seedlot');
 
 # -----------------------------------------------------------------------------
 # Create cross progeny
