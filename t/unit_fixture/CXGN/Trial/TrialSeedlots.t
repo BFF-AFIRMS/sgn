@@ -290,7 +290,7 @@ like($bad_trial_parse_errors, qr/The seedlot: seedlot_cross_op is not linked to 
 like($bad_trial_parse_errors, qr/The seedlot: seedlot_accession is not linked to the accession\/cross_unique_id: test_accession3./i, 'Caught bad accession seedlot relationship during trial upload ');
 
 # -----------------------------------------------------------------------------
-# Download Layout
+# Download Layout with family_name and cross columns
 
 my $layout_file_path = '/tmp/seedlot_trial_layout.csv';
 
@@ -313,15 +313,21 @@ ok(my $error = $download->download(), 'Download trial layout');
 my $plot_1_id = $schema->resultset('Stock::Stock')->find({ name => 'seedlot_trial_plot_1' })->stock_id();
 my $plot_2_id = $schema->resultset('Stock::Stock')->find({ name => 'seedlot_trial_plot_2' })->stock_id();
 my $plot_3_id = $schema->resultset('Stock::Stock')->find({ name => 'seedlot_trial_plot_3' })->stock_id();
+my $plot_4_id = $schema->resultset('Stock::Stock')->find({ name => 'seedlot_trial_plot_4' })->stock_id();
+my $plot_5_id = $schema->resultset('Stock::Stock')->find({ name => 'seedlot_trial_plot_5' })->stock_id();
 
 my $plot_1_accession_id = $schema->resultset('Stock::Stock')->find({ name => 'cross_op_accession_001' })->stock_id();
 my $plot_2_accession_id = $schema->resultset('Stock::Stock')->find({ name => 'cross_biparental_accession_001' })->stock_id();
 my $plot_3_accession_id = $schema->resultset('Stock::Stock')->find({ name => 'test_accession1' })->stock_id();
+my $plot_4_accession_id = $schema->resultset('Stock::Stock')->find({ name => 'test_accession3' })->stock_id();
+my $plot_5_accession_id = $plot_4_accession_id;
 
 my $expected_csv = "plot_name,plot_id,accession_name,accession_id,plot_number,block_number,is_a_control,rep_number,row_number,col_number,seedlot_name,num_seed_per_plot,family_name,cross_unique_id,location_name,trial_name
 seedlot_trial_plot_1,$plot_1_id,cross_op_accession_001,$plot_1_accession_id,1,1,,1,1,1,seedlot_cross_op,10,family_cross_op,cross_op,test_location,seedlot_trial
 seedlot_trial_plot_2,$plot_2_id,cross_biparental_accession_001,$plot_2_accession_id,2,1,,2,1,2,seedlot_cross_biparental,10,,cross_biparental,test_location,seedlot_trial
-seedlot_trial_plot_3,$plot_3_id,test_accession1,$plot_3_accession_id,3,1,,3,1,3,seedlot_accession,10,,,test_location,seedlot_trial";
+seedlot_trial_plot_3,$plot_3_id,test_accession1,$plot_3_accession_id,3,1,,3,1,3,seedlot_accession,10,,,test_location,seedlot_trial
+seedlot_trial_plot_4,$plot_4_id,test_accession3,$plot_4_accession_id,4,1,,3,1,4,,,,,test_location,seedlot_trial
+seedlot_trial_plot_5,$plot_5_id,test_accession3,$plot_5_accession_id,5,1,,3,1,5,,,,,test_location,seedlot_trial";
 my @expected = split "\n", $expected_csv;
 
 # Read observed layout and remove quotations
