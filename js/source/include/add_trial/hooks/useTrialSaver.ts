@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { TrialFormData } from '../types';
 import { useWorkingModal } from '../../working_modal';
+import { fetchListItems } from './useBreedbaseLists';
 
 export const useTrialSaver = () => {
     const [saving, setSaving] = useState(false);
@@ -28,6 +29,22 @@ export const useTrialSaver = () => {
                     if (vals.length > 0) subplotsPerPlot *= vals.length;
                 });
             }
+
+            const [stockListItems, controlListItems] = await Promise.all([
+                (form.stockListId || form.repStockListId) ? fetchListItems(form.stockListId || form.repStockListId) : Promise.resolve(null),
+                form.controlListId ? fetchListItems(form.controlListId) : Promise.resolve(null),
+            ]);
+
+            let greenhousePlantsArray: number[] | undefined;
+            if (form.designType === 'greenhouse' && stockListItems) {
+                const defaultPlants = parseInt(form.greenhouseDefaultPlants || '1', 10) || 1;
+                greenhousePlantsArray = stockListItems.map(st => {
+                    const custom = form.greenhouseCustomPlants[st];
+                    const parsed = parseInt(custom, 10);
+                    return !isNaN(parsed) && parsed > 0 ? parsed : defaultPlants;
+                });
+            }
+
             const payload = new URLSearchParams({
                 project_name: form.trialName.trim(),
                 project_description: form.description.trim(),
@@ -50,6 +67,9 @@ export const useTrialSaver = () => {
                 field_size: form.fieldSize,
                 plot_width: form.plotWidth,
                 plot_length: form.plotLength,
+                fieldmap_col_number: form.colNumberPerBlock || '',
+                fieldmap_row_number: form.fieldMapRowNumber || '',
+                plot_layout_format: form.plotLayoutFormat || '',
                 use_same_layout: form.useSameLayout ? 'same_design' : '',
                 field_trial_is_planned_to_be_genotyped: form.willBeGenotyped,
                 field_trial_is_planned_to_cross: form.willBeCrossed,
@@ -63,6 +83,16 @@ export const useTrialSaver = () => {
                 westcott_col: form.westcottCol,
                 westcott_col_between_check: form.westcottColBetweenCheck
             });
+
+            if (greenhousePlantsArray) {
+                payload.append('greenhouse_num_plants', JSON.stringify(greenhousePlantsArray));
+            }
+            if (stockListItems) {
+                payload.append('stock_list', JSON.stringify(stockListItems));
+            }
+            if (controlListItems) {
+                payload.append('control_list', JSON.stringify(controlListItems));
+            }
 
             form.sourceTrialIds.forEach(id => payload.append('add_project_trial_source[]', id));
 
