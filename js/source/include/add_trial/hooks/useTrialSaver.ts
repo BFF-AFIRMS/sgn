@@ -18,16 +18,18 @@ export const useTrialSaver = () => {
         try {
             let subplotsPerPlot = 1;
             if (form.designType === 'splitplot') {
-                const treatmentsMap: Record<string, string[]> = {};
-                form.treatments.forEach(t => {
-                    if (t.name.trim() && t.value.trim()) {
-                        if (!treatmentsMap[t.name.trim()]) treatmentsMap[t.name.trim()] = [];
-                        treatmentsMap[t.name.trim()].push(t.value.trim());
+                const treatmentCounts: Record<string, number> = {};
+                for (const t of form.treatments) {
+                    const name = t.name.trim();
+                    const value = t.value.trim();
+
+                    if (name && value) {
+                        treatmentCounts[name] = (treatmentCounts[name] || 0) + 1;
                     }
-                });
-                Object.values(treatmentsMap).forEach(vals => {
-                    if (vals.length > 0) subplotsPerPlot *= vals.length;
-                });
+                }
+                for (const count of Object.values(treatmentCounts)) {
+                    subplotsPerPlot *= count;
+                }
             }
 
             const [stockListItems, controlListItems] = await Promise.all([
