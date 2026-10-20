@@ -129,7 +129,7 @@ export const ReviewDesignStep: React.FC<ReviewDesignStepProps> = ({ onSuccess })
                         trialPlotType="plot"
                         hasColAndRowNumbers={true}
                         hasSubplotEntries={formData.designType === 'splitplot'}
-                        hasPlantEntries={parseInt(formData.plantsPerPlot || '0', 10) > 0}
+                        hasPlantEntries={formData.designType === 'greenhouse' || parseInt(formData.plantsPerPlot || formData.greenhouseDefaultPlants || '0', 10) > 0}
                     />
                 </div>
             </div>
