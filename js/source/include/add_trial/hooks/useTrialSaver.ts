@@ -42,7 +42,7 @@ export const useTrialSaver = () => {
 
             let greenhousePlantsArray: number[] | undefined;
             if (form.designType === 'greenhouse' && stockListItems) {
-                const defaultPlants = parseInt(form.greenhouseDefaultPlants || '1', 10) || 1;
+                const defaultPlants = parseInt(form.greenhouseDefaultPlants || form.plantsPerPlot || '1', 10) || 1;
                 greenhousePlantsArray = stockListItems.map(st => {
                     const custom = form.greenhouseCustomPlants[st];
                     return parseInt(custom, 10) || defaultPlants;
@@ -79,7 +79,9 @@ export const useTrialSaver = () => {
                 field_trial_is_planned_to_cross: form.willBeCrossed,
                 has_plant_entries: form.designType === 'splitplot'
                     ? String(subplotsPerPlot * (parseInt(form.numPlantsPerTreatment || '0', 10) || 0))
-                    : (form.plantsPerPlot || '0'),
+                    : form.designType === 'greenhouse'
+                        ? String(parseInt(form.greenhouseDefaultPlants || form.plantsPerPlot || '1', 10) || 1)
+                        : (form.plantsPerPlot || '0'),
                 has_subplot_entries: form.designType === 'splitplot' ? String(subplotsPerPlot) : '0',
                 num_seed_per_plot: form.numSeedPerPlot,
                 westcott_check_1: form.westcottCheck1,

@@ -117,7 +117,25 @@ export const TrialFormProvider: React.FC<{ serverProps: ServerProps; children: R
     const { formData, setFormData, clearDraft, draftId, maxStep, setMaxStep } = useFormDraft<TrialFormData>(defaultData);
 
     const updateField = <K extends keyof TrialFormData>(key: K, val: TrialFormData[K]) => {
-        setFormData(prev => ({ ...prev, [key]: val }));
+        setFormData(prev => {
+            if (key === 'plantsPerPlot') {
+                const strVal = val as string;
+                return {
+                    ...prev,
+                    plantsPerPlot: strVal,
+                    greenhouseDefaultPlants: strVal,
+                };
+            }
+            if (key === 'greenhouseDefaultPlants') {
+                const strVal = val as string;
+                return {
+                    ...prev,
+                    greenhouseDefaultPlants: strVal,
+                    plantsPerPlot: strVal,
+                };
+            }
+            return { ...prev, [key]: val };
+        });
     };
 
     return (
