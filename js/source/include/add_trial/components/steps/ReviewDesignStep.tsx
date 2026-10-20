@@ -44,10 +44,10 @@ export const ReviewDesignStep: React.FC<ReviewDesignStepProps> = ({ onSuccess })
     }, [currentPlots, currentLocationName]);
 
     useEffect(() => {
-        if (!result && !generating && formData.trialName.trim()) {
+        if (!result && !generating && !regenError && formData.trialName.trim()) {
             generateDesign(formData);
         }
-    }, [result, generating, formData, generateDesign]);
+    }, [result, generating, regenError, formData, generateDesign]);
 
     const confirmedTreatments = useMemo(() => {
         return extractConfirmedTreatments(parsedDesigns);
