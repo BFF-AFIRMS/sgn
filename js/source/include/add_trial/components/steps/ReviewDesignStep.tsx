@@ -3,12 +3,12 @@ import { useTrialForm } from '../../contexts/TrialFormContext';
 import { useDesignResult } from '../../contexts/DesignResultContext';
 import { useDesignGenerator } from '../../hooks/useDesignGenerator';
 import { useTrialSaver } from '../../hooks/useTrialSaver';
-import { designMapToObservationUnits } from '../../utils/designAdapters';
+import { designMapToObservationUnits, extractConfirmedTreatments } from '../../utils/designAdapters';
 import { FieldMapContainer } from '../../../fieldmap';
 import { AddTreatmentsModal } from '../../modals/AddTreatmentsModal';
 import { TrialDesignInformation } from '../review/TrialDesignInformation';
 import { TrialDesignLayoutTable } from '../review/TrialDesignLayoutTable';
-import { GeneratedDesignPlot, FieldTrialTreatment } from '../../types';
+import { GeneratedDesignPlot } from '../../types';
 
 interface ReviewDesignStepProps {
     onSuccess: () => void;
@@ -51,30 +51,7 @@ export const ReviewDesignStep: React.FC<ReviewDesignStepProps> = ({ onSuccess })
     }, [result, regenerating, formData, generateDesign, setResult]);
 
     const confirmedTreatments = useMemo(() => {
-        const list: Array<{ name: string; type?: string; stocks: string[] }> = [];
-        const seen = new Map<string, { type?: string; stocks: Set<string> }>();
-
-        for (const design of parsedDesigns) {
-            const treatments = design?.treatments as Record<string, FieldTrialTreatment> | undefined;
-            if (treatments && typeof treatments === 'object') {
-                for (const [key, val] of Object.entries(treatments)) {
-                    if (!seen.has(key)) {
-                        seen.set(key, {
-                            type: val.new_treatment_type,
-                            stocks: new Set(val.new_treatment_stocks || [])
-                        });
-                    } else {
-                        const entry = seen.get(key)!;
-                        (val.new_treatment_stocks || []).forEach(s => entry.stocks.add(s));
-                    }
-                }
-            }
-        }
-
-        for (const [name, entry] of seen.entries()) {
-            list.push({ name, type: entry.type, stocks: Array.from(entry.stocks) });
-        }
-        return list;
+        return extractConfirmedTreatments(parsedDesigns);
     }, [parsedDesigns]);
 
     const handleRedo = async () => {
