@@ -58,6 +58,12 @@ export interface FieldTrialTreatment {
     new_treatment_description: string;
 }
 
+export interface ConfirmedTreatment {
+    name: string;
+    type?: string;
+    stocks: string[];
+}
+
 export interface TrialFormData {
     trialName: string;
     breedingProgram: string;

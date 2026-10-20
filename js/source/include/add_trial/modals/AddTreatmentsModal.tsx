@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useTrialForm } from '../contexts/TrialFormContext';
 import { useDesignResult } from '../contexts/DesignResultContext';
+import { getDesignTreatments } from '../utils/designAdapters';
 import { FieldTrialTreatment } from '../types';
 
 interface AddTreatmentsModalProps {
@@ -150,8 +151,7 @@ export const AddTreatmentsModal: React.FC<AddTreatmentsModalProps> = ({ show, on
         for (let i = 0; i < raw.length; i++) {
             const designHash: Record<string, unknown> = JSON.parse(raw[i]);
 
-            const existingTreatments: Record<string, FieldTrialTreatment> =
-                (designHash['treatments'] as Record<string, FieldTrialTreatment>) || {};
+            const existingTreatments = { ...getDesignTreatments(designHash) };
 
             const selectedSet = selectedPlots[i] || new Set();
             const trialPlots = plotsByTrial[i] || [];
