@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useModals } from '../contexts/ModalsContext';
 import { CsvDownloadOpts } from '../types';
 import { useDownloadLayoutCSV } from '../hooks/useDownloadLayoutCSV';
+import { useLayoutConfig, BorderLabel } from '../contexts/LayoutConfigContext';
 
 interface DownloadCSVModalProps {
 }
@@ -21,6 +22,10 @@ export const DownloadCSVModal: React.FC<DownloadCSVModalProps> = ({ }) => {
         familyName: false,
         crossName: false,
     });
+
+    const {
+        borderLabel, setBorderLabel,
+    } = useLayoutConfig();
 
     const {
         downloadLayoutCSV
@@ -62,6 +67,17 @@ export const DownloadCSVModal: React.FC<DownloadCSVModalProps> = ({ }) => {
                         </div>
                         <div className="checkbox">
                             <label><input type="checkbox" checked={csvDownloadOpts.crossName} onChange={e => setCsvDownloadOpts({ ...csvDownloadOpts, crossName: e.target.checked })} /> Cross</label>
+                        </div>
+                        <div className="form-group tw:min-w-45">
+                            <label>Border Label:</label>
+                            <select
+                                className="form-control"
+                                value={borderLabel}
+                                onChange={e => setBorderLabel(e.target.value as BorderLabel)}
+                            >
+                                <option value="Border">Border</option>
+                                <option value="">Empty Cell</option>
+                            </select>
                         </div>
                     </div>
                     <div className="modal-footer">
