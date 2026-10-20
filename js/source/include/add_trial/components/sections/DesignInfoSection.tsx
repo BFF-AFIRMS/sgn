@@ -450,7 +450,7 @@ export const DesignInfoSection: React.FC<DesignInfoSectionProps> = ({ onOpenPrep
                                                     name={`greenhouse_num_plants_input_${i}`}
                                                     type="text"
                                                     className="form-control input-sm"
-                                                    placeholder={formData.greenhouseDefaultPlants || '1'}
+                                                    placeholder={formData.greenhouseDefaultPlants || formData.plantsPerPlot || '1'}
                                                     value={formData.greenhouseCustomPlants[name] || ''}
                                                     onChange={e => {
                                                         const val = e.target.value;

@@ -35,7 +35,7 @@ export const useDesignGenerator = () => {
             // Greenhouse plants array
             let greenhousePlantsArray: number[] | undefined;
             if (form.designType === 'greenhouse' && stockListItems) {
-                const defaultPlants = parseInt(form.greenhouseDefaultPlants || '1', 10) || 1;
+                const defaultPlants = parseInt(form.greenhouseDefaultPlants || form.plantsPerPlot || '1', 10) || 1;
                 greenhousePlantsArray = stockListItems.map(st => {
                     const custom = form.greenhouseCustomPlants[st];
                     const parsed = parseInt(custom, 10);
@@ -128,7 +128,9 @@ export const useDesignGenerator = () => {
                 treatments: JSON.stringify(treatmentsMap),
                 num_plants_per_plot: form.designType === 'splitplot'
                     ? String((parseInt(form.numPlantsPerTreatment || '0', 10) || 0) * subplotsPerPlot)
-                    : (form.plantsPerPlot || '0')
+                    : form.designType === 'greenhouse'
+                        ? String(parseInt(form.greenhouseDefaultPlants || form.plantsPerPlot || '1', 10) || 1)
+                        : (form.plantsPerPlot || '0')
             });
 
             if (greenhousePlantsArray) payload.append('greenhouse_num_plants', JSON.stringify(greenhousePlantsArray));
