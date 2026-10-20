@@ -4,6 +4,7 @@ use warnings;
 
 use Test::More;
 
+use Try::Tiny;
 use File::Copy;
 use JSON;
 use SGN::Model::Cvterm;
@@ -562,8 +563,14 @@ sub test_download_heatmap_image_ok {
 				if (-s $candidate > 0) {
 					$found_file = $candidate;
 					return 1;
+				} else {
+					warn "Found heatmap PNG file '$candidate' but it is empty";
 				}
+			} else {
+				warn "No heatmap PNG files found in download directory '$download_dir'";
 			}
+		} else {
+			warn "Could not open download directory '$download_dir': $!";
 		}
 		return 0;
 	} timeout => 15, interval => 0.5), "Verify heatmap PNG file was downloaded to disk for '$expected_label'");
@@ -1869,6 +1876,7 @@ EOSQL
 	# =========================================================================
 	# Configure trial with subplots (1 subplot per plot)
 	$t->click_ok('trial_design_section_onswitch', 'id', 'Open trial design section');
+	$t->find_element_ok('//table[@id="trial_controls_table"]//thead//tr//th[contains(text(),"Attribute")]', 'xpath', 'Wait until Attribute column header is in trial design table');
 	$t->click_ok('trial_subplots_onswitch', 'id', 'Open subplots section');
 	$t->click_ok('create_subplot_entries_button', 'id', 'Click Add subplot entries button');
 	$t->send_keys_ok('add_subplots_per_plot_num', 'id', '1', 'Set number of subplots per plot to 1');
@@ -1878,6 +1886,7 @@ EOSQL
 
 	# Configure subplots with plants (3 rows x 3 columns = 9 plants per subplot)
 	$t->click_ok('trial_design_section_onswitch', 'id', 'Re-open trial design section');
+	$t->find_element_ok('//table[@id="trial_controls_table"]//thead//tr//th[contains(text(),"Attribute")]', 'xpath', 'Wait until Attribute column header is in trial design table');
 	$t->click_ok('trial_plants_onswitch', 'id', 'Open plants section');
 	$t->click_ok('create_plant_entries_subplots_button', 'id', 'Click Add plant entries button for subplots');
 	$t->send_keys_ok('add_plants_per_subplot_num', 'id', '9', 'Set number of plants per subplot to 9');
@@ -1929,7 +1938,13 @@ EOSQL
 	$t->click_ok('upload_images_link', 'id', 'Click Add New Image button to open upload modal');
 
 	# Upload and verify image file
-	my $upload_path = eval { $t->driver->upload_file($temp_image) } || $temp_image;
+	my $upload_path;
+	try {
+		$upload_path = $t->driver->upload_file($temp_image);
+	} catch {
+		die "Failed to upload $temp_image: $_";
+	};
+
 	$t->send_keys_ok('upload_images_file_input', 'id', $upload_path, 'Input image filename');
 	$t->driver->execute_script(q{
 		document.getElementById('upload_images_file_input').dispatchEvent(new Event('input', { bubbles: true }));
