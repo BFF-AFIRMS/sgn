@@ -32,9 +32,12 @@ export const useTrialSaver = () => {
                 }
             }
 
+            const stockListId = form.stockListId || form.repStockListId;
+            const controlListId = form.controlListId;
+
             const [stockListItems, controlListItems] = await Promise.all([
-                (form.stockListId || form.repStockListId) ? fetchListItems(form.stockListId || form.repStockListId) : Promise.resolve(null),
-                form.controlListId ? fetchListItems(form.controlListId) : Promise.resolve(null),
+                stockListId ? fetchListItems(stockListId) : Promise.resolve(null),
+                controlListId ? fetchListItems(controlListId) : Promise.resolve(null),
             ]);
 
             let greenhousePlantsArray: number[] | undefined;
@@ -42,8 +45,7 @@ export const useTrialSaver = () => {
                 const defaultPlants = parseInt(form.greenhouseDefaultPlants || '1', 10) || 1;
                 greenhousePlantsArray = stockListItems.map(st => {
                     const custom = form.greenhouseCustomPlants[st];
-                    const parsed = parseInt(custom, 10);
-                    return !isNaN(parsed) && parsed > 0 ? parsed : defaultPlants;
+                    return parseInt(custom, 10) || defaultPlants;
                 });
             }
 
