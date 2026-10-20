@@ -83,6 +83,7 @@ export const designPlotsToObservationUnits = (
         const row = parseInt(String(plot.row_number));
 
         return {
+            type: 'data',
             observationUnitDbId: String(plot.plot_name || plot.plot_number),
             observationUnitName: String(plot.plot_name),
             germplasmName: String(plot.stock_name),
