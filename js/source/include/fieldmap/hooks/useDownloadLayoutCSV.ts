@@ -24,9 +24,9 @@ export const useDownloadLayoutCSV = () => {
 		csvDownloadOpts: CsvDownloadOpts
 	) => {
 		let cols_csv_header = [];
-		let forwardCols = invertCols == axisOrientation.x.reversed;
-		let startCol = forwardCols ? bounds.minCol: bounds.maxCol;
-		let endCol = forwardCols ? bounds.maxCol: bounds.minCol;
+		const forwardCols = invertCols == axisOrientation.x.reversed;
+		const startCol = forwardCols ? bounds.minCol: bounds.maxCol;
+		const endCol = forwardCols ? bounds.maxCol: bounds.minCol;
 		for (let i = startCol; forwardCols ? i <= endCol : i >= endCol; forwardCols ? i++ : i--) {
 			cols_csv_header.push(i);
 		}
