@@ -155,6 +155,49 @@ export const useTrialValidation = () => {
         const syncCheck = validateDesignInfoSync(form);
         if (!syncCheck.valid) return syncCheck;
 
+        const endpoints = {
+            accession: { endpoint: '/ajax/trial/verify_stock_list', paramName: 'stock_list' },
+            cross: { endpoint: '/ajax/trial/verify_cross_list', paramName: 'cross_list' },
+            family_name: { endpoint: '/ajax/trial/verify_family_name_list', paramName: 'family_name_list' }
+        };
+
+        const verifyStockItems = async (items: string[], listLabel?: string): Promise<{ valid: boolean; error?: string }> => {
+            if (items.length === 0) return { valid: true };
+            const { endpoint, paramName } = endpoints[form.stockType];
+            try {
+                const res = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: new URLSearchParams({ [paramName]: JSON.stringify(items) }).toString()
+                });
+                const json = await res.json();
+                if (json.error) {
+                    return { valid: false, error: listLabel ? `${listLabel}: ${json.error}` : json.error };
+                }
+            } catch {
+                return { valid: false, error: `Failed to verify ${listLabel || 'stock list'} with server.` };
+            }
+            return { valid: true };
+        };
+
+        const verifyCheckItems = async (items: string[], listLabel: string): Promise<{ valid: boolean; error?: string }> => {
+            if (items.length === 0) return { valid: true };
+            try {
+                const res = await fetch('/ajax/trial/verify_stock_list', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: new URLSearchParams({ stock_list: JSON.stringify(items) }).toString()
+                });
+                const json = await res.json();
+                if (json.error) {
+                    return { valid: false, error: `${listLabel}: ${json.error}` };
+                }
+            } catch {
+                return { valid: false, error: `Failed to verify ${listLabel.toLowerCase()} with server.` };
+            }
+            return { valid: true };
+        };
+
         if (form.designType === 'p-rep') {
             const [rep, unrep] = await Promise.all([
                 fetchListItems(form.repStockListId),
@@ -172,11 +215,20 @@ export const useTrialValidation = () => {
             if (rows * cols !== (unrep.length + rep.length * repTimes)) {
                 return { valid: false, error: 'Treatment repeats do not equal total plots (rows × columns) in design.' };
             }
+
+            const [repCheck, unrepCheck] = await Promise.all([
+                verifyStockItems(rep, 'Replicated list'),
+                verifyStockItems(unrep, 'Unreplicated list')
+            ]);
+            if (!repCheck.valid) return repCheck;
+            if (!unrepCheck.valid) return unrepCheck;
         } else {
             const elements = await fetchListItems(form.stockListId);
             if (elements.length === 0) {
                 return { valid: false, error: 'Selected stock list contains no items.' };
             }
+            const stockCheck = await verifyStockItems(elements);
+            if (!stockCheck.valid) return stockCheck;
         }
 
         if (form.designType === 'Augmented' || form.designType === 'MAD') {
@@ -184,38 +236,23 @@ export const useTrialValidation = () => {
             if (checks.length === 0) {
                 return { valid: false, error: 'Selected checks list contains no items.' };
             }
+            const checkCheck = await verifyCheckItems(checks, 'Checks list');
+            if (!checkCheck.valid) return checkCheck;
+        }
+
+        if (form.crbdControlListId) {
+            const crbdChecks = await fetchListItems(form.crbdControlListId);
+            if (crbdChecks.length === 0) {
+                return { valid: false, error: 'Selected checks list contains no items.' };
+            }
+            const crbdCheck = await verifyCheckItems(crbdChecks, 'Checks list');
+            if (!crbdCheck.valid) return crbdCheck;
         }
 
         if (form.stockType === 'accession' && form.seedlotListId) {
             const seedlotItems = await fetchListItems(form.seedlotListId);
             if (seedlotItems.length === 0) {
                 return { valid: false, error: 'Selected seedlot list contains no items.' };
-            }
-        }
-
-        // Validate stock list server-side
-        const endpoints = {
-            'accession': { endpoint: '/ajax/trial/verify_stock_list', paramName: 'stock_list' },
-            'cross': { endpoint: '/ajax/trial/verify_cross_list', paramName: 'cross_list' },
-            'family_name': { endpoint: '/ajax/trial/verify_family_name_list', paramName: 'family_name_list' }
-        }
-        const targetListId = form.designType === 'p-rep' ? form.repStockListId : form.stockListId;
-        const elements = await fetchListItems(targetListId);
-        if (elements.length > 0) {
-            const { endpoint, paramName } = endpoints[form.stockType];
-
-            try {
-                const res = await fetch(endpoint, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                    body: new URLSearchParams({ [paramName]: JSON.stringify(elements) }).toString()
-                });
-                const json = await res.json();
-                if (json.error) {
-                    return { valid: false, error: json.error };
-                }
-            } catch {
-                return { valid: false, error: 'Failed to verify stock list with server.' };
             }
         }
 
