@@ -1,9 +1,13 @@
-import React, { createContext, useContext, useState } from 'react';
-import { DesignResultResponse, GeneratedDesignPlot } from '../types';
+import React, { createContext, useContext, useState, useMemo } from 'react';
+import { DesignResultResponse, GeneratedDesignPlot, TrialFormData } from '../types';
+import { useDesignGenerator } from '../hooks/useDesignGenerator';
 
 export interface DesignResultContextType {
     result: DesignResultResponse | null;
-    setResult: (res: DesignResultResponse | null) => void;
+    setResult: React.Dispatch<React.SetStateAction<DesignResultResponse | null>>;
+    generateDesign: (form: TrialFormData) => void;
+    generating: boolean;
+    generatorError: string | null;
     parsedDesigns: Array<Record<string, GeneratedDesignPlot>>;
     selectedLocationIndex: number;
     setSelectedLocationIndex: (idx: number) => void;
@@ -14,11 +18,11 @@ export interface DesignResultContextType {
 const DesignResultContext = createContext<DesignResultContextType | undefined>(undefined);
 
 export const DesignResultProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const [result, setResult] = useState<DesignResultResponse | null>(null);
+    const { data: result, setData: setResult, generateDesign, loading: generating, error: generatorError } = useDesignGenerator();
     const [selectedLocationIndex, setSelectedLocationIndex] = useState(0);
     const [savedTrialId, setSavedTrialId] = useState<string | null>(null);
 
-    const parsedDesigns = React.useMemo(() => {
+    const parsedDesigns = useMemo(() => {
         if (!result?.design_json) return [];
         try {
             const raw: string[] = JSON.parse(result.design_json);
@@ -32,6 +36,9 @@ export const DesignResultProvider: React.FC<{ children: React.ReactNode }> = ({ 
         <DesignResultContext.Provider value={{
             result,
             setResult,
+            generateDesign,
+            generating,
+            generatorError,
             parsedDesigns,
             selectedLocationIndex,
             setSelectedLocationIndex,

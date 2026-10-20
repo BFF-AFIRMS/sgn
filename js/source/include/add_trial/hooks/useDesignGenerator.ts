@@ -4,17 +4,20 @@ import { fetchListItems } from './useBreedbaseLists';
 import { useWorkingModal } from '../../working_modal';
 
 export const useDesignGenerator = () => {
+    const [data, setData] = useState<DesignResultResponse | null>(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
     useWorkingModal(loading);
 
-    const generateDesign = useCallback(async (
+    const generateDesign = useCallback((
         form: TrialFormData
-    ): Promise<{ data: DesignResultResponse | null; error: string | null }> => {
+    ): void => {
         setLoading(true);
         setError(null);
-        try {
+        setData(null);
+        (async () => {
+            try {
             const [stockListItems, controlListItems, crbdControlListItems, unrepStockListItems, repStockListItems] = await Promise.all([
                 form.stockListId ? fetchListItems(form.stockListId) : Promise.resolve(null),
                 form.controlListId ? fetchListItems(form.controlListId) : Promise.resolve(null),
@@ -109,20 +112,20 @@ export const useDesignGenerator = () => {
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                 body: payload.toString()
             });
-            const data: DesignResultResponse = await res.json();
-            if (data.error) {
-                setError(data.error);
-                return { data: null, error: data.error };
+            const resData: DesignResultResponse = await res.json();
+            if (resData.error) {
+                setError(resData.error);
+            } else {
+                setData(resData);
             }
-            return { data, error: null };
-        } catch (e: any) {
-            const msg = e?.message || 'Failed to generate experimental design';
+        } catch (e: unknown) {
+            const msg = e instanceof Error ? e.message : 'Failed to generate experimental design';
             setError(msg);
-            return { data: null, error: msg };
         } finally {
             setLoading(false);
         }
+        })();
     }, []);
 
-    return { generateDesign, loading, error };
+    return { data, setData, generateDesign, loading, error, setError };
 };

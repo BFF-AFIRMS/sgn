@@ -1,8 +1,7 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useTrialForm } from '../../contexts/TrialFormContext';
 import { useDesignResult } from '../../contexts/DesignResultContext';
 import { useTrialValidation, validateTrialInfoSync, validateDesignInfoSync, validateFieldMapInfoSync } from '../../hooks/useTrialValidation';
-import { useDesignGenerator } from '../../hooks/useDesignGenerator';
 import { TrialInfoSection } from '../sections/TrialInfoSection';
 import { DesignInfoSection } from '../sections/DesignInfoSection';
 import { TrialLinkageSection } from '../sections/TrialLinkageSection';
@@ -19,10 +18,10 @@ interface DesignDetailsStepProps {
 
 export const DesignDetailsStep: React.FC<DesignDetailsStepProps> = ({ onOpenPrepHelp, onSuccess, onLockForward }) => {
     const { formData } = useTrialForm();
-    const { setResult } = useDesignResult();
+    const { result, generateDesign, generating, generatorError } = useDesignResult();
     const { validateTrialInfo, validateDesignInfo } = useTrialValidation();
-    const { generateDesign, loading } = useDesignGenerator();
     const [validationError, setValidationError] = useState<string | null>(null);
+    const [submitting, setSubmitting] = useState(false);
 
     const sections = useMemo(() => [
         {
@@ -80,20 +79,25 @@ export const DesignDetailsStep: React.FC<DesignDetailsStepProps> = ({ onOpenPrep
                 return;
             }
 
-            const { data: generated, error: genErr } = await generateDesign(formData);
-            if (genErr) {
-                setValidationError(genErr);
-                alert(genErr);
-                return;
-            }
-            if (generated) {
-                setResult(generated);
-                onSuccess();
-            }
+            setSubmitting(true);
+            generateDesign(formData);
         } finally {
             hideWorkingModal();
         }
     };
+
+    useEffect(() => {
+        if (!submitting) return;
+
+        if (generatorError) {
+            setSubmitting(false);
+            setValidationError(generatorError);
+            alert(generatorError);
+        } else if (result) {
+            setSubmitting(false);
+            onSuccess();
+        }
+    }, [submitting, result, generatorError, onSuccess]);
 
     return (
         <div
@@ -124,10 +128,10 @@ export const DesignDetailsStep: React.FC<DesignDetailsStepProps> = ({ onOpenPrep
                     id="new_trial_submit"
                     name="create_trial_submit"
                     className="btn btn-primary btn-lg"
-                    disabled={loading}
+                    disabled={generating}
                     onClick={handleContinue}
                 >
-                    {loading ? 'Generating Layout...' : 'Continue to Next Step'}
+                    {generating ? 'Generating Layout...' : 'Continue to Next Step'}
                 </button>
             </div>
         </div>
