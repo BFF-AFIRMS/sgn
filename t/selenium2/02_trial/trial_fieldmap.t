@@ -1320,6 +1320,12 @@ $t->while_logged_in_as("curator", sub {
 	$t->accept_alert_ok('Accept layout submission success alert');
 	$t->wait_for_network_idle();
 
+	# Refresh page to access new options now with submit layout
+	$t->get_ok('/breeders/trial/165', 'Navigate to trial page');
+	$t->click_ok('pheno_heatmap_onswitch', 'id', 'Open fieldmap section');
+	$t->wait_for_working_dialog();
+	$t->find_element_ok('//*[@id="' . $svg_id . '"]', 'xpath', 'Find fieldmap SVG');
+
 	# Inverted Rows and Columns + Top and Left Borders + Starting Corner = Bottom Left
 	$t->click_ok('//label[contains(text(),"Invert Rows")]/input', 'xpath', 'Enable Invert Rows checkbox');
 	$t->click_ok('//label[contains(text(),"Invert Columns")]/input', 'xpath', 'Enable Invert Columns checkbox');
