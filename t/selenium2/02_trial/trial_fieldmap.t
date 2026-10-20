@@ -633,11 +633,13 @@ sub download_spatial_layout_ok {
 
 	$t->click_ok($trigger_xpath, 'xpath', 'Click Download Spatial Layout button');
 
-	foreach my $label (@$checkboxes) {
+	foreach my $label (@$all_checkbox_labels) {
 		my $element = $t->find_element_ok('//div[contains(@class,"show")]//label[contains(text(),"' . $label . '")]/input', 'xpath', "Find checkbox for '$label'");
-
-		next if $element->is_selected();
-		ok($element->click(), "Click checkbox for '$label'");
+		if ( grep { $_ eq $label } @$checkboxes ){
+			ok($element->click(), "Enable checkbox for '$label'") unless $element->is_selected();
+		} else {
+			ok($element->click(), "Disable checkbox for '$label'") if $element->is_selected();;
+		}
 	}
 
 	$t->click_ok('//div[contains(@class,"show")]//button[contains(text(),"Download CSV")]', 'xpath', 'Click Download CSV button');
@@ -1394,6 +1396,60 @@ $t->while_logged_in_as("curator", sub {
 	like($plot_order_content, qr/25,gap,,,,,,,,1,7,,,/, "Gap Exists in Row 1, Column 7");
 	like($plot_order_content, qr/26,gap,,,,,,,,1,6,,,/, "Gap Exists in Row 1, Column 6");
 	like($plot_order_content, qr/32,border,,,,,,,,1,0,,,/, "Left Border Exists in Row 1, Column 0");
+
+	# Refresh page
+	$t->get_ok('/breeders/trial/165', 'Navigate to trial page');
+	$t->click_ok('pheno_heatmap_onswitch', 'id', 'Open fieldmap section');
+	$t->wait_for_working_dialog();
+	$t->find_element_ok('//*[@id="' . $svg_id . '"]', 'xpath', 'Find fieldmap SVG');
+
+	# =========================================================================
+	# Download Spatial Layout
+	# =========================================================================
+	# Confirm and submit layout
+	$t->click_ok('//button[contains(text(),"Submit Layout Changes")]', 'xpath', 'Click Submit Layout Changes button');
+	$t->accept_alert_ok('Accept layout submission confirmation prompt');
+	$t->accept_alert_ok('Accept layout submission success alert');
+	$t->wait_for_network_idle();
+
+	# Double rotate (x and y axis labels both in a reversed state)
+	$t->click_ok('//button[@title="Rotate"]', 'xpath', 'Click Rotate button');
+	$t->click_ok('//button[@title="Rotate"]', 'xpath', 'Click Rotate button');
+	my $expected_csv = (
+		'Rows/Columns,7,6,5,4,3,2,1
+		1,"","","107","106","105","104","103"
+		2,"207","206","205","204","203","202","201"
+		3,"307","306","305","304","303","302","301"
+		' =~ s/^[\t]+//mgr
+	);
+	write_file('/tmp/Trial_165_spatial_layout_rotate_expected.csv', $expected_csv);
+	download_spatial_layout_ok(
+		'Trial_165_spatial_layout.csv',
+		'/tmp/Trial_165_spatial_layout_rotate_expected.csv',
+		['Plot Number']
+	);
+
+	# 1 Rotate + Invert Columns and Rows
+	$t->click_ok('//button[@title="Rotate"]', 'xpath', 'Click Rotate button');
+	$t->click_ok('//label[contains(text(),"Invert Rows")]/input', 'xpath', 'Disable Invert Rows checkbox');
+	$t->click_ok('//label[contains(text(),"Invert Columns")]/input', 'xpath', 'Disable Invert Columns checkbox');
+	my $expected_csv = (
+		'Rows/Columns,1,2,3
+		1,"103","201","301"
+		2,"104","202","302"
+		3,"105","203","303"
+		4,"106","204","304"
+		5,"107","205","305"
+		6,"","206","306"
+		7,"","207","307"
+		' =~ s/^[\t]+//mgr
+	);
+	write_file('/tmp/Trial_165_spatial_layout_invert_expected.csv', $expected_csv);
+	download_spatial_layout_ok(
+		'Trial_165_spatial_layout.csv',
+		'/tmp/Trial_165_spatial_layout_invert_expected.csv',
+		['Plot Number']
+	);
 
 	# Refresh page
 	$t->get_ok('/breeders/trial/165', 'Navigate to trial page');
