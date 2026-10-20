@@ -31,7 +31,7 @@ $d->while_logged_in_as('submitter', sub {
     $d->send_keys_ok("updateListDescField", "id", "new_trial_list_description", "add trial test list description");
 
     $d->click_ok("updateListDescButton", "id", "click update List Desc Button");
-    $d->accept_alert();
+    $d->accept_alert_ok("accept update list description alert");
     $d->wait_for_alert_dismissed();
 
     my $trials_list = "Kasese solgs trial\ntrial2 NaCRRI";
@@ -52,7 +52,7 @@ $d->while_logged_in_as('submitter', sub {
         "select 'trials' as type list");
 
     $d->click_ok("list_item_dialog_validate", "id", "find and click validate 'trails' type list");
-    $d->accept_alert();
+    $d->accept_alert_ok("accept validation alert");
 
     $d->wait_for_working_dialog();
 
