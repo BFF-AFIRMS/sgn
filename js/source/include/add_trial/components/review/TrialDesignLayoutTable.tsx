@@ -21,16 +21,6 @@ export const TrialDesignLayoutTable: React.FC<TrialDesignLayoutTableProps> = ({
         return 'Accession Name';
     }, [stockType]);
 
-    const sortedPlots = useMemo(() => {
-        return [...plots].sort((a, b) => {
-            const numA = parseInt(String(a.plot_number || 0), 10);
-            const numB = parseInt(String(b.plot_number || 0), 10);
-            return isNaN(numA) || isNaN(numB)
-                ? String(a.plot_name).localeCompare(String(b.plot_name))
-                : numA - numB;
-        });
-    }, [plots]);
-
     return (
         <table className="table table-bordered table-hover">
             <thead>
@@ -52,7 +42,7 @@ export const TrialDesignLayoutTable: React.FC<TrialDesignLayoutTableProps> = ({
                 </tr>
             </thead>
             <tbody>
-                {sortedPlots.map(plot => {
+                {plots.map(plot => {
                     const plotNum = plot.plot_number ?? '';
                     const plotName = plot.plot_name ?? '';
                     const stockName = plot.stock_name ?? '';

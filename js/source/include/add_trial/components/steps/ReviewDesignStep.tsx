@@ -3,12 +3,15 @@ import { useTrialForm } from '../../contexts/TrialFormContext';
 import { useDesignResult } from '../../contexts/DesignResultContext';
 import { useDesignGenerator } from '../../hooks/useDesignGenerator';
 import { useTrialSaver } from '../../hooks/useTrialSaver';
-import { designMapToObservationUnits, extractConfirmedTreatments } from '../../utils/designAdapters';
+import {
+    extractDesignPlots,
+    designPlotsToObservationUnits,
+    extractConfirmedTreatments
+} from '../../utils/designAdapters';
 import { FieldMapContainer } from '../../../fieldmap';
 import { AddTreatmentsModal } from '../../modals/AddTreatmentsModal';
 import { TrialDesignInformation } from '../review/TrialDesignInformation';
 import { TrialDesignLayoutTable } from '../review/TrialDesignLayoutTable';
-import { GeneratedDesignPlot } from '../../types';
 
 interface ReviewDesignStepProps {
     onSuccess: () => void;
@@ -28,17 +31,17 @@ export const ReviewDesignStep: React.FC<ReviewDesignStepProps> = ({ onSuccess })
     const { saveTrial, saving, error: saveError } = useTrialSaver();
     const [showTreatmentModal, setShowTreatmentModal] = useState(false);
 
-    const currentDesign = parsedDesigns[selectedLocationIndex] || parsedDesigns[0] || {};
-    const currentUnits = useMemo(() => {
-        const locName = formData.locations[selectedLocationIndex] || formData.trialName;
-        return designMapToObservationUnits(currentDesign, locName);
-    }, [currentDesign, selectedLocationIndex, formData.locations, formData.trialName]);
+    const currentLocationName = formData.locations[selectedLocationIndex] || formData.trialName;
+    const currentDesign = parsedDesigns[selectedLocationIndex] || parsedDesigns[0];
 
-    const currentPlots = useMemo(() => {
-        return Object.entries(currentDesign)
-            .filter(([key, plot]) => key !== 'treatments' && plot && typeof plot === 'object' && (plot.plot_name || plot.plot_number !== undefined))
-            .map(([_, plot]) => plot as GeneratedDesignPlot);
-    }, [currentDesign]);
+    const currentPlots = useMemo(
+        () => extractDesignPlots(currentDesign),
+        [currentDesign]
+    );
+
+    const currentUnits = useMemo(() => {
+        return designPlotsToObservationUnits(currentPlots, currentLocationName);
+    }, [currentPlots, currentLocationName]);
 
     useEffect(() => {
         if (!result && !regenerating && formData.trialName.trim()) {
