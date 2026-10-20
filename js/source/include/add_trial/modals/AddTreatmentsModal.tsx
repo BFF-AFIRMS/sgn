@@ -136,7 +136,7 @@ export const AddTreatmentsModal: React.FC<AddTreatmentsModalProps> = ({ show, on
         }
         if (!result?.design_json) return;
 
-        let raw: unknown;
+        let raw: string[];
         try {
             raw = JSON.parse(result.design_json);
         } catch {
@@ -144,14 +144,11 @@ export const AddTreatmentsModal: React.FC<AddTreatmentsModalProps> = ({ show, on
             return;
         }
 
-        const designArray: unknown[] = Array.isArray(raw) ? raw : [raw];
         const newDesignArray: string[] = [];
         const formattedDate = formatTreatmentDate(treatmentDate);
 
-        for (let i = 0; i < designArray.length; i++) {
-            const designHash: Record<string, unknown> = typeof designArray[i] === 'string'
-                ? JSON.parse(designArray[i] as string)
-                : { ...(designArray[i] as Record<string, unknown>) };
+        for (let i = 0; i < raw.length; i++) {
+            const designHash: Record<string, unknown> = JSON.parse(raw[i]);
 
             const existingTreatments: Record<string, FieldTrialTreatment> =
                 (designHash['treatments'] as Record<string, FieldTrialTreatment>) || {};

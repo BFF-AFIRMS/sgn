@@ -51,40 +51,31 @@ export const ReviewDesignStep: React.FC<ReviewDesignStepProps> = ({ onSuccess })
     }, [result, regenerating, formData, generateDesign, setResult]);
 
     const confirmedTreatments = useMemo(() => {
-        if (!result?.design_json) return [];
-        try {
-            const raw = JSON.parse(result.design_json);
-            const designArray = Array.isArray(raw) ? raw : [raw];
-            const list: Array<{ name: string; type?: string; stocks: string[] }> = [];
-            const seen = new Map<string, { type?: string; stocks: Set<string> }>();
+        const list: Array<{ name: string; type?: string; stocks: string[] }> = [];
+        const seen = new Map<string, { type?: string; stocks: Set<string> }>();
 
-            for (let i = 0; i < designArray.length; i++) {
-                const dh = typeof designArray[i] === 'string' ? JSON.parse(designArray[i] as string) : designArray[i];
-                const treatments = dh?.treatments as Record<string, FieldTrialTreatment> | undefined;
-                if (treatments && typeof treatments === 'object') {
-                    for (const [key, val] of Object.entries(treatments)) {
-                        if (!seen.has(key)) {
-                            seen.set(key, {
-                                type: val.new_treatment_type,
-                                stocks: new Set(val.new_treatment_stocks || [])
-                            });
-                        } else {
-                            const entry = seen.get(key)!;
-                            (val.new_treatment_stocks || []).forEach(s => entry.stocks.add(s));
-                        }
+        for (const design of parsedDesigns) {
+            const treatments = design?.treatments as Record<string, FieldTrialTreatment> | undefined;
+            if (treatments && typeof treatments === 'object') {
+                for (const [key, val] of Object.entries(treatments)) {
+                    if (!seen.has(key)) {
+                        seen.set(key, {
+                            type: val.new_treatment_type,
+                            stocks: new Set(val.new_treatment_stocks || [])
+                        });
+                    } else {
+                        const entry = seen.get(key)!;
+                        (val.new_treatment_stocks || []).forEach(s => entry.stocks.add(s));
                     }
                 }
             }
-
-            for (const [name, entry] of seen.entries()) {
-                list.push({ name, type: entry.type, stocks: Array.from(entry.stocks) });
-            }
-
-            return list;
-        } catch {
-            return [];
         }
-    }, [result?.design_json]);
+
+        for (const [name, entry] of seen.entries()) {
+            list.push({ name, type: entry.type, stocks: Array.from(entry.stocks) });
+        }
+        return list;
+    }, [parsedDesigns]);
 
     const handleRedo = async () => {
         const { data: generated, error: err } = await generateDesign(formData);
