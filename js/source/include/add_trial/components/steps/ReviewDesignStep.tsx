@@ -1,7 +1,6 @@
 import React, { useMemo, useEffect, useState } from 'react';
 import { useTrialForm } from '../../contexts/TrialFormContext';
 import { useDesignResult } from '../../contexts/DesignResultContext';
-import { useDesignGenerator } from '../../hooks/useDesignGenerator';
 import { useTrialSaver } from '../../hooks/useTrialSaver';
 import {
     extractDesignPlots,
@@ -21,13 +20,14 @@ export const ReviewDesignStep: React.FC<ReviewDesignStepProps> = ({ onSuccess })
     const { formData, clearDraft } = useTrialForm();
     const {
         result,
-        setResult,
+        generateDesign,
+        generating,
+        generatorError: regenError,
         parsedDesigns,
         selectedLocationIndex,
         setSelectedLocationIndex,
         setSavedTrialId
     } = useDesignResult();
-    const { generateDesign, loading: regenerating, error: regenError } = useDesignGenerator();
     const { saveTrial, saving, error: saveError } = useTrialSaver();
     const [showTreatmentModal, setShowTreatmentModal] = useState(false);
 
@@ -44,29 +44,24 @@ export const ReviewDesignStep: React.FC<ReviewDesignStepProps> = ({ onSuccess })
     }, [currentPlots, currentLocationName]);
 
     useEffect(() => {
-        if (!result && !regenerating && formData.trialName.trim()) {
-            generateDesign(formData).then(({ data }) => {
-                if (data) {
-                    setResult(data);
-                }
-            });
+        if (!result && !generating && formData.trialName.trim()) {
+            generateDesign(formData);
         }
-    }, [result, regenerating, formData, generateDesign, setResult]);
+    }, [result, generating, formData, generateDesign]);
 
     const confirmedTreatments = useMemo(() => {
         return extractConfirmedTreatments(parsedDesigns);
     }, [parsedDesigns]);
 
-    const handleRedo = async () => {
-        const { data: generated, error: err } = await generateDesign(formData);
-        if (err) {
-            alert(err);
-            return;
-        }
-        if (generated) {
-            setResult(generated);
-        }
+    const handleRedo = () => {
+        generateDesign(formData);
     };
+
+    useEffect(() => {
+        if (regenError) {
+            alert(regenError);
+        }
+    }, [regenError]);
 
     const handleConfirm = async () => {
         if (!result?.design_json) return;
@@ -143,17 +138,17 @@ export const ReviewDesignStep: React.FC<ReviewDesignStepProps> = ({ onSuccess })
                     type="button"
                     id="redo_trial_layout_button"
                     className="btn btn-info btn-lg"
-                    disabled={regenerating || saving}
+                    disabled={generating || saving}
                     onClick={handleRedo}
                 >
-                    {regenerating ? 'Regenerating...' : 'Redo Randomization'}
+                    {generating ? 'Regenerating...' : 'Redo Randomization'}
                 </button>
                 <button
                     type="button"
                     id="add_trial_treatments_button"
                     name="new_trial_add_treatments"
                     className="btn btn-default btn-lg"
-                    disabled={regenerating || saving}
+                    disabled={generating || saving}
                     onClick={() => setShowTreatmentModal(true)}
                 >
                     + Add Field Treatments
@@ -180,7 +175,7 @@ export const ReviewDesignStep: React.FC<ReviewDesignStepProps> = ({ onSuccess })
                     id="new_trial_confirm_submit"
                     name="new_trial_confirm_submit"
                     className="btn btn-primary btn-lg"
-                    disabled={saving || regenerating}
+                    disabled={saving || generating}
                     onClick={handleConfirm}
                 >
                     {saving ? 'Saving Trial...' : 'Confirm (Save Trial in Database)'}
