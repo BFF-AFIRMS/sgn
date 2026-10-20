@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import { TrialFormData } from '../types';
 import { useWorkingModal } from '../../working_modal';
 import { fetchListItems } from './useBreedbaseLists';
+import { getSplitplotTreatments } from '../utils/designAdapters';
 
 interface SaveTrialResponse {
     trial_id?: number | string;
@@ -27,21 +28,9 @@ export const useTrialSaver = () => {
         setIsSuccess(false);
 
         try {
-            let subplotsPerPlot = 1;
-            if (form.designType === 'splitplot') {
-                const treatmentCounts: Record<string, number> = {};
-                for (const t of form.treatments) {
-                    const name = t.name.trim();
-                    const value = t.value.trim();
-
-                    if (name && value) {
-                        treatmentCounts[name] = (treatmentCounts[name] || 0) + 1;
-                    }
-                }
-                for (const count of Object.values(treatmentCounts)) {
-                    subplotsPerPlot *= count;
-                }
-            }
+            const { subplotsPerPlot } = form.designType === 'splitplot'
+                ? getSplitplotTreatments(form.treatments)
+                : { subplotsPerPlot: 1 };
 
             const stockListId = form.stockListId || form.repStockListId;
             const controlListId = form.controlListId;

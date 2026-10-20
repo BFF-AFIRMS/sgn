@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import { TrialFormData, DesignResultResponse } from '../types';
 import { fetchListItems } from './useBreedbaseLists';
 import { useWorkingModal } from '../../working_modal';
+import { getSplitplotTreatments } from '../utils/designAdapters';
 
 export const useDesignGenerator = () => {
     const [data, setData] = useState<DesignResultResponse | null>(null);
@@ -26,19 +27,9 @@ export const useDesignGenerator = () => {
             ]);
 
             // Format splitplot treatments
-            const treatmentsMap: Record<string, string[]> = {};
-            let subplotsPerPlot = 1;
-            if (form.designType === 'splitplot') {
-                form.treatments.forEach(t => {
-                    if (t.name.trim() && t.value.trim()) {
-                        if (!treatmentsMap[t.name.trim()]) treatmentsMap[t.name.trim()] = [];
-                        treatmentsMap[t.name.trim()].push(t.value.trim());
-                    }
-                });
-                Object.values(treatmentsMap).forEach(vals => {
-                    if (vals.length > 0) subplotsPerPlot *= vals.length;
-                });
-            }
+            const { treatmentsMap, subplotsPerPlot } = form.designType === 'splitplot'
+                ? getSplitplotTreatments(form.treatments)
+                : { treatmentsMap: {}, subplotsPerPlot: 1 };
 
             // Greenhouse plants array
             let greenhousePlantsArray: number[] | undefined;
@@ -96,10 +87,8 @@ export const useDesignGenerator = () => {
                     ? String((parseInt(form.numPlantsPerTreatment || '0', 10) || 0) * subplotsPerPlot)
                     : (form.plantsPerPlot || '0')
             });
-            if (greenhousePlantsArray) {
-                payload.append('greenhouse_num_plants', JSON.stringify(greenhousePlantsArray));
-            }
 
+            if (greenhousePlantsArray) payload.append('greenhouse_num_plants', JSON.stringify(greenhousePlantsArray));
             if (stockListItems) payload.append('stock_list', JSON.stringify(stockListItems));
             if (controlListItems) payload.append('control_list', JSON.stringify(controlListItems));
             if (crbdControlListItems) payload.append('control_list_crbd', JSON.stringify(crbdControlListItems));
