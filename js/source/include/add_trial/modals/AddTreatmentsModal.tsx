@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useTrialForm } from '../contexts/TrialFormContext';
 import { useDesignResult } from '../contexts/DesignResultContext';
-import { getDesignTreatments } from '../utils/designAdapters';
+import { getDesignTreatments, extractDesignPlots } from '../utils/designAdapters';
 import { FieldTrialTreatment } from '../types';
 
 interface AddTreatmentsModalProps {
@@ -73,20 +73,10 @@ export const AddTreatmentsModal: React.FC<AddTreatmentsModalProps> = ({ show, on
         }
     }, [show, managementFactorTypes, formData.year, formData.plantingDate]);
 
-    const plotsByTrial = useMemo(() => {
-        return parsedDesigns.map(designMap => {
-            return Object.entries(designMap)
-                .filter(([key, plot]) => key !== 'treatments' && plot && typeof plot === 'object' && (plot.plot_name || plot.plot_number !== undefined))
-                .map(([_, plot]) => plot)
-                .sort((a, b) => {
-                    const numA = parseInt(String(a.plot_number || 0), 10);
-                    const numB = parseInt(String(b.plot_number || 0), 10);
-                    return isNaN(numA) || isNaN(numB)
-                        ? String(a.plot_name).localeCompare(String(b.plot_name))
-                        : numA - numB;
-                });
-        });
-    }, [parsedDesigns]);
+    const plotsByTrial = useMemo(
+        () => parsedDesigns.map(extractDesignPlots),
+        [parsedDesigns]
+    );
 
     const handleContinue = () => {
         if (!treatmentName.trim()) {
