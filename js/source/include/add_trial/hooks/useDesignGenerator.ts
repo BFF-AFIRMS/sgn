@@ -18,12 +18,13 @@ export const useDesignGenerator = () => {
         setError(null);
         setData(null);
         try {
-            const [stockListItems, controlListItems, crbdControlListItems, unrepStockListItems, repStockListItems] = await Promise.all([
+            const [stockListItems, controlListItems, crbdControlListItems, unrepStockListItems, repStockListItems, seedlotListItems] = await Promise.all([
                 form.stockListId ? fetchListItems(form.stockListId) : Promise.resolve(null),
                 form.controlListId ? fetchListItems(form.controlListId) : Promise.resolve(null),
                 form.crbdControlListId ? fetchListItems(form.crbdControlListId) : Promise.resolve(null),
                 form.unrepStockListId ? fetchListItems(form.unrepStockListId) : Promise.resolve(null),
                 form.repStockListId ? fetchListItems(form.repStockListId) : Promise.resolve(null),
+                (form.stockType === 'accession' && form.seedlotListId) ? fetchListItems(form.seedlotListId) : Promise.resolve(null),
             ]);
 
             // Format splitplot treatments
@@ -40,6 +41,48 @@ export const useDesignGenerator = () => {
                     const parsed = parseInt(custom, 10);
                     return !isNaN(parsed) && parsed > 0 ? parsed : defaultPlants;
                 });
+            }
+
+            let seedlotHash: Record<string, string> = { ...(form.seedlotHash || {}) };
+            if (form.stockType === 'accession' && form.seedlotListId) {
+                if (!seedlotListItems || seedlotListItems.length === 0) {
+                    setError('Selected seedlot list contains no items.');
+                    return;
+                }
+
+                const listsToVerify = [
+                    { items: stockListItems, required: true },
+                    { items: repStockListItems, required: true },
+                    { items: unrepStockListItems, required: true },
+                    { items: controlListItems, required: false },
+                    { items: crbdControlListItems, required: false },
+                ].filter((entry): entry is { items: string[]; required: boolean } => Boolean(entry.items && entry.items.length > 0));
+
+                const verifyResults = await Promise.all(
+                    listsToVerify.map(async entry => {
+                        const res = await fetch('/ajax/trial/verify_seedlot_list', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                            body: new URLSearchParams({
+                                stock_list: JSON.stringify(entry.items),
+                                seedlot_list: JSON.stringify(seedlotListItems),
+                            }).toString(),
+                        });
+                        const json = await res.json();
+                        return { entry, json };
+                    })
+                );
+
+                for (const { entry, json } of verifyResults) {
+                    if (json.error) {
+                        if (entry.required) {
+                            setError(json.error);
+                            return;
+                        }
+                    } else if (json.seedlot_hash) {
+                        seedlotHash = { ...seedlotHash, ...json.seedlot_hash };
+                    }
+                }
             }
 
             const payload = new URLSearchParams({
@@ -77,7 +120,7 @@ export const useDesignGenerator = () => {
                 plot_width: form.plotWidth,
                 plot_length: form.plotLength,
                 num_seed_per_plot: form.numSeedPerPlot,
-                seedlot_hash: JSON.stringify(form.seedlotHash || {}),
+                seedlot_hash: JSON.stringify(seedlotHash),
                 westcott_check_1: form.westcottCheck1,
                 westcott_check_2: form.westcottCheck2,
                 westcott_col: form.westcottCol,
