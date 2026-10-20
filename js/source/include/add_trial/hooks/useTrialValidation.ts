@@ -61,12 +61,16 @@ export const validateDesignInfoSync = (
         }
     }
 
-    if (form.designType === 'Augmented' && (!form.maxBlockSize || parseInt(form.maxBlockSize, 10) < 1)) {
-        return { valid: false, error: 'Please specify maximum block size for Augmented design.' };
+    if (form.designType === 'Augmented') {
+        if (!form.maxBlockSize || parseInt(form.maxBlockSize, 10) < 1) {
+            return { valid: false, error: 'Please specify maximum block size for Augmented design.' };
+        }
     }
 
-    if (form.designType === 'DRRC' && (!form.colNumber || parseInt(form.colNumber, 10) < 1)) {
-        return { valid: false, error: 'Doubly-Resolvable Row-Column (DRRC) requires specifying Number of Columns.' };
+    if (form.designType === 'DRRC') {
+        if (!form.colNumber || parseInt(form.colNumber, 10) < 1) {
+            return { valid: false, error: 'Doubly-Resolvable Row-Column (DRRC) requires specifying Number of Columns.' };
+        }
     }
 
     if (form.designType === 'URDD') {
@@ -93,8 +97,10 @@ export const validateDesignInfoSync = (
         }
     }
 
-    if (form.designType === 'Alpha' && (!form.blockSize || parseInt(form.blockSize, 10) < 1)) {
-        return { valid: false, error: 'Please specify block size for Alpha Lattice design.' };
+    if (form.designType === 'Alpha') {
+        if (!form.blockSize || parseInt(form.blockSize, 10) < 1) {
+            return { valid: false, error: 'Please specify block size for Alpha Lattice design.' };
+        }
     }
 
     if (form.designType === 'Westcott') {
@@ -126,8 +132,10 @@ export const validateDesignInfoSync = (
 };
 
 export const validateFieldMapInfoSync = (form: TrialFormData): { valid: boolean; error?: string } => {
-    if (form.designType === 'RRC' && (!form.fieldMapRowNumber || parseInt(form.fieldMapRowNumber, 10) < 1)) {
-        return { valid: false, error: 'Resolvable Row-Column (RRC) requires specifying Number of Rows in design.' };
+    if (form.designType === 'RRC') {
+        if (!form.fieldMapRowNumber || parseInt(form.fieldMapRowNumber, 10) < 1) {
+            return { valid: false, error: 'Resolvable Row-Column (RRC) requires specifying Number of Rows in design.' };
+        }
     }
     return { valid: true };
 };
@@ -153,16 +161,21 @@ export const useTrialValidation = () => {
 
     const validateDesignInfo = useCallback(async (form: TrialFormData): Promise<{ valid: boolean; error?: string }> => {
         const syncCheck = validateDesignInfoSync(form);
-        if (!syncCheck.valid) return syncCheck;
-
-        const endpoints = {
-            accession: { endpoint: '/ajax/trial/verify_stock_list', paramName: 'stock_list' },
-            cross: { endpoint: '/ajax/trial/verify_cross_list', paramName: 'cross_list' },
-            family_name: { endpoint: '/ajax/trial/verify_family_name_list', paramName: 'family_name_list' }
-        };
+        if (!syncCheck.valid) {
+            return syncCheck;
+        }
 
         const verifyStockItems = async (items: string[], listLabel?: string): Promise<{ valid: boolean; error?: string }> => {
-            if (items.length === 0) return { valid: true };
+            const endpoints = {
+                accession: { endpoint: '/ajax/trial/verify_stock_list', paramName: 'stock_list' },
+                cross: { endpoint: '/ajax/trial/verify_cross_list', paramName: 'cross_list' },
+                family_name: { endpoint: '/ajax/trial/verify_family_name_list', paramName: 'family_name_list' }
+            };
+
+            if (items.length === 0) {
+                return { valid: true };
+            }
+
             const { endpoint, paramName } = endpoints[form.stockType];
             try {
                 const res = await fetch(endpoint, {
