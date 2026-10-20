@@ -1,4 +1,30 @@
 import { GeneratedDesignPlot, FieldTrialTreatment, ConfirmedTreatment } from '../types';
+import { Plot } from '../../fieldmap/types';
+
+/**
+ * Extracts and sorts plot records from a raw design layout map,
+ * filtering out metadata keys such as 'treatments'.
+ */
+export const extractDesignPlots = (
+    design?: Record<string, unknown>
+): GeneratedDesignPlot[] => {
+    if (!design) return [];
+    return Object.entries(design)
+        .filter(([key, plot]) => (
+            key !== 'treatments' &&
+            plot &&
+            typeof plot === 'object' &&
+            (('plot_name' in plot) || ('plot_number' in plot))
+        ))
+        .map(([_, plot]) => plot as GeneratedDesignPlot)
+        .sort((a, b) => {
+            const numA = parseInt(String(a.plot_number || 0), 10);
+            const numB = parseInt(String(b.plot_number || 0), 10);
+            return isNaN(numA) || isNaN(numB)
+                ? String(a.plot_name || '').localeCompare(String(b.plot_name || ''))
+                : numA - numB;
+        });
+};
 
 /**
  * Safely extracts the treatments dictionary from a design map.
@@ -45,21 +71,14 @@ export const extractConfirmedTreatments = (
 };
 
 /**
- * Adapts a generated design plot map (from /ajax/trial/generate_experimental_design)
- * into BrAPI ObservationUnit records compatible with FieldMap's derivePlotGrid.
+ * Converts generated design plots into BrAPI ObservationUnit records
+ * compatible with FieldMap's derivePlotGrid.
  */
-export const designMapToObservationUnits = (
-    designMap: Record<string, GeneratedDesignPlot>,
+export const designPlotsToObservationUnits = (
+    plots: GeneratedDesignPlot[],
     studyName?: string
-): any[] => {
-    return Object.entries(designMap)
-        .filter(([key, plot]) => (
-            key !== 'treatments' &&
-            plot &&
-            typeof plot === 'object' &&
-            (plot.plot_name || plot.plot_number !== undefined)
-        ))
-        .map(([_, plot]) => {
+): Plot[] => {
+    return plots.map(plot => {
         const col = parseInt(String(plot.col_number));
         const row = parseInt(String(plot.row_number));
 
@@ -86,4 +105,14 @@ export const designMapToObservationUnits = (
             }
         };
     });
+};
+
+/**
+ * Adapts a raw design layout map into BrAPI ObservationUnit records.
+ */
+export const designMapToObservationUnits = (
+    designMap: Record<string, unknown>,
+    studyName?: string
+): Plot[] => {
+    return designPlotsToObservationUnits(extractDesignPlots(designMap), studyName);
 };
