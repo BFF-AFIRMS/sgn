@@ -1,5 +1,4 @@
 import React, { useMemo, useEffect, useState } from 'react';
-import { createPortal } from 'react-dom';
 import { useTrialForm } from '../../contexts/TrialFormContext';
 import { useDesignResult } from '../../contexts/DesignResultContext';
 import { useDesignGenerator } from '../../hooks/useDesignGenerator';
@@ -7,6 +6,9 @@ import { useTrialSaver } from '../../hooks/useTrialSaver';
 import { designMapToObservationUnits } from '../../utils/designAdapters';
 import { FieldMapContainer } from '../../../fieldmap';
 import { AddTreatmentsModal } from '../../modals/AddTreatmentsModal';
+import { TrialDesignInformation } from '../review/TrialDesignInformation';
+import { TrialDesignLayoutTable } from '../review/TrialDesignLayoutTable';
+import { GeneratedDesignPlot, FieldTrialTreatment } from '../../types';
 
 interface ReviewDesignStepProps {
     onSuccess: () => void;
@@ -25,13 +27,18 @@ export const ReviewDesignStep: React.FC<ReviewDesignStepProps> = ({ onSuccess })
     const { generateDesign, loading: regenerating, error: regenError } = useDesignGenerator();
     const { saveTrial, saving, error: saveError } = useTrialSaver();
     const [showTreatmentModal, setShowTreatmentModal] = useState(false);
-    const [treatmentsPortalTarget, setTreatmentsPortalTarget] = useState<HTMLElement | null>(null);
 
     const currentDesign = parsedDesigns[selectedLocationIndex] || parsedDesigns[0] || {};
     const currentUnits = useMemo(() => {
         const locName = formData.locations[selectedLocationIndex] || formData.trialName;
         return designMapToObservationUnits(currentDesign, locName);
     }, [currentDesign, selectedLocationIndex, formData.locations, formData.trialName]);
+
+    const currentPlots = useMemo(() => {
+        return Object.entries(currentDesign)
+            .filter(([key, plot]) => key !== 'treatments' && plot && typeof plot === 'object' && (plot.plot_name || plot.plot_number !== undefined))
+            .map(([_, plot]) => plot as GeneratedDesignPlot);
+    }, [currentDesign]);
 
     useEffect(() => {
         if (!result && !regenerating && formData.trialName.trim()) {
@@ -43,16 +50,6 @@ export const ReviewDesignStep: React.FC<ReviewDesignStepProps> = ({ onSuccess })
         }
     }, [result, regenerating, formData, generateDesign, setResult]);
 
-    useEffect(() => {
-        const target = document.getElementById('trial_design_confirm_treatments');
-        if (target) {
-            target.innerHTML = '';
-            setTreatmentsPortalTarget(target);
-        } else {
-            setTreatmentsPortalTarget(null);
-        }
-    }, [result?.design_info_view_html]);
-
     const confirmedTreatments = useMemo(() => {
         if (!result?.design_json) return [];
         try {
@@ -63,7 +60,7 @@ export const ReviewDesignStep: React.FC<ReviewDesignStepProps> = ({ onSuccess })
 
             for (let i = 0; i < designArray.length; i++) {
                 const dh = typeof designArray[i] === 'string' ? JSON.parse(designArray[i] as string) : designArray[i];
-                const treatments = dh?.treatments as Record<string, { new_treatment_stocks?: string[]; new_treatment_type?: string }> | undefined;
+                const treatments = dh?.treatments as Record<string, FieldTrialTreatment> | undefined;
                 if (treatments && typeof treatments === 'object') {
                     for (const [key, val] of Object.entries(treatments)) {
                         if (!seen.has(key)) {
@@ -109,19 +106,6 @@ export const ReviewDesignStep: React.FC<ReviewDesignStepProps> = ({ onSuccess })
             onSuccess();
         }
     };
-
-    const layoutTablesHtml = useMemo(() => {
-        if (!result?.design_layout_view_html) return '';
-        try {
-            const parsed = JSON.parse(result.design_layout_view_html);
-            if (Array.isArray(parsed)) {
-                return parsed.join('<br/>');
-            }
-            return String(parsed);
-        } catch {
-            return result.design_layout_view_html;
-        }
-    }, [result?.design_layout_view_html]);
 
     return (
         <div className="tw:flex tw:flex-col tw:gap-4">
@@ -175,13 +159,13 @@ export const ReviewDesignStep: React.FC<ReviewDesignStepProps> = ({ onSuccess })
                 </div>
             </div>
 
-            {layoutTablesHtml && (
-                <div
-                    id="trial_design_view_layout_return"
-                    className="tw:overflow-x-auto"
-                    dangerouslySetInnerHTML={{ __html: layoutTablesHtml }}
+            <div id="trial_design_view_layout_return" className="tw:overflow-x-auto">
+                <TrialDesignLayoutTable
+                    plots={currentPlots}
+                    stockType={formData.stockType}
+                    designType={formData.designType}
                 />
-            )}
+            </div>
 
             <div className="tw:flex tw:justify-center tw:gap-3 tw:my-2">
                 <button
@@ -212,27 +196,11 @@ export const ReviewDesignStep: React.FC<ReviewDesignStepProps> = ({ onSuccess })
             </p>
             <hr />
 
-            {result?.design_info_view_html && (
-                <div
-                    id="trial_design_information"
-                    dangerouslySetInnerHTML={{ __html: result.design_info_view_html }}
-                />
-            )}
-
-            {treatmentsPortalTarget && createPortal(
-                confirmedTreatments.length === 0 ? (
-                    <span>None added. Treatments and management regimes can be added on the trial detail page.</span>
-                ) : (
-                    <ul className="tw:list-disc tw:pl-5 tw:my-1 tw:space-y-1">
-                        {confirmedTreatments.map(t => (
-                            <li key={t.name}>
-                                Treatment: <strong>{t.name}</strong>{t.type && ` (${t.type})`} &mdash; Plots: {t.stocks.join(', ')}
-                            </li>
-                        ))}
-                    </ul>
-                ),
-                treatmentsPortalTarget
-            )}
+            <TrialDesignInformation
+                formData={formData}
+                plots={currentPlots}
+                confirmedTreatments={confirmedTreatments}
+            />
 
             <br />
             <div className="tw:flex tw:justify-center">

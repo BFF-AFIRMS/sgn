@@ -13,21 +13,32 @@ export type DesignType =
     | 'p-rep'
     | 'Westcott';
 
-export const STANDARD_DESIGN_TYPES: Array<{ value: DesignType; label: string }> = [
-    { value: 'CRD', label: 'Completely Randomized' },
-    { value: 'RCBD', label: 'Complete Block' },
-    { value: 'RRC', label: 'Resolvable Row-Column' },
-    { value: 'DRRC', label: 'Doubly-Resolvable Row-Column' },
-    { value: 'URDD', label: 'Un-Replicated Diagonal Design' },
-    { value: 'Alpha', label: 'Alpha Lattice' },
-    { value: 'Lattice', label: 'Lattice' },
-    { value: 'Augmented', label: 'Augmented' },
-    { value: 'MAD', label: 'Modified Augmented Design' },
-    { value: 'greenhouse', label: 'Nursery/Greenhouse' },
-    { value: 'splitplot', label: 'Split Plot' },
-    { value: 'p-rep', label: 'Partially Replicated' },
-    { value: 'Westcott', label: 'Westcott' }
+export interface DesignTypeOption {
+    value: DesignType;
+    label: string;
+    description: string;
+}
+
+export const STANDARD_DESIGN_TYPES: DesignTypeOption[] = [
+    { value: 'CRD', label: 'Completely Randomized', description: 'Completely Randomized Design' },
+    { value: 'RCBD', label: 'Complete Block', description: 'Randomized Complete Block Design' },
+    { value: 'RRC', label: 'Resolvable Row-Column', description: 'Resolvable Row-Column Design' },
+    { value: 'DRRC', label: 'Doubly-Resolvable Row-Column', description: 'Doubly-Resolvable Row-Column Design' },
+    { value: 'URDD', label: 'Un-Replicated Diagonal Design', description: 'Un-Replicated Diagonal Design' },
+    { value: 'Alpha', label: 'Alpha Lattice', description: 'Alpha Lattice Incomplete Block Design' },
+    { value: 'Lattice', label: 'Lattice', description: 'Lattice Design' },
+    { value: 'Augmented', label: 'Augmented', description: 'Augmented Incomplete Block Design' },
+    { value: 'MAD', label: 'Modified Augmented Design', description: 'Modified Augmented Design' },
+    { value: 'greenhouse', label: 'Nursery/Greenhouse', description: 'Greenhouse Design' },
+    { value: 'splitplot', label: 'Split Plot', description: 'Split Plot Design' },
+    { value: 'p-rep', label: 'Partially Replicated', description: 'Partially Replicated Design' },
+    { value: 'Westcott', label: 'Westcott', description: 'Westcott Design' }
 ];
+
+export const getDesignTypeDescription = (designType: DesignType): string => {
+    const match = STANDARD_DESIGN_TYPES.find(d => d.value === designType);
+    return match ? match.description : designType;
+};
 
 export type StockType = 'accession' | 'cross' | 'family_name';
 export type PlotNumberingScheme = 'block_based' | 'consecutive';
