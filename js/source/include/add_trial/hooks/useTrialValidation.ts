@@ -115,8 +115,11 @@ export const validateDesignInfoSync = (
         }
     }
 
-    if (form.seedlotListId && (!form.numSeedPerPlot || parseInt(form.numSeedPerPlot, 10) < 1)) {
-        return { valid: false, error: 'Number of seeds per plot is required when a seedlot list is selected.' };
+    if (form.stockType === 'accession' && form.seedlotListId) {
+        const numSeeds = parseInt(form.numSeedPerPlot, 10);
+        if (isNaN(numSeeds) || numSeeds < 1) {
+            return { valid: false, error: 'Number of seeds per plot must be a positive integer when a seedlot list is selected.' };
+        }
     }
 
     return { valid: true };
@@ -180,6 +183,13 @@ export const useTrialValidation = () => {
             const checks = await fetchListItems(form.controlListId);
             if (checks.length === 0) {
                 return { valid: false, error: 'Selected checks list contains no items.' };
+            }
+        }
+
+        if (form.stockType === 'accession' && form.seedlotListId) {
+            const seedlotItems = await fetchListItems(form.seedlotListId);
+            if (seedlotItems.length === 0) {
+                return { valid: false, error: 'Selected seedlot list contains no items.' };
             }
         }
 
