@@ -3,18 +3,29 @@ import { TrialFormData } from '../types';
 import { useWorkingModal } from '../../working_modal';
 import { fetchListItems } from './useBreedbaseLists';
 
+interface SaveTrialResponse {
+    trial_id?: number | string;
+    error?: string;
+    success?: string | number;
+}
+
 export const useTrialSaver = () => {
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [trialId, setTrialId] = useState<string | null>(null);
+    const [isSuccess, setIsSuccess] = useState(false);
 
     useWorkingModal(saving);
 
     const saveTrial = useCallback(async (
         form: TrialFormData,
         designJson: string
-    ): Promise<{ success: boolean; trialId?: string; error?: string }> => {
+    ): Promise<void> => {
         setSaving(true);
         setError(null);
+        setTrialId(null);
+        setIsSuccess(false);
+
         try {
             let subplotsPerPlot = 1;
             if (form.designType === 'splitplot') {
@@ -105,10 +116,10 @@ export const useTrialSaver = () => {
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                 body: payload.toString()
             });
-            const result = await res.json();
+            const result: SaveTrialResponse = await res.json();
             if (result.error) {
                 setError(result.error);
-                return { success: false, error: result.error };
+                return;
             }
 
             const trialId = String(result.trial_id);
@@ -133,15 +144,24 @@ export const useTrialSaver = () => {
                 }
             }
 
-            return { success: true, trialId };
-        } catch (e: any) {
-            const msg = e?.message || 'An error occurred saving the trial.';
+            setTrialId(trialId);
+            setIsSuccess(true);
+        } catch (e: unknown) {
+            const msg = e instanceof Error ? e.message : 'An error occurred saving the trial.';
             setError(msg);
-            return { success: false, error: msg };
         } finally {
             setSaving(false);
         }
     }, []);
 
-    return { saveTrial, saving, error };
+    return {
+        saveTrial,
+        saving,
+        error,
+        setError,
+        trialId,
+        setTrialId,
+        isSuccess,
+        success: isSuccess
+    };
 };

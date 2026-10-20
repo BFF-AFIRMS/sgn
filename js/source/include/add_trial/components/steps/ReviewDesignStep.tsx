@@ -28,7 +28,7 @@ export const ReviewDesignStep: React.FC<ReviewDesignStepProps> = ({ onSuccess })
         setSelectedLocationIndex,
         setSavedTrialId
     } = useDesignResult();
-    const { saveTrial, saving, error: saveError } = useTrialSaver();
+    const { saveTrial, saving, error: saveError, trialId } = useTrialSaver();
     const [showTreatmentModal, setShowTreatmentModal] = useState(false);
 
     const currentLocationName = formData.locations[selectedLocationIndex] || formData.trialName;
@@ -63,14 +63,23 @@ export const ReviewDesignStep: React.FC<ReviewDesignStepProps> = ({ onSuccess })
         }
     }, [regenError]);
 
-    const handleConfirm = async () => {
-        if (!result?.design_json) return;
-        const res = await saveTrial(formData, result.design_json);
-        if (res.success && res.trialId) {
+    useEffect(() => {
+        if (saveError) {
+            alert(saveError);
+        }
+    }, [saveError]);
+
+    useEffect(() => {
+        if (trialId) {
             clearDraft();
-            setSavedTrialId(res.trialId);
+            setSavedTrialId(trialId);
             onSuccess();
         }
+    }, [trialId, clearDraft, setSavedTrialId, onSuccess]);
+
+    const handleConfirm = () => {
+        if (!result?.design_json) return;
+        saveTrial(formData, result.design_json);
     };
 
     return (
