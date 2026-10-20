@@ -1,10 +1,10 @@
 import React, { useMemo } from 'react';
-import { TrialFormData, GeneratedDesignPlot, getDesignTypeDescription } from '../../types';
+import { TrialFormData, GeneratedDesignPlot, ConfirmedTreatment, getDesignTypeDescription } from '../../types';
 
 interface TrialDesignInformationProps {
     formData: TrialFormData;
     plots: GeneratedDesignPlot[];
-    confirmedTreatments: Array<{ name: string; type?: string; stocks: string[] }>;
+    confirmedTreatments: ConfirmedTreatment[];
 }
 
 export const TrialDesignInformation: React.FC<TrialDesignInformationProps> = ({
