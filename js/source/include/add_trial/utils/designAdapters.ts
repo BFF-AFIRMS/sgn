@@ -1,4 +1,4 @@
-import { GeneratedDesignPlot, FieldTrialTreatment, ConfirmedTreatment } from '../types';
+import { GeneratedDesignPlot, FieldTrialTreatment, ConfirmedTreatment, SplitplotTreatment } from '../types';
 import { Plot } from '../../fieldmap/types';
 
 /**
@@ -68,6 +68,39 @@ export const extractConfirmedTreatments = (
         type: entry.type,
         stocks: Array.from(entry.stocks)
     }));
+};
+
+/**
+ * Groups splitplot treatments by factor name and computes the total subplots per plot.
+ */
+export const getSplitplotTreatments = (
+    treatments?: SplitplotTreatment[]
+): { treatmentsMap: Record<string, string[]>; subplotsPerPlot: number } => {
+    const treatmentsMap: Record<string, string[]> = {};
+    let subplotsPerPlot = 1;
+
+    if (!treatments) {
+        return { treatmentsMap, subplotsPerPlot };
+    }
+
+    for (const t of treatments) {
+        const name = t.name.trim();
+        const value = t.value.trim();
+        if (name && value) {
+            if (!treatmentsMap[name]) {
+                treatmentsMap[name] = [];
+            }
+            treatmentsMap[name].push(value);
+        }
+    }
+
+    for (const vals of Object.values(treatmentsMap)) {
+        if (vals.length > 0) {
+            subplotsPerPlot *= vals.length;
+        }
+    }
+
+    return { treatmentsMap, subplotsPerPlot };
 };
 
 /**
