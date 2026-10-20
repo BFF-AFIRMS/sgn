@@ -2,7 +2,6 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useTrialForm } from '../contexts/TrialFormContext';
 import { useDesignResult } from '../contexts/DesignResultContext';
 import { getDesignTreatments, extractDesignPlots } from '../utils/designAdapters';
-import { FieldTrialTreatment } from '../types';
 
 interface AddTreatmentsModalProps {
     show: boolean;
@@ -125,23 +124,12 @@ export const AddTreatmentsModal: React.FC<AddTreatmentsModalProps> = ({ show, on
             alert('Please select at least one plot for this treatment.');
             return;
         }
-        if (!result?.design_json) return;
+        if (!result || parsedDesigns.length === 0) return;
 
-        let raw: string[];
-        try {
-            raw = JSON.parse(result.design_json);
-        } catch {
-            alert('Error parsing existing trial design data.');
-            return;
-        }
-
-        const newDesignArray: string[] = [];
         const formattedDate = formatTreatmentDate(treatmentDate);
 
-        for (let i = 0; i < raw.length; i++) {
-            const designHash: Record<string, unknown> = JSON.parse(raw[i]);
-
-            const existingTreatments = { ...getDesignTreatments(designHash) };
+        const newDesignArray = parsedDesigns.map((design, i) => {
+            const existingTreatments = { ...getDesignTreatments(design) };
 
             const selectedSet = selectedPlots[i] || new Set();
             const trialPlots = plotsByTrial[i] || [];
@@ -170,9 +158,11 @@ export const AddTreatmentsModal: React.FC<AddTreatmentsModalProps> = ({ show, on
                 };
             }
 
-            designHash['treatments'] = existingTreatments;
-            newDesignArray.push(JSON.stringify(designHash));
-        }
+            return JSON.stringify({
+                ...design,
+                treatments: existingTreatments
+            });
+        });
 
         setResult({
             ...result,
