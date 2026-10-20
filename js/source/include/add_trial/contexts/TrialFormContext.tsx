@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useMemo } from 'react';
-import { TrialFormData, ServerProps, STANDARD_DESIGN_TYPES, DesignType } from '../types';
+import { TrialFormData, ServerProps, STANDARD_DESIGN_TYPES, DesignType, DesignTypeOption } from '../types';
 import { useFormDraft } from '../../form_draft';
 
 export interface TrialFormContextType {
@@ -11,7 +11,7 @@ export interface TrialFormContextType {
     maxStep: number;
     setMaxStep: React.Dispatch<React.SetStateAction<number>>;
     serverProps: ServerProps;
-    availableDesignTypes: Array<{ value: DesignType; label: string }>;
+    availableDesignTypes: DesignTypeOption[];
 }
 
 const defaultFormData: TrialFormData = {
@@ -87,7 +87,7 @@ export const TrialFormProvider: React.FC<{ serverProps: ServerProps; children: R
             return STANDARD_DESIGN_TYPES;
         }
         const seen = new Set<DesignType>();
-        const ordered: Array<{ value: DesignType; label: string }> = [];
+        const ordered: DesignTypeOption[] = [];
 
         for (const raw of serverProps.design_types) {
             const type = raw.trim();
