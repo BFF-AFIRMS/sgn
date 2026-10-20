@@ -10,14 +10,13 @@ export const useDesignGenerator = () => {
 
     useWorkingModal(loading);
 
-    const generateDesign = useCallback((
+    const generateDesign = useCallback(async (
         form: TrialFormData
-    ): void => {
+    ): Promise<void> => {
         setLoading(true);
         setError(null);
         setData(null);
-        (async () => {
-            try {
+        try {
             const [stockListItems, controlListItems, crbdControlListItems, unrepStockListItems, repStockListItems] = await Promise.all([
                 form.stockListId ? fetchListItems(form.stockListId) : Promise.resolve(null),
                 form.controlListId ? fetchListItems(form.controlListId) : Promise.resolve(null),
@@ -124,7 +123,6 @@ export const useDesignGenerator = () => {
         } finally {
             setLoading(false);
         }
-        })();
     }, []);
 
     return { data, setData, generateDesign, loading, error, setError };
