@@ -26,8 +26,8 @@ export interface ObservationLevelRelationship {
 }
 
 export interface ObservationUnitPosition {
-    positionCoordinateX: string | number;
-    positionCoordinateY: string | number;
+    positionCoordinateX?: string | number;
+    positionCoordinateY?: string | number;
     observationLevel: ObservationLevel;
     observationLevelRelationships?: ObservationLevelRelationship[];
     entryType?: string;
