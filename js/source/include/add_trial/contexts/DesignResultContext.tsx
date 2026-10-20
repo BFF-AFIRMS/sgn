@@ -21,11 +21,8 @@ export const DesignResultProvider: React.FC<{ children: React.ReactNode }> = ({ 
     const parsedDesigns = React.useMemo(() => {
         if (!result?.design_json) return [];
         try {
-            const raw = JSON.parse(result.design_json);
-            if (Array.isArray(raw)) {
-                return raw.map(item => (typeof item === 'string' ? JSON.parse(item) : item));
-            }
-            return [raw];
+            const raw: string[] = JSON.parse(result.design_json);
+            return raw.map(item => JSON.parse(item));
         } catch {
             return [];
         }
