@@ -20,6 +20,13 @@ const DEFAULT_MANAGEMENT_FACTOR_TYPES = [
     'Light treatment'
 ];
 
+const DEFAULT_TREATMENT_NAME = '';
+const DEFAULT_TREATMENT_TYPE = 'Fertilizer';
+const DEFAULT_TREATMENT_DATE = new Date().toISOString().slice(0, 10);
+const DEFAULT_TREATMENT_YEAR = String(new Date().getFullYear());
+const DEFAULT_TREATMENT_PLANTING_DATE = '';
+const DEFAULT_TREATMENT_DESCRIPTION = '';
+
 const formatTreatmentDate = (val?: string): string => {
     let d: Date;
     if (val) {
@@ -43,8 +50,9 @@ export const AddTreatmentsModal: React.FC<AddTreatmentsModalProps> = ({ show, on
     const { result, setResult, parsedDesigns } = useDesignResult();
 
     const managementFactorTypes = useMemo(() => {
-        if (serverProps.management_factor_types && serverProps.management_factor_types.length > 0) {
-            return serverProps.management_factor_types;
+        const types = serverProps.management_factor_types;
+        if (types && types.length > 0) {
+            return types;
         }
         return DEFAULT_MANAGEMENT_FACTOR_TYPES;
     }, [serverProps.management_factor_types]);
@@ -62,12 +70,12 @@ export const AddTreatmentsModal: React.FC<AddTreatmentsModalProps> = ({ show, on
     useEffect(() => {
         if (show) {
             setStep(1);
-            setTreatmentName('');
-            setTreatmentType(managementFactorTypes[0] || 'Fertilizer');
-            setTreatmentDate(new Date().toISOString().slice(0, 10));
-            setTreatmentYear(formData.year || String(new Date().getFullYear()));
-            setTreatmentPlantingDate(formData.plantingDate || '');
-            setTreatmentDescription('');
+            setTreatmentName(DEFAULT_TREATMENT_NAME);
+            setTreatmentType(managementFactorTypes[0] || DEFAULT_TREATMENT_TYPE);
+            setTreatmentDate(DEFAULT_TREATMENT_DATE);
+            setTreatmentYear(formData.year || DEFAULT_TREATMENT_YEAR);
+            setTreatmentPlantingDate(formData.plantingDate || DEFAULT_TREATMENT_PLANTING_DATE);
+            setTreatmentDescription(DEFAULT_TREATMENT_DESCRIPTION);
             setSelectedPlots({});
         }
     }, [show, managementFactorTypes, formData.year, formData.plantingDate]);
@@ -138,12 +146,8 @@ export const AddTreatmentsModal: React.FC<AddTreatmentsModalProps> = ({ show, on
             trialPlots.forEach(plot => {
                 if (selectedSet.has(plot.plot_name)) {
                     stocksForTrial.push(plot.plot_name);
-                    if (Array.isArray(plot.plant_names)) {
-                        stocksForTrial.push(...plot.plant_names);
-                    }
-                    if (Array.isArray(plot.subplots_names)) {
-                        stocksForTrial.push(...plot.subplots_names);
-                    }
+                    stocksForTrial.push(...(plot.plant_names || []));
+                    stocksForTrial.push(...(plot.subplots_names || []));
                 }
             });
 
