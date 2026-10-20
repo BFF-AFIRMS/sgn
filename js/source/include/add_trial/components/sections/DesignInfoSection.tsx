@@ -1,7 +1,7 @@
 import React from 'react';
 import { useTrialForm } from '../../contexts/TrialFormContext';
 import { BreedbaseListSelect } from '../common/BreedbaseListSelect';
-import { AccessionAutocomplete } from '../../../autocomplete';
+import { AccessionAutocomplete, CvtermAutocomplete } from '../../../autocomplete';
 import { useListItems } from '../../hooks/useBreedbaseLists';
 import { StockType } from '../../types';
 
@@ -475,21 +475,23 @@ export const DesignInfoSection: React.FC<DesignInfoSectionProps> = ({ onOpenPrep
                                 <div key={idx} className="form-group form-group-sm">
                                     <label className="col-sm-7 control-label">Treatment {idx + 1}: </label>
                                     <div className="col-sm-5 tw:flex tw:flex-col tw:gap-1">
-                                        <input
-                                            type="text"
+                                        <CvtermAutocomplete
                                             id={`create_trial_with_treatment_name_input${idx + 1}`}
-                                            className="form-control"
+                                            name={`create_trial_with_treatment_name_input${idx + 1}`}
+                                            className="form-control treatment-name-input-box"
                                             placeholder={idx === 0 ? "Required Treatment 1 (likely a control value)" : idx === 1 ? "Required Treatment 2" : `Optional Treatment ${idx + 1}`}
                                             value={t.name}
-                                            onChange={e => {
+                                            onChange={val => {
                                                 const updated = [...formData.treatments];
-                                                updated[idx] = { ...updated[idx], name: e.target.value };
+                                                updated[idx] = { ...updated[idx], name: val };
                                                 updateField('treatments', updated);
                                             }}
+                                            dbName="_TREATMENT"
                                         />
                                         <input
                                             type="text"
                                             id={`create_trial_with_treatment_value_input${idx + 1}`}
+                                            name={`create_trial_with_treatment_value_input${idx + 1}`}
                                             className="form-control"
                                             placeholder="treatment value"
                                             value={t.value}
