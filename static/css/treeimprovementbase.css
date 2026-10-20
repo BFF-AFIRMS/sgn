@@ -854,6 +854,20 @@ Overview Section
 
 /*
 -------------------------------------------------------------------------------
+Search
+-------------------------------------------------------------------------------
+*/
+
+/* Stock search results */
+select[aria-controls="stock_search_results"] {
+    margin-right: var(--padding-sm);
+}
+table[aria-describedby="stock_search_results_info"] th {
+    white-space: nowrap;
+}
+
+/*
+-------------------------------------------------------------------------------
 Table
 -------------------------------------------------------------------------------
 */
@@ -900,6 +914,7 @@ table.dataTable td.dt-type-date {
     background-color: white;
 }
 /*.table>tbody>tr>td, */
+
 
 /*
 -------------------------------------------------------------------------------
