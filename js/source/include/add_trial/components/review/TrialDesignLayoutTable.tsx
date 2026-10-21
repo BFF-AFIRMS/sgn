@@ -81,6 +81,27 @@ export const TrialDesignLayoutTable: React.FC<TrialDesignLayoutTableProps> = ({
                         });
                     }
 
+                    if (plot.plant_names && Array.isArray(plot.plant_names) && plot.plant_names.length > 0) {
+                        return plot.plant_names.map(plantName => (
+                            <tr key={`${plotNum}-${plantName}`}>
+                                {(isGreenhouse || isSplitplot) && <td>{plantName}</td>}
+                                {isSplitplot && <td></td>}
+                                <td>{plotName}</td>
+                                <td>{stockName}</td>
+                                <td>{checkName}</td>
+                                <td>{plotNum}</td>
+                                <td>{rowNum}</td>
+                                <td>{colNum}</td>
+                                <td>{blockNum}</td>
+                                <td>{blockRowNum}</td>
+                                <td>{blockColNum}</td>
+                                <td>{repNum}</td>
+                                <td>{seedlotName}</td>
+                                <td>{numSeeds}</td>
+                            </tr>
+                        ));
+                    }
+
                     return (
                         <tr key={String(plotNum || plotName)}>
                             {(isGreenhouse || isSplitplot) && <td></td>}
