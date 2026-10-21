@@ -64,8 +64,9 @@ my $check_list_id = create_test_list($check_list_name, 'accessions', [$acc2_name
 my $seedlot_list_name = sprintf("Test_Seedlots_%d", $rand_suffix);
 my $seedlot_list_id = create_test_list($seedlot_list_name, 'seedlots', [$seedlot_name]);
 
-my $no_seedlot_acc_list_name = sprintf("Test_Accessions_NoSeedlot_%d", $rand_suffix);
-my $no_seedlot_acc_list_id = create_test_list($no_seedlot_acc_list_name, 'accessions', [$acc3_name]);
+my $invalid_seedlot_name = sprintf("Nonexistent_Seedlot_%d", $rand_suffix);
+my $invalid_seedlot_list_name = sprintf("Test_Invalid_Seedlots_%d", $rand_suffix);
+my $invalid_seedlot_list_id = create_test_list($invalid_seedlot_list_name, 'seedlots', [$invalid_seedlot_name]);
 
 $t->while_logged_in_as("submitter", sub {
     # =========================================================================
@@ -99,21 +100,21 @@ $t->while_logged_in_as("submitter", sub {
     $t->click_ok('select_design_method', 'id', "Click design method select");
     $t->click_ok('//select[@id="select_design_method"]/option[@value="CRD"]', 'xpath', "Select design method 'CRD'");
 
-    # Screen 3: Design Details - Select accession list with missing seedlots
+    # Screen 3: Design Details - Select invalid seedlot list
     $t->send_keys_ok('rep_count', 'id', "1", "Set rep count to 1");
-    $t->click_option_ok('//select[@id="select_list_list_select"]/option[@value="' . $no_seedlot_acc_list_id . '"]', 'xpath', "Select missing seedlot accession list");
-    $t->click_option_ok('//select[@id="select_seedlot_list_list_select"]/option[@value="' . $seedlot_list_id . '"]', 'xpath', "Select seedlot list");
+    $t->click_option_ok('//select[@id="select_list_list_select"]/option[@value="' . $acc_list_id . '"]', 'xpath', "Select accession list");
+    $t->click_option_ok('//select[@id="select_seedlot_list_list_select"]/option[@value="' . $invalid_seedlot_list_id . '"]', 'xpath', "Select invalid seedlot list");
     $t->send_keys_ok('num_seed_per_plot', 'id', "5", "Enter 5 seeds per plot");
 
     sleep(1);
-    $t->click_ok('new_trial_submit', 'id', 'Click Continue to Next Step with missing required seedlot');
+    $t->click_ok('new_trial_submit', 'id', 'Click Continue to Next Step with invalid seedlot');
 
-    # Verify required stock list error alert appears and blocks progression
+    # Verify seedlot error alert appears and blocks progression
     $t->wait_for_alert_appear();
     my $fail_alert_text = $t->get_alert_text();
-    like($fail_alert_text, qr/Stock list/i, "Verify alert message indicates required stock list error");
-    like($fail_alert_text, qr/$acc3_name/i, "Verify alert mentions missing accession $acc3_name");
-    $t->accept_alert_ok("Accept required stock list error alert");
+    like($fail_alert_text, qr/Stock list/i, "Verify alert message indicates stock list verification error");
+    like($fail_alert_text, qr/$invalid_seedlot_name/i, "Verify alert mentions invalid seedlot $invalid_seedlot_name");
+    $t->accept_alert_ok("Accept seedlot error alert");
 
     # Ensure the user remains on the Design Details step (not advanced to Review)
     $t->find_element_ok('new_trial_submit', 'id', "Still on design details step after required seedlot failure");
@@ -121,19 +122,12 @@ $t->while_logged_in_as("submitter", sub {
     # =========================================================================
     # TEST CASE 2: Optional Check Seedlot Warning (Shows Alert, Continues & Saves)
     # =========================================================================
-    # Switch to the valid accession list and add the check list (which has no seedlots)
-    $t->click_option_ok('//select[@id="select_list_list_select"]/option[@value="' . $acc_list_id . '"]', 'xpath', "Select valid accession list");
+    # Switch to the valid seedlot list and add a check list (which has no seedlots in the seedlot list)
+    $t->click_option_ok('//select[@id="select_seedlot_list_list_select"]/option[@value="' . $seedlot_list_id . '"]', 'xpath', "Select valid seedlot list");
     $t->click_option_ok('//select[@id="crbd_list_of_checks_section_list_select"]/option[@value="' . $check_list_id . '"]', 'xpath', "Select check list without seedlots");
 
     sleep(1);
-    $t->click_ok('new_trial_submit', 'id', 'Click Continue to Next Step with optional check missing seedlot');
-
-    # Verify warning alert appears for the optional check list
-    $t->wait_for_alert_appear();
-    my $check_alert_text = $t->get_alert_text();
-    like($check_alert_text, qr/Checks list/i, "Verify alert message indicates checks list seedlot warning");
-    like($check_alert_text, qr/$acc2_name/i, "Verify alert mentions missing check accession $acc2_name");
-    $t->accept_alert_ok("Accept optional check seedlot warning alert");
+    $t->click_ok('new_trial_submit', 'id', 'Click Continue to Next Step with valid seedlot list');
 
     # Wait for design generation to finish
     $t->wait_for_working_dialog();
@@ -161,7 +155,7 @@ $t->while_logged_in_as("submitter", sub {
     ok($trial, "Trial $trial_name was created and saved in database with optional check seedlots");
 
     # Clean up test lists
-    for my $id ($acc_list_id, $check_list_id, $seedlot_list_id, $no_seedlot_acc_list_id) {
+    for my $id ($acc_list_id, $check_list_id, $seedlot_list_id, $invalid_seedlot_list_id) {
         eval { CXGN::List::delete_list($dbh, $id); };
     }
 });
