@@ -36,6 +36,7 @@ my $driver = Selenium::Remote::Driver->new(
 $t->driver($driver);
 
 my $download_dir = '/selenium/downloads';
+my $upload_dir = '/home/seluser/Downloads';
 
 # -----------------------------------------------------------------------------
 # Field Map Layout Constants & Color Definitions
@@ -1314,7 +1315,7 @@ $t->while_logged_in_as("curator", sub {
 	write_file($breedbase_layout_file_path, $CASS_6Genotypes_layout_csv);
 
 	# Upload the spatial layout file
-	my $selenium_layout_file_path = "/downloads/$filename";
+	my $selenium_layout_file_path = "$upload_dir/$filename";
 	$t->click_ok('heatmap_upload_trial_coords_link', 'id', 'Click Upload Spatial Layout');
 	$t->send_keys_ok('trial_coordinates_uploaded_file', 'id', $selenium_layout_file_path, 'Select Spatial Layout File Path');
 	$t->click_ok("upload_trial_coords_ok_button", "id", "Submit Spatial Layout Upload ");
