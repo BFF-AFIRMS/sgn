@@ -34,7 +34,7 @@ export const PlotDetailsModal: React.FC<PlotDetailsModalProps> = ({ }) => {
         axisOrientation,
         bounds,
         plotStructure,
-        plotImages,
+        plotImages
     } = usePlotGrid();
 
     const {

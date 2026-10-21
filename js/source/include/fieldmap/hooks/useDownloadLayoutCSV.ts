@@ -17,7 +17,7 @@ export const useDownloadLayoutCSV = () => {
 
 	const {
 		invertCols,
-		invertRows,
+		invertRows
 	} = useLayoutConfig();
 
 	const downloadLayoutCSV = useCallback((

@@ -638,7 +638,7 @@ sub download_spatial_layout_ok {
 		if ( grep { $_ eq $label } @$checkboxes ){
 			ok($element->click(), "Enable checkbox for '$label'") unless $element->is_selected();
 		} else {
-			ok($element->click(), "Disable checkbox for '$label'") if $element->is_selected();;
+			ok($element->click(), "Disable checkbox for '$label'") if $element->is_selected();
 		}
 	}
 
