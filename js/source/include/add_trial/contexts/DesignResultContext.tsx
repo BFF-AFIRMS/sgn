@@ -1,26 +1,28 @@
 import React, { createContext, useContext, useState, useMemo } from 'react';
-import { DesignResultResponse, GeneratedDesignPlot, TrialFormData } from '../types';
-import { useDesignGenerator } from '../hooks/useDesignGenerator';
+import { DesignResultResponse, GeneratedDesignPlot } from '../types';
 
 export interface DesignResultContextType {
     result: DesignResultResponse | null;
     setResult: React.Dispatch<React.SetStateAction<DesignResultResponse | null>>;
-    generateDesign: (form: TrialFormData) => void;
-    generating: boolean;
-    generatorError: string | null;
     parsedDesigns: Array<Record<string, GeneratedDesignPlot>>;
     selectedLocationIndex: number;
     setSelectedLocationIndex: (idx: number) => void;
     savedTrialId: string | null;
     setSavedTrialId: (id: string | null) => void;
+    isGenerating: boolean;
+    setIsGenerating: (val: boolean) => void;
+    isSaving: boolean;
+    setIsSaving: (val: boolean) => void;
 }
 
 const DesignResultContext = createContext<DesignResultContextType | undefined>(undefined);
 
 export const DesignResultProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const { data: result, setData: setResult, generateDesign, loading: generating, error: generatorError } = useDesignGenerator();
+    const [result, setResult] = useState<DesignResultResponse | null>(null);
     const [selectedLocationIndex, setSelectedLocationIndex] = useState(0);
     const [savedTrialId, setSavedTrialId] = useState<string | null>(null);
+    const [isGenerating, setIsGenerating] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
 
     const parsedDesigns = useMemo(() => {
         if (!result?.design_json) return [];
@@ -36,14 +38,15 @@ export const DesignResultProvider: React.FC<{ children: React.ReactNode }> = ({ 
         <DesignResultContext.Provider value={{
             result,
             setResult,
-            generateDesign,
-            generating,
-            generatorError,
             parsedDesigns,
             selectedLocationIndex,
             setSelectedLocationIndex,
             savedTrialId,
-            setSavedTrialId
+            setSavedTrialId,
+            isGenerating,
+            setIsGenerating,
+            isSaving,
+            setIsSaving
         }}>
             {children}
         </DesignResultContext.Provider>

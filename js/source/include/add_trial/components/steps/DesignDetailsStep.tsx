@@ -1,14 +1,13 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useTrialForm } from '../../contexts/TrialFormContext';
-import { useDesignResult } from '../../contexts/DesignResultContext';
-import { useTrialValidation, validateTrialInfoSync, validateDesignInfoSync, validateFieldMapInfoSync } from '../../hooks/useTrialValidation';
+import { useTrialActions } from '../../hooks/useTrialActions';
+import { validateTrialInfoSync, validateDesignInfoSync, validateFieldMapInfoSync } from '../../hooks/useTrialValidation';
 import { TrialInfoSection } from '../sections/TrialInfoSection';
 import { DesignInfoSection } from '../sections/DesignInfoSection';
 import { TrialLinkageSection } from '../sections/TrialLinkageSection';
 import { FieldMapSection } from '../sections/FieldMapSection';
 import { PlotNamingSection } from '../sections/PlotNamingSection';
 import { WorkflowAccordion, evaluateAccordionSync } from '../../../workflow_accordion';
-import { showWorkingModal, hideWorkingModal } from '../../../working_modal';
 
 interface DesignDetailsStepProps {
     onOpenPrepHelp: () => void;
@@ -18,10 +17,8 @@ interface DesignDetailsStepProps {
 
 export const DesignDetailsStep: React.FC<DesignDetailsStepProps> = ({ onOpenPrepHelp, onSuccess, onLockForward }) => {
     const { formData } = useTrialForm();
-    const { result, generateDesign, generating, generatorError } = useDesignResult();
-    const { validateTrialInfo, validateDesignInfo } = useTrialValidation();
+    const { generate, isGenerating } = useTrialActions();
     const [validationError, setValidationError] = useState<string | null>(null);
-    const [submitting, setSubmitting] = useState(false);
 
     const sections = useMemo(() => [
         {
@@ -63,41 +60,14 @@ export const DesignDetailsStep: React.FC<DesignDetailsStepProps> = ({ onOpenPrep
             return;
         }
 
-        showWorkingModal();
-        try {
-            const infoCheck = await validateTrialInfo(formData);
-            if (!infoCheck.valid) {
-                setValidationError(infoCheck.error || 'Trial name verification failed.');
-                alert(infoCheck.error || 'Trial name verification failed.');
-                return;
-            }
-
-            const designCheck = await validateDesignInfo(formData);
-            if (!designCheck.valid) {
-                setValidationError(designCheck.error || 'Stock list validation failed.');
-                alert(designCheck.error || 'Stock list validation failed.');
-                return;
-            }
-
-            setSubmitting(true);
-            generateDesign(formData);
-        } finally {
-            hideWorkingModal();
+        const res = await generate(formData);
+        if (res.ok) {
+            onSuccess();
+        } else {
+            setValidationError(res.error || 'Failed to generate experimental design');
+            alert(res.error || 'Failed to generate experimental design');
         }
     };
-
-    useEffect(() => {
-        if (!submitting) return;
-
-        if (generatorError) {
-            setSubmitting(false);
-            setValidationError(generatorError);
-            alert(generatorError);
-        } else if (result) {
-            setSubmitting(false);
-            onSuccess();
-        }
-    }, [submitting, result, generatorError, onSuccess]);
 
     return (
         <div
@@ -128,10 +98,10 @@ export const DesignDetailsStep: React.FC<DesignDetailsStepProps> = ({ onOpenPrep
                     id="new_trial_submit"
                     name="create_trial_submit"
                     className="btn btn-primary btn-lg"
-                    disabled={generating}
+                    disabled={isGenerating}
                     onClick={handleContinue}
                 >
-                    {generating ? 'Generating Layout...' : 'Continue to Next Step'}
+                    {isGenerating ? 'Generating Layout...' : 'Continue to Next Step'}
                 </button>
             </div>
         </div>
