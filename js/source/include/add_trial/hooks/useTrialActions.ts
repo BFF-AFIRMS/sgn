@@ -3,13 +3,13 @@ import { TrialFormData, DesignResultResponse } from '../types';
 import { useDesignResult } from '../contexts/DesignResultContext';
 import { useTrialForm } from '../contexts/TrialFormContext';
 import { fetchListItems } from './useBreedbaseLists';
-import { showWorkingModal, hideWorkingModal } from '../../working_modal';
 import * as trialService from '../services/trialService';
 
 export interface ActionResult<T = void> {
     ok: boolean;
     data?: T;
     error?: string;
+    warnings?: string[];
 }
 
 export const useTrialActions = () => {
@@ -25,7 +25,7 @@ export const useTrialActions = () => {
 
     const generate = useCallback(async (form: TrialFormData): Promise<ActionResult<DesignResultResponse>> => {
         setIsGenerating(true);
-        showWorkingModal();
+        const warnings: string[] = [];
         try {
             await trialService.verifyTrialName(form.trialName);
 
@@ -102,7 +102,7 @@ export const useTrialActions = () => {
                         if (entry.required) {
                             throw new Error(`${entry.label}: ${msg}`);
                         } else {
-                            alert(`${entry.label}: ${msg}`);
+                            warnings.push(`${entry.label}: ${msg}`);
                         }
                     }
                 }
@@ -119,19 +119,25 @@ export const useTrialActions = () => {
 
             const designResult = await trialService.requestExperimentalDesign(payload);
             setResult(designResult);
-            return { ok: true, data: designResult };
+            return {
+                ok: true,
+                data: designResult,
+                warnings: warnings.length > 0 ? warnings : undefined
+            };
         } catch (err: unknown) {
             const msg = err instanceof Error ? err.message : 'Failed to generate experimental design';
-            return { ok: false, error: msg };
+            return {
+                ok: false,
+                error: msg,
+                warnings: warnings.length > 0 ? warnings : undefined
+            };
         } finally {
-            hideWorkingModal();
             setIsGenerating(false);
         }
     }, [setIsGenerating, setResult]);
 
     const save = useCallback(async (form: TrialFormData, designJson: string): Promise<ActionResult<string>> => {
         setIsSaving(true);
-        showWorkingModal();
         try {
             const stockListId = form.stockListId || form.repStockListId;
             const controlListId = form.controlListId;
@@ -160,7 +166,6 @@ export const useTrialActions = () => {
             const msg = err instanceof Error ? err.message : 'An error occurred saving the trial.';
             return { ok: false, error: msg };
         } finally {
-            hideWorkingModal();
             setIsSaving(false);
         }
     }, [setIsSaving, clearDraft, setSavedTrialId]);
