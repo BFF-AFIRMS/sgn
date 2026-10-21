@@ -6,6 +6,7 @@ const TerserPlugin = require("terser-webpack-plugin");
 const sourcePath = path.resolve(__dirname, "source");
 const entryPath = path.resolve(sourcePath, "entries");
 const legacyPath = path.resolve(sourcePath, "legacy");
+const includePath = path.resolve(sourcePath, "include");
 
 module.exports = {
     mode: "production",
@@ -29,7 +30,10 @@ module.exports = {
         libraryTarget: "umd"
     },
     resolve: {
-        extensions: ['.ts', '.tsx', '.js', '.jsx', '.json']
+        extensions: ['.ts', '.tsx', '.js', '.jsx', '.json'],
+        alias: {
+            '~': includePath,
+        },
     },
     // Set up babel and JSAN processing
     module: {
