@@ -115,7 +115,7 @@ if (-e $bashrc_filepath){
     edit_file_lines sub { $_ = '' if /TEST_DB_NAME/ }, $bashrc_filepath;
 }
 # Note: append_file will create the file if it does not already exist
-append_file($bashrc_filepath, "TEST_DB_NAME=$dbname\n");
+append_file($bashrc_filepath, "export TEST_DB_NAME=$dbname\n");
 
 print STDERR "# Writing a .pgpass file... ";
 # format = hostname:port:database:username:password
