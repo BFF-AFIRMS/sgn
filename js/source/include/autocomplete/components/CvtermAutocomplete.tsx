@@ -27,28 +27,43 @@ export const CvtermAutocomplete: React.FC<CvtermAutocompleteProps> = ({
             setSuggestions([]);
             return;
         }
-        const delayDebounce = setTimeout(() => {
-            const params = new URLSearchParams({
-                term: value,
-                ...(dbName ? { db_name: dbName } : {})
-            });
-            fetch(`/ajax/cvterm/autocompleteslim?${params.toString()}`)
-                .then(res => res.json())
-                .then((data: unknown) => {
-                    if (Array.isArray(data)) {
-                        const list = data.map(item => {
-                            if (typeof item === 'string') return item;
-                            if (item && typeof item === 'object') {
-                                return (item as { label?: string; value?: string }).label || (item as { label?: string; value?: string }).value || '';
-                            }
-                            return '';
-                        });
-                        setSuggestions(list.filter(Boolean));
-                    }
-                })
-                .catch(() => {});
+
+        const controller = new AbortController();
+
+        const delayDebounce = setTimeout(async () => {
+            try {
+                const params = new URLSearchParams({
+                    term: value,
+                    ...(dbName ? { db_name: dbName } : {})
+                });
+                const res = await fetch(`/ajax/cvterm/autocompleteslim?${params.toString()}`, {
+                    signal: controller.signal
+                });
+                if (!res.ok) return;
+                const data: unknown = await res.json();
+                if (controller.signal.aborted) return;
+
+                if (Array.isArray(data)) {
+                    const list = data.map(item => {
+                        if (typeof item === 'string') return item;
+                        if (item && typeof item === 'object') {
+                            return (item as { label?: string; value?: string }).label || (item as { label?: string; value?: string }).value || '';
+                        }
+                        return '';
+                    });
+                    setSuggestions(list.filter(Boolean));
+                }
+            } catch (err: unknown) {
+                if (err instanceof Error && err.name === 'AbortError') {
+                    return;
+                }
+            }
         }, 300);
-        return () => clearTimeout(delayDebounce);
+
+        return () => {
+            clearTimeout(delayDebounce);
+            controller.abort();
+        };
     }, [value, dbName]);
 
     return (
