@@ -398,17 +398,19 @@ export const PlotGridProvider: React.FC<FieldMapContextProps> = ({ trialId, auth
             if (units.length > 0) {
                 const firstInfo = units[0].additionalInfo;
                 if (firstInfo) {
-                    setTopBorder(firstInfo.top_border_selection);
-                    setLeftBorder(firstInfo.left_border_selection);
-                    setRightBorder(firstInfo.right_border_selection);
-                    setBottomBorder(firstInfo.bottom_border_selection);
-                    setInvertRows(firstInfo.invert_row_checkmark);
-                    setInvertCols(firstInfo.invert_col_checkmark);
+                    // Add safe defaults in case the firstInfo is only partially constructued
+                    // Otherwise these variables will be set to undefined, causing problems
+                    setTopBorder(firstInfo.top_border_selection || false);
+                    setLeftBorder(firstInfo.left_border_selection || false );
+                    setRightBorder(firstInfo.right_border_selection || false);
+                    setBottomBorder(firstInfo.bottom_border_selection || false );
+                    setInvertRows(firstInfo.invert_row_checkmark || false);
+                    setInvertCols(firstInfo.invert_col_checkmark || false);
 
-                    if (firstInfo.plot_layout) setPlotLayout(firstInfo.plot_layout);
-                    if (firstInfo.plot_color_var) setColorVar(firstInfo.plot_color_var);
-                    if (firstInfo.plot_label_var) setLabelVar(firstInfo.plot_label_var);
-                    if (firstInfo.plot_label_size) setLabelSize(firstInfo.plot_label_size);
+                    if (firstInfo.plot_layout) setPlotLayout(firstInfo.plot_layout || "serpentine");
+                    if (firstInfo.plot_color_var) setColorVar(firstInfo.plot_color_var || "parity");
+                    if (firstInfo.plot_label_var) setLabelVar(firstInfo.plot_label_var || "plot_number");
+                    if (firstInfo.plot_label_size) setLabelSize(firstInfo.plot_label_size || 10);
                 }
                 parsePlotData(units);
             }
