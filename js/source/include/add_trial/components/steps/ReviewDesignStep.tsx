@@ -11,6 +11,7 @@ import { FieldMapContainer } from '../../../fieldmap';
 import { AddTreatmentsModal } from '../../modals/AddTreatmentsModal';
 import { TrialDesignInformation } from '../review/TrialDesignInformation';
 import { TrialDesignLayoutTable } from '../review/TrialDesignLayoutTable';
+import { Alert } from '../../../@generic';
 
 interface ReviewDesignStepProps {
     onSuccess: () => void;
@@ -45,6 +46,7 @@ export const ReviewDesignStep: React.FC<ReviewDesignStepProps> = ({ onSuccess })
         if (!result && formData.trialName.trim() && !hasRestoredRef.current) {
             hasRestoredRef.current = true;
             generate(formData).then(res => {
+                Alert.warnings(res.warnings);
                 if (!res.ok) {
                     setErrorMessage(res.error || 'Failed to restore design layout.');
                 }
@@ -59,6 +61,7 @@ export const ReviewDesignStep: React.FC<ReviewDesignStepProps> = ({ onSuccess })
     const handleRedo = async () => {
         setErrorMessage(null);
         const res = await generate(formData);
+        Alert.warnings(res.warnings);
         if (!res.ok) {
             setErrorMessage(res.error || 'Failed to regenerate layout.');
             alert(res.error || 'Failed to regenerate layout.');
