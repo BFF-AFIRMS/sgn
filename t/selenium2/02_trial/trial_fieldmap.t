@@ -6,6 +6,7 @@ use Test::More;
 
 use Try::Tiny;
 use File::Copy;
+use File::Slurp;
 use JSON;
 use SGN::Model::Cvterm;
 use SGN::Test::WWW::WebDriver;
@@ -35,6 +36,7 @@ my $driver = Selenium::Remote::Driver->new(
 $t->driver($driver);
 
 my $download_dir = '/selenium/downloads';
+my $upload_dir = '/home/seluser/Downloads';
 
 # -----------------------------------------------------------------------------
 # Field Map Layout Constants & Color Definitions
@@ -1284,6 +1286,98 @@ $t->while_logged_in_as("curator", sub {
 	find_plot_cell_ok(4, 2, $check_fill);
 
 	# =========================================================================
+	# Download Plot Order
+	# =========================================================================
+	my $CASS_6Genotypes_layout_csv = 'plot_name,row_number,col_number
+	CASS_6Genotypes_103,1,1
+	CASS_6Genotypes_104,1,2
+	CASS_6Genotypes_105,1,3
+	CASS_6Genotypes_106,1,4
+	CASS_6Genotypes_107,1,5
+	CASS_6Genotypes_201,2,1
+	CASS_6Genotypes_202,2,2
+	CASS_6Genotypes_203,2,3
+	CASS_6Genotypes_204,2,4
+	CASS_6Genotypes_205,2,5
+	CASS_6Genotypes_206,2,6
+	CASS_6Genotypes_207,2,7
+	CASS_6Genotypes_301,3,1
+	CASS_6Genotypes_302,3,2
+	CASS_6Genotypes_303,3,3
+	CASS_6Genotypes_304,3,4
+	CASS_6Genotypes_305,3,5
+	CASS_6Genotypes_306,3,6
+	CASS_6Genotypes_307,3,7';
+	# Trim leading whitespace
+	$CASS_6Genotypes_layout_csv =~ s/^[ ]+//mg;
+	my $filename = 'CASS_6Genotypes_spatial_layout.csv';
+	my $breedbase_layout_file_path = "/selenium/downloads/$filename";
+	write_file($breedbase_layout_file_path, $CASS_6Genotypes_layout_csv);
+
+	# Upload the spatial layout file
+	my $selenium_layout_file_path = "$upload_dir/$filename";
+	$t->click_ok('heatmap_upload_trial_coords_link', 'id', 'Click Upload Spatial Layout');
+	$t->send_keys_ok('trial_coordinates_uploaded_file', 'id', $selenium_layout_file_path, 'Select Spatial Layout File Path');
+	$t->click_ok("upload_trial_coords_ok_button", "id", "Submit Spatial Layout Upload ");
+	$t->click_ok("trial_coord_upload_success_dialog_message_cancel", "id", "Close Success Message");
+	$t->wait_for_network_idle();
+
+	# Refresh page
+	$t->get_ok('/breeders/trial/165', 'Navigate to trial page');
+	$t->click_ok('pheno_heatmap_onswitch', 'id', 'Open fieldmap section');
+	$t->wait_for_working_dialog();
+	$t->find_element_ok('//*[@id="' . $svg_id . '"]', 'xpath', 'Find fieldmap SVG');
+
+	# Inverted Rows and Columns + Top and Left Borders + Starting Corner = Bottom Left
+	$t->click_ok('//label[contains(text(),"Invert Rows")]/input', 'xpath', 'Enable Invert Rows checkbox');
+	$t->click_ok('//label[contains(text(),"Invert Columns")]/input', 'xpath', 'Enable Invert Columns checkbox');
+	$t->click_ok('//label[contains(text(),"Top")]/input', 'xpath', 'Enable Top Border checkbox');
+	$t->click_ok('//label[contains(text(),"Left")]/input', 'xpath', 'Enable Left Border checkbox');
+	$t->click_ok('//label[contains(text(),"Include Borders")]/input', 'xpath', "Enable Include Borders for Download Plot Order");
+	$t->click_ok('//label[contains(text(),"Include Gaps")]/input', 'xpath', "Enable Include Gaps for Download Plot Order");
+	$t->click_ok('//label[contains(text(),"Starting Corner")]/following-sibling::select[1]/option[@value="bottom_left"]', 'xpath', "Select Starting Corner Bottom Left");
+	my $plot_order_file_path = "$download_dir/planting_order_165.csv";
+	if (-e $plot_order_file_path) {
+		unlink $plot_order_file_path or die "Could not delete existing file '$plot_order_file_path': $!";
+	}
+	$t->click_ok('//button[contains(text(),"Generate & Download File")]', 'xpath', "Click Generate and Download File");
+	ok((wait_until {-e $plot_order_file_path;} timeout => 15, interval => 1), "Wait for file '$plot_order_file_path' to be downloaded");
+
+	# Check expected values
+	my $plot_order_content = read_file($plot_order_file_path);
+	like($plot_order_content, qr/1,border,,,,,,,,3,8,,,/, "Left Border Exists in Row 3, Column 8");
+	like($plot_order_content, qr/18,gap,,,,,,,,1,7,,,/, "Gap Exists in Row 1, Column 7");
+	like($plot_order_content, qr/19,gap,,,,,,,,1,6,,,/, "Gap Exists in Row 1, Column 6");
+	like($plot_order_content, qr/25,border,,,,,,,,0,8,,,/, "Top and Left Border Exists in Row 0, Column 8");
+	like($plot_order_content, qr/32,border,,,,,,,,0,1,,,/, "Top Border Exists in Row 0, Column 0");
+
+	# Non-Inverted Rows and Columns + Starting Corner = Top Right
+	$t->click_ok('//label[contains(text(),"Invert Rows")]/input', 'xpath', 'Disable Invert Rows checkbox');
+	$t->click_ok('//label[contains(text(),"Invert Columns")]/input', 'xpath', 'Disable Invert Columns checkbox');
+	$t->click_ok('//button[@title="Rotate"]', 'xpath', 'Click Rotate button');
+	$t->click_ok('//label[contains(text(),"Starting Corner")]/following-sibling::select[1]/option[@value="top_right"]', 'xpath', "Select Starting Corner Top Right");
+	my $plot_order_file_path = "$download_dir/planting_order_165.csv";
+	if (-e $plot_order_file_path) {
+		unlink $plot_order_file_path or die "Could not delete existing file '$plot_order_file_path': $!";
+	}
+	$t->click_ok('//button[contains(text(),"Generate & Download File")]', 'xpath', "Click Generate and Download File");
+	ok((wait_until {-e $plot_order_file_path;} timeout => 15, interval => 1), "Wait for file '$plot_order_file_path' to be downloaded");
+
+	# Check expected values
+	$plot_order_content = read_file($plot_order_file_path);
+	like($plot_order_content, qr/1,border,,,,,,,,4,7,,,/, "Top Border Exists in Row 4, Column 7");
+	like($plot_order_content, qr/8,border,,,,,,,,4,0,,,/, "Top and Left Border Exists in Row 4, Column 0");
+	like($plot_order_content, qr/25,gap,,,,,,,,1,7,,,/, "Gap Exists in Row 1, Column 7");
+	like($plot_order_content, qr/26,gap,,,,,,,,1,6,,,/, "Gap Exists in Row 1, Column 6");
+	like($plot_order_content, qr/32,border,,,,,,,,1,0,,,/, "Left Border Exists in Row 1, Column 0");
+
+	# Refresh page
+	$t->get_ok('/breeders/trial/165', 'Navigate to trial page');
+	$t->click_ok('pheno_heatmap_onswitch', 'id', 'Open fieldmap section');
+	$t->wait_for_working_dialog();
+	$t->find_element_ok('//*[@id="' . $svg_id . '"]', 'xpath', 'Find fieldmap SVG');
+
+	# =========================================================================
 	# North Arrow Orientation Configuration
 	# =========================================================================
 	find_north_arrow_ok(0);
@@ -1337,13 +1431,13 @@ $t->while_logged_in_as("curator", sub {
 
 	# Toggle top, left, and bottom border layers
 	$t->click_ok('//label[contains(text(),"Top")]/input', 'xpath', 'Click Top checkbox');
-	find_plot_cell_ok(3, 3, $border_fill);
+	find_plot_cell_ok(1, 0, $border_fill);
 
 	$t->click_ok('//label[contains(text(),"Left")]/input', 'xpath', 'Click Left checkbox');
 	find_plot_cell_ok(0, 1, $border_fill);
 
 	$t->click_ok('//label[contains(text(),"Bottom")]/input', 'xpath', 'Click Bottom checkbox');
-	find_plot_cell_ok(2, 0, $border_fill);
+	find_plot_cell_ok(1, 4, $border_fill);
 	$t->click_ok('//label[contains(text(),"Bottom")]/input', 'xpath', 'Click Bottom checkbox');
 
 	$t->click_ok('//button[@title="Rotate"]', 'xpath', 'Click Rotate button');
@@ -1389,14 +1483,14 @@ $t->while_logged_in_as("curator", sub {
 
 	# Change dimensions allowing plots to move to new locations
 	set_dimensions(4, 7, undef, 0);
-	find_plot_label_ok('301', 4, 3);
-	find_plot_label_ok('307', 3, 4);
+	find_plot_label_ok('301', 4, 4);
+	find_plot_label_ok('307', 3, 5);
 	find_north_arrow_ok(90);
 
 	# Test changing dimensions, keeping plots in original locations
 	set_dimensions(6, 10, undef, 1);
-	find_plot_label_ok('301', 4, 3);
-	find_plot_label_ok('307', 3, 4);
+	find_plot_label_ok('301', 4, 4);
+	find_plot_label_ok('307', 3, 5);
 	# Set dimensions to expected values for rest of tests
 	set_dimensions(4, 7, undef, 1);
 
@@ -1426,7 +1520,7 @@ $t->while_logged_in_as("curator", sub {
 	# =========================================================================
 	# Plot Details Modal & Accession Replacement (Curator Override)
 	# =========================================================================
-	click_plot_cell_ok(3, 2);
+	click_plot_cell_ok(3, 3);
 	$t->find_element_ok('//div[contains(@class,"show")]//h4[contains(@class,"modal-title") and contains(.,"CASS_6Genotypes_206")]', 'xpath', 'Verify initial plot name CASS_6Genotypes_206 in modal header');
 	$t->find_element_ok('//div[contains(@class,"show")]//tr[td[contains(text(),"Accession")]]/td[2][contains(text(),"IITA-TMS-IBA30572")]', 'xpath', 'Verify accession name IITA-TMS-IBA30572 is displayed in the details modal');
 	$t->find_element_ok('//tr[td[contains(text(),"Plot Number")]]/td[2][contains(text(),"206")]', 'xpath', 'Verify plot number 206 is displayed in the details modal');
@@ -1442,7 +1536,7 @@ $t->while_logged_in_as("curator", sub {
 
 	# Verify updated accession in plot details
 	$t->wait_for_network_idle();
-	click_plot_cell_ok(3, 2);
+	click_plot_cell_ok(3, 3);
 	$t->find_element_ok('//div[contains(@class,"show")]//tr[td[contains(text(),"Accession")]]/td[2][contains(text(),"XG120015")]', 'xpath', 'Verify accession name XG120015 is displayed in the details modal');
 	$t->find_element_ok('//div[contains(@class,"show")]//h4[contains(@class,"modal-title") and contains(.,"CASS_6Genotypes_206")]', 'xpath', 'Verify plot name remains CASS_6Genotypes_206 when new plot name is omitted');
 	$t->click_ok('//div[contains(@class,"show")]//button[contains(text(),"Close")]', 'xpath', 'Click Close button in details modal');
@@ -1450,7 +1544,7 @@ $t->while_logged_in_as("curator", sub {
 	# =========================================================================
 	# Custom Plot Renaming on Accession Change
 	# =========================================================================
-	click_plot_cell_ok(3, 2);
+	click_plot_cell_ok(3, 3);
 	$t->find_element_ok('//div[contains(@class,"show")]//h4[contains(@class,"modal-title") and contains(.,"CASS_6Genotypes_206")]', 'xpath', 'Verify plot name before custom renaming');
 	$t->click_ok('//div[contains(@class,"show")]//a[contains(text(),"Replace")]', 'xpath', 'Click Replace Accession tab for custom renaming');
 	$t->send_keys_ok('//div[contains(@class,"show")]//label[contains(normalize-space(),"Accession")]/following-sibling::div//input', 'xpath', 'IITA-TMS-IBA30572', 'Set New Accession Name input to IITA-TMS-IBA30572', clear => 1);
@@ -1461,7 +1555,7 @@ $t->while_logged_in_as("curator", sub {
 	$t->wait_for_network_idle();
 
 	# Verify updated plot name and accession in plot details
-	click_plot_cell_ok(3, 2);
+	click_plot_cell_ok(3, 3);
 	$t->find_element_ok('//div[contains(@class,"show")]//h4[contains(@class,"modal-title") and contains(.,"CASS_6Genotypes_206_renamed")]', 'xpath', 'Verify updated plot name CASS_6Genotypes_206_renamed in modal header');
 	$t->find_element_ok('//div[contains(@class,"show")]//tr[td[contains(text(),"Accession")]]/td[2][contains(text(),"IITA-TMS-IBA30572")]', 'xpath', 'Verify accession name IITA-TMS-IBA30572 in details modal');
 	$t->click_ok('//div[contains(@class,"show")]//button[contains(text(),"Close")]', 'xpath', 'Click Close button in details modal');
@@ -1469,7 +1563,7 @@ $t->while_logged_in_as("curator", sub {
 	# =========================================================================
 	# Accession Autocomplete Dropdown Interaction (Plot Details Modal)
 	# =========================================================================
-	click_plot_cell_ok(3, 2);
+	click_plot_cell_ok(3, 3);
 	$t->find_element_ok('//div[contains(@class,"show")]//h4[contains(@class,"modal-title") and contains(text(),"Plot Details")]', 'xpath', 'Plot details modal is open for autocomplete testing');
 	$t->click_ok('//div[contains(@class,"show")]//a[contains(text(),"Replace")]', 'xpath', 'Click Replace Accession tab for autocomplete test');
 
@@ -1566,7 +1660,7 @@ $t->while_logged_in_as("curator", sub {
 	my $orig_handle = $t->driver->get_current_window_handle();
 	my @handles_before = @{$t->driver->get_window_handles()};
 
-	double_click_plot_cell_ok(3, 2);
+	double_click_plot_cell_ok(3, 3);
 
 	# Wait past the 250ms single-click timer
 	sleep(1);
@@ -1600,19 +1694,19 @@ $t->while_logged_in_as("curator", sub {
 	}
 
 	# Verify normal single click still opens details modal afterwards
-	click_plot_cell_ok(3, 2);
+	click_plot_cell_ok(3, 3);
 	$t->find_element_ok('//div[contains(@class,"show")]//h4[contains(@class,"modal-title") and contains(.,"CASS_6Genotypes_206")]', 'xpath', 'Plot details modal opens on single click after double-click test');
 	$t->click_ok('//div[contains(@class,"show")]//button[contains(text(),"Close")]', 'xpath', 'Close plot details modal');
 
 	# =========================================================================
 	# Column Inversion, Layout Rotation, & North Arrow Tracking
 	# =========================================================================
-	$t->click_ok('//label[contains(text(),"Invert Columns")]/input', 'xpath', 'Click Invert Columns checkbox');
-	find_plot_label_ok('207', 1, 2);
-	find_north_arrow_ok(270);
 
+	$t->click_ok('//label[contains(text(),"Invert Columns")]/input', 'xpath', 'Click Invert Columns checkbox');
+	find_plot_label_ok('207', 1, 3);
+	find_north_arrow_ok(270);
 	$t->click_ok('//button[@title="Rotate"]', 'xpath', 'Click Rotate button');
-	find_plot_label_ok('207', 5, 0);
+	find_plot_label_ok('207', 5, 1);
 	find_north_arrow_ok(0);
 
 	# =========================================================================
@@ -1903,7 +1997,7 @@ EOSQL
 	$t->find_element_ok('//*[@id="' . $svg_id . '"]', 'xpath', 'Find fieldmap SVG');
 
 	# Click plot cell to open details modal
-	click_plot_cell_ok(3, 2);
+	click_plot_cell_ok(3, 3);
 	$t->find_element_ok('//div[contains(@class,"show")]//h4[contains(@class,"modal-title") and contains(text(),"Plot Details")]', 'xpath', 'Plot details modal is open');
 	$t->find_element_ok('//h5[contains(text(),"Plot Contents & Structure Hierarchy:")]', 'xpath', 'Verify Plot Contents & Structure Hierarchy heading');
 
