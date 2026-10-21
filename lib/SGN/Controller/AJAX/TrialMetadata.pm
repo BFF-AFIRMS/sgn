@@ -6864,4 +6864,84 @@ sub secondary_axis_POST {
     $c->stash->{rest} = { success => 1 };
 
 }
+
+sub axis_orientation : Chained('trial') PathPart('axis_orientation') Args(0) ActionClass('REST') {};
+
+sub axis_orientation_GET {
+    my $self = shift;
+    my $c = shift;
+    my $schema = $c->stash->{schema};
+    my $trial_id = $c->stash->{trial_id};
+
+    my $read_prop = sub {
+        my ($cvterm_name) = @_;
+        my $cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, $cvterm_name, 'project_property');
+        if (!$cvterm) {
+            $c->stash->{rest} = { error => "Cvterm '$cvterm_name' not found. Has the db patch been run?" };
+            return;
+        }
+        my $prop = $schema->resultset("Project::Projectprop")->find({
+            project_id => $trial_id,
+            type_id => $cvterm->cvterm_id()
+        });
+        return $prop ? $prop->value() : undef;
+    };
+
+    $c->stash->{rest} = {
+        x_axis_orientation => $read_prop->('x_axis_orientation'),
+        y_axis_orientation => $read_prop->('y_axis_orientation'),
+    };
+}
+
+sub axis_orientation_POST {
+    my $self = shift;
+    my $c = shift;
+
+    if ($self->privileges_denied($c)) {
+        $c->stash->{rest} = { error => "You have insufficient access privileges to edit this trial." };
+        return;
+    }
+
+    my $schema = $c->stash->{schema};
+    my $trial_id = $c->stash->{trial_id};
+
+    my %props_to_set = (
+        x_axis_orientation => $c->req->param('x_axis_orientation'),
+        y_axis_orientation => $c->req->param('y_axis_orientation'),
+    );
+
+    foreach my $cvterm_name (keys %props_to_set) {
+        my $value = $props_to_set{$cvterm_name};
+        my $cvterm = SGN::Model::Cvterm->get_cvterm_row($schema, $cvterm_name, 'project_property');
+        if (!$cvterm) {
+            $c->stash->{rest} = { error => "Cvterm '$cvterm_name' not found. Has the db patch been run?" };
+            return;
+        }
+        my $prop = $schema->resultset("Project::Projectprop")->find({
+            project_id => $trial_id,
+            type_id => $cvterm->cvterm_id()
+        });
+
+        if (defined $value && $value ne '') {
+            if ($prop) {
+                $prop->update({ value => $value });
+            } else {
+                $schema->resultset("Project::Projectprop")->create({
+                    project_id => $trial_id,
+                    type_id => $cvterm->cvterm_id(),
+                    value => $value,
+                    rank => 0
+                });
+            }
+        } else {
+            if ($prop) {
+                $prop->delete();
+            }
+        }
+    }
+
+    $c->stash->{rest} = { success => 1 };
+
+}
+
 1;

@@ -50,6 +50,12 @@ my $LABEL_Y_OFFSET                  = 30;
 my $LABEL_Y_OFFSET_STAGGERED_TOP    = 20;
 my $LABEL_Y_OFFSET_STAGGERED_BOTTOM = 40;
 
+# Axis layout offsets relative to grid bounds
+my $X_VAL_TOP_OFFSET_Y    = -10;
+my $X_VAL_BOTTOM_OFFSET_Y = 20;
+my $Y_VAL_LEFT_OFFSET_X   = -20;
+my $Y_VAL_RIGHT_OFFSET_X  = 20;
+
 # Secondary axis layout offsets relative to grid bounds
 my $SEC_X_LABEL_TOP_OFFSET_Y    = -42;
 my $SEC_X_LABEL_BOTTOM_OFFSET_Y = 52;
@@ -207,6 +213,24 @@ sub find_plot_label_ok {
 	my $x = $col * $CELL_SIZE + $CELL_HALF;
 	my $y = $row * $CELL_SIZE + $y_offset;
 	return find_svg_text_ok($text, $x, $y, $font_size);
+}
+
+# Verify X axis column tick value text at top or bottom
+sub find_x_val_ok {
+	my ($text, $col, $num_rows, $side) = @_;
+	my $x = $col * $CELL_SIZE + $CELL_HALF;
+	my $grid_h = defined $num_rows ? $num_rows * $CELL_SIZE : 0;
+	my $y = ($side eq 'top') ? $X_VAL_TOP_OFFSET_Y : ($grid_h + $X_VAL_BOTTOM_OFFSET_Y);
+	return find_svg_text_ok($text, $x, $y);
+}
+
+# Verify Y axis row tick value text at left or right
+sub find_y_val_ok {
+	my ($text, $row, $num_cols, $side) = @_;
+	my $grid_w = defined $num_cols ? $num_cols * $CELL_SIZE : 0;
+	my $x = ($side eq 'left') ? $Y_VAL_LEFT_OFFSET_X : ($grid_w + $Y_VAL_RIGHT_OFFSET_X);
+	my $y = $row * $CELL_SIZE + $LABEL_Y_OFFSET;
+	return find_svg_text_ok($text, $x, $y);
 }
 
 # Verify secondary X axis label text (centered horizontally at top or bottom)
@@ -609,11 +633,13 @@ sub download_spatial_layout_ok {
 
 	$t->click_ok($trigger_xpath, 'xpath', 'Click Download Spatial Layout button');
 
-	foreach my $label (@$checkboxes) {
+	foreach my $label (@$all_checkbox_labels) {
 		my $element = $t->find_element_ok('//div[contains(@class,"show")]//label[contains(text(),"' . $label . '")]/input', 'xpath', "Find checkbox for '$label'");
-
-		next if $element->is_selected();
-		ok($element->click(), "Click checkbox for '$label'");
+		if ( grep { $_ eq $label } @$checkboxes ){
+			ok($element->click(), "Enable checkbox for '$label'") unless $element->is_selected();
+		} else {
+			ok($element->click(), "Disable checkbox for '$label'") if $element->is_selected();
+		}
 	}
 
 	$t->click_ok('//div[contains(@class,"show")]//button[contains(text(),"Download CSV")]', 'xpath', 'Click Download CSV button');
@@ -1288,41 +1314,13 @@ $t->while_logged_in_as("curator", sub {
 	# =========================================================================
 	# Download Plot Order
 	# =========================================================================
-	my $CASS_6Genotypes_layout_csv = 'plot_name,row_number,col_number
-	CASS_6Genotypes_103,1,1
-	CASS_6Genotypes_104,1,2
-	CASS_6Genotypes_105,1,3
-	CASS_6Genotypes_106,1,4
-	CASS_6Genotypes_107,1,5
-	CASS_6Genotypes_201,2,1
-	CASS_6Genotypes_202,2,2
-	CASS_6Genotypes_203,2,3
-	CASS_6Genotypes_204,2,4
-	CASS_6Genotypes_205,2,5
-	CASS_6Genotypes_206,2,6
-	CASS_6Genotypes_207,2,7
-	CASS_6Genotypes_301,3,1
-	CASS_6Genotypes_302,3,2
-	CASS_6Genotypes_303,3,3
-	CASS_6Genotypes_304,3,4
-	CASS_6Genotypes_305,3,5
-	CASS_6Genotypes_306,3,6
-	CASS_6Genotypes_307,3,7';
-	# Trim leading whitespace
-	$CASS_6Genotypes_layout_csv =~ s/^[ ]+//mg;
-	my $filename = 'CASS_6Genotypes_spatial_layout.csv';
-	my $breedbase_layout_file_path = "/selenium/downloads/$filename";
-	write_file($breedbase_layout_file_path, $CASS_6Genotypes_layout_csv);
-
-	# Upload the spatial layout file
-	my $selenium_layout_file_path = "$upload_dir/$filename";
-	$t->click_ok('heatmap_upload_trial_coords_link', 'id', 'Click Upload Spatial Layout');
-	$t->send_keys_ok('trial_coordinates_uploaded_file', 'id', $selenium_layout_file_path, 'Select Spatial Layout File Path');
-	$t->click_ok("upload_trial_coords_ok_button", "id", "Submit Spatial Layout Upload ");
-	$t->click_ok("trial_coord_upload_success_dialog_message_cancel", "id", "Close Success Message");
+	# Confirm and submit layout
+	$t->click_ok('//button[contains(text(),"Submit Layout Changes")]', 'xpath', 'Click Submit Layout Changes button');
+	$t->accept_alert_ok('Accept layout submission confirmation prompt');
+	$t->accept_alert_ok('Accept layout submission success alert');
 	$t->wait_for_network_idle();
 
-	# Refresh page
+	# Refresh page to access new options now with submit layout
 	$t->get_ok('/breeders/trial/165', 'Navigate to trial page');
 	$t->click_ok('pheno_heatmap_onswitch', 'id', 'Open fieldmap section');
 	$t->wait_for_working_dialog();
@@ -1378,6 +1376,60 @@ $t->while_logged_in_as("curator", sub {
 	$t->find_element_ok('//*[@id="' . $svg_id . '"]', 'xpath', 'Find fieldmap SVG');
 
 	# =========================================================================
+	# Download Spatial Layout
+	# =========================================================================
+	# Confirm and submit layout
+	$t->click_ok('//button[contains(text(),"Submit Layout Changes")]', 'xpath', 'Click Submit Layout Changes button');
+	$t->accept_alert_ok('Accept layout submission confirmation prompt');
+	$t->accept_alert_ok('Accept layout submission success alert');
+	$t->wait_for_network_idle();
+
+	# Double rotate (x and y axis labels both in a reversed state)
+	$t->click_ok('//button[@title="Rotate"]', 'xpath', 'Click Rotate button');
+	$t->click_ok('//button[@title="Rotate"]', 'xpath', 'Click Rotate button');
+	my $expected_csv = (
+		'Rows/Columns,7,6,5,4,3,2,1
+		1,"","","107","106","105","104","103"
+		2,"207","206","205","204","203","202","201"
+		3,"307","306","305","304","303","302","301"
+		' =~ s/^[\t]+//mgr
+	);
+	write_file('/tmp/Trial_165_spatial_layout_rotate_expected.csv', $expected_csv);
+	download_spatial_layout_ok(
+		'Trial_165_spatial_layout.csv',
+		'/tmp/Trial_165_spatial_layout_rotate_expected.csv',
+		['Plot Number']
+	);
+
+	# 1 Rotate + Invert Columns and Rows
+	$t->click_ok('//button[@title="Rotate"]', 'xpath', 'Click Rotate button');
+	$t->click_ok('//label[contains(text(),"Invert Rows")]/input', 'xpath', 'Disable Invert Rows checkbox');
+	$t->click_ok('//label[contains(text(),"Invert Columns")]/input', 'xpath', 'Disable Invert Columns checkbox');
+	my $expected_csv = (
+		'Rows/Columns,1,2,3
+		1,"103","201","301"
+		2,"104","202","302"
+		3,"105","203","303"
+		4,"106","204","304"
+		5,"107","205","305"
+		6,"","206","306"
+		7,"","207","307"
+		' =~ s/^[\t]+//mgr
+	);
+	write_file('/tmp/Trial_165_spatial_layout_invert_expected.csv', $expected_csv);
+	download_spatial_layout_ok(
+		'Trial_165_spatial_layout.csv',
+		'/tmp/Trial_165_spatial_layout_invert_expected.csv',
+		['Plot Number']
+	);
+
+	# Refresh page
+	$t->get_ok('/breeders/trial/165', 'Navigate to trial page');
+	$t->click_ok('pheno_heatmap_onswitch', 'id', 'Open fieldmap section');
+	$t->wait_for_working_dialog();
+	$t->find_element_ok('//*[@id="' . $svg_id . '"]', 'xpath', 'Find fieldmap SVG');
+
+	# =========================================================================
 	# North Arrow Orientation Configuration
 	# =========================================================================
 	find_north_arrow_ok(0);
@@ -1390,6 +1442,14 @@ $t->while_logged_in_as("curator", sub {
 
 	set_north_arrow_angle(0);
 	find_north_arrow_ok(0);
+
+	# =========================================================================
+	# Primary Axis Rendering
+	# =========================================================================
+	find_x_val_ok('1', 0, undef, 'top');
+	find_x_val_ok('1', 0, 3, 'bottom');
+	find_y_val_ok('3', 0, undef, 'left');
+	find_y_val_ok('3', 0, 7, 'right');
 
 	# =========================================================================
 	# Secondary Axis Configuration & Rendering
@@ -1407,14 +1467,71 @@ $t->while_logged_in_as("curator", sub {
 	find_sec_y_val_ok('ty3', 0, 7, 'right');
 
 	# =========================================================================
+	# Plot Details Coordinates
+	# =========================================================================
+	my $details_coordinates_xpath = '//div[contains(@class,"show")]//tr[td[contains(text(),"Coordinates")]]/td[2]';
+	my $details_close_xpath = '//div[contains(@class,"show")]//button[contains(text(),"Close")]';
+
+	# Normal plot coordinates
+	click_plot_cell_ok(2, 1);
+	$t->find_element_ok($details_coordinates_xpath . '[contains(text(),"3 / 2")]' , 'xpath', 'Verify plot CASS_6Genotypes_203 has coordinates 3 / 2');
+	$t->click_ok($details_close_xpath, 'xpath', 'Click Close button in details modal');
+
+	# Plot coordinates after inverting rows and columns
+	$t->click_ok('//label[contains(text(),"Invert Rows")]/input', 'xpath', 'Check Invert Rows checkbox');
+	$t->click_ok('//label[contains(text(),"Invert Columns")]/input', 'xpath', 'Check Invert Columns checkbox');
+	click_plot_cell_ok(4, 1);
+	$t->find_element_ok($details_coordinates_xpath . '[contains(text(),"3 / 2")]' , 'xpath', 'Verify plot CASS_6Genotypes_203 still has coordinates 3 / 2 after inverting');
+	$t->click_ok($details_close_xpath, 'xpath', 'Click Close button in details modal');
+
+	# Plot coordinates after rotating
+	$t->click_ok('//label[contains(text(),"Invert Rows")]/input', 'xpath', 'Unheck Invert Rows checkbox');
+	$t->click_ok('//label[contains(text(),"Invert Columns")]/input', 'xpath', 'Unheck Invert Columns checkbox');
+	$t->click_ok('//button[@title="Rotate"]', 'xpath', 'Click Rotate button');
+	click_plot_cell_ok(1, 2);
+	$t->find_element_ok($details_coordinates_xpath . '[contains(text(),"2 / 3")]' , 'xpath', 'Verify plot CASS_6Genotypes_203 has new coordinates 2 / 3 after rotating');
+	$t->click_ok($details_close_xpath, 'xpath', 'Click Close button in details modal');
+
+	# Reset rotation
+	$t->click_ok('//button[@title="Rotate"]', 'xpath', 'Click Rotate button');
+	$t->click_ok('//button[@title="Rotate"]', 'xpath', 'Click Rotate button');
+	$t->click_ok('//button[@title="Rotate"]', 'xpath', 'Click Rotate button');
+
+	# =========================================================================
 	# Layout Transformations & Border Inset Layers
 	# =========================================================================
 	# Rotate layout 90 degrees clockwise
 	$t->click_ok('//button[@title="Rotate"]', 'xpath', 'Click Rotate button');
 	find_plot_label_ok('103', 0, 0);
 	find_plot_label_ok('207', 1, 6);
+	find_x_val_ok('1', 0, undef, 'top');
+	find_y_val_ok('1', 0, undef, 'left');
+	find_sec_x_val_ok('ty3', 2, 7, 'bottom');
 	find_sec_y_val_ok('tx3', 2, 3, 'right');
 	find_north_arrow_ok(90);
+
+	# Rotate layout 180 degrees clockwise
+	$t->click_ok('//button[@title="Rotate"]', 'xpath', 'Click Rotate button');
+	find_plot_label_ok('103', 6, 0);
+	find_x_val_ok('1', 6, undef, 'top');
+	find_y_val_ok('1', 0, undef, 'left');
+	find_sec_x_val_ok('tx1', 6, undef, 'top');
+	find_sec_y_val_ok('ty1', 0, undef, 'left');
+	find_north_arrow_ok(180);
+
+	# Rotate layout 270 degrees clockwise
+	$t->click_ok('//button[@title="Rotate"]', 'xpath', 'Click Rotate button');
+	find_plot_label_ok('103', 2, 6);
+	find_x_val_ok('1', 2, undef, 'top');
+	find_y_val_ok('1', 6, undef, 'left');
+	find_sec_x_val_ok('ty1', 2, undef, 'top');
+	find_sec_y_val_ok('tx1', 6, undef, 'left');
+	find_north_arrow_ok(270);
+
+	# Rotate layout 360 (0) degrees clockwise
+	$t->click_ok('//button[@title="Rotate"]', 'xpath', 'Click Rotate button');
+	# Rotate layout back to 90 degrees clockwise for remainder of tests
+	$t->click_ok('//button[@title="Rotate"]', 'xpath', 'Click Rotate button');
 
 	# Transpose layout across diagonal axis
 	$t->click_ok('//button[@title="Transpose Display"]', 'xpath', 'Click Transpose Display button');
@@ -1432,18 +1549,40 @@ $t->while_logged_in_as("curator", sub {
 	# Toggle top, left, and bottom border layers
 	$t->click_ok('//label[contains(text(),"Top")]/input', 'xpath', 'Click Top checkbox');
 	find_plot_cell_ok(1, 0, $border_fill);
+	find_x_val_ok('1', 6, undef, 'top');
+	find_y_val_ok('1', 1, undef, 'left');
+	find_sec_x_val_ok('tx1', 6, undef, 'top');
+	find_sec_y_val_ok('ty1', 1, undef, 'left');
 
 	$t->click_ok('//label[contains(text(),"Left")]/input', 'xpath', 'Click Left checkbox');
 	find_plot_cell_ok(0, 1, $border_fill);
+	find_x_val_ok('1', 7, undef, 'top');
+	find_sec_x_val_ok('tx1', 7, undef, 'top');
 
 	$t->click_ok('//label[contains(text(),"Bottom")]/input', 'xpath', 'Click Bottom checkbox');
 	find_plot_cell_ok(1, 4, $border_fill);
+	find_y_val_ok('1', 1, undef, 'left');
+	find_sec_y_val_ok('ty1', 1, undef, 'left');
 	$t->click_ok('//label[contains(text(),"Bottom")]/input', 'xpath', 'Click Bottom checkbox');
 
 	$t->click_ok('//button[@title="Rotate"]', 'xpath', 'Click Rotate button');
 	$t->click_ok('//label[contains(text(),"Right")]/input', 'xpath', 'Click Right checkbox');
 	find_plot_cell_ok(4, 6, $border_fill);
+	find_x_val_ok('1', 1, undef, 'top');
 	find_sec_x_val_ok('ty3', 3, undef, 'top');
+
+	# Normal Rows, Invert Columns
+	$t->click_ok('//label[contains(text(),"Invert Rows")]/input', 'xpath', 'Uncheck Invert Rows checkbox');
+	$t->click_ok('//label[contains(text(),"Invert Columns")]/input', 'xpath', 'Check Invert Columns checkbox');
+	find_plot_cell_ok(0, 1, $border_fill);
+	find_plot_cell_ok(1, 0, $border_fill);
+	find_plot_label_ok('103', 3, 7);
+	find_x_val_ok('1', 3, undef, 'top');
+	find_y_val_ok('1', 7, undef, 'left');
+
+	# Go Back to Inverted Rows only for remainder of tests
+	$t->click_ok('//label[contains(text(),"Invert Columns")]/input', 'xpath', 'Uncheck Invert Columns checkbox');
+	$t->click_ok('//label[contains(text(),"Invert Rows")]/input', 'xpath', 'Check Invert Rows checkbox');
 
 	# =========================================================================
 	# Dimension Adjustments & Grid Layout Recalculation

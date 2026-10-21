@@ -12,6 +12,7 @@ export const useDownloadLayoutCSV = () => {
 	const {
 		bounds,
 		plotList,
+		axisOrientation,
 	} = usePlotGrid();
 
 	const {
@@ -23,11 +24,11 @@ export const useDownloadLayoutCSV = () => {
 		csvDownloadOpts: CsvDownloadOpts
 	) => {
 		let cols_csv_header = [];
-		for (let i = bounds.minCol; i <= bounds.maxCol; i++) {
+		const forwardCols = invertCols == axisOrientation.x.reversed;
+		const startCol = forwardCols ? bounds.minCol: bounds.maxCol;
+		const endCol = forwardCols ? bounds.maxCol: bounds.minCol;
+		for (let i = startCol; forwardCols ? i <= endCol : i >= endCol; forwardCols ? i++ : i--) {
 			cols_csv_header.push(i);
-		}
-		if (invertCols) {
-			cols_csv_header.reverse();
 		}
 		let csv = '';
 		csv += ['Rows/Columns', ...cols_csv_header].join(',') + '\n';
@@ -82,7 +83,7 @@ export const useDownloadLayoutCSV = () => {
 				rowArr.reverse();
 			}
 
-			const rowLabel = invertRows ? bounds.minRow + idx : bounds.maxRow - idx;
+			const rowLabel = invertRows !== axisOrientation.y.reversed ? bounds.minRow + idx : bounds.maxRow - idx;
 			csv += [rowLabel, ...rowArr].join(',') + '\n';
 		});
 
@@ -91,6 +92,6 @@ export const useDownloadLayoutCSV = () => {
 		hiddenElement.target = '_blank';
 		hiddenElement.download = `Trial_${trialId}_spatial_layout.csv`;
 		hiddenElement.click();
-	}, [bounds, plotList, invertCols, invertRows, trialId]);
+	}, [bounds, plotList, invertCols, invertRows, trialId, axisOrientation]);
 	return { downloadLayoutCSV };
 };

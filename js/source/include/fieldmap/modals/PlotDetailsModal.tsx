@@ -6,6 +6,7 @@ import { useModals } from '../contexts/ModalsContext';
 import { useHeatmap } from '../contexts/HeatmapContext';
 import { useView } from '../contexts/ViewContext';
 import { usePlotGrid } from '../contexts/PlotGridContext';
+import { useLayoutConfig } from '../contexts/LayoutConfigContext';
 import { ReplaceAccessionResult, useReplaceAccession } from '../hooks/useReplaceAccession';
 import { useSubmitSuppressPhenotype } from '../hooks/useSubmitSuppressPhenotype';
 import { plotAccessionName } from '../utils/plot';
@@ -30,9 +31,16 @@ export const PlotDetailsModal: React.FC<PlotDetailsModalProps> = ({ }) => {
     } = useView();
 
     const {
+        axisOrientation,
+        bounds,
         plotStructure,
         plotImages
     } = usePlotGrid();
+
+    const {
+        invertCols,
+        invertRows,
+    } = useLayoutConfig();
 
     const { heatmapData } = useHeatmap();
 
@@ -86,6 +94,17 @@ export const PlotDetailsModal: React.FC<PlotDetailsModalProps> = ({ }) => {
 
     if (!show || !selectedPlot) return null;
 
+    // Adjust displayed X and Y coordinates if the plot has been rotated (ie. reversed axis)
+    // Row/Col inversion handling is not required, because the coordinates are correct either way
+    let coordinates = '';
+    if (selectedPlot.observationUnitPosition?.positionCoordinateX){
+        const coordX = Number(selectedPlot.observationUnitPosition?.positionCoordinateX);
+        const coordY = Number(selectedPlot.observationUnitPosition?.positionCoordinateY);
+        const rowNumber = !axisOrientation.y.reversed ? coordY : 1 + bounds.maxRow - coordY;
+        const colNumber = !axisOrientation.x.reversed ? coordX : 1 + bounds.maxCol - coordX;
+        coordinates = `${colNumber} / ${rowNumber}`;
+    }
+
     return <>
         <div className="modal show tw:block tw:bg-black/50">
             <div className="modal-dialog modal-lg">
@@ -123,7 +142,7 @@ export const PlotDetailsModal: React.FC<PlotDetailsModalProps> = ({ }) => {
                                         {selectedPlot.observationUnitPosition?.positionCoordinateX && (
                                             <tr>
                                                 <td className="tw:font-bold">Coordinates (X / Y):</td>
-                                                <td>{selectedPlot.observationUnitPosition.positionCoordinateX} / {selectedPlot.observationUnitPosition.positionCoordinateY}</td>
+                                                <td>{coordinates}</td>
                                             </tr>
                                         )}
                                     </tbody>
