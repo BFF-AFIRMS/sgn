@@ -1,7 +1,7 @@
-import React, { useMemo, useEffect, useState } from 'react';
+import React, { useMemo, useEffect, useState, useRef } from 'react';
 import { useTrialForm } from '../../contexts/TrialFormContext';
 import { useDesignResult } from '../../contexts/DesignResultContext';
-import { useTrialSaver } from '../../hooks/useTrialSaver';
+import { useTrialActions } from '../../hooks/useTrialActions';
 import {
     extractDesignPlots,
     designPlotsToObservationUnits,
@@ -17,19 +17,16 @@ interface ReviewDesignStepProps {
 }
 
 export const ReviewDesignStep: React.FC<ReviewDesignStepProps> = ({ onSuccess }) => {
-    const { formData, clearDraft } = useTrialForm();
+    const { formData } = useTrialForm();
     const {
         result,
-        generateDesign,
-        generating,
-        generatorError: regenError,
         parsedDesigns,
         selectedLocationIndex,
         setSelectedLocationIndex,
-        setSavedTrialId
     } = useDesignResult();
-    const { saveTrial, saving, error: saveError, trialId } = useTrialSaver();
+    const { generate, save, isGenerating, isSaving } = useTrialActions();
     const [showTreatmentModal, setShowTreatmentModal] = useState(false);
+    const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
     const currentLocationName = formData.locations[selectedLocationIndex] || formData.trialName;
     const currentDesign = parsedDesigns[selectedLocationIndex] || parsedDesigns[0];
@@ -43,43 +40,41 @@ export const ReviewDesignStep: React.FC<ReviewDesignStepProps> = ({ onSuccess })
         return designPlotsToObservationUnits(currentPlots, currentLocationName);
     }, [currentPlots, currentLocationName]);
 
+    const hasRestoredRef = useRef(false);
     useEffect(() => {
-        if (!result && !generating && !regenError && formData.trialName.trim()) {
-            generateDesign(formData);
+        if (!result && formData.trialName.trim() && !hasRestoredRef.current) {
+            hasRestoredRef.current = true;
+            generate(formData).then(res => {
+                if (!res.ok) {
+                    setErrorMessage(res.error || 'Failed to restore design layout.');
+                }
+            });
         }
-    }, [result, generating, regenError, formData, generateDesign]);
+    }, [result, formData, generate]);
 
     const confirmedTreatments = useMemo(() => {
         return extractConfirmedTreatments(parsedDesigns);
     }, [parsedDesigns]);
 
-    const handleRedo = () => {
-        generateDesign(formData);
+    const handleRedo = async () => {
+        setErrorMessage(null);
+        const res = await generate(formData);
+        if (!res.ok) {
+            setErrorMessage(res.error || 'Failed to regenerate layout.');
+            alert(res.error || 'Failed to regenerate layout.');
+        }
     };
 
-    useEffect(() => {
-        if (regenError) {
-            alert(regenError);
-        }
-    }, [regenError]);
-
-    useEffect(() => {
-        if (saveError) {
-            alert(saveError);
-        }
-    }, [saveError]);
-
-    useEffect(() => {
-        if (trialId) {
-            clearDraft();
-            setSavedTrialId(trialId);
-            onSuccess();
-        }
-    }, [trialId, clearDraft, setSavedTrialId, onSuccess]);
-
-    const handleConfirm = () => {
+    const handleConfirm = async () => {
         if (!result?.design_json) return;
-        saveTrial(formData, result.design_json);
+        setErrorMessage(null);
+        const res = await save(formData, result.design_json);
+        if (res.ok) {
+            onSuccess();
+        } else {
+            setErrorMessage(res.error || 'An error occurred saving the trial.');
+            alert(res.error || 'An error occurred saving the trial.');
+        }
     };
 
     return (
@@ -95,11 +90,8 @@ export const ReviewDesignStep: React.FC<ReviewDesignStepProps> = ({ onSuccess })
                     </div>
                 </center>
             )}
-            {regenError && (
-                <div className="alert alert-danger tw:m-0">{regenError}</div>
-            )}
-            {saveError && (
-                <div className="alert alert-danger tw:m-0">{saveError}</div>
+            {errorMessage && (
+                <div className="alert alert-danger tw:m-0">{errorMessage}</div>
             )}
 
             {formData.locations.length > 1 && (
@@ -147,17 +139,17 @@ export const ReviewDesignStep: React.FC<ReviewDesignStepProps> = ({ onSuccess })
                     type="button"
                     id="redo_trial_layout_button"
                     className="btn btn-info btn-lg"
-                    disabled={generating || saving}
+                    disabled={isGenerating || isSaving}
                     onClick={handleRedo}
                 >
-                    {generating ? 'Regenerating...' : 'Redo Randomization'}
+                    {isGenerating ? 'Regenerating...' : 'Redo Randomization'}
                 </button>
                 <button
                     type="button"
                     id="add_trial_treatments_button"
                     name="new_trial_add_treatments"
                     className="btn btn-default btn-lg"
-                    disabled={generating || saving}
+                    disabled={isGenerating || isSaving}
                     onClick={() => setShowTreatmentModal(true)}
                 >
                     + Add Field Treatments
@@ -184,10 +176,10 @@ export const ReviewDesignStep: React.FC<ReviewDesignStepProps> = ({ onSuccess })
                     id="new_trial_confirm_submit"
                     name="new_trial_confirm_submit"
                     className="btn btn-primary btn-lg"
-                    disabled={saving || generating}
+                    disabled={isSaving || isGenerating}
                     onClick={handleConfirm}
                 >
-                    {saving ? 'Saving Trial...' : 'Confirm (Save Trial in Database)'}
+                    {isSaving ? 'Saving Trial...' : 'Confirm (Save Trial in Database)'}
                 </button>
             </div>
 
