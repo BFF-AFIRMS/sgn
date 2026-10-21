@@ -76,7 +76,7 @@ export const DownloadCSVModal: React.FC<DownloadCSVModalProps> = ({ }) => {
                                 onChange={e => setBorderLabel(e.target.value as BorderLabel)}
                             >
                                 <option value="Border">Border</option>
-                                <option value="">Empty Cell</option>
+                                <option value="empty">Empty Cell</option>
                             </select>
                         </div>
                     </div>

@@ -47,6 +47,7 @@ export const useDownloadLayoutCSV = () => {
 
 		let coord_matrix: string[][] = [];
 		const sortedPlots = [...plotList].filter(p => p.type !== 'border');
+		const borderCell = borderLabel === 'empty' ? `""` : `"${borderLabel}"`;
 
 		sortedPlots.forEach(plot => {
 			const r = Number(plot.observationUnitPosition.positionCoordinateY) - bounds.minRow;
@@ -96,16 +97,16 @@ export const useDownloadLayoutCSV = () => {
 			}
 
 			// Add left and right borders
-			if (effectiveLeftBorder) rowArr.unshift(borderLabel);
-			if (effectiveRightBorder) rowArr.push(borderLabel);
+			if (effectiveLeftBorder) rowArr.unshift(borderCell);
+			if (effectiveRightBorder) rowArr.push(borderCell);
 			let rowNumber = invertRows !== axisOrientation.y.reversed ? bounds.minRow + idx : bounds.maxRow - idx;
 			csv += [rowNumber, ...rowArr].join(',') + '\n';
 		});
 
 		// Add top and bottom borders
-		let borderArray = Array.from({length: bounds.numCols}, () => borderLabel);
-		if (effectiveLeftBorder) borderArray.unshift(borderLabel);
-		if (effectiveRightBorder) borderArray.push(borderLabel);
+		let borderArray = Array.from({length: bounds.numCols}, () => borderCell);
+		if (effectiveLeftBorder) borderArray.unshift(borderCell);
+		if (effectiveRightBorder) borderArray.push(borderCell);
 		// Do not give a rowLabel to border rows, to match the fieldmap display
 		borderArray.unshift('');
 		if (effectiveTopBorder) csv = borderArray.join(',') + '\n' + csv;
