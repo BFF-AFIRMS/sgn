@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useBreedbaseLists } from '../../hooks/useBreedbaseLists';
 
 interface BreedbaseListSelectProps {
@@ -21,16 +21,6 @@ export const BreedbaseListSelect: React.FC<BreedbaseListSelectProps> = ({
     selectId
 }) => {
     const { lists, loading, loadLists } = useBreedbaseLists(listType);
-
-    useEffect(() => {
-        const handleReload = () => loadLists();
-        window.addEventListener('focus', handleReload);
-        jQuery('#list_dialog').on('hidden.bs.modal', handleReload);
-        return () => {
-            window.removeEventListener('focus', handleReload);
-            jQuery('#list_dialog').off('hidden.bs.modal', handleReload);
-        };
-    }, [loadLists]);
 
     return (
         <div id={id} className="tw:flex tw:items-center tw:gap-2">
