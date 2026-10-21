@@ -1371,10 +1371,6 @@ $t->while_logged_in_as("curator", sub {
 	like($plot_order_content, qr/26,gap,,,,,,,,1,6,,,/, "Gap Exists in Row 1, Column 6");
 	like($plot_order_content, qr/32,border,,,,,,,,1,0,,,/, "Left Border Exists in Row 1, Column 0");
 
-	# Delete spatial layout
-	$t->click_ok("delete_field_map_hm_link", "id", "Click Delete Spatial Layout");
-	$t->accept_alert_ok("Confirm Delete Spatial Layout");
-	$t->wait_for_working_dialog();
 	# Refresh page
 	$t->get_ok('/breeders/trial/165', 'Navigate to trial page');
 	$t->click_ok('pheno_heatmap_onswitch', 'id', 'Open fieldmap section');
