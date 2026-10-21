@@ -622,8 +622,9 @@ my $all_checkbox_labels = [
 
 # Open the CSV download modal, select requested columns, trigger download, and verify CSV content
 sub download_spatial_layout_ok {
-	my ($filename, $expected_filepath, $checkboxes, $trigger_xpath) = @_;
+	my ($filename, $expected_filepath, $checkboxes, $trigger_xpath, $border_label) = @_;
 	$checkboxes ||= $all_checkbox_labels;
+	$border_label ||= "Border";
 	$trigger_xpath ||= '//button[@title="Download Spatial Layout (CSV)"]';
 
 	my $file_path = "$download_dir/$filename";
@@ -642,6 +643,7 @@ sub download_spatial_layout_ok {
 		}
 	}
 
+	$t->click_option_ok('//label[contains(text(),"Border Label:")]/following-sibling::select/option[@value="' . $border_label . '"]', 'xpath', "Select Border Label=$border_label");
 	$t->click_ok('//div[contains(@class,"show")]//button[contains(text(),"Download CSV")]', 'xpath', 'Click Download CSV button');
 
 	ok((wait_until {
@@ -1415,6 +1417,53 @@ $t->while_logged_in_as("curator", sub {
 		'Trial_165_spatial_layout.csv',
 		'/tmp/Trial_165_spatial_layout_invert_expected.csv',
 		['Plot Number']
+	);
+
+	# =========================================================================
+	# Download Spatial Layout with Borders
+	# =========================================================================
+
+	# Top and Left Border
+	$t->click_ok('//label[contains(text(),"Top")]/input', 'xpath', 'Enable Top Border checkbox');
+	$t->click_ok('//label[contains(text(),"Left")]/input', 'xpath', 'Enable Left Border checkbox');
+	my $expected_csv = (
+		'Rows/Columns,,1,2,3,4,5,6,7
+		,"Border","Border","Border","Border","Border","Border","Border","Border"
+		3,"Border","301","302","303","304","305","306","307"
+		2,"Border","201","202","203","204","205","206","207"
+		1,"Border","103","104","105","106","107","",""
+		' =~ s/^[\t]+//mgr
+	);
+	write_file('/tmp/Trial_165_spatial_layout_borders.csv', $expected_csv);
+	download_spatial_layout_ok(
+		'Trial_165_spatial_layout.csv',
+		'/tmp/Trial_165_spatial_layout_borders.csv',
+		['Plot Number'],
+		undef,
+		"Border"
+	);
+
+	# Left, Right, Bottom Border + 2 Rotations, + Border Label as Empty Cell ("")
+	$t->click_ok('//label[contains(text(),"Top")]/input', 'xpath', 'Disable Top Border checkbox');
+	$t->click_ok('//label[contains(text(),"Bottom")]/input', 'xpath', 'Enable Bottom Border checkbox');
+	$t->click_ok('//label[contains(text(),"Right")]/input', 'xpath', 'Enable Right Border checkbox');
+	$t->click_ok('//button[@title="Rotate"]', 'xpath', 'Click Rotate button');
+	$t->click_ok('//button[@title="Rotate"]', 'xpath', 'Click Rotate button');
+	my $expected_csv = (
+		'Rows/Columns,,7,6,5,4,3,2,1,
+		1,"","","","107","106","105","104","103",""
+		2,"","207","206","205","204","203","202","201",""
+		3,"","307","306","305","304","303","302","301",""
+		,"","","","","","","","",""
+		' =~ s/^[\t]+//mgr
+	);
+	write_file('/tmp/Trial_165_spatial_layout_borders_rotate.csv', $expected_csv);
+	download_spatial_layout_ok(
+		'Trial_165_spatial_layout.csv',
+		'/tmp/Trial_165_spatial_layout_borders_rotate.csv',
+		['Plot Number'],
+		undef,
+		"empty"
 	);
 
 	# =========================================================================
