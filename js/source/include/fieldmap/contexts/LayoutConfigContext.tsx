@@ -6,7 +6,7 @@ import { FieldMapContextProps } from '../types';
 export type PlotLayout = 'serpentine' | 'zigzag';
 export type ColorVar = 'parity' | 'germplasm' | 'block' | 'family_name' | 'cross_name';
 export type LabelVar = 'plot_number' | 'germplasm' | 'block' | 'family_name' | 'cross_name';
-export type BorderLabel = 'Border' | '';
+export type BorderLabel = 'Border' | 'empty';
 
 export interface SecondaryAxis {
     readonly xLabel?: string;
