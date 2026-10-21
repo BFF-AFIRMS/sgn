@@ -35,7 +35,7 @@ $t->while_logged_in_as("submitter", sub {
 	$t->click_ok('add_project_year', 'id', "find trial year select list");
 	$t->click_ok('//select[@id="add_project_year"]/option[@value="2015"]', 'xpath', "Select '2015' as value for year");
 
-	$t->send_keys_ok('add_project_planting_date', 'id', "31/01/2015", "Set '31/01/2015' as value for planting_date");
+	$t->send_keys_ok('add_project_planting_date', 'id', "20150131", "Set '31/01/2015' as value for planting_date");
 
 	$t->send_keys_ok('add_project_plot_width', 'id', "10", "find trial plot width input");
 	$t->send_keys_ok('add_project_plot_length', 'id', "10", "find trial plot length input");
