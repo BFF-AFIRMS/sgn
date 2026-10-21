@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { ServerProps } from '../include/add_trial/types';
 import { WorkflowPaged, WorkflowPagedStepController } from '../include/workflow_paged';
 import { TrialFormProvider, useTrialForm } from '../include/add_trial/contexts/TrialFormContext';
+import { BreedbaseListsProvider } from '../include/add_trial/contexts/BreedbaseListsContext';
 import { DesignResultProvider } from '../include/add_trial/contexts/DesignResultContext';
 import { IntroStep } from '../include/add_trial/components/steps/IntroStep';
 import { DesignDetailsStep } from '../include/add_trial/components/steps/DesignDetailsStep';
@@ -74,9 +75,11 @@ export const AddTrialApp: React.FC = () => {
 export const AddTrialContainer: React.FC<ServerProps> = (props) => {
     return (
         <TrialFormProvider serverProps={props}>
-            <DesignResultProvider>
-                <AddTrialApp />
-            </DesignResultProvider>
+            <BreedbaseListsProvider>
+                <DesignResultProvider>
+                    <AddTrialApp />
+                </DesignResultProvider>
+            </BreedbaseListsProvider>
         </TrialFormProvider>
     );
 };
