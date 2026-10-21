@@ -86,19 +86,24 @@ export const useTrialActions = () => {
                     throw new Error('Selected seedlot list contains no items.');
                 }
                 const listsToVerify = [
-                    { items: stockListItems, required: true },
-                    { items: repStockListItems, required: true },
-                    { items: unrepStockListItems, required: true },
-                    { items: controlListItems, required: false },
-                    { items: crbdControlListItems, required: false },
-                ].filter((e): e is { items: string[]; required: boolean } => Boolean(e.items && e.items.length > 0));
+                    { items: stockListItems, required: true, label: 'Stock list' },
+                    { items: repStockListItems, required: true, label: 'Replicated stock list' },
+                    { items: unrepStockListItems, required: true, label: 'Unreplicated stock list' },
+                    { items: controlListItems, required: false, label: 'Checks list' },
+                    { items: crbdControlListItems, required: false, label: 'Checks list' },
+                ].filter((e): e is { items: string[]; required: boolean; label: string } => Boolean(e.items && e.items.length > 0));
 
                 for (const entry of listsToVerify) {
                     try {
                         const verified = await trialService.verifySeedlotList(entry.items, seedlotListItems);
                         seedlotHash = { ...seedlotHash, ...verified };
                     } catch (err: unknown) {
-                        if (entry.required) throw e;
+                        const msg = err instanceof Error ? err.message : String(err);
+                        if (entry.required) {
+                            throw new Error(`${entry.label}: ${msg}`);
+                        } else {
+                            alert(`${entry.label}: ${msg}`);
+                        }
                     }
                 }
             }
