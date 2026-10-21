@@ -4,16 +4,20 @@ import { ServerProps } from '../include/add_trial/types';
 import { WorkflowPaged, WorkflowPagedStepController } from '../include/workflow_paged';
 import { TrialFormProvider, useTrialForm } from '../include/add_trial/contexts/TrialFormContext';
 import { BreedbaseListsProvider } from '../include/add_trial/contexts/BreedbaseListsContext';
-import { DesignResultProvider } from '../include/add_trial/contexts/DesignResultContext';
+import { DesignResultProvider, useDesignResult } from '../include/add_trial/contexts/DesignResultContext';
 import { IntroStep } from '../include/add_trial/components/steps/IntroStep';
 import { DesignDetailsStep } from '../include/add_trial/components/steps/DesignDetailsStep';
 import { ReviewDesignStep } from '../include/add_trial/components/steps/ReviewDesignStep';
 import { CompleteStep } from '../include/add_trial/components/steps/CompleteStep';
 import { PartialRepHelpModal } from '../include/add_trial/modals/PartialRepHelpModal';
+import { useWorkingModal } from '../include/working_modal';
 
 export const AddTrialApp: React.FC = () => {
     const [showPrepHelp, setShowPrepHelp] = useState(false);
     const { maxStep, setMaxStep } = useTrialForm();
+    const { isGenerating, isSaving } = useDesignResult();
+
+    useWorkingModal(isGenerating || isSaving);
 
     const steps = useMemo(() => [
         {

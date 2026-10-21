@@ -8,6 +8,7 @@ import { TrialLinkageSection } from '../sections/TrialLinkageSection';
 import { FieldMapSection } from '../sections/FieldMapSection';
 import { PlotNamingSection } from '../sections/PlotNamingSection';
 import { WorkflowAccordion, evaluateAccordionSync } from '../../../workflow_accordion';
+import { Alert } from '../../../@generic';
 
 interface DesignDetailsStepProps {
     onOpenPrepHelp: () => void;
@@ -61,6 +62,7 @@ export const DesignDetailsStep: React.FC<DesignDetailsStepProps> = ({ onOpenPrep
         }
 
         const res = await generate(formData);
+        Alert.warnings(res.warnings);
         if (res.ok) {
             onSuccess();
         } else {
