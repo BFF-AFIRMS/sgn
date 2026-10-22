@@ -296,7 +296,8 @@ if (!$nocleanup) {
 	print STDERR "# Delete server logfile... \n";
 	close($logfile);
 	unlink $logfile;
-	
+	print STDERR "# Delete selenium sessions... \n";
+	system('curl -X GET "http://selenium:4444/status" 2>/dev/null | grep sessionId | cut -d \'"\' -f 4 | while read sessionId; do curl -X DELETE http://selenium:4444/session/$sessionId >/dev/null 2>&1; done');
 
 	print STDERR "# Delete fixture conf file... ";
 	unlink "sgn_fixture.conf";
