@@ -83,8 +83,8 @@ sub trial_create_page : Path('/breeders/trial/create') Args(0) {
     my $field_management_factors = $c->config->{management_factor_types};
     my @management_factor_types = split ',', $field_management_factors;
 
-    my $design_types_cfg = $c->config->{design_types};
-    my @design_types = split ',', $design_types_cfg;
+    my $design_types_cfg = $c->config->{design_types} || '';
+    my @design_types = map { s/^\s+|\s+$//gr } split ',', $design_types_cfg;
 
     $c->stash->{locations} = $locations;
     $c->stash->{breeding_programs} = $breeding_programs;
