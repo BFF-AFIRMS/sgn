@@ -1,4 +1,7 @@
 import React, { useState, useMemo } from 'react';
+
+import { alertWarnings } from '~/@generic/utils/alert';
+
 import { useTrialForm } from '../../contexts/TrialFormContext';
 import { useTrialActions } from '../../hooks/useTrialActions';
 import { validateTrialInfoSync, validateDesignInfoSync, validateFieldMapInfoSync } from '../../hooks/useTrialValidation';
@@ -8,7 +11,6 @@ import { TrialLinkageSection } from '../sections/TrialLinkageSection';
 import { FieldMapSection } from '../sections/FieldMapSection';
 import { PlotNamingSection } from '../sections/PlotNamingSection';
 import { WorkflowAccordion, evaluateAccordionSync } from '../../../workflow_accordion';
-import { Alert } from '../../../@generic';
 
 interface DesignDetailsStepProps {
     onOpenPrepHelp: () => void;
@@ -62,7 +64,7 @@ export const DesignDetailsStep: React.FC<DesignDetailsStepProps> = ({ onOpenPrep
         }
 
         const res = await generate(formData);
-        Alert.warnings(res.warnings);
+        alertWarnings(res.warnings);
         if (res.ok) {
             onSuccess();
         } else {

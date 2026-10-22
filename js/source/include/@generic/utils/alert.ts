@@ -1,4 +1,4 @@
-export const warnings = (warningList?: string[] | string): void => {
+export const alertWarnings = (warningList?: string[] | string): void => {
     if (!warningList) return;
     if (Array.isArray(warningList)) {
         if (warningList.length > 0) {
