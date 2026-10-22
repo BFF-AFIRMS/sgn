@@ -1557,12 +1557,10 @@ $t->while_logged_in_as("curator", sub {
 		['Plot Number']
 	);
 
-	# Delete Spatial Layout, this cleanup step might not be necessary
-	# $t->click_ok("delete_field_map_hm_link", "id", "Click Delete Spatial Layout");
-	# $t->accept_alert_ok("Confirm Delete Spatial Layout");
-	# $t->wait_for_working_dialog();
-	# # Unclear exactly if this alert is present
-	# #$t->accept_alert_ok("Accept Success Dialog Box");
+	# Delete Spatial Layout
+	$t->click_ok("delete_field_map_hm_link", "id", "Click Delete Spatial Layout");
+	$t->accept_alert_ok("Confirm Delete Spatial Layout");
+	$t->accept_alert_ok("Accept Field map deletion successful Dialog Box");
 
 	# Refresh page
 	$t->get_ok('/breeders/trial/165', 'Navigate to trial page');
