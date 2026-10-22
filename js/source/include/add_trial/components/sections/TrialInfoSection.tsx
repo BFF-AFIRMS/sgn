@@ -6,7 +6,7 @@ import { useTrialForm } from '../../contexts/TrialFormContext';
 import { DesignType, StockType } from '../../types';
 
 export const TrialInfoSection: React.FC = () => {
-    const { formData, updateField, serverProps, availableDesignTypes } = useTrialForm();
+    const { formData, setFormData, updateField, serverProps, availableDesignTypes } = useTrialForm();
     const [trialTypes, setTrialTypes] = useState<HtmlSelectOption[]>([
         { value: '', label: 'None', title: 'None' }
     ]);
@@ -31,16 +31,6 @@ export const TrialInfoSection: React.FC = () => {
         });
     }, [serverProps.locations, formData.breedingProgram]);
 
-    useEffect(() => {
-        if (formData.locations.length > 0) {
-            const validNames = new Set(filteredLocations.map(l => l.properties?.Name).filter(Boolean));
-            const updated = formData.locations.filter(loc => validNames.has(loc));
-            if (updated.length !== formData.locations.length) {
-                updateField('locations', updated);
-            }
-        }
-    }, [filteredLocations, formData.locations, updateField]);
-
     return (
         <div className="tw:flex tw:flex-col tw:gap-3.5">
             <div className="form-group row">
@@ -53,7 +43,20 @@ export const TrialInfoSection: React.FC = () => {
                         name="select_breeding_program"
                         className="form-control"
                         value={formData.breedingProgram}
-                        onChange={e => updateField('breedingProgram', e.target.value)}
+                        onChange={e => {
+                            const newProgram = e.target.value;
+                            const validNames = new Set(
+                                serverProps.locations
+                                    .filter(loc => Boolean(newProgram && loc.properties?.Program === newProgram))
+                                    .map(loc => loc.properties?.Name)
+                                    .filter(Boolean)
+                            );
+                            setFormData(prev => ({
+                                ...prev,
+                                breedingProgram: newProgram,
+                                locations: prev.locations.filter(loc => validNames.has(loc))
+                            }));
+                        }}
                     >
                         <option value="">-- Select Breeding Program --</option>
                         {serverProps.breeding_programs.map(p => (

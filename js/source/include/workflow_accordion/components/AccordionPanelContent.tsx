@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
 
 export interface AccordionPanelContentProps {
     id: string;
@@ -7,15 +7,13 @@ export interface AccordionPanelContentProps {
 }
 
 export const AccordionPanelContent: React.FC<AccordionPanelContentProps> = ({ id, isOpen, children }) => {
+    const [prevIsOpen, setPrevIsOpen] = useState(isOpen);
     const [isTransitioning, setIsTransitioning] = useState(false);
-    const prevOpenRef = useRef(isOpen);
 
-    useEffect(() => {
-        if (prevOpenRef.current !== isOpen) {
-            setIsTransitioning(true);
-            prevOpenRef.current = isOpen;
-        }
-    }, [isOpen]);
+    if (isOpen !== prevIsOpen) {
+        setPrevIsOpen(isOpen);
+        setIsTransitioning(true);
+    }
 
     const handleTransitionEnd = (e: React.TransitionEvent<HTMLDivElement>) => {
         if (e.target === e.currentTarget && e.propertyName === 'grid-template-rows') {
