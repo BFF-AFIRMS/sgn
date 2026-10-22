@@ -263,11 +263,10 @@ my @view_column_options = (@{ $editable_stock_props || [] }, 'organism', 'synony
 
     </&> <!-- closes advanced search -->
 
-    <div class="tw:text-center tw:m-2">
+    <div class="tw:text-center tw:m-2 tw:mt-8">
         <button class="btn btn-default" id="reset_stock_search">Reset</button>
         <button class="btn btn-primary" id="submit_stock_search">Search</button>
     </div>
-    <br/><br/>
   </div>
 </&>
 
