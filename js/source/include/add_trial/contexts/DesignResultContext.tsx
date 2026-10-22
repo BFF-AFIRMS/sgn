@@ -1,5 +1,6 @@
-import React, { createContext, useContext, useState, useMemo } from 'react';
+import React, { createContext, useContext, useState, useMemo, useCallback } from 'react';
 import { DesignResultResponse, GeneratedDesignPlot } from '../types';
+import { useTrialForm } from './TrialFormContext';
 
 export interface DesignResultContextType {
     result: DesignResultResponse | null;
@@ -18,7 +19,16 @@ export interface DesignResultContextType {
 const DesignResultContext = createContext<DesignResultContextType | undefined>(undefined);
 
 export const DesignResultProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const [result, setResult] = useState<DesignResultResponse | null>(null);
+    const { formData, setFormData } = useTrialForm();
+    const result = formData.designResult ?? null;
+
+    const setResult = useCallback((valOrFn: React.SetStateAction<DesignResultResponse | null>) => {
+        setFormData(prev => ({
+            ...prev,
+            designResult: typeof valOrFn === 'function' ? valOrFn(prev.designResult ?? null) : valOrFn
+        }));
+    }, [setFormData]);
+
     const [selectedLocationIndex, setSelectedLocationIndex] = useState(0);
     const [savedTrialId, setSavedTrialId] = useState<string | null>(null);
     const [isGenerating, setIsGenerating] = useState(false);

@@ -75,7 +75,8 @@ const defaultFormData: TrialFormData = {
     plotNumberingScheme: 'block_based',
     plotPrefix: '',
     startNumber: '1',
-    increment: ''
+    increment: '',
+    designResult: null
 };
 
 const TrialFormContext = createContext<TrialFormContextType | undefined>(undefined);
