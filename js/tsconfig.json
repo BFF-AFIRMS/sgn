@@ -1,5 +1,9 @@
 {
 	"compilerOptions": {
+		"baseUrl": ".",
+		"paths": {
+			"~/*": ["source/include/*"]
+		},
 		"target": "es2015",
 		"module": "es2015",
 		"jsx": "react-jsx",
