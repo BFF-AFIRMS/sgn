@@ -188,7 +188,7 @@ test('Trial Service - buildSaveDesignPayload: Linkage and Design JSON Forwarding
     t.equal(payload.get('has_plant_entries'), '5', 'Sets has_plant_entries count');
     t.equal(payload.get('has_subplot_entries'), '0', 'Standard trial has 0 subplot entries');
 
-    const sourceTrials = payload.getAll('add_project_trial_source[]');
+    const sourceTrials = [...payload.getAll('add_project_trial_source[]')];
     t.deepEqual(sourceTrials, ['100', '200'], 'Appends all source trial IDs as array parameters');
 
     t.end();
