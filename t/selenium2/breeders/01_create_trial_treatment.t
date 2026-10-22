@@ -84,6 +84,18 @@ $t->while_logged_in_as("submitter", sub {
 	};
 	ok($treatment_found_in_review, "Verify treatment name appears in confirmed treatments section");
 
+	# Refresh page and verify treatment and design persist without regenerating
+	my $treatment_url = $t->driver->get_current_url();
+	$t->get_ok($treatment_url, "Refresh page at review step after adding treatment");
+	$t->wait_for_network_idle();
+
+	my $treatment_still_present = wait_until {
+		my $text = $t->get_text('trial_design_confirm_treatments', 'id');
+		return $text if $text =~ /$treatment_name/;
+		return undef;
+	};
+	ok($treatment_still_present, "Verify treatment name persists after page refresh");
+
 	# Confirm and save trial in database
 	$t->click_ok('new_trial_confirm_submit', 'id', "confirm and save trial");
 	$t->wait_for_working_dialog();
