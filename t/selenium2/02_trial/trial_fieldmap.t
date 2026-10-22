@@ -942,6 +942,14 @@ sub create_trial_with_geo_coordinates {
 	return $trial_id;
 }
 
+sub reload_trial_fieldmap {
+	my $trial_id = shift;
+	$t->get_ok("/breeders/trial/$trial_id", "Navigate to trial page: $trial_id");
+	$t->click_ok('pheno_heatmap_onswitch', 'id', 'Open fieldmap section');
+	$t->wait_for_working_dialog();
+	$t->find_element_ok('//*[@id="' . $svg_id . '"]', 'xpath', 'Find fieldmap SVG');
+}
+
 # -----------------------------------------------------------------------------
 # Fixture Setup: Mark plot CASS_6Genotypes_107 as a control
 # -----------------------------------------------------------------------------
@@ -1323,10 +1331,7 @@ $t->while_logged_in_as("curator", sub {
 	$t->wait_for_network_idle();
 
 	# Refresh page to access new options now with submit layout
-	$t->get_ok('/breeders/trial/165', 'Navigate to trial page');
-	$t->click_ok('pheno_heatmap_onswitch', 'id', 'Open fieldmap section');
-	$t->wait_for_working_dialog();
-	$t->find_element_ok('//*[@id="' . $svg_id . '"]', 'xpath', 'Find fieldmap SVG');
+	reload_trial_fieldmap(165);
 
 	# Inverted Rows and Columns + Top and Left Borders + Starting Corner = Bottom Left
 	$t->click_ok('//label[contains(text(),"Invert Rows")]/input', 'xpath', 'Enable Invert Rows checkbox');
@@ -1371,11 +1376,8 @@ $t->while_logged_in_as("curator", sub {
 	like($plot_order_content, qr/26,gap,,,,,,,,1,6,,,/, "Gap Exists in Row 1, Column 6");
 	like($plot_order_content, qr/32,border,,,,,,,,1,0,,,/, "Left Border Exists in Row 1, Column 0");
 
-	# Refresh page
-	$t->get_ok('/breeders/trial/165', 'Navigate to trial page');
-	$t->click_ok('pheno_heatmap_onswitch', 'id', 'Open fieldmap section');
-	$t->wait_for_working_dialog();
-	$t->find_element_ok('//*[@id="' . $svg_id . '"]', 'xpath', 'Find fieldmap SVG');
+	# Reset fieldmap state
+	reload_trial_fieldmap(165);
 
 	# =========================================================================
 	# Download Spatial Layout
@@ -1418,6 +1420,9 @@ $t->while_logged_in_as("curator", sub {
 		'/tmp/Trial_165_spatial_layout_invert_expected.csv',
 		['Plot Number']
 	);
+
+	# Reset fieldmap state
+	reload_trial_fieldmap(165);
 
 	# =========================================================================
 	# Download Spatial Layout with Borders
@@ -1466,6 +1471,9 @@ $t->while_logged_in_as("curator", sub {
 		"empty"
 	);
 
+	# Reset fieldmap state
+	reload_trial_fieldmap(165);
+
 	# =========================================================================
 	# Spatial Layout with Rows and Columns Starting Above 1
 	# =========================================================================
@@ -1507,10 +1515,7 @@ $t->while_logged_in_as("curator", sub {
 	$t->wait_for_network_idle();
 
 	# Refresh page
-	$t->get_ok('/breeders/trial/165', 'Navigate to trial page');
-	$t->click_ok('pheno_heatmap_onswitch', 'id', 'Open fieldmap section');
-	$t->wait_for_working_dialog();
-	$t->find_element_ok('//*[@id="' . $svg_id . '"]', 'xpath', 'Find fieldmap SVG');
+	reload_trial_fieldmap(165);
 
 	# Check axis coordinates
 	find_plot_label_ok('103', 0, 2);
@@ -1534,6 +1539,9 @@ $t->while_logged_in_as("curator", sub {
 		'/tmp/Trial_165_spatial_layout_above_1.csv',
 		['Plot Number']
 	);
+
+	# Reset fieldmap state
+	reload_trial_fieldmap(165);
 
 	# =========================================================================
 	# Spatial Layout with Rows and Columns Starting Below 0
@@ -1576,10 +1584,7 @@ $t->while_logged_in_as("curator", sub {
 	$t->wait_for_network_idle();
 
 	# Refresh page
-	$t->get_ok('/breeders/trial/165', 'Navigate to trial page');
-	$t->click_ok('pheno_heatmap_onswitch', 'id', 'Open fieldmap section');
-	$t->wait_for_working_dialog();
-	$t->find_element_ok('//*[@id="' . $svg_id . '"]', 'xpath', 'Find fieldmap SVG');
+	reload_trial_fieldmap(165);
 
 	# Check axis coordinates
 	find_plot_label_ok('103', 0, 2);
@@ -1611,11 +1616,8 @@ $t->while_logged_in_as("curator", sub {
 	$t->accept_alert_ok("Confirm Delete Spatial Layout");
 	$t->accept_alert_ok("Accept Field map deletion successful Dialog Box");
 
-	# Refresh page
-	$t->get_ok('/breeders/trial/165', 'Navigate to trial page');
-	$t->click_ok('pheno_heatmap_onswitch', 'id', 'Open fieldmap section');
-	$t->wait_for_working_dialog();
-	$t->find_element_ok('//*[@id="' . $svg_id . '"]', 'xpath', 'Find fieldmap SVG');
+	# Reset fieldmap state
+	reload_trial_fieldmap(165);
 
 	# =========================================================================
 	# North Arrow Orientation Configuration
