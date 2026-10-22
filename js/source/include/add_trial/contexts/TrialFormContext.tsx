@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useMemo } from 'react';
+import React, { createContext, useContext, useMemo, useCallback } from 'react';
 
 import { useFormDraft } from '~/form_draft';
 
@@ -118,7 +118,7 @@ export const TrialFormProvider: React.FC<{ serverProps: ServerProps; children: R
 
     const { formData, setFormData, clearDraft, draftId, maxStep, setMaxStep } = useFormDraft<TrialFormData>(defaultData);
 
-    const updateField = <K extends keyof TrialFormData>(key: K, val: TrialFormData[K]) => {
+    const updateField = useCallback(<K extends keyof TrialFormData>(key: K, val: TrialFormData[K]) => {
         setFormData(prev => {
             if (key === 'plantsPerPlot') {
                 const strVal = val as string;
@@ -138,7 +138,7 @@ export const TrialFormProvider: React.FC<{ serverProps: ServerProps; children: R
             }
             return { ...prev, [key]: val };
         });
-    };
+    }, [setFormData]);
 
     return (
         <TrialFormContext.Provider value={{
