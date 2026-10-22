@@ -1,6 +1,6 @@
 import { useEffect, useCallback, useState, useMemo } from 'react';
 import { DraftData } from '../types';
-import { isFunction } from '../../functions';
+import { isFunction } from '~/@generic/utils/functions';
 
 const MAX_DRAFTS = 10;
 const DRAFT_PREFIX = 'form_draft';

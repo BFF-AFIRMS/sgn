@@ -1,7 +1,9 @@
 import React from 'react';
+
+import { AccessionAutocomplete, CvtermAutocomplete } from '~/autocomplete';
+
 import { useTrialForm } from '../../contexts/TrialFormContext';
 import { BreedbaseListSelect } from '../common/BreedbaseListSelect';
-import { AccessionAutocomplete, CvtermAutocomplete } from '../../../autocomplete';
 import { useListItems } from '../../hooks/useBreedbaseLists';
 import { StockType } from '../../types';
 
