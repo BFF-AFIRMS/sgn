@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
+
+import { fetchSelectOptions, HtmlSelectOption } from '~/@generic/utils/fetch';
+
 import { useTrialForm } from '../../contexts/TrialFormContext';
-import { fetchSelectOptions, HtmlSelectOption } from '../../../fetch';
 
 export const TrialLinkageSection: React.FC = () => {
     const { formData, updateField } = useTrialForm();

@@ -1,7 +1,9 @@
 import React, { useEffect, useMemo, useState } from 'react';
+
+import { fetchSelectOptions, HtmlSelectOption } from '~/@generic/utils/fetch';
+
 import { useTrialForm } from '../../contexts/TrialFormContext';
 import { DesignType, StockType } from '../../types';
-import { fetchSelectOptions, HtmlSelectOption } from '../../../fetch';
 
 export const TrialInfoSection: React.FC = () => {
     const { formData, updateField, serverProps, availableDesignTypes } = useTrialForm();

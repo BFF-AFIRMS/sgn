@@ -1,6 +1,5 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
-import { isDefined } from '../../functions';
 import { FieldMapContextProps } from '../types';
 
 export type PlotLayout = 'serpentine' | 'zigzag';
