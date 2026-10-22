@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { AccordionWorkflowStep, WorkflowAccordionProps } from '../types';
 import { AccordionPanelContent } from './AccordionPanelContent';
 
@@ -42,31 +42,26 @@ export const WorkflowAccordion: React.FC<WorkflowAccordionProps> = ({
     const effectiveMaxUnlocked = maxUnlocked !== undefined ? maxUnlocked : evaluation.maxUnlocked;
     const effectiveFailingMessage = firstFailingMessage !== undefined ? firstFailingMessage : evaluation.message;
 
-    const [openPanels, setOpenPanels] = useState<Set<number>>(new Set([0]));
-
-    const prevMaxUnlockedRef = useRef<number>(0);
-
-    useEffect(() => {
-        const prevMax = prevMaxUnlockedRef.current;
-        if (effectiveMaxUnlocked > prevMax) {
-            setOpenPanels((prev: Set<number>) => {
-                const next = new Set(prev);
-                for (let j = prevMax + 1; j <= effectiveMaxUnlocked && j < steps.length; j++) {
-                    next.add(j);
-                }
-                return next;
-            });
-        } else if (effectiveMaxUnlocked < prevMax) {
-            setOpenPanels((prev: Set<number>) => {
-                const next = new Set<number>();
-                prev.forEach(idx => {
-                    if (idx <= effectiveMaxUnlocked) next.add(idx);
-                });
-                return next;
-            });
+    const [prevMaxUnlocked, setPrevMaxUnlocked] = useState(effectiveMaxUnlocked);
+    const [openPanels, setOpenPanels] = useState<Set<number>>(() => {
+        const initial = new Set<number>([0]);
+        for (let j = 1; j <= effectiveMaxUnlocked && j < steps.length; j++) {
+            initial.add(j);
         }
-        prevMaxUnlockedRef.current = effectiveMaxUnlocked;
-    }, [effectiveMaxUnlocked, steps.length, setOpenPanels]);
+        return initial;
+    });
+
+    // Adjust state during rendering when effectiveMaxUnlocked changes
+    if (effectiveMaxUnlocked > prevMaxUnlocked) {
+        setPrevMaxUnlocked(effectiveMaxUnlocked);
+        const next = new Set(openPanels);
+        for (let j = prevMaxUnlocked + 1; j <= effectiveMaxUnlocked && j < steps.length; j++) {
+            next.add(j);
+        }
+        setOpenPanels(next);
+    } else if (effectiveMaxUnlocked < prevMaxUnlocked) {
+        setPrevMaxUnlocked(effectiveMaxUnlocked);
+    }
 
     const handleHeaderClick = (idx: number) => {
         if (onHeaderClick) {
@@ -93,8 +88,8 @@ export const WorkflowAccordion: React.FC<WorkflowAccordionProps> = ({
     return (
         <div className={`panel-group accordion-workflow ${className}`} id={id}>
             {steps.map((sec, i) => {
-                const isOpen = openPanels.has(i);
                 const isLocked = i > effectiveMaxUnlocked;
+                const isOpen = !isLocked && openPanels.has(i);
                 return (
                     <div
                         key={sec.id}
