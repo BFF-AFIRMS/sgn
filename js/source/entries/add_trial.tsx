@@ -14,7 +14,7 @@ import { useWorkingModal } from '../include/working_modal';
 
 export const AddTrialApp: React.FC = () => {
     const [showPrepHelp, setShowPrepHelp] = useState(false);
-    const { maxStep, setMaxStep } = useTrialForm();
+    const { maxStep, setMaxStep, updateField } = useTrialForm();
     const { isGenerating, isSaving } = useDesignResult();
 
     useWorkingModal(isGenerating || isSaving);
@@ -32,7 +32,10 @@ export const AddTrialApp: React.FC = () => {
                 <DesignDetailsStep
                     onOpenPrepHelp={() => setShowPrepHelp(true)}
                     onSuccess={next}
-                    onLockForward={lockForward}
+                    onLockForward={() => {
+                        lockForward();
+                        updateField('designResult', null);
+                    }}
                 />
             )
         },
@@ -48,7 +51,7 @@ export const AddTrialApp: React.FC = () => {
             title: 'Complete',
             content: <CompleteStep />
         }
-    ], []);
+    ], [updateField]);
 
     return (
         <div className="well">

@@ -132,6 +132,7 @@ export interface TrialFormData {
     plotPrefix: string;
     startNumber: string;
     increment: string;
+    designResult?: DesignResultResponse | null;
 }
 
 export interface GeneratedDesignPlot {
