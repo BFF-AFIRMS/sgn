@@ -18,11 +18,12 @@ export const extractDesignPlots = (
         ))
         .map(([_, plot]) => plot as GeneratedDesignPlot)
         .sort((a, b) => {
-            const numA = parseInt(String(a.plot_number || 0), 10);
-            const numB = parseInt(String(b.plot_number || 0), 10);
-            return isNaN(numA) || isNaN(numB)
-                ? String(a.plot_name || '').localeCompare(String(b.plot_name || ''))
-                : numA - numB;
+            const numA = parseInt(String(a.plot_number ?? ''), 10);
+            const numB = parseInt(String(b.plot_number ?? ''), 10);
+            if (!isNaN(numA) && !isNaN(numB) && numA !== numB) {
+                return numA - numB;
+            }
+            return String(a.plot_name || '').localeCompare(String(b.plot_name || ''));
         });
 };
 
