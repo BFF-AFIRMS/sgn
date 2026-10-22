@@ -188,10 +188,11 @@ export const ReviewDesignStep: React.FC<ReviewDesignStepProps> = ({ onSuccess })
                 </button>
             </div>
 
-            <AddTreatmentsModal
-                show={showTreatmentModal}
-                onClose={() => setShowTreatmentModal(false)}
-            />
+            {showTreatmentModal && (
+                <AddTreatmentsModal
+                    onClose={() => setShowTreatmentModal(false)}
+                />
+            )}
         </div>
     );
 };

@@ -71,11 +71,9 @@ export const WorkflowPaged: React.FC<WorkflowPagedProps> = ({
         }
     }, [updateUrl, onStepChange, steps]);
 
-    useEffect(() => {
-        if (currentStep > currentMaxStep) {
-            changeStep(currentMaxStep, true);
-        }
-    }, [currentStep, currentMaxStep, changeStep]);
+    if (currentStep > currentMaxStep) {
+        setCurrentStep(currentMaxStep);
+    }
 
     useEffect(() => {
         if (paramName) {

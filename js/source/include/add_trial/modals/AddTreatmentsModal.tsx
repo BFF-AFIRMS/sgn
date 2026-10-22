@@ -1,10 +1,10 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useTrialForm } from '../contexts/TrialFormContext';
 import { useDesignResult } from '../contexts/DesignResultContext';
 import { getDesignTreatments, extractDesignPlots } from '../utils/designAdapters';
 
 interface AddTreatmentsModalProps {
-    show: boolean;
+    show?: boolean;
     onClose: () => void;
 }
 
@@ -45,7 +45,7 @@ const formatTreatmentDate = (val?: string): string => {
     return `${d.getFullYear()}/${pad(d.getMonth() + 1)}/${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
 };
 
-export const AddTreatmentsModal: React.FC<AddTreatmentsModalProps> = ({ show, onClose }) => {
+export const AddTreatmentsModal: React.FC<AddTreatmentsModalProps> = ({ show = true, onClose }) => {
     const { formData, serverProps } = useTrialForm();
     const { result, setResult, parsedDesigns } = useDesignResult();
 
@@ -58,27 +58,14 @@ export const AddTreatmentsModal: React.FC<AddTreatmentsModalProps> = ({ show, on
     }, [serverProps.management_factor_types]);
 
     const [step, setStep] = useState<1 | 2>(1);
-    const [treatmentName, setTreatmentName] = useState('');
-    const [treatmentType, setTreatmentType] = useState('');
-    const [treatmentDate, setTreatmentDate] = useState('');
-    const [treatmentYear, setTreatmentYear] = useState('');
-    const [treatmentPlantingDate, setTreatmentPlantingDate] = useState('');
-    const [treatmentDescription, setTreatmentDescription] = useState('');
+    const [treatmentName, setTreatmentName] = useState(DEFAULT_TREATMENT_NAME);
+    const [treatmentType, setTreatmentType] = useState(() => managementFactorTypes[0] || DEFAULT_TREATMENT_TYPE);
+    const [treatmentDate, setTreatmentDate] = useState(DEFAULT_TREATMENT_DATE);
+    const [treatmentYear, setTreatmentYear] = useState(() => formData.year || DEFAULT_TREATMENT_YEAR);
+    const [treatmentPlantingDate, setTreatmentPlantingDate] = useState(() => formData.plantingDate || DEFAULT_TREATMENT_PLANTING_DATE);
+    const [treatmentDescription, setTreatmentDescription] = useState(DEFAULT_TREATMENT_DESCRIPTION);
 
     const [selectedPlots, setSelectedPlots] = useState<Record<number, Set<string>>>({});
-
-    useEffect(() => {
-        if (show) {
-            setStep(1);
-            setTreatmentName(DEFAULT_TREATMENT_NAME);
-            setTreatmentType(managementFactorTypes[0] || DEFAULT_TREATMENT_TYPE);
-            setTreatmentDate(DEFAULT_TREATMENT_DATE);
-            setTreatmentYear(formData.year || DEFAULT_TREATMENT_YEAR);
-            setTreatmentPlantingDate(formData.plantingDate || DEFAULT_TREATMENT_PLANTING_DATE);
-            setTreatmentDescription(DEFAULT_TREATMENT_DESCRIPTION);
-            setSelectedPlots({});
-        }
-    }, [show, managementFactorTypes, formData.year, formData.plantingDate]);
 
     const plotsByTrial = useMemo(
         () => parsedDesigns.map(extractDesignPlots),
