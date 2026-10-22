@@ -6,9 +6,12 @@ use Bio::GeneticRelationships::Pedigree;
 use CXGN::Stock::Seedlot;
 use CXGN::Pedigree::AddCrosses;
 use CXGN::Pedigree::AddCrossingtrial;
+use CXGN::Pedigree::AddFamilyNames;
 use CXGN::Pedigree::AddProgeny;
+use CXGN::Trial::Download;
 use CXGN::Trial::ParseUpload;
 use CXGN::Trial::TrialCreate;
+use File::Slurp qw(read_file);
 use JSON;
 use SGN::Test::Fixture;
 use SGN::Model::Cvterm;
@@ -76,6 +79,20 @@ ok($add_cross->add_crosses(), 'Add crosses to crossing trial');
 
 my $cross_op_id = $schema->resultset('Stock::Stock')->find({ uniquename => 'cross_op' })->stock_id;
 my $cross_biparental_id = $schema->resultset('Stock::Stock')->find({ uniquename => 'cross_biparental' })->stock_id;
+
+# -----------------------------------------------------------------------------
+# Create Family Name
+
+my $family_name_add = CXGN::Pedigree::AddFamilyNames->new({
+    chado_schema   => $schema,
+    phenome_schema => $phenome_schema,
+    dbh            => $dbh,
+    cross_name     => 'cross_op',
+    family_name    => 'family_cross_op',
+    owner_name     => 'janedoe',
+    family_type    => 'same_parents',
+});
+ok(my $return = $family_name_add->add_family_name(), 'Create family name');
 
 # -----------------------------------------------------------------------------
 # Create seedlots
@@ -271,5 +288,60 @@ ok(unlink($bad_trial_xlsx), 'Delete temporary bad trial xlsx');
 my $bad_trial_parse_errors = $parser->get_parse_errors()->{error_messages}->[0];
 like($bad_trial_parse_errors, qr/The seedlot: seedlot_cross_op is not linked to the accession\/cross_unique_id: test_accession3./i, 'Caught bad cross seedlot relationship during trial upload ');
 like($bad_trial_parse_errors, qr/The seedlot: seedlot_accession is not linked to the accession\/cross_unique_id: test_accession3./i, 'Caught bad accession seedlot relationship during trial upload ');
+
+# -----------------------------------------------------------------------------
+# Download Layout with family_name and cross columns
+
+my $layout_file_path = '/tmp/seedlot_trial_layout.csv';
+
+my $download = CXGN::Trial::Download->new({
+    bcs_schema => $schema,
+    trial_id => $trial_id,
+    filename => $layout_file_path,
+    format => 'TrialLayoutCSV',
+    data_level => 'plots',
+    selected_columns => {
+        "location_name"=>1,"trial_name"=>1,"plot_name"=>1,"plot_id"=>1,"plot_number"=>1,
+        "row_number"=>1,"col_number"=>1,"accession_name"=>1,"seedlot_name"=>1,"num_seed_per_plot"=>1,
+        "rep_number"=>1,"block_number"=>1,"is_a_control"=>1,"accession_id"=>1,
+        "cross_unique_id"=>1,"family_name"=>1,
+    },
+});
+
+ok(my $error = $download->download(), 'Download trial layout');
+
+my $plot_1_id = $schema->resultset('Stock::Stock')->find({ name => 'seedlot_trial_plot_1' })->stock_id();
+my $plot_2_id = $schema->resultset('Stock::Stock')->find({ name => 'seedlot_trial_plot_2' })->stock_id();
+my $plot_3_id = $schema->resultset('Stock::Stock')->find({ name => 'seedlot_trial_plot_3' })->stock_id();
+my $plot_4_id = $schema->resultset('Stock::Stock')->find({ name => 'seedlot_trial_plot_4' })->stock_id();
+my $plot_5_id = $schema->resultset('Stock::Stock')->find({ name => 'seedlot_trial_plot_5' })->stock_id();
+
+my $plot_1_accession_id = $schema->resultset('Stock::Stock')->find({ name => 'cross_op_accession_001' })->stock_id();
+my $plot_2_accession_id = $schema->resultset('Stock::Stock')->find({ name => 'cross_biparental_accession_001' })->stock_id();
+my $plot_3_accession_id = $schema->resultset('Stock::Stock')->find({ name => 'test_accession1' })->stock_id();
+my $plot_4_accession_id = $schema->resultset('Stock::Stock')->find({ name => 'test_accession3' })->stock_id();
+my $plot_5_accession_id = $plot_4_accession_id;
+
+my $expected_csv = "plot_name,plot_id,accession_name,accession_id,plot_number,block_number,is_a_control,rep_number,row_number,col_number,seedlot_name,num_seed_per_plot,family_name,cross_unique_id,location_name,trial_name
+seedlot_trial_plot_1,$plot_1_id,cross_op_accession_001,$plot_1_accession_id,1,1,,1,1,1,seedlot_cross_op,10,family_cross_op,cross_op,test_location,seedlot_trial
+seedlot_trial_plot_2,$plot_2_id,cross_biparental_accession_001,$plot_2_accession_id,2,1,,2,1,2,seedlot_cross_biparental,10,,cross_biparental,test_location,seedlot_trial
+seedlot_trial_plot_3,$plot_3_id,test_accession1,$plot_3_accession_id,3,1,,3,1,3,seedlot_accession,10,,,test_location,seedlot_trial
+seedlot_trial_plot_4,$plot_4_id,test_accession3,$plot_4_accession_id,4,1,,3,1,4,,,,,test_location,seedlot_trial
+seedlot_trial_plot_5,$plot_5_id,test_accession3,$plot_5_accession_id,5,1,,3,1,5,,,,,test_location,seedlot_trial";
+my @expected = split "\n", $expected_csv;
+
+# Read observed layout and remove quotations
+# We remove quotations, because every single value is surrounded by double quotations (")
+# which makes constructing the expected csv messy when inserting variables like plot id
+my @observed = read_file($layout_file_path, chomp => 1);
+foreach my $row (0 .. scalar @observed - 1){
+    $observed[$row] = $observed[$row] =~ s/"//gr;
+}
+is_deeply(\@observed, \@expected, 'Trial layout has expected content');
+ok(unlink($layout_file_path), 'Delete temporary trial layout file');
+
+# -----------------------------------------------------------------------------
+# Cleanup
+
 $f->clean_up_db();
 done_testing();
