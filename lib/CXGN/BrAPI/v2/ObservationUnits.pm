@@ -295,9 +295,9 @@ sub _search {
         my %observationUnitPosition = (
             entryType => $entry_type,
             geoCoordinates => $obs_unit->{plot_geo_json},
-            positionCoordinateX => $obs_unit->{col_number} ? $obs_unit->{col_number} + 0 : undef,
+            positionCoordinateX => defined $obs_unit->{col_number} ? $obs_unit->{col_number} + 0 : undef,
             positionCoordinateXType => 'GRID_COL',
-            positionCoordinateY => $obs_unit->{row_number} ? $obs_unit->{row_number} + 0 : undef,
+            positionCoordinateY => defined $obs_unit->{row_number} ? $obs_unit->{row_number} + 0 : undef,
             positionCoordinateYType => 'GRID_ROW',
             observationLevel =>  {
                 levelName => $level_name,

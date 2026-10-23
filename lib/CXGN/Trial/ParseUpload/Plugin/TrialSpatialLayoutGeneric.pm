@@ -64,14 +64,14 @@ sub _validate_with_plugin {
         my $row_number = $data->{'row_number'};
         my $col_number = $data->{'col_number'};
 
-        # Row Number: must be a positive integer
-        if (!($row_number =~ /^\d+?$/)) {
-            push @error_messages, "Row $row: row_number <strong>$row_number</strong> must be a positive integer.";
+        # Row Number: must be an integer
+        if (!($row_number =~ /^-?\d+?$/)) {
+            push @error_messages, "Row $row: row_number <strong>$row_number</strong> must be an integer.";
         }
 
-        # Col Number: must be a positive integer
-        if (!($col_number =~ /^\d+?$/)) {
-            push @error_messages, "Row $row: col_number <strong>$col_number</strong> must be a positive integer.";
+        # Col Number: must be an integer
+        if (!($col_number =~ /^-?\d+?$/)) {
+            push @error_messages, "Row $row: col_number <strong>$col_number</strong> must be an integer.";
         }
 
         # Track row/col positions to check for duplicates
