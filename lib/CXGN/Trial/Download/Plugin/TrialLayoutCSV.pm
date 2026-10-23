@@ -79,6 +79,7 @@ sub download {
             plot_order => $self->plot_order,
             plot_start => $self->plot_start,
             missing_format => $self->missing_format,
+            use_synonyms => $self->include_trait_synonyms,
         });
         my $output = $trial_layout_download->get_layout_output();
         if ($output->{error_messages}){
