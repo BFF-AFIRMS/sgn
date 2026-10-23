@@ -14,6 +14,8 @@ export const FieldMapTooltip: React.FC<FieldMapTooltipProps> = ({ }) => {
     } = useView();
 
     const {
+        axisOrientation,
+        bounds,
         overlappingPlots,
         plotContentCache,
     } = usePlotGrid();
@@ -30,6 +32,17 @@ export const FieldMapTooltip: React.FC<FieldMapTooltipProps> = ({ }) => {
     const plot = hoveredPlot.plot;
     const coordKey = `${plot.observationUnitPosition?.positionCoordinateX}-${plot.observationUnitPosition?.positionCoordinateY}`;
     const overlapping = overlappingPlots[coordKey];
+
+    // Adjust displayed X and Y coordinates if the plot has been rotated (ie. reversed axis)
+    // Row/Col inversion handling is not required, because the coordinates are correct either way
+    let rowNumber = '';
+    let colNumber = '';
+    if (plot.observationUnitPosition?.positionCoordinateX){
+        const coordX = Number(plot.observationUnitPosition?.positionCoordinateX);
+        const coordY = Number(plot.observationUnitPosition?.positionCoordinateY);
+        rowNumber = `${!axisOrientation.y.reversed ? coordY : 1 + bounds.maxRow - coordY}`;
+        colNumber = `${!axisOrientation.x.reversed ? coordX : 1 + bounds.maxCol - coordX}`;
+    }
 
     return (
         <div
@@ -68,6 +81,8 @@ export const FieldMapTooltip: React.FC<FieldMapTooltipProps> = ({ }) => {
                     <div><strong>Plot Name:</strong> {plot.observationUnitName}</div>
                     {plot.type === 'data' && (
                         <>
+                            {rowNumber != '' && (<div><strong>Row:</strong> {rowNumber}</div>)}
+                            {colNumber != '' && (<div><strong>Column:</strong> {colNumber}</div>)}
                             {plot.observationUnitPosition?.observationLevel?.levelName != 'analysis_instance' && (
                                 <div><strong>Plot Number:</strong> {plot.observationUnitPosition?.observationLevel?.levelCode}</div>
                             )}
