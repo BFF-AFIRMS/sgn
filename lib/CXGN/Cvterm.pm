@@ -282,7 +282,7 @@ sub get_single_synonym {
     my $self=shift;
     my $cvterm_id= $self->cvterm_id();
 
-    my $query=  "SELECT synonym FROM cvtermsynonym WHERE cvterm_id= ? AND synonym NOT LIKE '% %' AND synonym NOT LIKE '%\\_%' LIMIT 1";
+    my $query=  "SELECT synonym FROM cvtermsynonym WHERE cvterm_id= ?";
     my $synonym_sth = $self->schema->storage->dbh->prepare($query);
     $synonym_sth->execute($cvterm_id);
 
