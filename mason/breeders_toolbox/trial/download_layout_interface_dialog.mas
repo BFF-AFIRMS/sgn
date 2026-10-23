@@ -561,11 +561,12 @@ function open_create_fieldbook_dialog_<% $download_type %>() {
     var plot_order = jQuery('#create_fieldbook_plot_order_<% $download_type %>').val();
     var plot_start = jQuery('#create_fieldbook_plot_start_<% $download_type %>').val();
     var missing_format = jQuery('#create_fieldbook_missing_format_<% $download_type %>').val();
+    var use_synonyms = jQuery('#create_fieldbook_use_synonyms_<% $download_type %>').prop("checked");
     console.log(format);
     //Calls SGN::Controller:BreedersToolbox::Trial
     for ( let i = 0; i < trial_ids.length; i++ ) {
         let trial_id = parseInt(trial_ids[i]);
-        window.open("/breeders/trial/"+trial_id+"/download/layout?format="+format+"&dataLevel="+data_level+"&treatments="+treatments+"&selected_columns="+selected_columns+"&trait_list_id="+trait_list_id+"&include_measured="+include_measurements+"&include_plot_order="+include_plot_order+"&plot_order="+plot_order+"&plot_start="+plot_start+"&missing_format="+missing_format);
+        window.open("/breeders/trial/"+trial_id+"/download/layout?format="+format+"&dataLevel="+data_level+"&treatments="+treatments+"&selected_columns="+selected_columns+"&trait_list_id="+trait_list_id+"&include_measured="+include_measurements+"&include_plot_order="+include_plot_order+"&plot_order="+plot_order+"&plot_start="+plot_start+"&missing_format="+missing_format+"&use_synonyms="+use_synonyms);
     }
 }
 
