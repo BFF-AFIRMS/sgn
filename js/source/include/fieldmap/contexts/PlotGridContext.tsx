@@ -1,19 +1,10 @@
 import React, { createContext, useContext, useState, useMemo, useCallback, useEffect } from 'react';
 import { Plot, PlotStructureNode } from '../types';
 import { SecondaryAxis, useLayoutConfig } from './LayoutConfigContext';
-import { FieldMapContextProps } from '../types';
+import { FieldMapContextProps, GridBounds } from '../types';
 import { useModals } from './ModalsContext';
 import { useView } from './ViewContext';
 import { derivePlotGrid } from '../utils/derivePlotGrid';
-
-export interface GridBounds {
-    readonly minCol: number;
-    readonly maxCol: number;
-    readonly minRow: number;
-    readonly maxRow: number;
-    readonly numRows: number;
-    readonly numCols: number;
-}
 
 export interface AxisOrientation {
     readonly x: { source: 'x' | 'y'; reversed: boolean };
@@ -254,17 +245,6 @@ export const PlotGridProvider: React.FC<FieldMapContextProps> = ({ trialId, auth
             layoutBounds ??= bounds;
 
             const plotsArr = Object.values(currentPlots).filter(p => !!p.observationUnitDbId);
-
-            let minC = Infinity, minR = Infinity;
-            plotsArr.forEach(p => {
-                const x = Number(p.observationUnitPosition.positionCoordinateX);
-                const y = Number(p.observationUnitPosition.positionCoordinateY);
-                if (x < minC) minC = x;
-                if (y < minR) minR = y;
-            });
-            if (minC === Infinity) minC = 1;
-            if (minR === Infinity) minR = 1;
-
             const sortedPlots = [...plotsArr];
             sortedPlots.sort((a, b) => {
                 const codeA = parseFloat(String(a.observationUnitPosition?.observationLevel?.levelCode)) || 0;

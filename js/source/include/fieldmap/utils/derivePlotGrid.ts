@@ -1,5 +1,4 @@
-import { Plot } from '../types';
-import {GridBounds} from '../contexts/PlotGridContext';
+import { Plot, GridBounds } from '../types';
 
 export interface DerivedGridResult {
     plotObject: Record<string, Plot>;
