@@ -374,7 +374,7 @@ for my $extension ("xls", "xlsx") {
         user_id          => 41,
         user_name        => "janedoe",
         data_level       => 'plots',
-        selected_columns => { 'plot_name' => 1, 'plot_id' => 1, 'plot_number' => 1, 'block_number' => 1,, 'accession_name' => 1 },
+        selected_columns => { 'plot_name' => 1, 'plot_id' => 1, 'plot_number' => 1, 'block_number' => 1,, 'cross_unique_id' => 1 },
         trial_stock_type => 'cross'
     });
 
@@ -409,7 +409,7 @@ for my $extension ("xls", "xlsx") {
         user_id          => 41,
         user_name        => "janedoe",
         data_level       => 'plots',
-        selected_columns => { 'plot_name' => 1, 'plot_id' => 1, 'plot_number' => 1, 'rep_number' => 1,, 'accession_name' => 1 },
+        selected_columns => { 'plot_name' => 1, 'plot_id' => 1, 'plot_number' => 1, 'rep_number' => 1,, 'family_name' => 1 },
         trial_stock_type => 'family_name'
     });
 
