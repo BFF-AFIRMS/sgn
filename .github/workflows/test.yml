@@ -19,6 +19,7 @@ jobs:
           - unit
           - unit_fixture
           - unit_mech
+          - js_unit
           - selenium2_list
           - selenium2_trial
           - selenium2_dataset
@@ -97,6 +98,12 @@ jobs:
         run: |
           ./run_test t/unit_mech
           exit $(docker inspect testing-breedbase-1 --format='{{.State.ExitCode}}')
+      
+      - name: Run JS unit tests
+        if: ${{ matrix.subtest_key == 'js_unit' }}
+        run: |
+          cd cxgn/sgn/js
+          npm run test
 
       # Run all selenium tests individually to avoid solgs for now
       - name: Run selenium tests lists

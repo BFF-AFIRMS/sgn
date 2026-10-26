@@ -8,7 +8,8 @@
     "build": "npm run reset && webpack --config build.webpack.config.js",
     "build-watch": "npm run reset && webpack --config build.webpack.config.js -w",
     "reset-test": "npm config set engine-strict true; rm -r build_test/ || true && npm install .",
-    "build-test": "npm run reset-test && webpack --config test.webpack.config.js"
+    "build-test": "npm run reset-test && webpack --config test.webpack.config.js",
+    "test": "npm run build-test && node run-tests.js"
   },
   "private": true,
   "author": "",
