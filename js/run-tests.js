@@ -11,7 +11,7 @@ var fs = require('fs');
 const path = require('path');
 const glob = require("glob");
 const nock = require('nock');
-const node_fetch = require('node-fetch');
+const node_fetch = require('node-fetch').default;
 
 const { JSAN_to_src_path } = require("./webpack_util/utils.js");
 
@@ -85,7 +85,17 @@ function runTests(mapping){
     nock.cleanAll();
     nock.disableNetConnect();
     // Polyfill JSDOM fetch using node-fetch
-    dom.window.fetch = node_fetch;
+    dom.window.fetch = async (url, opts) => {
+      const res = await node_fetch(url, opts);
+      // Override res.json to use the JSDOM window's JSON.parse instead of Node's.
+      // Node's JSON.parse creates arrays with Node's Array prototype, which fail
+      // `instanceof Array` checks in scripts running inside the JSDOM window (e.g. BrAPI.js).
+      res.json = async () => {
+        const text = await res.text();
+        return dom.window.JSON.parse(text);
+      };
+      return res;
+    };
     // Ensure console.log/info/debug statements inside virtual DOM print to stderr
     // by replacing the default console with one which routes to stderr
     // This ensures "pure" tap stdout
@@ -98,5 +108,26 @@ function runTests(mapping){
       scrpt.innerHTML = src;
       dom.window.document.head.appendChild(scrpt);
     })
+    // Setup jQuery AJAX transport to use the polyfilled fetch function
+    if (dom.window.$ && dom.window.$.ajaxTransport) {
+      dom.window.$.ajaxTransport("+*", function(options) {
+        return {
+          send: async (headers, completeCallback) => {
+            try {
+              const res = await dom.window.fetch(options.url, {
+                method: options.type || "GET",
+                headers: headers,
+                body: options.data
+              });
+              const text = await res.text();
+              completeCallback(res.status, res.statusText, { text: text });
+            } catch (err) {
+              completeCallback(0, err.message);
+            }
+          },
+          abort: function() {}
+        };
+      });
+    }
   });
 }
