@@ -456,7 +456,7 @@ export const PlotGridProvider: React.FC<FieldMapContextProps> = ({ trialId, auth
             // Pass newBounds to function manually, otherwise state doesn't update in time
             recalculateLayout(plotLayout, preserveGaps, newBounds);
         }
-    }, [trialId, plotList]);
+    }, [trialId, plotList, bounds]);
 
     const transformedSecondaryAxis = useMemo(() => {
         if (!hasSecondaryAxis || !secondaryAxis) {
