@@ -53,24 +53,14 @@ sub retrieve {
     my $trial_stock_type = $self->trial_stock_type();
     my $include_plot_order = $self->include_plot_order() && $self->plot_order() && $self->plot_order() ne '' && $self->plot_start() && $self->plot_start() ne '';
 
-    my @possible_cols = ('plot_name','plot_id','accession_name','accession_id','plot_order','plot_number','block_number','is_a_control','rep_number','range_number','row_number','col_number','stake_number','set_number','seedlot_name','seed_transaction_operator','num_seed_per_plot', 'family_name', 'cross_unique_id', 'pedigree','female_parent','male_parent','location_name','trial_name','year', 'planting_date', 'synonyms','tier','plot_geo_json',);
+    my @possible_cols = ('plot_name','plot_id','accession_name', 'cross_unique_id', 'family_name', 'accession_id','plot_order','plot_number','block_number','is_a_control','rep_number','range_number','row_number','col_number','stake_number','set_number','seedlot_name','seed_transaction_operator','num_seed_per_plot', 'pedigree','female_parent','male_parent','location_name','trial_name','year', 'planting_date', 'synonyms','tier','plot_geo_json',);
 
     $selected_cols{plot_order} = 1 if $include_plot_order;
 
     my @header;
     foreach (@possible_cols){
         if ($selected_cols{$_}){
-            if (($_ eq 'accession_name') && ($trial_stock_type eq 'family_name')) {
-                push @header, 'family_name';
-            } elsif (($_ eq 'accession_name') && ($trial_stock_type eq 'cross')) {
-                push @header, 'cross_unique_id';
-            } elsif (($_ eq 'family_name') && ($trial_stock_type eq 'family_name')){
-                next;
-            } elsif (($_ eq 'cross_unique_id') && ($trial_stock_type eq 'cross')){
-                next;
-            } else {
-                push @header, $_;
-            }
+            push @header, $_;
         }
     }
     foreach (@$trait_header){

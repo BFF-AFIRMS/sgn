@@ -372,14 +372,6 @@ function show_available_columns_<% $download_type %>(level){
     var download_type = "<% $download_type %>";
     var trial_id = "<% $trial_id %>";
     var trial_stock_type = "<% $trial_stock_type %>";
-    var stock_col = 'accession_name';
-    if (download_type == 'Fieldbook' && trial_id !== undefined) {
-        if (trial_stock_type == 'family_name') {
-            stock_col = 'family_name';
-        } else if (trial_stock_type == 'cross') {
-            stock_col = 'cross_unique_id';
-        }
-    }
 
     var col_meta = {
         'plot_name': { label: 'Plot Name', desc: 'Unique name identifier for each plot. This is a globally unique plot name in the database. If you have barcoded your plots for phenotyping, this is what is encoded in the barcode.' },
@@ -420,12 +412,12 @@ function show_available_columns_<% $download_type %>(level){
     };
 
     var mandatory_cols = [];
-    var optional_cols_checked = [];
-    var optional_cols_unchecked = ['synonyms', 'trial_name', 'location_name', 'year', 'family_name', 'cross_unique_id', 'pedigree', 'female_parent', 'male_parent', 'tier', 'seedlot_name', 'seed_transaction_operator', 'num_seed_per_plot', 'range_number', 'stake_number', 'set_number', 'plot_geo_json'];
+    var optional_cols_checked = ['accession_name', 'cross_unique_id', 'family_name'];
+    var optional_cols_unchecked = ['synonyms', 'trial_name', 'location_name', 'year', 'pedigree', 'female_parent', 'male_parent', 'tier', 'seedlot_name', 'seed_transaction_operator', 'num_seed_per_plot', 'range_number', 'stake_number', 'set_number', 'plot_geo_json'];
 
     if (level == 'plots') {
         mandatory_cols = ['plot_name', 'plot_id'];
-        optional_cols_checked = ['block_number', 'plot_number', 'rep_number', 'row_number', 'col_number', stock_col, 'is_a_control'];
+        optional_cols_checked.push('block_number', 'plot_number', 'rep_number', 'row_number', 'col_number', 'is_a_control');
     } else if (level == 'plants') {
         mandatory_cols = ['plant_name', 'plant_id'];
         if (has_subplots_<% $download_type %> == 1) {
@@ -435,10 +427,10 @@ function show_available_columns_<% $download_type %>(level){
         if (has_subplots_<% $download_type %> == 1) {
             optional_cols_checked.push('subplot_number');
         }
-        optional_cols_checked.push('plot_number', 'rep_number', 'row_number', 'col_number', stock_col, 'is_a_control');
+        optional_cols_checked.push('plot_number', 'rep_number', 'row_number', 'col_number', 'is_a_control');
     } else if (level == 'subplots') {
         mandatory_cols = ['subplot_name', 'subplot_id'];
-        optional_cols_checked = ['plot_name', 'block_number', 'subplot_number', 'plot_number', 'rep_number', 'row_number', 'col_number', stock_col, 'is_a_control'];
+        optional_cols_checked = ['plot_name', 'block_number', 'subplot_number', 'plot_number', 'rep_number', 'row_number', 'col_number', 'is_a_control'];
     } else if (level == 'field_trial_tissue_samples') {
         mandatory_cols = ['tissue_sample_name', 'tissue_sample_id', 'plant_name'];
         if (has_subplots_<% $download_type %> == 1) {
@@ -448,7 +440,7 @@ function show_available_columns_<% $download_type %>(level){
         if (has_subplots_<% $download_type %> == 1) {
             optional_cols_checked.push('subplot_number');
         }
-        optional_cols_checked.push('plot_number', 'rep_number', 'row_number', 'col_number', stock_col, 'is_a_control');
+        optional_cols_checked.push('plot_number', 'rep_number', 'row_number', 'col_number', 'is_a_control');
     }
 
     selected_columns_<% $download_type %> = {};
