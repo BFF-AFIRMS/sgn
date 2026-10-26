@@ -7,6 +7,22 @@ import jQuery from 'jquery';
 (globalThis as any).jQuery = jQuery;
 (globalThis as any).$ = jQuery;
 
+// Mock Bootstrap's collapse jQuery plugin in the test runner
+(jQuery.fn as any).collapse = function (action?: string) {
+    return this.each(function () {
+        const $this = jQuery(this);
+        if (action === 'hide') {
+            $this.removeClass('in show').css('display', 'none');
+            $this.trigger('hide.bs.collapse');
+            $this.trigger('hidden.bs.collapse');
+        } else if (action === 'show') {
+            $this.addClass('in show').css('display', 'block');
+            $this.trigger('show.bs.collapse');
+            $this.trigger('shown.bs.collapse');
+        }
+    });
+};
+
 /**
  * Sets up a clean HTML form environment in JSDOM before each test.
  */
