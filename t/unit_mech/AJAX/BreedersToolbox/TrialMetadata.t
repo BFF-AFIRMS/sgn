@@ -159,6 +159,21 @@ $response = decode_json $mech->content;
 #print STDERR Dumper $response;
 is_deeply($response, {'accessions' => [[]]}, "check controls");
 
+# Add control data to trial
+$schema
+    ->resultset('Stock::Stock')
+    ->find({ uniquename => 'CASS_6Genotypes_107' })
+    ->create_stockprops({ 'is a control' => 1, 'stock_additional_info' => '{"is_a_control": 1}'});
+$schema
+    ->resultset('Stock::Stock')
+    ->find({ uniquename => 'CASS_6Genotypes_106' })
+    ->create_stockprops({ 'is a control' => 0, 'stock_additional_info' => '{"is_a_control": 0}'});
+
+# Check that only 1 control is returned
+$mech->get_ok('http://localhost:3010/ajax/breeders/trial/165/controls');
+$response = decode_json $mech->content;
+is_deeply($response, {'accessions' => [[{'stock_id' => 41280,'accession_name' => 'TMEB693'}]]});
+
 $mech->get_ok('http://localhost:3010/ajax/breeders/trial/'.$trial_id.'/plots');
 $response = decode_json $mech->content;
 #print STDERR Dumper $response;
