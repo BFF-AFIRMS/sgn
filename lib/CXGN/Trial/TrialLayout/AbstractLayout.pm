@@ -469,6 +469,7 @@ sub retrieve_plot_info {
     my $seed_transaction_cvterm_id = $self->cvterm_id('seed transaction');
     my $collection_of_cvterm_id = $self->cvterm_id('collection_of');
     my $offspring_of_cvterm_id = $self->cvterm_id('offspring_of');
+    my $cross_member_of_cvterm_id = $self->cvterm_id('cross_member_of');
 
     # cvterm trial layout
     my $plot_number_cvterm_id = $self->cvterm_id('plot number');
@@ -823,6 +824,46 @@ sub retrieve_plot_info {
             if (! defined $plot_seedlot){
                 push @{$verify_errors->{errors}->{seedlot_errors}}, "Plot: $plot_id does not have a seedlot linked.";
             }
+        }
+    }
+
+    # -------------------------------------------------------------------------
+    # Cross and Family Name
+
+    my $query = "
+    select plot.stock_id, cr.stock_id, cr.name, family_name.stock_id, family_name.name
+    from stock as plot
+    -- plot parent
+    join stock_relationship as plot_to_parent on (
+        plot.stock_id = plot_to_parent.subject_id
+        and plot_to_parent.type_id = $plot_of_cvterm_id
+    )
+    join stock as parent on (parent.stock_id = plot_to_parent.object_id)
+    -- plot cross
+    join stock_relationship as parent_to_cross on (
+        parent_to_cross.subject_id = parent.stock_id
+        and parent_to_cross.type_id = $offspring_of_cvterm_id
+    )
+    join stock as cr on (parent_to_cross.object_id = cr.stock_id)
+    -- optional cross family_name
+    left join stock_relationship as cross_to_family_name on (
+        cross_to_family_name.subject_id = cr.stock_id
+        and cross_to_family_name.type_id = $cross_member_of_cvterm_id
+    )
+    left join stock as family_name on (cross_to_family_name.object_id = family_name.stock_id)
+    where plot.stock_id = any (?)
+    order by plot.stock_id, cr.stock_id, family_name.stock_id";
+
+    my $sth = $schema->storage()->dbh()->prepare($query);
+    $sth->execute(\@plot_ids);
+    while (my ($plot_id, $cross_id, $cross_name, $family_id, $family_name) = $sth->fetchrow_array()) {
+        if (!defined $design_info->{$plot_id}->{"cross_name"}){
+            $design_info->{$plot_id}->{"cross_id"} = $cross_id;
+            $design_info->{$plot_id}->{"cross_name"} = $cross_name;
+        }
+        if (defined $family_name && !defined $design_info->{$plot_id}->{"family_name"}){
+            $design_info->{$plot_id}->{"family_id"} = $family_id;
+            $design_info->{$plot_id}->{"family_name"} = $family_name;
         }
     }
 

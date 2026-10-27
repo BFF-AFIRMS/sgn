@@ -373,11 +373,14 @@ function show_available_columns_<% $download_type %>(level){
     var trial_id = "<% $trial_id %>";
     var trial_stock_type = "<% $trial_stock_type %>";
     var stock_col = 'accession_name';
+    var unchecked_stock_col = ['family_name', 'cross_unique_id']
     if (download_type == 'Fieldbook' && trial_id !== undefined) {
         if (trial_stock_type == 'family_name') {
             stock_col = 'family_name';
+            unchecked_stock_col = ['accession_name', 'cross_unique_id']
         } else if (trial_stock_type == 'cross') {
             stock_col = 'cross_unique_id';
+            unchecked_stock_col = ['accession_name', 'family_name']
         }
     }
 
@@ -421,7 +424,7 @@ function show_available_columns_<% $download_type %>(level){
 
     var mandatory_cols = [];
     var optional_cols_checked = [];
-    var optional_cols_unchecked = ['synonyms', 'trial_name', 'location_name', 'year', 'pedigree', 'female_parent', 'male_parent', 'tier', 'seedlot_name', 'seed_transaction_operator', 'num_seed_per_plot', 'range_number', 'stake_number', 'set_number', 'plot_geo_json'];
+    var optional_cols_unchecked = unchecked_stock_col.concat(['synonyms', 'trial_name', 'location_name', 'year', 'pedigree', 'female_parent', 'male_parent', 'tier', 'seedlot_name', 'seed_transaction_operator', 'num_seed_per_plot', 'range_number', 'stake_number', 'set_number', 'plot_geo_json']);
 
     if (level == 'plots') {
         mandatory_cols = ['plot_name', 'plot_id'];
