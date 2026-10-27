@@ -1770,7 +1770,7 @@ $t->while_logged_in_as("curator", sub {
 	find_plot_label_ok('301', 4, 4);
 	find_plot_label_ok('307', 3, 5);
 	# Set dimensions to expected values for rest of tests
-	set_dimensions(4, 7, undef, 1);
+	set_dimensions(4, 7, undef, 0);
 
 	# =========================================================================
 	# Spatial Layout CSV Export Customization
