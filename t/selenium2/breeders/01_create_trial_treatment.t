@@ -8,54 +8,40 @@ use Test::More;
 use SGN::Test::WWW::WebDriver;
 use SGN::Test::Fixture;
 use Selenium::Waiter qw(wait_until);
+use Shared::AddTrial qw/
+    open_add_trial
+    fill_trial_info
+    fill_design_info
+    continue_to_review
+    confirm_and_save
+    finish_trial_creation
+/;
 
 my $t = SGN::Test::WWW::WebDriver->new();
 my $f = SGN::Test::Fixture->new();
+my $dbh = $f->dbh;
+
+# The fixture database ships a list of accessions named "accessions2add".
+# Resolve it to its id so the wizard can select it by value.
+my ($acc_list_id) = $dbh->selectrow_array(
+	"SELECT list_id FROM sgn_people.list WHERE name = 'accessions2add'");
 
 $t->while_logged_in_as("submitter", sub {
-	$t->get_ok('/breeders/trial/create');
+	open_add_trial($t);
 
-	# SCREEN 1 /Intro/
-	$t->click_ok('next_step_intro_button', 'id', 'go to next screen - Intro');
+	my $trial_name = fill_trial_info($t,
+		trial_name  => sprintf("Trial_treatment_selenium_%d", int(rand(10000))),
+		description => "Test trial with field treatments selenium",
+	);
 
-	# SCREEN 2 /Trial information/
-	$t->click_ok('select_breeding_program', 'id', 'find breeding program select and click "test"');
-	$t->click_ok('//select[@id="select_breeding_program"]/option[@value="test"]', 'xpath', "Select 'test' as value for breeding program");
+	fill_design_info($t,
+		design_type => 'CRD',
+		stock_list  => $acc_list_id,
+		checks_list => 4,
+		rep_count   => "1",
+	);
 
-	$t->click_ok('//select[@id="add_project_location"]/option[@value="test_location"]',
-		'xpath',
-		"Select 'test_location' as value for project location");
-
-	my $trial_name = sprintf("Trial_treatment_selenium_%d", int(rand(10000)));
-	$t->send_keys_ok('new_trial_name', 'id', $trial_name, "find new trial name input box");
-
-	$t->click_ok('add_project_type', 'id', "find project type select list");
-	$t->click_ok('//select[@id="add_project_type"]/option[@title="misc_trial"]', 'xpath', "Select 'misc_trial' as value for project type");
-
-	$t->click_ok('add_project_year', 'id', "find trial year select list");
-	$t->click_ok('//select[@id="add_project_year"]/option[@value="2015"]', 'xpath', "Select '2015' as value for year");
-
-	$t->send_keys_ok('add_project_description', 'id', "Test trial with field treatments selenium", "find project description input box");
-
-	$t->find_element_ok('select_stock_type', 'id', "find trial stock type select input");
-	$t->click_ok('//select[@id="select_stock_type"]/option[@value="accession"]', 'xpath', "find accession value for stock type");
-
-	$t->click_ok('select_design_method', 'id', "find field trial design input");
-	$t->click_ok('//select[@id="select_design_method"]/option[@value="CRD"]', 'xpath', "find randomized method of design");
-
-	# SCREEN 3 /Design Information/
-	$t->send_keys_ok('rep_count', 'id', "1", "find trial replicates count input");
-
-	$t->click_ok('show_list_of_accession_section', 'id', "find accessions to include select");
-	$t->click_ok('//option[text()="accessions2add"]', "xpath", "find accession value for list");
-
-	$t->click_ok('crbd_list_of_checks_section_list_select', 'id', "find checks to include select");
-	$t->click_ok('//select[@id="crbd_list_of_checks_section_list_select"]//option[@value ="4"]', "xpath", "find checks for list");
-
-	# Advance to Review Screen
-	sleep(1);
-	$t->click_ok('new_trial_submit', 'id', 'go to next screen - Review design');
-	$t->wait_for_working_dialog();
+	continue_to_review($t);
 
 	# SCREEN 4 /Review design - Field Treatments/
 	$t->find_element_ok('add_trial_treatments_button', 'id', "find Add Field Treatments button");
@@ -97,14 +83,8 @@ $t->while_logged_in_as("submitter", sub {
 	ok($treatment_still_present, "Verify treatment name persists after page refresh");
 
 	# Confirm and save trial in database
-	$t->click_ok('new_trial_confirm_submit', 'id', "confirm and save trial");
-	$t->wait_for_working_dialog();
-	$t->wait_for_network_idle();
-
-	# SCREEN 5 /Complete/
-	$t->click_ok('//div[@class="panel-body"]//div[@class="workflow-complete-message workflow-message-show"]//button[@id="create_trial_success_complete_button"]',
-		'xpath', 'click complete button on last screen');
-	$t->wait_for_network_idle();
+	confirm_and_save($t);
+	finish_trial_creation($t);
 
 	# Verify trial exists in tree
 	$t->click_ok("refresh_jstree_html", "name", "refresh tree with new trial added");

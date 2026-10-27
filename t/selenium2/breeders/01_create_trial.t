@@ -7,92 +7,64 @@ use Test::More;
 
 use SGN::Test::WWW::WebDriver;
 use SGN::Test::Fixture;
-use Selenium::Waiter qw(wait_until);
+use Shared::AddTrial qw/
+    open_add_trial
+    fill_trial_info
+    fill_design_info
+    fill_trial_linkage
+    fill_field_map_info
+    fill_plot_naming
+    continue_to_review
+    confirm_and_save
+    finish_trial_creation
+/;
 
 my $t = SGN::Test::WWW::WebDriver->new();
 my $f = SGN::Test::Fixture->new();
+my $dbh = $f->dbh;
+
+# The fixture database ships a list of accessions named "accessions2add".
+# Resolve it to its id so the wizard can select it by value.
+my ($acc_list_id) = $dbh->selectrow_array(
+	"SELECT list_id FROM sgn_people.list WHERE name = 'accessions2add'");
 
 $t->while_logged_in_as("submitter", sub {
-	$t->get_ok('/breeders/trial/create');
+	open_add_trial($t);
 
-	# SCREEN 1 /Intro/
-	$t->click_ok('next_step_intro_button', 'id', 'go to next screen - Intro');
+	my $trial_name = fill_trial_info($t,
+		trial_name      => sprintf("Trial_selenium_%d", int(rand(1000))),
+		planting_date   => "20150131",
+		plot_width      => "10",
+		plot_length     => "10",
+		field_size      => "5",
+		plants_per_plot => "10",
+		description     => "Test trial selenium / description for field test",
+	);
 
-	# SCREEN 2 /Trial information/
-	$t->click_ok('select_breeding_program', 'id', 'find breeding program select and click "test"');
-	$t->click_ok('//select[@id="select_breeding_program"]/option[@value="test"]', 'xpath', "Select 'test' as value for breeding program");
+	fill_design_info($t,
+		design_type => 'CRD',
+		stock_list  => $acc_list_id,
+		checks_list => 4,
+		rep_count   => "1",
+	);
 
-	$t->click_ok('//select[@id="add_project_location"]/option[@value="test_location"]',
-		'xpath',
-		"Select 'test_location' as value for project location");
+	fill_trial_linkage($t,
+		trial_sourced     => 'no',
+		will_be_genotyped => 'no',
+		will_be_crossed   => 'no',
+	);
 
-	my $trail_name = sprintf("Trial_selenium_%d", int(rand(1000)));
-	$t->send_keys_ok('new_trial_name', 'id', $trail_name, "find new trial name input box");
+	fill_field_map_info($t, rows => "1", layout => 'zigzag');
 
-	$t->click_ok('add_project_type', 'id', "find project type select list");
-	$t->click_ok('//select[@id="add_project_type"]/option[@title="misc_trial"]', 'xpath', "Select 'test' as value for breeding program");
+	fill_plot_naming($t, prefix => "prefix_sel_", start_number => "101", increment => "2");
 
-	$t->click_ok('add_project_year', 'id', "find trial year select list");
-	$t->click_ok('//select[@id="add_project_year"]/option[@value="2015"]', 'xpath', "Select '2015' as value for year");
+	continue_to_review($t);
 
-	$t->send_keys_ok('add_project_planting_date', 'id', "20150131", "Set '31/01/2015' as value for planting_date");
-
-	$t->send_keys_ok('add_project_plot_width', 'id', "10", "find trial plot width input");
-	$t->send_keys_ok('add_project_plot_length', 'id', "10", "find trial plot length input");
-	$t->send_keys_ok('new_trial_field_size', 'id', "5", "find trial field size input");
-	$t->send_keys_ok('add_plant_entries', 'id', "10", "find trial plants per plot input");
-
-	$t->send_keys_ok('add_project_description', 'id', "Test trial selenium / description for field test", "find project description input box");
-
-	$t->find_element_ok('select_stock_type', 'id', "find trial stock type select input");
-	$t->click_ok('//select[@id="select_stock_type"]/option[@value="accession"]', 'xpath', "find accession value for stock type");
-
-	$t->click_ok('select_design_method', 'id', "find field trial description input");
-	$t->click_ok('//select[@id="select_design_method"]/option[@value="CRD"]', 'xpath', "find randomized method of design");
-
-	# SCREEN 3 /Design Information/
-
-	$t->send_keys_ok('rep_count', 'id', "1", "find trial replicates count input");
-
-	$t->click_ok('show_list_of_accession_section', 'id', "find accessions to include select");
-	$t->click_ok('//option[text()="accessions2add"]', "xpath", "find accession value for list");
-
-	$t->click_ok('crbd_list_of_checks_section_list_select', 'id', "find accessions to include select");
-	$t->click_ok('//select[@id="crbd_list_of_checks_section_list_select"]//option[@value ="4"]', "xpath", "find checks for list");
-
-	# SCREEN 4 /Trail Linkage/
-
-	$t->click_ok('add_project_trial_sourced', 'id', "find add project trial sourced select");
-	$t->click_ok('//select[@id="add_project_trial_sourced"]/option[contains(@value, "no")]', "xpath", "select project trial source option as 'no'");
-
-	$t->click_ok('add_project_trial_will_be_genotyped', 'id', "find add project trial will be genotyped select");
-	$t->click_ok('//select[@id="add_project_trial_will_be_genotyped"]/option[contains(@value, "no")]', "xpath", "select project trial will be genotyped option as 'no'");
-
-	$t->click_ok('add_project_trial_will_be_crossed', 'id', "find project trial will be crossed select");
-	$t->click_ok('//select[@id="add_project_trial_will_be_crossed"]/option[contains(@value, "no")]', "xpath", "select project trial will be crossed option as 'no'");
-
-	# SCREEN 5 /Field map information/
-	$t->send_keys_ok('fieldMap_row_number', 'id', "1", "find field map row number input");
-	$t->click_ok('plot_layout_format', 'id', "find plot layout format select");
-	$t->click_ok('//select[@id="plot_layout_format"]//option[contains(@value, "zigzag")]', "xpath", "find checks for list");
-
-	# SCREEN 6 /Custom plot naming/
-	$t->send_keys_ok('plot_prefix', 'id', "prefix_sel_", "find plot prefix input");
-	$t->click_ok('start_number', 'id', "find plot start number select");
-	$t->click_ok('//select[@id="start_number"]//option[contains(@value, "101")]', "xpath", "find checks for list");
-	$t->send_keys_ok('increment', 'id', "2", "find plot number increment input");
-
-	# Lets the previous inputs settle before attempting to click the submit button
-	sleep(1);
-
-	$t->click_ok('new_trial_submit', 'id', 'go to next screen - Custom plot naming');
-	$t->wait_for_working_dialog();
-
-	# SCREEN 7 /Review design/
+	# Redo the randomization and confirm the review screen updates.
 	$t->click_ok('redo_trial_layout_button', 'id', "find redo randomization and click button");
 	$t->wait_for_working_dialog();
 
-	# TEST PAGE REFRESH AND DRAFT RESTORATION ON STEP 6 (REVIEW DESIGN)
+	# TEST PAGE REFRESH AND DRAFT RESTORATION ON THE REVIEW STEP
 	my $current_url = $t->driver->get_current_url();
 	ok($current_url =~ /draft_id=/, "URL contains draft_id parameter");
 
@@ -107,22 +79,15 @@ $t->while_logged_in_as("submitter", sub {
 	ok($design_info_text =~ /Number of accessions/, "Verify restored accessions in trial design info");
 	ok($design_info_text =~ /Number of reps/, "Verify restored reps in trial design info");
 
-	$t->click_ok('new_trial_confirm_submit', 'id', "find new trial confirm and submit");
-	$t->wait_for_working_dialog();
-
-	$t->wait_for_network_idle();
-
-	# This xpath is required because there are actually two buttons with the same id on the page, one of which is hidden.
-	$t->click_ok('//div[@class="panel-body"]//div[@class="workflow-complete-message workflow-message-show"]//button[@id="create_trial_success_complete_button"]',
-		'xpath', 'click complete button on last screen and finish a modal process');
-	$t->wait_for_network_idle();
+	confirm_and_save($t);
+	finish_trial_creation($t);
 
 	$t->click_ok("refresh_jstree_html", "name", "refresh tree with new trial added");
 
 	$t->click_ok('//div[@id="trial_list"]//ul[@class="jstree-container-ul jstree-children"]//li//i[@class="jstree-icon jstree-ocl"]',
 		'xpath', 'find a plus button to open a tree in test trails');
 
-	$t->click_ok("//a[contains(text(),\"$trail_name\")]", 'xpath', 'Confirm if trail exists in database and new tree after refresh');
+	$t->click_ok("//a[contains(text(),\"$trial_name\")]", 'xpath', 'Confirm if trail exists in database and new tree after refresh');
 });
 
 

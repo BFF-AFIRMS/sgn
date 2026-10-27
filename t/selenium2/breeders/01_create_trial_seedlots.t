@@ -6,9 +6,17 @@ use lib 't/lib';
 use Test::More;
 use SGN::Test::WWW::WebDriver;
 use SGN::Test::Fixture;
-use Selenium::Waiter qw(wait_until);
 use CXGN::List;
 use CXGN::Stock::Seedlot;
+use Shared::AddTrial qw/
+    open_add_trial
+    fill_trial_info
+    fill_design_info
+    continue_to_review
+    confirm_and_save
+    finish_trial_creation
+    select_option
+/;
 
 my $t = SGN::Test::WWW::WebDriver->new();
 my $f = SGN::Test::Fixture->new();
@@ -72,41 +80,21 @@ $t->while_logged_in_as("submitter", sub {
     # =========================================================================
     # TEST CASE 1: Required Stock List Seedlot Failure (Blocks Progression)
     # =========================================================================
-    $t->get_ok('/breeders/trial/create');
+    open_add_trial($t);
 
-    # Screen 1: Intro
-    $t->click_ok('next_step_intro_button', 'id', 'Click Go to Next Step on Intro');
+    my $trial_name = fill_trial_info($t,
+        trial_name  => sprintf("Trial_seedlot_%d", $rand_suffix),
+        description => "Test seedlot verification behavior",
+    );
 
-    # Screen 2: Trial Information
-    $t->click_ok('select_breeding_program', 'id', 'Click breeding program select');
-    $t->click_ok('//select[@id="select_breeding_program"]/option[@value="test"]', 'xpath', "Select breeding program 'test'");
+    fill_design_info($t,
+        design_type       => 'CRD',
+        stock_list        => $acc_list_id,
+        seedlot_list      => $invalid_seedlot_list_id,
+        num_seed_per_plot => "5",
+        rep_count         => "1",
+    );
 
-    $t->click_ok('//select[@id="add_project_location"]/option[@value="test_location"]', 'xpath', "Select location 'test_location'");
-
-    my $trial_name = sprintf("Trial_seedlot_%d", $rand_suffix);
-    $t->send_keys_ok('new_trial_name', 'id', $trial_name, "Enter trial name $trial_name");
-
-    $t->click_ok('add_project_type', 'id', "Click project type select");
-    $t->click_ok('//select[@id="add_project_type"]/option[@title="misc_trial"]', 'xpath', "Select trial type 'misc_trial'");
-
-    $t->click_ok('add_project_year', 'id', "Click trial year select");
-    $t->click_ok('//select[@id="add_project_year"]/option[@value="2015"]', 'xpath', "Select year '2015'");
-
-    $t->send_keys_ok('add_project_description', 'id', "Test seedlot verification behavior", "Enter project description");
-
-    $t->find_element_ok('select_stock_type', 'id', "Find stock type select");
-    $t->click_ok('//select[@id="select_stock_type"]/option[@value="accession"]', 'xpath', "Select stock type 'accession'");
-
-    $t->click_ok('select_design_method', 'id', "Click design method select");
-    $t->click_ok('//select[@id="select_design_method"]/option[@value="CRD"]', 'xpath', "Select design method 'CRD'");
-
-    # Screen 3: Design Details - Select invalid seedlot list
-    $t->send_keys_ok('rep_count', 'id', "1", "Set rep count to 1");
-    $t->click_option_ok('//select[@id="select_list_list_select"]/option[@value="' . $acc_list_id . '"]', 'xpath', "Select accession list");
-    $t->click_option_ok('//select[@id="select_seedlot_list_list_select"]/option[@value="' . $invalid_seedlot_list_id . '"]', 'xpath', "Select invalid seedlot list");
-    $t->send_keys_ok('num_seed_per_plot', 'id', "5", "Enter 5 seeds per plot");
-
-    sleep(1);
     $t->click_ok('new_trial_submit', 'id', 'Click Continue to Next Step with invalid seedlot');
 
     # Verify seedlot error alert appears and blocks progression
@@ -123,15 +111,10 @@ $t->while_logged_in_as("submitter", sub {
     # TEST CASE 2: Optional Check Seedlot Warning (Shows Alert, Continues & Saves)
     # =========================================================================
     # Switch to the valid seedlot list and add a check list (which has no seedlots in the seedlot list)
-    $t->click_option_ok('//select[@id="select_seedlot_list_list_select"]/option[@value="' . $seedlot_list_id . '"]', 'xpath', "Select valid seedlot list");
-    $t->click_option_ok('//select[@id="crbd_list_of_checks_section_list_select"]/option[@value="' . $check_list_id . '"]', 'xpath', "Select check list without seedlots");
+    select_option($t, 'select_seedlot_list_list_select', $seedlot_list_id, desc => "Select valid seedlot list");
+    select_option($t, 'crbd_list_of_checks_section_list_select', $check_list_id, desc => "Select check list without seedlots");
 
-    sleep(1);
-    $t->click_ok('new_trial_submit', 'id', 'Click Continue to Next Step with valid seedlot list');
-
-    # Wait for design generation to finish
-    $t->wait_for_working_dialog();
-    $t->wait_for_network_idle();
+    continue_to_review($t);
 
     # Verify workflow successfully advanced to Review Design step
     $t->find_element_ok('trial_design_view_layout_return', 'id', "Find layout table in review step");
@@ -141,14 +124,8 @@ $t->while_logged_in_as("submitter", sub {
     like($layout_table_text, qr/$acc2_name/, "Layout table contains check accession name");
 
     # Confirm and save trial in database
-    $t->click_ok('new_trial_confirm_submit', 'id', "Click Confirm to save trial in database");
-    $t->wait_for_working_dialog();
-    $t->wait_for_network_idle();
-
-    # Complete screen
-    $t->click_ok('//div[@class="panel-body"]//div[@class="workflow-complete-message workflow-message-show"]//button[@id="create_trial_success_complete_button"]',
-        'xpath', 'Click complete button on final screen');
-    $t->wait_for_network_idle();
+    confirm_and_save($t);
+    finish_trial_creation($t);
 
     # Verify trial was created in database
     my $trial = $f->bcs_schema->resultset('Project::Project')->find({ name => $trial_name });
