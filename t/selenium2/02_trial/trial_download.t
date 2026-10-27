@@ -3,6 +3,7 @@ use strict;
 use Test::More;
 use SGN::Test::WWW::WebDriver;
 use SGN::Test::Fixture;
+use Selenium::Waiter qw(wait_until);
 use Selenium::Firefox::Profile;
 use Text::CSV;
 use SGN::Model::Cvterm;
@@ -28,6 +29,8 @@ my $driver = Selenium::Remote::Driver->new(
     remote_server_addr => $ENV{SGN_REMOTE_SERVER_ADDR} || 'localhost'
 );
 $t->driver($driver);
+
+my $download_dir = '/selenium/downloads';
 
 $t->while_logged_in_as("curator", sub {
     my $schema = $f->bcs_schema;
@@ -151,6 +154,48 @@ $t->while_logged_in_as("curator", sub {
 
     close $fh;
     unlink $trial_csv_path;
+
+    # -------------------------------------------------------------------------
+    # Download trait synonyms
+    # -------------------------------------------------------------------------
+
+    my $filename = 'CASS_6Genotypes_Sampling_2015_layout.csv';
+    my $file_path = "$download_dir/$filename";
+    my $include_phenotypes_xpath = '//div[@data-toggle][input/@id = "create_fieldbook_include_measured_TrialLayout"]';
+
+    # Load experimental design for trial 165
+    $t->get_ok('/breeders/trial/165', 'Load trial 165');
+    $t->click_ok('trial_design_section_onswitch', 'id', 'Open experimental design section');
+    $t->wait_for_network_idle();
+    $t->click_ok('trial_download_layout_button', 'id', 'Click Download Layout');
+    my $include_phenotypes = $t->find_element($include_phenotypes_xpath, 'xpath')->is_selected();
+    if (!$include_phenotypes){
+        $t->click_ok($include_phenotypes_xpath, 'xpath', 'Enable phenotypes download');
+    }
+
+    # Download phenotypes with synonyms
+    my $use_synonyms_xpath = '//div[@data-toggle][input/@id = "create_fieldbook_use_synonyms_TrialLayout"]';
+    my $use_trait_synonyms = $t->find_element('create_fieldbook_use_synonyms_TrialLayout', 'id')->is_selected();
+    if (!$use_trait_synonyms){
+        $t->click_ok($use_synonyms_xpath, 'xpath', 'Enable use trait synonyms');
+    }
+    if (-e $file_path) {
+        unlink $file_path or die "Could not delete existing file '$file_path': $!";
+    }
+    $t->click_ok('create_fieldbook_ok_button_TrialLayout', 'id', 'Click submit download layout');
+    ok((wait_until { -e $file_path; } timeout => 15, interval => 1), "Wait for file '$filename' to be downloaded");
+    my $synonyms_contents = read_file($file_path);
+    like($synonyms_contents, qr/cass sink leaf_3-phosphoglyceric acid_ug\/g_Wk16/, "Phenotypes header contains trait synonyms");
+
+    # Download phenotypes without synonyms
+    $t->click_ok($use_synonyms_xpath, 'xpath', 'Disable use trait synonyms');
+    if (-e $file_path) {
+        unlink $file_path or die "Could not delete existing file '$file_path': $!";
+    }
+    $t->click_ok('create_fieldbook_ok_button_TrialLayout', 'id', 'Click submit download layout');
+    ok((wait_until { -e $file_path; } timeout => 15, interval => 1), "Wait for file '$filename' to be downloaded");
+    $synonyms_contents = read_file($file_path);
+    like($synonyms_contents, qr/cass sink leaf|3-phosphoglyceric acid|ug\/g|week 16|COMP:0000013/, "Phenotypes header contains full trait names");
 
     # -------------------------------------------------------------------------
     # Download missing measurements format
