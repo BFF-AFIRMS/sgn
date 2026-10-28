@@ -35,7 +35,6 @@ my $build = SGN::Build->new(
         'Archive::Zip'                             => '== 1.68',
         'Array::Utils'                             => '== 0.5',
         'Barcode::Code128'                         => '== 2.21',
-        'Bio::Chado::Schema'                       => 0,
         'Bio::GFF3::LowLevel'                      => '== 2.0',
         'Bio::GMOD::Blast::Graph'                  => '== 0.06',
         'Bio::GMOD::GenericGenePage'               => '== 0.12',
