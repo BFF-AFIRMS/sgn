@@ -169,7 +169,12 @@ my %DESIGN_PRESETS = (
     'greenhouse' => { greenhouse_default_plants => 1 },
     'splitplot'  => { block_number => 2, num_plants_per_treatment => 2 },
     'p-rep'      => { no_of_rep_times => 2 },
-    'Westcott'   => { westcott_col => 6 },
+    # st4gi's cr.w() computes the number of genotype blocks between check
+    # columns as floor((nc - 1) / (ncb + 1)). With the default ncb of 10 a
+    # westcott_col below 12 makes that zero, which collapses the field to a
+    # single cell and overflows R's vector allocation (1:(nr * nc)). 16
+    # genotypes with the default check spacing therefore need >= 12 columns.
+    'Westcott'   => { westcott_col => 12 },
 );
 
 # Options a design type needs on top of its preset defaults. These are the
