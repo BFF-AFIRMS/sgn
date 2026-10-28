@@ -115,15 +115,27 @@ $t->while_logged_in_as("submitter", sub {
         my %overrides = %$design;
         delete $overrides{type};
 
-        my $trial_name = create_trial($t,
-            %{ design_preset($type,
-                stock_list => $stock_list_id,
-                %overrides,
-            ) }
-        );
+        subtest $type => sub {
+            # Each design gets a fresh page load (open_add_trial navigates),
+            # so a failure here does not poison the designs that follow.
+            my $trial_name = eval {
+                create_trial($t,
+                    %{ design_preset($type,
+                        stock_list => $stock_list_id,
+                        %overrides,
+                    ) }
+                );
+            };
 
-        my $trial = find_trial($schema, $trial_name);
-        ok($trial, "$type: trial '$trial_name' was saved to the database");
+            if (my $err = $@) {
+                $err =~ s/\s+at\s+\S+\s+line\s+\d+.*//s;
+                fail("$type design failed: $err");
+                return;
+            }
+
+            my $trial = find_trial($schema, $trial_name);
+            ok($trial, "$type: trial '$trial_name' was saved to the database");
+        };
     }
 });
 
