@@ -155,11 +155,17 @@ my %DESIGN_PRESETS = (
     'RCBD'       => { block_number => 2 },
     'RRC'        => { block_number => 2, rows => 4 },
     'DRRC'       => { rep_count => 2, col_number => 4 },
-    'URDD'       => { block_number => 2, row_in_design_number => 4, col_in_design_number => 4 },
-    'Alpha'      => { rep_count => 2, block_size => 2 },
+    # URDD needs a checks list (see %DESIGN_REQUIRED_OPTIONS), so the field must
+    # be large enough to hold the lines plus the checks.
+    'URDD'       => { block_number => 2, row_in_design_number => 5, col_in_design_number => 4 },
+    # Alpha rejects a block size below 3, and the block count (stocks / block
+    # size) must be at least the block size: 16 / 4 = 4 blocks.
+    'Alpha'      => { rep_count => 2, block_size => 4 },
     'Lattice'    => { rep_count => 2 },
     'Augmented'  => { max_block_size => 5 },
-    'MAD'        => { row_number => 4, col_number => 4 },
+    # MAD additionally requires the per-block dimensions. Its blocks are 3 rows
+    # by 5 columns, so the field is a multiple of both.
+    'MAD'        => { row_number => 6, col_number => 5, row_number_per_block => 3, col_number_per_block => 5 },
     'greenhouse' => { greenhouse_default_plants => 1 },
     'splitplot'  => { block_number => 2, num_plants_per_treatment => 2 },
     'p-rep'      => { no_of_rep_times => 2 },
@@ -174,6 +180,7 @@ my %DESIGN_REQUIRED_OPTIONS = (
     'MAD'       => [qw( checks_list )],
     'splitplot' => [qw( treatments )],
     'p-rep'     => [qw( unrep_stock_list rep_stock_list row_in_design_number col_in_design_number )],
+    'URDD'      => [qw( checks_list )],
     'Westcott'  => [qw( westcott_check_1 westcott_check_2 )],
 );
 
