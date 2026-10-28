@@ -21,13 +21,22 @@ curator (see C<while_logged_in_as> in L<SGN::Test::WWW::WebDriver>).
 =head1 SYNOPSIS
 
   use lib 't/lib';
-  use Shared::AddTrial qw/ create_trial /;
+  use Shared::AddTrial qw/ create_trial design_preset find_trial /;
 
+  # Spell out the design parameters yourself...
   my $trial_name = create_trial($t,
       design_type => 'CRD',
       stock_list  => $accession_list_id,
       rep_count   => 1,
   );
+
+  # ...or let design_preset fill in the ones a design type requires.
+  my $trial_name = create_trial($t, %{ design_preset('CRD',
+      stock_list => $accession_list_id,
+  ) });
+
+  # Then assert on what was actually saved.
+  my $trial = find_trial($schema, $trial_name);
 
 =head1 FORM INPUTS
 
@@ -36,11 +45,48 @@ C<js/source/include/add_trial/components/sections>. If an input is renamed
 there, update the corresponding helper (or the relevant key in
 C<%DESIGN_INPUT_IDS>) here.
 
+=head1 DESIGN PRESETS
+
+C<design_preset($design_type, %overrides)> returns a hashref of options for
+C<create_trial>/C<fill_design_info> with the numeric parameters that a design
+type needs to pass validation already filled in. Fixture-specific values (list
+ids and accession names) are always passed as overrides:
+
+  my $opts = design_preset('Augmented',
+      stock_list  => $accession_list_id,
+      checks_list => $checks_list_id,
+  );
+
+The following overrides are required, in addition to C<stock_list> for every
+design except C<p-rep>:
+
+  Augmented  checks_list
+  MAD        checks_list
+  splitplot  treatments
+  p-rep      unrep_stock_list, rep_stock_list, row_in_design_number,
+             col_in_design_number (rows x columns must equal
+             unreplicated + replicated x no_of_rep_times)
+  Westcott   westcott_check_1, westcott_check_2
+
+=head1 DATABASE ASSERTIONS
+
+Helpers for asserting on what a test actually saved, which is far more stable
+than scraping the wizard's DOM:
+
+  my $trial = find_trial($schema, $trial_name);
+  ok($trial, "trial was saved");
+
+  is(count_trial_plots($schema, $trial->project_id), 4, "four plots");
+
+C<count_trial_stocks($schema, $trial_id, $stock_type_name)> counts stocks of an
+arbitrary type (C<plot>, C<plant>, ...).
+
 =cut
 
 use strict;
 use warnings;
 use Exporter qw(import);
+use SGN::Model::Cvterm;
 
 our @EXPORT = qw/
     open_add_trial
@@ -55,8 +101,14 @@ our @EXPORT = qw/
     create_trial
     select_option
     select_options
+    select_autocomplete
     open_accordion_panel
     random_trial_name
+    design_preset
+    find_trial
+    count_trial_stocks
+    count_trial_plots
+    count_trial_plants
 /;
 
 # Form field name => DOM id of the input that edits it.
@@ -85,11 +137,72 @@ my %DESIGN_INPUT_IDS = (
     westcott_col_between_check => 'westcott_col_between_check',
 );
 
+# Design inputs that render an autocomplete widget rather than a plain text
+# input. Typing into them updates the form value, but the canonical value is
+# only committed once a suggestion is picked, so they are handled separately
+# from the numeric inputs in %DESIGN_INPUT_IDS.
+my %AUTOCOMPLETE_FIELDS = map { $_ => 1 } qw(
+    westcott_check_1
+    westcott_check_2
+);
+
+# The minimum numeric/structural parameters each design type needs to pass
+# validation. Everything here is independent of the fixture database; list ids
+# and accession names are always supplied by the caller (see
+# %DESIGN_REQUIRED_OPTIONS and design_preset()).
+my %DESIGN_PRESETS = (
+    'CRD'        => { rep_count => 1 },
+    'RCBD'       => { block_number => 2 },
+    'RRC'        => { block_number => 2, rows => 4 },
+    'DRRC'       => { rep_count => 2, col_number => 4 },
+    'URDD'       => { block_number => 2, row_in_design_number => 4, col_in_design_number => 4 },
+    'Alpha'      => { rep_count => 2, block_size => 2 },
+    'Lattice'    => { rep_count => 2 },
+    'Augmented'  => { max_block_size => 5 },
+    'MAD'        => { row_number => 4, col_number => 4 },
+    'greenhouse' => { greenhouse_default_plants => 1 },
+    'splitplot'  => { block_number => 2, num_plants_per_treatment => 2 },
+    'p-rep'      => { no_of_rep_times => 2 },
+    'Westcott'   => { westcott_col => 6 },
+);
+
+# Options a design type needs on top of its preset defaults. These are the
+# fixture-specific values (list ids, accession names) that cannot be baked into
+# %DESIGN_PRESETS above.
+my %DESIGN_REQUIRED_OPTIONS = (
+    'Augmented' => [qw( checks_list )],
+    'MAD'       => [qw( checks_list )],
+    'splitplot' => [qw( treatments )],
+    'p-rep'     => [qw( unrep_stock_list rep_stock_list row_in_design_number col_in_design_number )],
+    'Westcott'  => [qw( westcott_check_1 westcott_check_2 )],
+);
+
 # A name unique enough to avoid collisions between repeated or parallel runs.
 sub random_trial_name {
     my ($prefix) = @_;
     $prefix = 'Trial_selenium' unless defined $prefix && length $prefix;
     return sprintf('%s_%d', $prefix, int(rand(1_000_000)));
+}
+
+# Return the option hash for a design type, merging the design's preset defaults
+# with the caller's overrides. Dies if a required override is missing so a test
+# fails immediately instead of timing out in the browser.
+sub design_preset {
+    my ($design_type, %overrides) = @_;
+
+    my $defaults = $DESIGN_PRESETS{$design_type}
+        or die "Unknown design type '$design_type'. Known types: "
+            . join(', ', sort keys %DESIGN_PRESETS) . "\n";
+
+    # Every design except p-rep selects a single stock list.
+    my @required = $design_type eq 'p-rep' ? () : ('stock_list');
+    push @required, @{ $DESIGN_REQUIRED_OPTIONS{$design_type} || [] };
+
+    my @missing = grep { !defined $overrides{$_} } @required;
+    die "design_preset('$design_type') is missing required option(s): "
+        . join(', ', @missing) . "\n" if @missing;
+
+    return { %$defaults, design_type => $design_type, %overrides };
 }
 
 # Select a single option from a native <select> by one of its attributes.
@@ -145,6 +258,29 @@ sub select_options {
 
     die "$desc: matched $matched of " . scalar(@$values) . " options\n"
         unless $matched == @$values;
+}
+
+# Choose a value from an autocomplete input (AccessionAutocomplete,
+# CvtermAutocomplete, ...).
+#
+# These widgets render the suggestion list in a <ul> that is a sibling of the
+# input, and only commit the canonical value once a suggestion is clicked, so
+# typing alone is not enough. The value must match one of the rendered
+# suggestions exactly.
+sub select_autocomplete {
+    my ($t, $input_id, $value, %opts) = @_;
+    return unless defined $value && length $value;
+
+    my $desc = $opts{desc} || "Select autocomplete suggestion '$value' for '$input_id'";
+
+    $t->send_keys_ok($input_id, 'id', $value, "Type '$value' into '$input_id'", clear => 1);
+
+    $t->click_ok(
+        "//input[\@id='$input_id']/following-sibling::ul[contains(\@class,'dropdown-menu')]"
+            . "//a[normalize-space()='$value']",
+        'xpath',
+        $desc,
+    );
 }
 
 # Expand a collapsed panel on the design step's accordion.
@@ -306,10 +442,37 @@ sub fill_design_info {
         }
     }
 
+    # Greenhouse designs give each accession its own plant count. The inputs
+    # follow the order of the selected stock list, so locate each one by the
+    # label beside it rather than relying on the index. Pass a hashref of
+    # accession name => plant count.
+    if ($design_type eq 'greenhouse' && $opts{greenhouse_num_plants}) {
+        my $counts = $opts{greenhouse_num_plants};
+        for my $stock_name (sort keys %$counts) {
+            $t->send_keys_ok(
+                "//div[\@id='greenhouse_num_plants_per_accession']"
+                    . "/div[label[normalize-space()='$stock_name:']]//input",
+                'xpath',
+                $counts->{$stock_name},
+                "Enter greenhouse plant count for '$stock_name'",
+            );
+        }
+    }
+
+    # Autocomplete fields commit their value when a suggestion is picked, so
+    # they cannot be filled by typing alone.
+    for my $field (sort keys %AUTOCOMPLETE_FIELDS) {
+        next unless defined $opts{$field};
+        my $input_id = $DESIGN_INPUT_IDS{$field};
+        next unless @{ $t->driver->find_elements($input_id, 'id') || [] };
+        select_autocomplete($t, $input_id, $opts{$field}, desc => "Select $field");
+    }
+
     # Numeric design parameters. Skip any input the current design did not
     # render rather than waiting out WebDriver's timeout for it.
     for my $field (keys %DESIGN_INPUT_IDS) {
         next unless defined $opts{$field};
+        next if $AUTOCOMPLETE_FIELDS{$field};
         my $input_id = $DESIGN_INPUT_IDS{$field};
         next unless @{ $t->driver->find_elements($input_id, 'id') || [] };
         $t->send_keys_ok($input_id, 'id', $opts{$field}, "Enter $field");
@@ -429,6 +592,51 @@ sub create_trial {
     finish_trial_creation($t);
 
     return $trial_name;
+}
+
+# Find a saved trial by name. Returns the Project::Project row, or undef.
+sub find_trial {
+    my ($schema, $trial_name) = @_;
+    return $schema->resultset('Project::Project')->find({ name => $trial_name });
+}
+
+# Ids of the nd_experiments linked to a trial (usually exactly one).
+sub _trial_nd_experiment_ids {
+    my ($schema, $trial_id) = @_;
+    my $rs = $schema->resultset('NaturalDiversity::NdExperimentProject')
+        ->search({ project_id => $trial_id });
+    return [ map { $_->nd_experiment_id } $rs->all ];
+}
+
+# Count the stocks of a given stock type (e.g. 'plot', 'plant') belonging to a
+# trial.
+sub count_trial_stocks {
+    my ($schema, $trial_id, $stock_type_name) = @_;
+
+    my $experiment_ids = _trial_nd_experiment_ids($schema, $trial_id);
+    return 0 unless @$experiment_ids;
+
+    my $stock_type_id = SGN::Model::Cvterm->get_cvterm_row(
+        $schema, $stock_type_name, 'stock_type'
+    )->cvterm_id();
+
+    return $schema->resultset('NaturalDiversity::NdExperimentStock')->search(
+        {
+            nd_experiment_id => { -in => $experiment_ids },
+            'stock.type_id'  => $stock_type_id,
+        },
+        { join => 'stock' },
+    )->count;
+}
+
+sub count_trial_plots {
+    my ($schema, $trial_id) = @_;
+    return count_trial_stocks($schema, $trial_id, 'plot');
+}
+
+sub count_trial_plants {
+    my ($schema, $trial_id) = @_;
+    return count_trial_stocks($schema, $trial_id, 'plant');
 }
 
 1;
