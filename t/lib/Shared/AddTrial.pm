@@ -549,6 +549,25 @@ sub continue_to_review {
         $opts{desc} || 'Submit design and continue to the review step');
     $t->wait_for_working_dialog();
     $t->wait_for_network_idle();
+
+    # A design that fails to generate stays on the design step and reports the
+    # reason through alert() *and* an .alert-danger element. wait_for_network_idle
+    # has already dismissed the alert by now, so read the element instead of
+    # letting the caller time out searching for a review screen that will never
+    # render.
+    my $deadline = time() + 5;
+    while (time() < $deadline) {
+        last if @{ $t->driver->find_elements('new_trial_confirm_submit', 'id') || [] };
+        sleep(1);
+    }
+    return if @{ $t->driver->find_elements('new_trial_confirm_submit', 'id') || [] };
+
+    my @errors = @{ $t->driver->find_elements(
+        '//div[contains(@class,"alert-danger")]', 'xpath') || [] };
+    my $reason = @errors
+        ? $errors[0]->get_text()
+        : 'no error message shown on the design step';
+    die "Design generation failed: $reason\n";
 }
 
 # Confirm the reviewed design and save the trial to the database.
