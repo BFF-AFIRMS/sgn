@@ -107,3 +107,11 @@ export interface PlotStructureNode {
     has?: Record<string, PlotStructureNode>;
 }
 
+export interface GridBounds {
+    minCol: number;
+    maxCol: number;
+    minRow: number;
+    maxRow: number;
+    numRows: number;
+    numCols: number;
+}
