@@ -15,8 +15,7 @@ table.myTable td, table.myTable th { border:1px solid black;padding:5px; }
 
 <table class="myTable">
 <tr><td>Institution</td><td>Researchers</td><td>Data</td></tr>
-<tr><td>University of Alberta</td><td>John Smith</td><td>Lodgepole pine reference genome and annotations.</td></tr>
-<tr><td>University of Alberta</td><td>Jane Smith</td><td>Lodgepole pine wesetern gall rust phenotyping and genomic data.</td></tr>
+<tr><td>University of Alberta</td><td>John Smith</td><td>Unpublished dataset description.</td></tr>
 </table>
 
 
