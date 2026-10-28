@@ -26,24 +26,28 @@ $user_id ||= 41;
 
 # --- Fixture data -----------------------------------------------------------
 #
-# A 16-accession stock list is a convenient size: it factors by 2, 4 and 8, so
-# the same list satisfies the block, row-column and augmented designs below.
+# A 16-accession stock list factors by 2, 4 and 8, so the same list satisfies
+# the block, row-column and augmented designs below. The checks must come from
+# *different* accessions: URDD and the augmented designs merge the checks into
+# the stock list, and an entry that is both a line and a check is counted
+# twice, corrupting the design.
 my $STOCK_COUNT = 16;
+my $CHECK_COUNT = 3;
 
-my @accessions = @{ $dbh->selectcol_arrayref(
+my @all_accessions = @{ $dbh->selectcol_arrayref(
     "SELECT s.uniquename
        FROM stock s
        JOIN cvterm c ON s.type_id = c.cvterm_id
       WHERE c.name = 'accession'
         AND COALESCE(s.is_obsolete, false) = false
       ORDER BY s.stock_id
-      LIMIT $STOCK_COUNT"
-) };
-BAIL_OUT("Fixture needs at least $STOCK_COUNT accessions (found "
-    . scalar(@accessions) . ")") if @accessions < $STOCK_COUNT;
+      LIMIT " . ($STOCK_COUNT + $CHECK_COUNT) ) };
+BAIL_OUT("Fixture needs at least " . ($STOCK_COUNT + $CHECK_COUNT)
+    . " accessions (found " . scalar(@all_accessions) . ")")
+    if @all_accessions < $STOCK_COUNT + $CHECK_COUNT;
 
-# Augmented and MAD designs need a separate list of checks.
-my @checks = @accessions[0 .. 2];
+my @accessions = @all_accessions[0 .. $STOCK_COUNT - 1];
+my @checks     = @all_accessions[$STOCK_COUNT .. $STOCK_COUNT + $CHECK_COUNT - 1];
 
 # Split plot treatments are typed into a CvtermAutocomplete whose suggestions
 # come from the EXPERIMENT_TREATMENT database (the UI passes "_TREATMENT", which
