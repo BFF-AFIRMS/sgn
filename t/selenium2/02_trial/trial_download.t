@@ -179,7 +179,7 @@ $t->while_logged_in_as("curator", sub {
     foreach my $format (@DOWNLOAD_MISSING_FORMATS) {
         my $char = $MISSING_FORMATS{$format};
 
-        my $expected_csv = '"plot_name","plot_id","accession_name","plot_number","block_number","is_a_control","rep_number","row_number","col_number","fresh root weight|CO_334:0000012"
+        my $expected_csv = '"plot_name","plot_id","accession_name","plot_number","block_number","is_a_control","rep_number","row_number","col_number",""rtwt" EXACT []"
         "DownloadParentsPlot' . $suffix . '","' . $plot_1_id . '","' . $progeny_name . '","1","1","","1","1","1","' . $phenotype_value . '"
         "MissingPhenotypesPlot' . $suffix . '","' . $plot_2_id . '","' . $progeny_name . '","2","1","","2","1","2","' . $char . '"';
         # Trim leading whitespace
