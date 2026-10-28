@@ -23,7 +23,6 @@
             </div>
         </div>
         <div class="modal-footer">
-            <button type="button" class="btn btn-default" id="usage_policy_disagree_submit">Don't Agree</button>
             <button type="button" class="btn btn-primary" id="usage_policy_agree_submit">Agree</button>
         </div>
         </div>
@@ -37,14 +36,6 @@
         jQuery.cookie("website_usage_policy_approved", "1", { expires: 10000 } );
         jQuery('#usage_policy').modal("hide");
     });
-
-    jQuery('#usage_policy_disagree_submit').click( function () {
-        document.location.href="http://www.biochemie.nat.uni-erlangen.de/Cassava/index.html";
-    });
-
-    if (jQuery.cookie("website_usage_policy_approved") == 1) {
-    document.write('<div class="well well-sm">You have already accepted the <a href="/usage_policy">data usage policy</a>. Thank you.</div>');
-    }
 
     window.onload=function() {
         var cookie = jQuery.cookie("website_usage_policy_approved");
