@@ -49,23 +49,26 @@ BAIL_OUT("Fixture needs at least " . ($STOCK_COUNT + $CHECK_COUNT)
 my @accessions = @all_accessions[0 .. $STOCK_COUNT - 1];
 my @checks     = @all_accessions[$STOCK_COUNT .. $STOCK_COUNT + $CHECK_COUNT - 1];
 
-# Split plot treatments are typed into a CvtermAutocomplete whose suggestions
-# come from the EXPERIMENT_TREATMENT database (the UI passes "_TREATMENT", which
-# the backend matches with LIKE '%_TREATMENT%'). COMP_EXP_TREATMENT matches that
-# pattern too, but it holds ontology metadata ("Composed experimental treatment
-# ontology") rather than usable treatment values, and the save step validates
-# treatment names as traits, so a real term is required.
-my @treatment_names = @{ $dbh->selectcol_arrayref(
-    "SELECT cvt.name
+# Split plot treatment names are validated as *traits* at save time (see
+# CXGN::List::Validate::Plugin::Traits), so they must be full trait terms of the
+# form "name|db:accession" resolving to a cvterm with a VARIABLE_OF
+# relationship. The EXPERIMENT_TREATMENT db the autocomplete suggests from holds
+# only ontology descriptors in this fixture, which the trait validator rejects.
+my ($treatment_db, $treatment_accession, $treatment_cvterm_name) = $dbh->selectrow_array(
+    "SELECT db.name, dbx.accession, cvt.name
        FROM cvterm cvt
        JOIN dbxref dbx ON cvt.dbxref_id = dbx.dbxref_id
        JOIN db db ON dbx.db_id = db.db_id
-      WHERE db.name = 'EXPERIMENT_TREATMENT'
+       JOIN cvterm_relationship cvr ON cvr.subject_id = cvt.cvterm_id
+       JOIN cvterm reltype ON reltype.cvterm_id = cvr.type_id
+      WHERE reltype.name = 'VARIABLE_OF'
         AND COALESCE(cvt.is_obsolete, 0) = 0
-      ORDER BY cvt.name
-      LIMIT 2"
-) };
-@treatment_names = ('Treatment A', 'Treatment B') unless @treatment_names;
+      ORDER BY db.name, cvt.name
+      LIMIT 1"
+);
+my $treatment_name = $treatment_db
+    ? "$treatment_cvterm_name|$treatment_db:$treatment_accession"
+    : undef;
 
 # --- Test lists -------------------------------------------------------------
 
@@ -116,8 +119,8 @@ my @designs = (
     {
         type       => 'splitplot',
         treatments => [
-            { name => $treatment_names[0], value => 'High' },
-            { name => $treatment_names[0], value => 'Low' },
+            { name => $treatment_name, value => 'High' },
+            { name => $treatment_name, value => 'Low' },
         ],
     },
     {
@@ -136,10 +139,7 @@ $t->while_logged_in_as("submitter", sub {
         delete $overrides{skip};
 
         subtest $type => sub {
-            # A design that is known to be broken (a missing R package, an
-            # upstream FielDHub bug) is reported as a skip with its reason
-            # rather than a failure. This guard has to run before design_preset,
-            # which dies on a design whose required options were never supplied.
+            # Skip designs known to be broken
             if (my $reason = $design->{skip}) {
                 skip($reason, 1);
                 return;
