@@ -141,7 +141,7 @@ $t->while_logged_in_as("submitter", sub {
         subtest $type => sub {
             # Skip designs known to be broken
             if (my $reason = $design->{skip}) {
-                skip($reason, 1);
+                plan skip_all => $reason;
                 return;
             }
 
