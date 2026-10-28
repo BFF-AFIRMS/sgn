@@ -1,11 +1,8 @@
-import { Plot } from '../types';
+import { Plot, GridBounds } from '../types';
 
 export interface DerivedGridResult {
     plotObject: Record<string, Plot>;
-    dimensions: {
-        rows: number;
-        cols: number;
-    };
+    bounds: GridBounds;
 }
 
 export const derivePlotGrid = (data: any[]): DerivedGridResult => {
@@ -75,6 +72,6 @@ export const derivePlotGrid = (data: any[]): DerivedGridResult => {
     
     return {
         plotObject: mapped,
-        dimensions: { rows, cols }
+        bounds: {minCol: minX, maxCol: maxX, minRow: minY, maxRow: maxY, numCols: cols, numRows: rows},
     };
 };

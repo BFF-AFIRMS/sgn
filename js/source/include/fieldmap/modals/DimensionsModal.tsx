@@ -13,7 +13,6 @@ export const DimensionsModal: React.FC<DimensionsModalProps> = ({}) => {
     } = useModals();
 
     const {
-        dimensions,
         applyDimensions,
         bounds
     } = usePlotGrid();
@@ -24,9 +23,9 @@ export const DimensionsModal: React.FC<DimensionsModalProps> = ({}) => {
     const [preserveGaps, setPreserveGaps] = useState(true);
 
     useEffect(() => {
-        setDimRowsInput((dimensions?.rows || bounds.numRows || '').toString());
-        setDimColsInput((dimensions?.cols || bounds.numCols || '').toString());
-    }, [dimensions, bounds, show]);
+        setDimRowsInput((bounds.numRows || '').toString());
+        setDimColsInput((bounds.numCols || '').toString());
+    }, [bounds, show]);
 
     const handleApplyDimensions = async () => {
         await applyDimensions(dimRowsInput, dimColsInput, preserveGaps, fillerAccessionInput);
