@@ -95,6 +95,7 @@ test('Trial Validation - validateTrialInfoSync: Dimensions and Capacity', (t) =>
     t.ok(validateTrialInfoSync(createBaseFormData({ plotLength: '13' })).valid, 'Passes when plotLength is at boundary 13');
 
     t.notOk(validateTrialInfoSync(createBaseFormData({ plantsPerPlot: '-5' })).valid, 'Fails on negative plantsPerPlot');
+    t.notOk(validateTrialInfoSync(createBaseFormData({ plantsPerPlot: 'abc' })).valid, 'Fails when plantsPerPlot is not a number');
     t.notOk(validateTrialInfoSync(createBaseFormData({ plantsPerPlot: '501' })).valid, 'Fails when plantsPerPlot > 500');
     t.ok(validateTrialInfoSync(createBaseFormData({ plantsPerPlot: '500' })).valid, 'Passes when plantsPerPlot is at boundary 500');
 

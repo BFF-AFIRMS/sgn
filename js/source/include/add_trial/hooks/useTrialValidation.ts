@@ -19,8 +19,8 @@ export const validateTrialInfoSync = (form: TrialFormData): { valid: boolean; er
     }
 
     const plantsPerPlot = parseInt(form.plantsPerPlot || '0', 10);
-    if (plantsPerPlot < 0 || plantsPerPlot > 500) {
-        return { valid: false, error: 'Plants per plot must be between 0 and 500.' };
+    if (isNaN(plantsPerPlot) || plantsPerPlot < 0 || plantsPerPlot > 500) {
+        return { valid: false, error: 'Plants per plot must be a number between 0 and 500.' };
     }
 
     if (form.assignRowColToPlants) {

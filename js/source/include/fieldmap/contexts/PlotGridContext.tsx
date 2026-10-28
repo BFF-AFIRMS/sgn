@@ -114,6 +114,7 @@ export const PlotGridProvider: React.FC<FieldMapContextProps> = ({ trialId, auth
     }, []);
 
     const loadAxisOrientation = useCallback(async () => {
+        if (!trialId || mode === 'preview') return;
         try {
             const response = await fetch(`/ajax/breeders/trial/${trialId}/axis_orientation`);
             const body = await response.json();
@@ -126,7 +127,7 @@ export const PlotGridProvider: React.FC<FieldMapContextProps> = ({ trialId, auth
         } catch (e) {
             console.error('Error loading axis orientation:', e);
         }
-    }, [trialId, setAxisOrientation]);
+    }, [trialId, mode, setAxisOrientation]);
 
     useEffect(() => {
         loadAxisOrientation();

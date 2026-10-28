@@ -1,7 +1,6 @@
 import { useCallback } from 'react';
 import { TrialFormData, DesignResultResponse } from '../types';
 import { useDesignResult } from '../contexts/DesignResultContext';
-import { useTrialForm } from '../contexts/TrialFormContext';
 import { fetchListItems } from './useBreedbaseLists';
 import * as trialService from '../services/trialService';
 
@@ -21,7 +20,6 @@ export const useTrialActions = () => {
         isSaving,
         setIsSaving
     } = useDesignResult();
-    const { clearDraft } = useTrialForm();
 
     const generate = useCallback(async (form: TrialFormData): Promise<ActionResult<DesignResultResponse>> => {
         setIsGenerating(true);
@@ -159,7 +157,6 @@ export const useTrialActions = () => {
                 await trialService.createPlantEntries(trialId, form, plantCount);
             }
 
-            clearDraft();
             setSavedTrialId(trialId);
             return { ok: true, data: trialId };
         } catch (err: unknown) {
@@ -168,7 +165,7 @@ export const useTrialActions = () => {
         } finally {
             setIsSaving(false);
         }
-    }, [setIsSaving, clearDraft, setSavedTrialId]);
+    }, [setIsSaving, setSavedTrialId]);
 
     return {
         generate,
