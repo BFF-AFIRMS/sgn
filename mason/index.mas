@@ -12,6 +12,8 @@ $editable_stock_props => {}
   use Data::Dumper;
 </%perl>
 
+<& homepage/usage_popup.mas &>
+
 <div style="text-align: center">
     <h1 style="text-align: center">Best Future Forests</h1>
     <p style="font-size: var(--font-size-xl); font-weight: var(--font-weight-bold)">Advanced Forest Genomics and Integrative Resource Management System</p>
