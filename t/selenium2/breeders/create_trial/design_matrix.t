@@ -90,18 +90,21 @@ my $checks_list_id = create_test_list("Matrix_Checks_$rand", 'accessions', \@che
 # the per-design numeric parameters live in %DESIGN_PRESETS and may need tuning
 # so the R design plugins can lay each one out.
 #
-# NOTE: the following designs currently have errors in their R code and are untested:
-# - p-rep
+# A row may carry a 'skip' reason for a design that is known to be broken
+# independently of this test; it is reported as a skip rather than a failure.
 my @designs = (
     { type => 'RCBD' },
     { type => 'RRC' },
     { type => 'DRRC' },
     # URDD requires checks (the form and validation now enforce this) and they
     # do reach FielDHub, but diagonal_arrangement returns an empty fieldBook for
-    # every dimension combination tried, so nothing is stored. Known-broken, out
-    # of scope, like p-rep.
+    # every dimension combination tried, so nothing is stored.
     { type => 'URDD', checks_list => $checks_list_id,
-      skip => 'FielDHub diagonal_arrangement returns an empty fieldBook (out of scope)' },
+      skip => 'FielDHub diagonal_arrangement returns an empty fieldBook (known broken)' },
+    # p-rep's R plugin (R/p-rep.pm) loads the DiGGer package, which is not
+    # installed, so the design cannot be generated.
+    { type => 'p-rep',
+      skip => 'p-rep design requires the DiGGer R package, which is not installed (known broken)' },
     { type => 'Alpha' },
     { type => 'Lattice' },
     { type => 'Augmented', checks_list => $checks_list_id },
