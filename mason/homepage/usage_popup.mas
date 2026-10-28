@@ -33,36 +33,26 @@
 
 
 <script>
+    jQuery('#usage_policy_agree_submit').click( function () {
+        jQuery.cookie("website_usage_policy_approved", "1", { expires: 10000 } );
+        jQuery('#usage_policy').modal("hide");
+    });
 
-  jQuery('#usage_policy_agree_submit').click( function () {
-     jQuery.cookie("website_usage_policy_approved", "1", { expires: 10000 } );
-     jQuery('#usage_policy').modal("hide");
-  });
+    jQuery('#usage_policy_disagree_submit').click( function () {
+        document.location.href="http://www.biochemie.nat.uni-erlangen.de/Cassava/index.html";
+    });
 
-  jQuery('#usage_policy_disagree_submit').click( function () {
-     document.location.href="http://www.biochemie.nat.uni-erlangen.de/Cassava/index.html";
-  });
-
-
-  if (jQuery.cookie("website_usage_policy_approved") == 1) {
+    if (jQuery.cookie("website_usage_policy_approved") == 1) {
     document.write('<div class="well well-sm">You have already accepted the <a href="/usage_policy">data usage policy</a>. Thank you.</div>');
-  }
-
-  window.onload=function() {
-    var cookie = jQuery.cookie("website_usage_policy_approved");
-  //alert("have cookie: "+cookie);
-
-    if (cookie == undefined) {
-    //  alert("showing!");
-
-      jQuery('#usage_policy').modal("show");
-  //alert("Done!");
     }
-    else {
-      //alert("Hiding!");
-      jQuery('#usage_policy').modal("hide");
 
+    window.onload=function() {
+        var cookie = jQuery.cookie("website_usage_policy_approved");
+        if (cookie == undefined) {
+            jQuery('#usage_policy').modal("show");
+        }
+        else {
+            jQuery('#usage_policy').modal("hide");
+        }
     }
-  }
-
 </script>
