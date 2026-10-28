@@ -56,6 +56,9 @@ export const DesignInfoSection: React.FC<DesignInfoSectionProps> = ({ onOpenPrep
     const crbdCheckSectionId = stockType === 'accession' ? 'crbd_show_list_of_checks_section' : `crbd_show_list_of_${stockType}_checks_section`;
     const crbdCheckDivId = stockType === 'accession' ? 'crbd_list_of_checks_section' : `crbd_list_of_${stockType}_checks_section`;
     const crbdCheckSelectId = `${crbdCheckDivId}_list_select`;
+    // URDD is the only design that reaches this block with the checks list
+    // required; for the others it stays optional.
+    const crbdChecksRequired = designType === 'URDD';
 
     return (
         <div className="tw:flex tw:flex-col tw:gap-4">
@@ -140,7 +143,8 @@ export const DesignInfoSection: React.FC<DesignInfoSectionProps> = ({ onOpenPrep
                         {['RCBD', 'CRD', 'Alpha', 'Lattice', 'RRC', 'DRRC', 'URDD'].includes(designType) && (
                             <div className="form-group form-group-sm" id={crbdCheckSectionId}>
                                 <label className="col-sm-7 control-label">
-                                    List of checks to include. Checks list should be {stockType === 'accession' ? 'separate from accessions' : 'accessions'} list. (optional): 
+                                    {crbdChecksRequired && <span className="tw:text-red-500 tw:mr-1">*</span>}
+                                    List of checks to include. Checks list should be {stockType === 'accession' ? 'separate from accessions' : 'accessions'} list.{crbdChecksRequired ? '' : ' (optional)'}:{' '}
                                 </label>
                                 <div className="col-sm-5">
                                     <BreedbaseListSelect
@@ -149,7 +153,8 @@ export const DesignInfoSection: React.FC<DesignInfoSectionProps> = ({ onOpenPrep
                                         listType="accessions"
                                         value={formData.crbdControlListId}
                                         onChange={id => updateField('crbdControlListId', id)}
-                                        placeholder="select optional check list"
+                                        placeholder={crbdChecksRequired ? 'select a check list' : 'select optional check list'}
+                                        required={crbdChecksRequired}
                                     />
                                 </div>
                             </div>
