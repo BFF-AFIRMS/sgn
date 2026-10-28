@@ -117,7 +117,7 @@ export const buildGenerateDesignPayload = (
         no_of_rep_times: form.noOfRepTimes,
         no_of_block_sequence: form.noOfBlockSequence,
         no_of_sub_block_sequence: form.noOfSubBlockSequence,
-        fieldmap_col_number: form.colNumber || form.colNumberPerBlock,
+        fieldmap_col_number: form.colNumberPerBlock,
         fieldmap_row_number: form.fieldMapRowNumber,
         plot_layout_format: form.plotLayoutFormat,
         plot_prefix: form.plotPrefix,

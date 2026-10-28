@@ -145,7 +145,7 @@ export const FieldMapSettingsPanel: React.FC<FieldMapSettingsPanelProps> = ({ mo
                 {mode !== 'preview' && (
                     <button className="btn btn-success" onClick={submitFieldLayout} disabled={displayLinkedTrials}>Submit Layout Changes</button>
                 )}
-                {selectedView !== 'fieldmap' && selectedView !== 'geofieldmap' && (
+                {mode !== 'preview' && selectedView !== 'fieldmap' && selectedView !== 'geofieldmap' && (
                     <button className="btn btn-danger" onClick={() => setShowDeleteTraitModal(true)}>Delete Selected Trait</button>
                 )}
             </div>

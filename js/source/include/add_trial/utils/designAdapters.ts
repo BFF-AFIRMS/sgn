@@ -52,6 +52,12 @@ export const extractConfirmedTreatments = (
     for (const design of designs) {
         const treatments = getDesignTreatments(design);
         for (const [key, val] of Object.entries(treatments)) {
+            // Split-plot designs also store their subplot/plant metadata under
+            // the "treatments" key; only entries describing an actual field
+            // treatment carry a list of treated stocks.
+            if (!Array.isArray(val?.new_treatment_stocks)) {
+                continue;
+            }
             if (!seen.has(key)) {
                 seen.set(key, {
                     type: val.new_treatment_type,
