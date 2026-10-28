@@ -46,16 +46,17 @@ BAIL_OUT("Fixture needs at least $STOCK_COUNT accessions (found "
 my @checks = @accessions[0 .. 2];
 
 # Split plot treatments are typed into a CvtermAutocomplete whose suggestions
-# come from the EXPERIMENT_TREATMENT / COMP_EXP_TREATMENT databases (the UI
-# passes "_TREATMENT", which the backend matches with LIKE '%_TREATMENT%').
-# The widget is suggest-only, so any string is accepted and the backend creates
-# the trait as needed; prefer real treatment terms when the fixture has them.
+# come from the EXPERIMENT_TREATMENT database (the UI passes "_TREATMENT", which
+# the backend matches with LIKE '%_TREATMENT%'). COMP_EXP_TREATMENT matches that
+# pattern too, but it holds ontology metadata ("Composed experimental treatment
+# ontology") rather than usable treatment values, and the save step validates
+# treatment names as traits, so a real term is required.
 my @treatment_names = @{ $dbh->selectcol_arrayref(
     "SELECT cvt.name
        FROM cvterm cvt
        JOIN dbxref dbx ON cvt.dbxref_id = dbx.dbxref_id
        JOIN db db ON dbx.db_id = db.db_id
-      WHERE db.name IN ('EXPERIMENT_TREATMENT', 'COMP_EXP_TREATMENT')
+      WHERE db.name = 'EXPERIMENT_TREATMENT'
         AND COALESCE(cvt.is_obsolete, 0) = 0
       ORDER BY cvt.name
       LIMIT 2"
@@ -84,11 +85,14 @@ my $checks_list_id = create_test_list("Matrix_Checks_$rand", 'accessions', \@che
 # Shared::AddTrial). The test asserts only that the trial reaches the database;
 # the per-design numeric parameters live in %DESIGN_PRESETS and may need tuning
 # so the R design plugins can lay each one out.
+#
+# NOTE: the following designs currently have errors in their R code and are untested:
+# - p-rep
 my @designs = (
     { type => 'RCBD' },
     { type => 'RRC' },
     { type => 'DRRC' },
-    { type => 'URDD' },
+    { type => 'URDD',      checks_list => $checks_list_id },
     { type => 'Alpha' },
     { type => 'Lattice' },
     { type => 'Augmented', checks_list => $checks_list_id },

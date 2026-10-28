@@ -72,6 +72,9 @@ export const validateDesignInfoSync = (
     }
 
     if (form.designType === 'URDD') {
+        if (!form.crbdControlListId) {
+            return { valid: false, error: 'Un-Replicated Diagonal Design (URDD) requires a list of checks.' };
+        }
         if (!form.rowInDesignNumber || !form.colInDesignNumber) {
             return { valid: false, error: 'Un-Replicated Diagonal Design (URDD) requires Number of Rows and Columns in design.' };
         }

@@ -204,6 +204,10 @@ sub generate_experimental_design_POST : Args(0) {
             $c->stash->{rest} = { error => "You need to provide number of rows and cols for a unreplicated diagonal design."};
             return;
         }
+        if (!@control_names_crbd){
+            $c->stash->{rest} = { error => "You need to provide a list of checks for an unreplicated diagonal design."};
+            return;
+        }
     }
 
     my @replicated_stocks;
