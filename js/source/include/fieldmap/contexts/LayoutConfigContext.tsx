@@ -6,6 +6,7 @@ import { FieldMapContextProps } from '../types';
 export type PlotLayout = 'serpentine' | 'zigzag';
 export type ColorVar = 'parity' | 'germplasm' | 'block' | 'family_name' | 'cross_name';
 export type LabelVar = 'plot_number' | 'germplasm' | 'block' | 'family_name' | 'cross_name';
+export type BorderLabel = 'Border' | 'empty';
 
 export interface SecondaryAxis {
     readonly xLabel?: string;
@@ -37,6 +38,8 @@ export interface LayoutConfigContextType {
     rightBorder: boolean;
     setRightBorder: React.Dispatch<React.SetStateAction<boolean>>;
     colorVar: ColorVar;
+    borderLabel: BorderLabel;
+    setBorderLabel: React.Dispatch<React.SetStateAction<BorderLabel>>;
     setColorVar: React.Dispatch<React.SetStateAction<ColorVar>>;
     labelVar: LabelVar;
     setLabelVar: React.Dispatch<React.SetStateAction<LabelVar>>;
@@ -64,6 +67,7 @@ export const LayoutConfigProvider: React.FC<FieldMapContextProps> = ({ trialId, 
     const [leftBorder, setLeftBorder] = useState(false);
     const [rightBorder, setRightBorder] = useState(false);
 
+    const [borderLabel, setBorderLabel] = useState('Border');
     const [colorVar, setColorVar] = useState<ColorVar>('parity');
     const [labelVar, setLabelVar] = useState<LabelVar>('plot_number');
     const [labelSize, setLabelSize] = useState(10);
@@ -161,6 +165,7 @@ export const LayoutConfigProvider: React.FC<FieldMapContextProps> = ({ trialId, 
             bottomBorder, setBottomBorder,
             leftBorder, setLeftBorder,
             rightBorder, setRightBorder,
+            borderLabel, setBorderLabel,
             colorVar, setColorVar,
             labelVar, setLabelVar,
             labelSize, setLabelSize,
