@@ -135,7 +135,6 @@ foreach (values %$tl) {
     $stock->_remove_stockprop('row_number', $_->{row_number});
     $stock->_remove_stockprop('col_number', $_->{col_number});
 }
-$trial_layout->generate_and_cache_layout();
 
 
 done_testing();

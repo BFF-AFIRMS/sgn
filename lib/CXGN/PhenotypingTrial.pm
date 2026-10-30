@@ -460,12 +460,6 @@ sub add_additional_stocks_for_greenhouse {
             my $new_design = $trial_design_store->store();
         }
 
-        my $new_layout = CXGN::Trial::TrialLayout->new({
-            schema => $schema,
-            trial_id => $trial_id,
-            experiment_type => 'field_layout',
-        });
-        $new_layout->generate_and_cache_layout();
     };
 
     my $error;
@@ -563,12 +557,6 @@ sub add_additional_plants_for_greenhouse {
 
         $greenhouse_trial->save_plant_entries($info,'' ,1 ,$user_id, $phenotype_store_config, $add_additional_plants); #TODO: Add phenotypestore config hash
 
-        my $new_layout = CXGN::Trial::TrialLayout->new({
-            schema => $schema,
-            trial_id => $trial_id,
-            experiment_type => 'field_layout',
-        });
-        $new_layout->generate_and_cache_layout();
     };
 
     my $error;

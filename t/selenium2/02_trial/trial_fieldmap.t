@@ -759,7 +759,6 @@ sub create_test_trial {
 		trial_id        => $trial_id,
 		experiment_type => 'field_layout',
 	});
-	$trial_layout->generate_and_cache_layout();
 
 	return $trial_id;
 }
@@ -887,7 +886,6 @@ sub create_trial_with_direct_plants {
 		trial_id        => $trial_id,
 		experiment_type => 'field_layout',
 	});
-	$trial_layout->generate_and_cache_layout();
 
 	return $trial_id;
 }
@@ -935,7 +933,6 @@ sub create_trial_with_geo_coordinates {
 		trial_id        => $trial_id,
 		experiment_type => 'field_layout',
 	});
-	$trial_layout->generate_and_cache_layout();
 
 	return $trial_id;
 }
