@@ -842,9 +842,6 @@ sub observationunits_update {
                 return CXGN::BrAPI::JSONResponse->return_error($self->status, sprintf($message), 400);
             }
         }
-        if ($preflight_check_done) {
-            $replace_plot_accession_fieldmap->_regenerate_trial_layout_cache();
-        }
     }
 
     my $search_params = {observationUnitDbIds => \@observation_unit_db_ids };
@@ -1109,7 +1106,7 @@ sub observationunits_store {
                     $param{experiment_type} = 'field_layout';
                 }
                 my $trial_layout = CXGN::Trial::TrialLayout->new(\%param);
-                my $design = $trial_layout->generate_and_cache_layout();
+                my $design = $trial_layout->generate_layout();
 
                 foreach my $plot_num (keys %{$design}) {
                     my $observationUnit_x_ref = $study->{$plot_num}->{external_refs};

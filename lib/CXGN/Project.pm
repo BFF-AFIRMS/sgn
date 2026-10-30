@@ -3457,7 +3457,6 @@ sub create_plant_entities {
             }
         }
 
-        $layout->generate_and_cache_layout();
     };
 
     eval {
@@ -3637,7 +3636,6 @@ sub save_plant_entries {
             }
         }
 
-        $layout->generate_and_cache_layout();
     };
 
     eval {
@@ -3839,7 +3837,6 @@ sub create_plant_subplot_entities {
             }
         }
 
-        $layout->generate_and_cache_layout();
     };
 
     eval {
@@ -4042,7 +4039,6 @@ sub save_plant_subplot_entries {
             }
         }
 
-        $layout->generate_and_cache_layout();
     };
 
     eval {
@@ -4411,7 +4407,6 @@ sub create_tissue_samples {
             }
         }
 
-        $layout->generate_and_cache_layout();
     };
 
     eval {
@@ -4639,7 +4634,6 @@ sub create_subplot_entities {
             }
         }
 
-        $layout->generate_and_cache_layout();
     };
 
     eval {
@@ -4805,7 +4799,6 @@ sub save_subplot_entries {
             }
         }
 
-        $layout->generate_and_cache_layout();
     };
 
     eval {

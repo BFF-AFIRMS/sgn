@@ -356,13 +356,6 @@ sub generate_layout {
     return $design;
 }
 
-# Deprecated alias retained so existing callers keep working. The design is no
-# longer persisted to a projectprop; prefer generate_layout() for new code.
-sub generate_and_cache_layout {
-    my $self = shift;
-    return $self->generate_layout();
-}
-
 sub retrieve_plot_info {
     my $self = shift;
     my $plots = shift;
