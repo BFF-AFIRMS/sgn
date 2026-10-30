@@ -2602,12 +2602,6 @@ sub _delete_field_layout_experiment {
         $has_tissues_prop->delete();
     }
 
-    my $trial_layout_json_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'trial_layout_json', 'project_property')->cvterm_id();
-    my $has_cached_layout_prop = $self->bcs_schema->resultset("Project::Projectprop")->find({ type_id => $trial_layout_json_cvterm_id, project_id => $trial_id });
-    if ($has_cached_layout_prop){
-        $has_cached_layout_prop->delete();
-    }
-
     my $nde_rs = $self->bcs_schema()->resultset("NaturalDiversity::NdExperiment")->search({ 'me.type_id'=>[$field_layout_type_id, $genotyping_layout_type_id, $analysis_experiment_type_id], 'project.project_id'=>$trial_id }, {'join'=>{'nd_experiment_projects'=>'project'}});
 #    if ($nde_rs->count != 1){
 #        die "Project $trial_id does not have exactly one ndexperiment of type field_layout or genotyping_layout!"
@@ -3463,7 +3457,6 @@ sub create_plant_entities {
             }
         }
 
-        $layout->generate_and_cache_layout();
     };
 
     eval {
@@ -3643,7 +3636,6 @@ sub save_plant_entries {
             }
         }
 
-        $layout->generate_and_cache_layout();
     };
 
     eval {
@@ -3845,7 +3837,6 @@ sub create_plant_subplot_entities {
             }
         }
 
-        $layout->generate_and_cache_layout();
     };
 
     eval {
@@ -4048,7 +4039,6 @@ sub save_plant_subplot_entries {
             }
         }
 
-        $layout->generate_and_cache_layout();
     };
 
     eval {
@@ -4417,7 +4407,6 @@ sub create_tissue_samples {
             }
         }
 
-        $layout->generate_and_cache_layout();
     };
 
     eval {
@@ -4645,7 +4634,6 @@ sub create_subplot_entities {
             }
         }
 
-        $layout->generate_and_cache_layout();
     };
 
     eval {
@@ -4811,7 +4799,6 @@ sub save_subplot_entries {
             }
         }
 
-        $layout->generate_and_cache_layout();
     };
 
     eval {

@@ -759,7 +759,6 @@ sub create_test_trial {
 		trial_id        => $trial_id,
 		experiment_type => 'field_layout',
 	});
-	$trial_layout->generate_and_cache_layout();
 
 	return $trial_id;
 }
@@ -887,7 +886,6 @@ sub create_trial_with_direct_plants {
 		trial_id        => $trial_id,
 		experiment_type => 'field_layout',
 	});
-	$trial_layout->generate_and_cache_layout();
 
 	return $trial_id;
 }
@@ -935,7 +933,6 @@ sub create_trial_with_geo_coordinates {
 		trial_id        => $trial_id,
 		experiment_type => 'field_layout',
 	});
-	$trial_layout->generate_and_cache_layout();
 
 	return $trial_id;
 }
@@ -2336,15 +2333,6 @@ EOSQL
 
 	$t->click_ok('//div[@id="upload_images_dialog"]//button[contains(text(),"Close")]', 'xpath', 'Close upload images modal');
 	unlink $temp_image if -e $temp_image;
-
-	# Refresh cache and reload trial page to view updated fieldmap with image
-	$t->driver->execute_script(q{
-		jQuery.ajax({
-			url: '/ajax/breeders/trial/165/refresh_cache',
-			type: 'POST',
-			async: false
-		});
-	});
 
 	$t->wait_for_network_idle();
 	$t->get_ok('/breeders/trial/165', 'Reload trial 165 page to view updated fieldmap with image');
