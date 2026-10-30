@@ -5446,7 +5446,7 @@ sub get_controls {
 		FROM stock as accession
 		JOIN stock_relationship on (accession.stock_id = stock_relationship.object_id)
 		JOIN stock as plot on (plot.stock_id = stock_relationship.subject_id)
-		JOIN stockprop as control on (plot.stock_id=control.stock_id)
+		JOIN stockprop as control on (plot.stock_id=control.stock_id and control.value = '1')
 		JOIN nd_experiment_stock on (plot.stock_id=nd_experiment_stock.stock_id)
 		JOIN nd_experiment using(nd_experiment_id)
 		JOIN nd_experiment_project using(nd_experiment_id)
