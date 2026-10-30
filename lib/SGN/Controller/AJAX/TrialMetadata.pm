@@ -6489,7 +6489,7 @@ sub get_analysis_instance_stock_type {
     });
     my $design = $trial_layout->get_design();
 
-    if ($design && ref($design) eq 'HASH' && keys %{$design}) {
+    if ($design && keys %{$design} && !$design->{error}) {
         my $sample_design_key = (keys %{$design})[0];
         my $sample_trial_entry = $design->{$sample_design_key};
 
