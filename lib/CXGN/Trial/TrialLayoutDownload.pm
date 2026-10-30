@@ -230,12 +230,14 @@ sub get_layout_output {
 
     my $trial_layout;
     try {
-        my %param = ( schema => $schema, trial_id => $trial_id );
-        if ($data_level eq 'plate'){
-            $param{experiment_type} = 'genotyping_layout';
-        } else {
-            $param{experiment_type} = 'field_layout';
-        }
+        # Read the layout using the trial's actual experiment type. The
+        # experiment-type-agnostic layout cache previously masked the fact that
+        # genotyping plates, analyses, and sampling trials were always being
+        # read as field layouts here, which yields an empty design.
+        my $experiment_type = $data_level eq 'plate'
+            ? 'genotyping_layout'
+            : $trial->get_cxgn_project_type()->{experiment_type};
+        my %param = ( schema => $schema, trial_id => $trial_id, experiment_type => $experiment_type );
         $trial_layout = CXGN::Trial::TrialLayout->new(\%param);
     };
     if (!$trial_layout) {
