@@ -5,6 +5,7 @@ use Moose;
 use Try::Tiny;
 use JSON;
 use Data::Dumper;
+use CXGN::Trial::TrialLayout;
 
 extends 'CXGN::Trial::TrialDesignStore::AbstractTrial';
 
@@ -198,15 +199,14 @@ sub validate_design {
     }
 
     # Check that the plot numbers are unique in the db for the given study
-    my $trial_layout_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($chado_schema, 'trial_layout_json', 'project_property')->cvterm_id();
-    my $plot_number_select = "select projectprop.value from project " .
-        "join projectprop on projectprop.project_id = project.project_id " .
-        "where projectprop.type_id = $trial_layout_cvterm_id and project.project_id = ?";
-    my $sth = $chado_schema->storage->dbh->prepare($plot_number_select);
-    $sth->execute($self->get_trial_id());
-    while (my ($trial_layout_json) = $sth->fetchrow_array()) {
-        my $trial_layout_json = decode_json($trial_layout_json);
-        foreach my $key (keys %{$trial_layout_json}) {
+    my $existing_layout = CXGN::Trial::TrialLayout->new({
+        schema => $chado_schema,
+        trial_id => $self->get_trial_id(),
+        experiment_type => 'field_layout'
+    });
+    my $existing_design = $existing_layout->get_design();
+    if ($existing_design && ref($existing_design) eq 'HASH') {
+        foreach my $key (keys %{$existing_design}) {
             if (defined $seen_plot_numbers{$key}) {
                 $error .= "Plot number '$key' already exists in the database for that study. Plot number must be unique.";
             }

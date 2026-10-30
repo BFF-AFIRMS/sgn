@@ -70,10 +70,8 @@ CXGN::Trial::TrialLayout - Module to get layout information about a trial
     }
  }
 
- By using get_design(), this module attempts to get the design from a
- projectprop called 'trial_layout_json', but if it cannot be found it calls
- generate_and_cache_layout() to generate the design, return it, and store it
- using that projectprop.
+ By using get_design(), this module generates the design directly from the
+ database and returns it. The design is not cached.
 
 --------------------------------------------------------------------------
 
@@ -88,7 +86,7 @@ my $trial_layout = CXGN::Trial::TrialLayout->new({
     verify_layout=>1,
     verify_physical_map=>1
 });
-my $trial_errors = $trial_layout->generate_and_cache_layout();
+my $trial_errors = $trial_layout->generate_layout();
 
 If there are errors, $trial_errors is a HashRef like:
 

@@ -135,7 +135,7 @@ has 'trial_stock_type'=> (
 #The attributes below are populated when get_layout_output is run, so should not be instantiatied
 #----------------------
 
-#This is a hashref of the cached trial_layout_json that comes from CXGN::Trial::TrialLayout
+#This is a hashref of the design that comes from CXGN::Trial::TrialLayout
 has 'design' => (
     isa => 'HashRef',
     is => 'rw',

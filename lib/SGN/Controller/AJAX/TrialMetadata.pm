@@ -2568,33 +2568,10 @@ sub remove_filler_plots : Chained('trial') PathPart('remove_fillers') Args(0) {
 
     my @stock_ids = $stocks_rs->get_column('stock_id')->all;
 
-    my $trial_layout_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trial_layout_json', 'project_property')->cvterm_id();
-
     if (@stock_ids) {
         $schema->resultset('Stock::Stock')->search({
             stock_id => { -in => \@stock_ids }
         })->delete;
-
-        my $pp_rs = $schema->resultset('Project::Projectprop')->search({
-            project_id => $trial_id,
-            type_id    => $trial_layout_cvterm_id,
-        });
-
-        while (my $row = $pp_rs->next) {
-            my $layout = decode_json($row->value);
-
-            # Remove filler plot numbers from projectprop.value json
-            my %filler_ids = map { $_ => 1 } @stock_ids;
-
-            foreach my $plot_number (keys %$layout) {
-                if ($filler_ids{ $layout->{$plot_number}->{plot_id} }) {
-                    delete $layout->{$plot_number};
-                }
-            }
-
-            $row->value(encode_json($layout));
-            $row->update;
-        }
     }
     $c->stash->{rest} = { success => 1, deleted => scalar(@stock_ids) };
 }
