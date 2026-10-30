@@ -336,6 +336,13 @@ sub get_crossing_experiments_from_field_trial {
         }
     }
 
+    # A trial with no plots or plants (e.g. a genotyping plate) cannot have any
+    # associated crossing experiments. Return early rather than building an
+    # invalid "IN ()" clause from an empty candidate list.
+    if (scalar(@related_stock_ids) == 0) {
+        return [];
+    }
+
     my @where_clause;
     my $stock_ids_sql = join (",", @related_stock_ids);
     push @where_clause, "stock_relationship.subject_id IN ($stock_ids_sql)";
