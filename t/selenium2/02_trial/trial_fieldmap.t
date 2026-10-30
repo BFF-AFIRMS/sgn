@@ -2334,15 +2334,6 @@ EOSQL
 	$t->click_ok('//div[@id="upload_images_dialog"]//button[contains(text(),"Close")]', 'xpath', 'Close upload images modal');
 	unlink $temp_image if -e $temp_image;
 
-	# Refresh cache and reload trial page to view updated fieldmap with image
-	$t->driver->execute_script(q{
-		jQuery.ajax({
-			url: '/ajax/breeders/trial/165/refresh_cache',
-			type: 'POST',
-			async: false
-		});
-	});
-
 	$t->wait_for_network_idle();
 	$t->get_ok('/breeders/trial/165', 'Reload trial 165 page to view updated fieldmap with image');
 	$t->click_ok('pheno_heatmap_onswitch', 'id', 'Open fieldmap section');

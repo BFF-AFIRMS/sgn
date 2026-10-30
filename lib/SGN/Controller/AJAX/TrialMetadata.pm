@@ -2986,13 +2986,6 @@ sub replace_trial_stock : Chained('trial') PathPart('replace_stock') Args(0) {
   $c->stash->{rest} = { success => 1};
 }
 
-sub refresh_cache : Chained('trial') PathPart('refresh_cache') Args(0) {
-    my $self = shift;
-    my $c = shift;
-
-    $c->stash->{rest} = { success => 1};
-}
-
 sub replace_plot_accession : Chained('trial') PathPart('replace_plot_accessions') Args(0) {
     my $self = shift;
     my $c = shift;

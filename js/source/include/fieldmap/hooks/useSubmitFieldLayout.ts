@@ -168,7 +168,6 @@ export const useSubmitFieldLayout = () => {
 
 		try {
 			await Promise.all([putRequest, postRequest, northArrowRequest, secondaryAxisRequest, axisOrientationRequest]);
-			await fetch(`/ajax/breeders/trial/${trialId}/refresh_cache`, { method: 'POST' });
 
 			alert('Field Plot layout submitted successfully!');
 			fetchObservationUnits();
