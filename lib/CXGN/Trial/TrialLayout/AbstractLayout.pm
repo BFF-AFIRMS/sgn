@@ -177,7 +177,7 @@ sub _lookup_trial_id {
     }
 
     $self->_set_design_type($self->_get_design_type_from_project());
-    $self->_set_design($self->_get_design_from_trial());
+    $self->_set_design($self->generate_layout());
     # print STDERR "DESIGN: ".Dumper($design)."\n";
 
     $self->_set_plot_names($self->_get_plot_info_fields_from_trial("plot_name") || []);
@@ -333,51 +333,6 @@ sub _get_plot_info_fields_from_trial {
 	return;
     }
     return \@field_values;
-}
-
-
-sub _get_design_from_trial {
-    print STDERR "Check 2.3.4.1: ".localtime()."\n";
-    my $self = shift;
-    my $schema = $self->get_schema();
-    my $project = $self->get_project();
-
-    #Try to retrieve layout from cached json
-    #my $trial_layout_json_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trial_layout_json', 'project_property')->cvterm_id;
-    #my $trial_has_plants_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'project_has_plant_entries', 'project_property')->cvterm_id;
-    my $trial_layout_json = $project->projectprops->find({ 'type_id' => $self->cvterm_id('trial_layout_json') });
-    my $trial_has_plants = $project->projectprops->find({ 'type_id' => $self->cvterm_id('project_has_plant_entries') });
-
-    my $design;
-
-    if ($trial_layout_json) {
-        $design = decode_json $trial_layout_json->value;
-    }
-    # print STDERR "\n_get_design_from_trial design: ".Dumper($design)."\n";
-    if (keys(%$design)) {
-        # print STDERR "WE HAVE TRIAL LAYOUT JSON!\n";
-	    # print STDERR "TRIAL LAYOUT JSON IS: ".$trial_layout_json->value()."\n";
-
-	    #Plant index number needs to be in the cached layout of trials that have plants. this serves a check to assure this.
-	    if ($trial_has_plants){
-		my @plot_values = values %$design;
-		if (!exists($plot_values[0]->{plant_index_numbers})) {
-		    print STDERR "Regenerating cache to include plants...\n";
-		    $self->generate_and_cache_layout();
-		} else {
-		    print STDERR "TrialLayout from cache ".localtime."\n";
-		    return $design;
-		}
-	    } else {
-            print STDERR "TrialLayout from cache ".localtime."\n";
-            return $design;
-	    }
-	} else {
-	print STDERR "Regenerating cache...\n";
-        my $design = $self->generate_and_cache_layout();
-	    # print STDERR "_get_design_from_trial Generated DESIGN (and cached) : ".Dumper($design);
-	return $design;
-    }
 }
 
 sub generate_layout {
