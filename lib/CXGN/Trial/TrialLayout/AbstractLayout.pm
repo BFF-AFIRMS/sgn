@@ -380,66 +380,32 @@ sub _get_design_from_trial {
     }
 }
 
-sub generate_and_cache_layout {
+sub generate_layout {
     my $self = shift;
     print STDERR "TrialLayout generate layout ".localtime."\n";
-    my $schema = $self->get_schema();
-    my $plots_ref;
-    my @plots;
-    my %unique_accessions;
-    my %unique_controls;
-    my $project = $self->get_project();
 
-    $plots_ref = $self->_get_plots();
+    my $plots_ref = $self->_get_plots();
     if (!$plots_ref) {
-      print STDERR "_get_design_from_trial: not plots provided... returning.\n";
-      return { error => "Something went wrong retrieving plots for this trial. This should not happen, so please contact us." };
-  }
-#print STDERR "Check 2.3.4.2: ".localtime()."\n";
-
-    # my $genotyping_user_id;
-    # my $genotyping_project_name;
-    # if ($self->get_experiment_type eq 'genotyping_trial'){
-    #     my $genotyping_user_id_row = $project
-    #         ->search_related("nd_experiment_projects")
-    #         ->search_related("nd_experiment")
-    #         ->search_related("nd_experimentprops")
-    #         ->find({ 'type.name' => 'genotyping_user_id' }, {join => 'type' });
-    #     $genotyping_user_id = $genotyping_user_id_row->get_column("value") || "unknown";
-
-    #     my $genotyping_project_name_row = $project
-    #         ->search_related("nd_experiment_projects")
-    #         ->search_related("nd_experiment")
-    #         ->search_related("nd_experimentprops")
-    #         ->find({ 'type.name' => 'genotyping_project_name' }, {join => 'type' });
-    #     $genotyping_project_name = $genotyping_project_name_row->get_column("value") || "unknown";
-    # }
-
-    @plots = @{$plots_ref};
-
-    my %design;
-
-    #print STDERR "PLOTS: ".Dumper(\@plots);
-    my ($design, $verify_errors) = $self->retrieve_plot_info(\@plots);
-
-    #print STDERR "DESIGN IN generate_and_cache_layout: ".Dumper(\%design);
-
-    my $trial_layout_json_rs = $project->search_related('projectprops',{ 'type_id' => $self->cvterm_id('trial_layout_json') });
-    while (my $t = $trial_layout_json_rs->next) {
-        $t->delete();
+        print STDERR "generate_layout: no plots provided... returning.\n";
+        return { error => "Something went wrong retrieving plots for this trial. This should not happen, so please contact us." };
     }
 
-    $project->create_projectprops({
-        'trial_layout_json' => encode_json($design)
-				  });
+    my @plots = @{$plots_ref};
+
+    my ($design, $verify_errors) = $self->retrieve_plot_info(\@plots);
 
     if ($self->get_verify_layout || $self->get_verify_physical_map){
         return $verify_errors;
     }
 
-    #print STDERR "DESIGN AS READ : ".Dumper(\%design);
-
     return $design;
+}
+
+# Deprecated alias retained so existing callers keep working. The design is no
+# longer persisted to a projectprop; prefer generate_layout() for new code.
+sub generate_and_cache_layout {
+    my $self = shift;
+    return $self->generate_layout();
 }
 
 sub retrieve_plot_info {
