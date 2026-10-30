@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { PlotStructureNode } from '../types';
 import { RenderPlantGrid, RenderSubplotGrid } from '../components/PlantSubplotGrids';
-import { AccessionAutocomplete } from '../components/AccessionAutocomplete';
+import { AccessionAutocomplete } from '../../autocomplete';
 import { useModals } from '../contexts/ModalsContext';
 import { useHeatmap } from '../contexts/HeatmapContext';
 import { useView } from '../contexts/ViewContext';

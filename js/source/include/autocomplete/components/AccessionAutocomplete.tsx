@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 
 interface AccessionAutocompleteProps {
+    id?: string;
+    name?: string;
     value: string;
     onChange: (val: string) => void;
     placeholder?: string;
@@ -9,6 +11,8 @@ interface AccessionAutocompleteProps {
 }
 
 export const AccessionAutocomplete: React.FC<AccessionAutocompleteProps> = ({
+    id,
+    name,
     value,
     onChange,
     placeholder,
@@ -22,29 +26,46 @@ export const AccessionAutocomplete: React.FC<AccessionAutocompleteProps> = ({
             setSuggestions([]);
             return;
         }
-        const delayDebounce = setTimeout(() => {
-            fetch(`/ajax/stock/accession_autocomplete?term=${encodeURIComponent(value)}`)
-                .then(res => res.json())
-                .then((data: unknown) => {
-                    if (Array.isArray(data)) {
-                        const list = data.map(item => {
-                            if (typeof item === 'string') return item;
-                            if (item && typeof item === 'object') {
-                                return (item as { label?: string; value?: string }).label || (item as { label?: string; value?: string }).value || '';
-                            }
-                            return '';
-                        });
-                        setSuggestions(list.filter(Boolean));
-                    }
-                })
-                .catch(() => {});
+
+        const controller = new AbortController();
+
+        const delayDebounce = setTimeout(async () => {
+            try {
+                const res = await fetch(`/ajax/stock/accession_autocomplete?term=${encodeURIComponent(value)}`, {
+                    signal: controller.signal
+                });
+                if (!res.ok) return;
+                const data: unknown = await res.json();
+                if (controller.signal.aborted) return;
+
+                if (Array.isArray(data)) {
+                    const list = data.map(item => {
+                        if (typeof item === 'string') return item;
+                        if (item && typeof item === 'object') {
+                            return (item as { label?: string; value?: string }).label || (item as { label?: string; value?: string }).value || '';
+                        }
+                        return '';
+                    });
+                    setSuggestions(list.filter(Boolean));
+                }
+            } catch (err: unknown) {
+                if (err instanceof Error && err.name === 'AbortError') {
+                    return;
+                }
+            }
         }, 300);
-        return () => clearTimeout(delayDebounce);
+
+        return () => {
+            clearTimeout(delayDebounce);
+            controller.abort();
+        };
     }, [value]);
 
     return (
         <div className="tw:relative">
             <input
+                id={id}
+                name={name}
                 type="text"
                 value={value}
                 onChange={e => { onChange(e.target.value); setShow(true); }}

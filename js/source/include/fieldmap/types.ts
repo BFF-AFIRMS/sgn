@@ -1,11 +1,13 @@
 export interface FieldMapProps {
-    trialId: string;
+    trialId?: string;
     trialStockType: string;
     trialPlotType: string;
     hasColAndRowNumbers: boolean;
     hasSubplotEntries: boolean;
     hasPlantEntries: boolean;
     authToken?: string;
+    initialUnits?: any[];
+    mode?: 'full' | 'preview';
 }
 
 export interface FieldMapContextProps extends FieldMapProps {
@@ -24,8 +26,8 @@ export interface ObservationLevelRelationship {
 }
 
 export interface ObservationUnitPosition {
-    positionCoordinateX: string | number;
-    positionCoordinateY: string | number;
+    positionCoordinateX?: string | number;
+    positionCoordinateY?: string | number;
     observationLevel: ObservationLevel;
     observationLevelRelationships?: ObservationLevelRelationship[];
     entryType?: string;
