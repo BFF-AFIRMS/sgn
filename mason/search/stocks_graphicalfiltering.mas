@@ -105,7 +105,8 @@ function loadBrAPIData(server,parameters,stock_type='accession'){
         'colvis',
         {
             extend: 'excelHtml5',
-            title: document.title + export_suffix,
+            filename: document.title + export_suffix,
+            title: null,
             exportOptions: {
                 columns: ':visible'
             }

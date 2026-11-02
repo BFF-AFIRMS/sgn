@@ -155,14 +155,16 @@ function GraphicalFilter(brapi_node,trait_accessor,table_col_accessor,table_col_
         gfilter.results_table = $(table_selector).DataTable({
               data: data,
               layout: {
-                  topStart: 'buttons',
+                  topStart: 'pageLength',
+                  top: 'buttons',
                   topEnd: 'search',
                   bottomStart: 'info',
-                  bottomEnd: 'paging'
+                  bottomEnd: 'paging',
               },
               "columns": sortedCols,
               "buttons": buttons,
               "scrollX": true,
+              "lengthMenu": [10,20,50,100],
         });
       } else {
         gfilter.results_table = $(table_selector).DataTable({
