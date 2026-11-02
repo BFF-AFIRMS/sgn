@@ -5,7 +5,15 @@
 
 <& /util/import_javascript.mas, classes => [ 'CXGN.List', 'd3.d3v4Min', 'brapi.BrAPI', 'brapi.GraphicalFilter' ] &>
 
-<&| /page/info_section.mas, id=>"stock_search_graphical_filter", title => 'Graphical Filter Accessions By Traits (Includes all Search Criteria From Above Search Form)', collapsible=>1, collapsed=>1&>
+<script src="/js/legacy/buttons.colVis.min.js" defer></script>
+
+<style>
+    table[aria-describedby='stock_search_graphical_filter_results_div_info'] thead th {
+        white-space: nowrap;
+    }
+</style>
+
+<&| /page/info_section.mas, id=>"stock_search_graphical_filter", title => 'Phenotype Results (Includes all Search Criteria From Above Search Form)', collapsible=>1, collapsed=>1&>
 
 <div class="well well-sm">
 
@@ -30,7 +38,7 @@
 
 <br/>
 
-<&| /page/info_section.mas, title => 'Copy Filtered Accessions to a List', collapsible=>1, collapsed=>0, subtitle=>'<i>Copy the accession names in table to a new or exisiting list</i>'&>
+<&| /page/info_section.mas, title => 'Copy Filtered Stocks to a List', collapsible=>1, collapsed=>0, subtitle=>'<i>Copy the stock names in table to a new or exisiting list</i>'&>
 <div style="text-align:right" id="graphical_filter_results_to_list_menu"></div>
 <div id="graphical_filter_result_names" style="display: none;"></div>
 </&>
@@ -47,7 +55,7 @@ jQuery(document).ready(function () {
 });
 
 var currentGFilter = null;
-function loadBrAPIData(server,parameters){
+function loadBrAPIData(server,parameters,stock_type='accession'){
     var auth_token;
     var require_login = "<%  $c->get_conf('brapi_require_login') %>";
     if (require_login === '1'){
@@ -75,22 +83,43 @@ function loadBrAPIData(server,parameters){
         function(d) { // traits/values
           var traits = {}
           d.observations.forEach(function(obs){
-            traits[obs.observationVariableName] = obs.value;
+            const variableName = obs.observationVariableSynonym ?? obs.observationVariableName;
+            traits[variableName] = obs.value;
           });
           return traits;
         },
         function(d) {
           return {
-            'Accession':d.germplasmName
+            'Stock': stock_type === 'accession' ? d.germplasmName : d.observationUnitName
           }
         },
-        ["Accession"],
+        [],
         function(d) {
-          return d.germplasmDbId
+          return stock_type === 'accession' ? d.germplasmDbId : d.observationUnitDbId
         }
       );
 
-    currentGFilter.draw("#stock_search_graphical_filter_div","#stock_search_graphical_filter_results_div");
+    const export_suffix = ' Traits';
+
+    const buttons = [
+        'colvis',
+        {
+            extend: 'excelHtml5',
+            title: document.title + export_suffix,
+            exportOptions: {
+                columns: ':visible'
+            }
+        },
+        {
+            extend: 'csvHtml5',
+            title: document.title + export_suffix,
+            exportOptions: {
+                columns: ':visible'
+            }
+        },
+    ];
+
+    currentGFilter.draw("#stock_search_graphical_filter_div","#stock_search_graphical_filter_results_div", buttons);
 
     jQuery('#stock_search_graphical_filter_results_div').on( 'draw.dt', function () {
 
