@@ -33,6 +33,7 @@ $latest_trial_activity => undef
 <%once>
 use JSON::XS;
 use Scalar::Util qw(looks_like_number);
+use HTML::Entities qw(encode_entities);
 </%once>
 
 <%perl>
@@ -45,13 +46,15 @@ if (defined $location_latitude && defined $location_longitude
     $has_coords = 1;
 }
 
-my $map_props_json = JSON::XS->new->ascii->escape_slash->encode({
+my $map_props_json = JSON::XS->new->ascii->encode({
     locationName => $location_name,
     countryName  => $country_name,
     latitude     => (defined $location_latitude  && looks_like_number($location_latitude))  ? 0 + $location_latitude  : undef,
     longitude    => (defined $location_longitude && looks_like_number($location_longitude)) ? 0 + $location_longitude : undef,
     altitude     => (defined $location_altitude  && looks_like_number($location_altitude))  ? 0 + $location_altitude  : undef,
 });
+
+my $map_props_attr = encode_entities($map_props_json, q{<>&"'});
 </%perl>
 
 <& /util/import_css.mas, paths => ['leaflet.css'] &>
@@ -313,13 +316,13 @@ my $map_props_json = JSON::XS->new->ascii->escape_slash->encode({
             </tr>
         </table>
 
-        <div id="trial_location_map_root"></div>
+        <div id="trial_location_map_root" data-props="<% $map_props_attr %>"></div>
     </div>
 </div>
 
 <script type="text/javascript">
 jQuery(document).ready(function() {
-    window.jsMod['trial_location_map'].init('trial_location_map_root', <% $map_props_json %>);
+    window.jsMod['trial_location_map'].init('trial_location_map_root');
 });
 </script>
 

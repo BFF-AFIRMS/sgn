@@ -261,10 +261,36 @@ export const TrialLocationMap: React.FC<TrialLocationMapProps> = ({
     );
 };
 
-export const init = (containerId: string, props: TrialLocationMapProps) => {
+const parseProps = (raw: string | undefined): TrialLocationMapProps => {
+    if (raw === undefined) {
+        throw new Error(`missing data-props attribute`);
+    }
+
+    let parsed: unknown;
+    try {
+        parsed = JSON.parse(raw);
+    } catch (e) {
+        const reason = e instanceof Error ? e.message : String(e);
+        throw new Error(`malformed data-props attribute: ${reason}`);
+    }
+
+    if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
+        throw new Error(`data-props must decode to a JSON object`);
+    }
+
+    return parsed as TrialLocationMapProps;
+};
+
+export const init = (containerId: string) => {
     const container = document.getElementById(containerId);
-    if (container) {
+    if (!container) {
+        return;
+    }
+    try {
+        const props = parseProps(container.dataset.props);
         const root = createRoot(container);
         root.render(<TrialLocationMap {...props} />);
+    } catch (e) {
+        throw new Error(`#${containerId} failed to initialize: ${e instanceof Error ? e.message : String(e)}`)
     }
 };
