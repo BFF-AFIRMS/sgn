@@ -37,15 +37,6 @@ use HTML::Entities qw(encode_entities);
 </%once>
 
 <%perl>
-my $has_coords = 0;
-if (defined $location_latitude && defined $location_longitude
-    && looks_like_number($location_latitude) && looks_like_number($location_longitude)
-    && $location_latitude >= -90 && $location_latitude <= 90
-    && $location_longitude >= -180 && $location_longitude <= 180
-    && !($location_latitude == 0 && $location_longitude == 0)) {
-    $has_coords = 1;
-}
-
 my $map_props_json = JSON::XS->new->ascii->encode({
     locationName => $location_name,
     countryName  => $country_name,

@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { createRoot } from 'react-dom/client';
+import { isDefined } from '~/functions';
 
 export interface TrialLocationMapProps {
     locationName?: string | null;
@@ -16,20 +17,6 @@ const PIN_SVG =
     '<circle cx="16" cy="15" r="5.5" fill="#ffffff"/>' +
     '</svg>';
 
-const isValidCoordinatePair = (
-    lat?: number | null,
-    lng?: number | null
-): boolean =>
-    typeof lat === 'number' &&
-    typeof lng === 'number' &&
-    Number.isFinite(lat) &&
-    Number.isFinite(lng) &&
-    lat >= -90 &&
-    lat <= 90 &&
-    lng >= -180 &&
-    lng <= 180 &&
-    !(lat === 0 && lng === 0);
-
 export const TrialLocationMap: React.FC<TrialLocationMapProps> = ({
     locationName,
     countryName,
@@ -39,11 +26,11 @@ export const TrialLocationMap: React.FC<TrialLocationMapProps> = ({
 }) => {
     const mapContainerRef = useRef<HTMLDivElement | null>(null);
     const popupContainer = useMemo(() => document.createElement('div'), []);
-    const hasCoords = isValidCoordinatePair(latitude, longitude);
+    const hasCoords = isDefined(latitude) && isDefined(longitude);
     const hasAltitude = typeof altitude === 'number' && Number.isFinite(altitude);
 
     useEffect(() => {
-        if (!hasCoords || !mapContainerRef.current || latitude == null || longitude == null) {
+        if (!mapContainerRef.current || !hasCoords) {
             return;
         }
 
@@ -121,7 +108,7 @@ export const TrialLocationMap: React.FC<TrialLocationMapProps> = ({
             resizeObserver.disconnect();
             map.remove();
         };
-    }, [hasCoords, latitude, longitude, popupContainer]);
+    }, [latitude, longitude, popupContainer]);
 
     return (
         <div
