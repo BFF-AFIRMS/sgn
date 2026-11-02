@@ -81,30 +81,26 @@ export const TrialLocationMap: React.FC<TrialLocationMapProps> = ({
     }, [latitude, longitude, popupContainer]);
 
     return (
-        <div
-            className="panel panel-default"
-            id="trial_location_map_panel"
-            style={{ marginTop: '15px' }}
-        >
+        <div className="panel panel-default tw:mt-3.75" id="trial_location_map_panel">
             <div className="panel-heading">
                 <span className="glyphicon glyphicon-map-marker" /> <b>Location Map</b>
                 {locationName && (
-                    <span className="pull-right text-muted" style={{ fontSize: '11px' }}>
+                    <span className="pull-right text-muted tw:text-xs">
                         {locationName}
                         {countryName ? ` (${countryName})` : ''}
                     </span>
                 )}
             </div>
-            <div className="panel-body" style={{ padding: 0 }}>
+            <div className="panel-body tw:p-0">
                 {hasCoords ? (
                     <>
                         <div
                             ref={mapContainerRef}
                             id="trial_location_map"
-                            style={{ height: '280px', width: '100%' }}
+                            className="tw:h-70 tw:w-full"
                         />
                         {createPortal(
-                            <div style={{ fontSize: '13px', lineHeight: 1.4 }}>
+                            <div className="tw:text-sm tw:leading-snug">
                                 <b>{locationName}</b>
                                 {countryName && (
                                     <>
@@ -112,7 +108,7 @@ export const TrialLocationMap: React.FC<TrialLocationMapProps> = ({
                                         <span className="text-muted">{countryName}</span>
                                     </>
                                 )}
-                                <hr style={{ margin: '5px 0' }} />
+                                <hr className="tw:my-1.25" />
                                 <b>Latitude:</b> {latitude}
                                 <br />
                                 <b>Longitude:</b> {longitude}
@@ -137,12 +133,9 @@ export const TrialLocationMap: React.FC<TrialLocationMapProps> = ({
                         )}
                     </>
                 ) : locationName ? (
-                    <div className="text-center text-muted" style={{ padding: '25px 15px' }}>
-                        <span
-                            className="glyphicon glyphicon-globe"
-                            style={{ fontSize: '2em', marginBottom: '8px', color: '#bbb' }}
-                        />
-                        <p style={{ marginBottom: '4px' }}>
+                    <div className="text-center text-muted tw:py-6.25 tw:px-3.75">
+                        <span className="glyphicon glyphicon-globe tw:text-3xl tw:mb-2 tw:text-gray-400" />
+                        <p className="tw:mb-1">
                             No GPS coordinates recorded for <b>{locationName}</b>.
                         </p>
                         <p>
@@ -153,12 +146,9 @@ export const TrialLocationMap: React.FC<TrialLocationMapProps> = ({
                         </p>
                     </div>
                 ) : (
-                    <div className="text-center text-muted" style={{ padding: '25px 15px' }}>
-                        <span
-                            className="glyphicon glyphicon-globe"
-                            style={{ fontSize: '2em', marginBottom: '8px', color: '#bbb' }}
-                        />
-                        <p style={{ marginBottom: 0 }}>No location specified for this trial.</p>
+                    <div className="text-center text-muted tw:py-6.25 tw:px-3.75">
+                        <span className="glyphicon glyphicon-globe tw:text-3xl tw:mb-2 tw:text-gray-400" />
+                        <p className="tw:mb-0">No location specified for this trial.</p>
                     </div>
                 )}
             </div>
