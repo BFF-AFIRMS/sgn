@@ -63,7 +63,7 @@ export const TrialLocationMap: React.FC<TrialLocationMapProps> = ({
 
         const map = L.map(mapContainerRef.current, {
             center: [latitude, longitude],
-            zoom: 16,
+            zoom: 10, // 10 ~= 153 m / pixel at equator
             layers: [satelliteLayer],
         });
 
