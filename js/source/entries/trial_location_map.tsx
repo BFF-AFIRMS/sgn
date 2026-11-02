@@ -2,58 +2,6 @@ import React, { useEffect, useMemo, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { createRoot } from 'react-dom/client';
 
-interface LeafletLayer {}
-
-interface LeafletControl {
-    addTo(map: LeafletMap): this;
-}
-
-interface LeafletIcon {}
-
-interface LeafletMarker {
-    addTo(map: LeafletMap): this;
-    bindPopup(content: HTMLElement | string): this;
-}
-
-interface LeafletMap {
-    invalidateSize(): void;
-    remove(): void;
-}
-
-interface LeafletStatic {
-    tileLayer(
-        urlTemplate: string,
-        options?: { attribution?: string; maxZoom?: number }
-    ): LeafletLayer;
-    map(
-        element: HTMLElement | string,
-        options?: { center?: [number, number]; zoom?: number; layers?: LeafletLayer[] }
-    ): LeafletMap;
-    control: {
-        layers(
-            baseLayers?: Record<string, LeafletLayer>,
-            overlays?: Record<string, LeafletLayer> | null,
-            options?: { position?: string }
-        ): LeafletControl;
-        scale(options?: {
-            maxWidth?: number;
-            metric?: boolean;
-            imperial?: boolean;
-            position?: string;
-        }): LeafletControl;
-    };
-    divIcon(options: {
-        className?: string;
-        html?: string;
-        iconSize?: [number, number];
-        iconAnchor?: [number, number];
-        popupAnchor?: [number, number];
-    }): LeafletIcon;
-    marker(latlng: [number, number], options?: { icon?: LeafletIcon }): LeafletMarker;
-}
-
-declare const L: LeafletStatic;
-
 export interface TrialLocationMapProps {
     locationName?: string | null;
     countryName?: string | null;
@@ -139,7 +87,7 @@ export const TrialLocationMap: React.FC<TrialLocationMapProps> = ({
                     Street: streetLayer,
                     Topographical: topoLayer,
                 },
-                null,
+                undefined,
                 { position: 'bottomright' }
             )
             .addTo(map);
