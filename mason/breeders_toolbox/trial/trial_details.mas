@@ -102,13 +102,6 @@ my $map_props_attr = encode_entities($map_props_json, q{<>&"'});
 %  } else {
 %    print "$location_name";
 %  }
-%  if ($has_coords) {
-%    print "<br/><small class='text-muted'>Lat: $location_latitude, Lon: $location_longitude";
-%    if (defined $location_altitude && $location_altitude ne '') {
-%      print ", Alt: ${location_altitude}m";
-%    }
-%    print "</small>";
-%  }
 % } else {
 %  print "<span class='text-danger'>[No Location]</span>";
 % }
