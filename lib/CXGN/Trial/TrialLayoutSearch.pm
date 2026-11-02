@@ -404,6 +404,7 @@ sub _include_observations {
     my $self = shift;
     my $observation_units = shift;
 
+    my $schema = $self->bcs_schema;
     my $phenotypes_search = CXGN::Phenotypes::SearchFactory->instantiate(
     'Native',
     {
@@ -417,11 +418,78 @@ sub _include_observations {
 
     my %data_window;
 
+    # Order composed traits by the time ontology
+    # Implemented by roughly converting all time ontology units to days for comparison
+    # Example: Tree height|year 9|cm should be a lower order than Tree height|year 11|cm
+    #          So that we can order them left to right chronologically in UI tables
+    my $trait_ids = [];
+    my $trait_orders = {};
+    my $unique_components;
+
+    my $time_ontology_cv_id = $schema->resultset('Cv::Cv')->find({name => 'cxgn_time_ontology'})->cv_id();
+    my $trait_ontology_cvterm_id = $schema->resultset('Cv::Cvterm')->find({name => 'trait_ontology'})->cvterm_id();
+    my $trait_ontologies_rs = $schema->resultset('Cv::Cvprop')->search({type_id => $trait_ontology_cvterm_id});
+    my @trait_ontologies = [];
+    while (my $record = $trait_ontologies_rs->next()) {
+        push(@trait_ontologies, $record->cv_id());
+    }
+
+    foreach (@$data){
+        my ($phenotype_value, $trait_id, $trait_name) = ($_->{phenotype_value}, $_->{trait_id}, $_->{trait_name});
+        if (defined $phenotype_value && $phenotype_value ne "") {
+            push(@$trait_ids, $trait_id);
+            my $components = SGN::Model::Cvterm->get_components_from_trait($schema, $_->{trait_id});
+            my $trait_order = 0;
+            my $trait_base = $trait_name;
+            foreach my $component_id (@$components){
+                my $order = 0;
+                if (!$unique_components->{$component_id}){
+                    my $component_cvterm = $schema->resultset('Cv::Cvterm')->find({cvterm_id => $component_id});
+                    my $component_cv = $component_cvterm->cv_id();
+                    my $component_name = $component_cvterm->name();
+
+                    if ( grep( /^$component_cv$/, @trait_ontologies ) ) {
+                        $unique_components->{$component_id}->{base} = $component_name;
+                    }
+                    if ($component_cv == $time_ontology_cv_id){
+                        my @component_split = split(' ', $component_name);
+                        my ($time_unit, $time_value) = ($component_split[0], $component_split[1]);
+                        if ($component_name =~ /day /) { $order = $time_value + 0; }
+                        if ($component_name =~ /month /) { $order = $time_value * 30; }
+                        if ($component_name =~ /year /) { $order = $time_value * 365; }
+                    }
+                    $unique_components->{$component_id}->{order} = $order;
+                } else {
+                    $order = $unique_components->{$component_id}->{order};
+                }
+                $trait_order = $order if $order > $trait_order;
+                my $component_base = $unique_components->{$component_id}->{base};
+                $trait_base = $component_base if defined $component_base;
+            }
+            $trait_orders->{$trait_id} = {'order' => $trait_order, 'base' => $trait_base };
+        }
+    }
+
+    # Get trait synonyms
+    my $t = CXGN::List::Transform->new();
+    my $synonym_list = $t->transform($self->bcs_schema, 'trait_ids_2_synonyms', $trait_ids);
+    my $trait_synonyms = {};
+
+    if (!scalar @{$synonym_list->{'missing'}}) {
+        my @trait_synonyms = @{$synonym_list->{'transform'}};
+        for my $i (0 .. $#trait_synonyms) {
+            my $trait_id = @$trait_ids[$i];
+            my $synonym = $trait_synonyms[$i];
+            $trait_synonyms->{$trait_id} = $synonym;
+        }
+    }
+
     foreach (@$data){
 
         if (defined $_->{phenotype_value} && $_->{phenotype_value} ne "") {
             my $observation_id = "$_->{phenotype_id}";
             my $observation_unit_id = "$_->{obsunit_stock_id}";
+            my $trait_id = qq|$_->{trait_id}|;
             my $additional_info;
             my $external_references;
 
@@ -441,8 +509,11 @@ sub _include_observations {
                 observationUnitDbId => qq|$_->{obsunit_stock_id}|,
                 observationUnitName => $_->{obsunit_uniquename},
                 observationDbId => $observation_id,
-                observationVariableDbId => qq|$_->{trait_id}|,
+                observationVariableDbId => $trait_id,
                 observationVariableName => $_->{trait_name},
+                observationVariableSynonym => $trait_synonyms->{$trait_id},
+                observationVariableOrder => $trait_orders->{$trait_id}->{order},
+                observationVariableBaseName => $trait_orders->{$trait_id}->{base},
                 observationTimeStamp => CXGN::TimeUtils::db_time_to_iso($obs_timestamp),
                 season => \%season,
                 collector => $_->{operator},
