@@ -6,6 +6,8 @@ $user_id => undef
 <& /util/import_javascript.mas, classes => ['jquery.iframe-post-form' ] &>
 <br>
 
+<script src="/js/legacy/buttons.colVis.min.js" defer></script>
+
 <div style="display: flex; justify-content: flex-end; align-items: baseline; gap: 15px;">
     <p><strong>Filter Locations by List:</strong></p>
     <div id="locations_list"></div>

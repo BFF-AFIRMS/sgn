@@ -334,7 +334,7 @@ my @view_column_options = (@{ $editable_stock_props || [] }, 'organism', 'synony
 
 </&>
 
-<& /page/detail_page_2_col_section.mas, info_section_title => "<h4 style='display:inline'>Graphical Filtering on Phenotype Performance</h4>", info_section_subtitle => 'Graphically filter an accessions average performance for combinations of traits', icon_class => "glyphicon glyphicon-equalizer", info_section_id => "stocks_search_graphical_filtering" &>
+<& /search/stocks_graphicalfiltering.mas &>
 
 
 </div>
@@ -765,54 +765,52 @@ jQuery(document).ready(function () {
     let run = false;
     jQuery('#stock_search_graphical_filter_onswitch').on("click", function(){
         const stock_type = jQuery('#stock_type_select option:selected').text();
-        if (stock_type === 'accession'){
-            jQuery.ajax ({
-                url : '/ajax/search/stocks',
-                data : {
-                    minimal_info : 1,
-                    any_name : jQuery('#any_name').val(),
-                    any_name_matchtype : jQuery('#any_name_matchtype').val(),
-                    stock_type,
-                    organism : jQuery('#organism_select').val(),
-                    person : jQuery('#person').val(),
-                    trait : jQuery('#trait').val(),
-                    minimum_trait_value : jQuery('#minimum_trait_value').val(),
-                    maximum_trait_value : jQuery('#maximum_trait_value').val(),
-                    project : jQuery('#project').val(),
-                    location : jQuery('#location').val(),
-                    year : jQuery('#year').val(),
-                    breeding_program : jQuery('#breeding_program').val(),
-                    editable_stockprop_values : JSON.stringify(editable_stockprops_search)
-                },
-                beforeSend: function() {
-                    jQuery("#working_modal").modal("show");
-                    jQuery('#stock_search_graphical_filter_div').html("[LOADING...]");
-                },
-                success: function(response){
-                    //console.log(response);
-                    jQuery("#working_modal").modal("hide");
-                    const stock_ids = [];
-                    for (var i=0; i<response.data.length; i++){
-                        stock_ids.push(response.data[i][0]);
-                    }
-
-                    if (run) {
-                        const $filterResultsDiv = jQuery('#stock_search_graphical_filter_results_div');
-                        $filterResultsDiv.DataTable().destroy();
-                        $filterResultsDiv.html("");
-                    }
-                    run = true;
-                    params = {"germplasmDbIds" : stock_ids, "observationLevel" : 'plot'};
-                    loadBrAPIData("<% $c->config->{main_production_site_url} %>",params);
-                },
-                error: function(response){
-                    jQuery("#working_modal").modal("hide");
-                    alert("Error retrieving accessions in graphical filtering.");
+        jQuery.ajax ({
+            url : '/ajax/search/stocks',
+            data : {
+                minimal_info : 1,
+                any_name : jQuery('#any_name').val(),
+                any_name_matchtype : jQuery('#any_name_matchtype').val(),
+                stock_type,
+                organism : jQuery('#organism_select').val(),
+                person : jQuery('#person').val(),
+                trait : jQuery('#trait').val(),
+                minimum_trait_value : jQuery('#minimum_trait_value').val(),
+                maximum_trait_value : jQuery('#maximum_trait_value').val(),
+                project : jQuery('#project').val(),
+                location : jQuery('#location').val(),
+                year : jQuery('#year').val(),
+                breeding_program : jQuery('#breeding_program').val(),
+                editable_stockprop_values : JSON.stringify(editable_stockprops_search)
+            },
+            beforeSend: function() {
+                jQuery("#working_modal").modal("show");
+                jQuery('#stock_search_graphical_filter_div').html("[LOADING...]");
+            },
+            success: function(response){
+                console.log("response:", response);
+                jQuery("#working_modal").modal("hide");
+                const stock_ids = [];
+                for (var i=0; i<response.data.length; i++){
+                    stock_ids.push(response.data[i][0]);
                 }
-            });
-        } else {
-            jQuery('#stock_search_graphical_filter_div').html("Graphical Filtering only configured for accessions. Currently searching across "+stock_type+". Change your search to accesions to use graphical filtering.");
-        }
+
+                if (run) {
+                    const $filterResultsDiv = jQuery('#stock_search_graphical_filter_results_div');
+                    $filterResultsDiv.DataTable().destroy();
+                    $filterResultsDiv.html("");
+                }
+                run = true;
+                params = stock_type === 'accession'
+                  ? {germplasmDbIds : stock_ids, "observationLevel" : 'plot'}
+                  : {observationUnitDbIds : stock_ids, "observationLevel" : 'plot'};
+                loadBrAPIData("<% $c->config->{main_production_site_url} %>",params, stock_type);
+            },
+            error: function(response){
+                jQuery("#working_modal").modal("hide");
+                alert("Error retrieving stocks in graphical filtering.");
+            }
+        });
     });
 
 
@@ -889,7 +887,7 @@ function _load_stock_search_results(stock_type, editable_stockprops_search, stoc
             bottomEnd: 'paging'
         },
         'rowId': 'Stock Id',
-        'buttons': [ 'colvis',
+        'buttons': [
             {
                 extend: 'excelHtml5',
                 title: document.title + export_suffix,

@@ -389,10 +389,11 @@ sub search {
             }
         }
         if ($minimum_phenotype_value) {
-            $and_conditions->{ 'phenotype.value' }  = { '>' => $minimum_phenotype_value };
+            $and_conditions->{ 'phenotype.value::decimal' }  = { '>' => $minimum_phenotype_value + 0 };
         }
         if ($maximum_phenotype_value) {
-            $and_conditions->{ 'phenotype.value' }  = { '<' => $maximum_phenotype_value };
+            # add space prefix so this is a unique key that does not overwrite minimum phenotype filter
+            $and_conditions->{ ' phenotype.value::decimal' }  = { '<' => $maximum_phenotype_value + 0 };
         }
     }
 
