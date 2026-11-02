@@ -336,6 +336,13 @@ sub get {
         }
     } timeout => $options->{timeout};
 
+    # Accept data usage policy if present
+    # Use the find_elements method to avoid raising an error if the element doesn't exist
+    my @elements = $self->driver->find_elements("usage_policy_agree_submit", "id");
+    if (@elements){
+        $self->find_element("usage_policy_agree_submit", "id", "click accept usage policy")->click();
+    }
+
     $self->wait_for_network_idle();
     return $ok;
 }

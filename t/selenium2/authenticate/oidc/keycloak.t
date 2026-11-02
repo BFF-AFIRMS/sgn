@@ -1,7 +1,7 @@
 
 use strict;
 use lib 't/lib';
-use Test::More 'tests' => 88;
+use Test::More 'tests' => 89;
 use SGN::Test::Fixture;
 use SGN::Test::WWW::WebDriver;
 use Try::Tiny;
@@ -81,6 +81,9 @@ ok( wait_for sub { $d->find_element_by_id('kc-login')->click() }, 'click keycloa
 # Check that we have: 1. Logged in as 'janedoe', and 2. Are on the homepage
 ok( (wait_for sub { $d->find_element_by_id('navbar_profile')->get_text() }) eq 'janedoe', 'logged in as janedoe');
 ok( (wait_for sub { $d->get_page_source()}) =~/What is Breedbase/, 'locate home page content');
+
+# Accept usage policy
+$w->click_ok("usage_policy_agree_submit", "id", "accept usage policy");
 
 # Logout Through Breedbase
 logout_breedbase();

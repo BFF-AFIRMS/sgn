@@ -32,6 +32,8 @@ Your status is currently "<% $role %>".
 </tbody>
 </table -->
 
+<div id="data_usage_policy_accepted"></div>
+
 % if ($role ne "user") {
 
 <&|  /page/info_section.mas, title => "<b><font size=\"3\">Continue where you left off</font></b>", collapsible => 1, collapsed => 1 &>
@@ -125,6 +127,11 @@ Interval:&nbsp;
 //       searching: false,
 //       paging: false,
 //   });
+
+    if (jQuery.cookie("website_usage_policy_approved") == 1) {
+        jQuery('#data_usage_policy_accepted').attr("class","well well-sm");
+        jQuery('#data_usage_policy_accepted').html('You have already accepted the <a href="/usage_policy">data usage policy</a>. Thank you');
+    }
 
 }
 
