@@ -8,6 +8,9 @@ my $t = SGN::Test::WWW::WebDriver->new();
 
 $t->while_logged_in_as("submitter", sub {
 
+    # Accept data usage policy
+    $t->click_ok("usage_policy_agree_submit", "id", "accept usage policy");
+
     # THIS FUNCTIONALITY DOES NOT EXIST IN THE OLD FORM, SIMPLE TEST FOR NEW ONE
     $t->click_ok("navbar_personal_calendar", "id", "find calendar button and click");
 
