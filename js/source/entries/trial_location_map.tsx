@@ -43,41 +43,11 @@ export const TrialLocationMap: React.FC<TrialLocationMapProps> = ({
             }
         );
 
-        const streetLayer = L.tileLayer(
-            'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',
-            {
-                attribution:
-                    'Tiles &copy; Esri &mdash; Source: Esri, DeLorme, NAVTEQ, USGS, Intermap, iPC, NRCAN, Esri Japan, METI, Esri China (Hong Kong), Esri (Thailand), TomTom, 2012',
-                maxZoom: 19,
-            }
-        );
-
-        const topoLayer = L.tileLayer(
-            'https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}',
-            {
-                attribution:
-                    'Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ, TomTom, Intermap, iPC, USGS, FAO, NPS, NRCAN, GeoBase, Kadaster NL, Ordnance Survey, Esri Japan, METI, Esri China (Hong Kong), and the GIS User Community',
-                maxZoom: 19,
-            }
-        );
-
         const map = L.map(mapContainerRef.current, {
             center: [latitude, longitude],
             zoom: 10, // 10 ~= 153 m / pixel at equator
             layers: [satelliteLayer],
         });
-
-        L.control
-            .layers(
-                {
-                    Satellite: satelliteLayer,
-                    Street: streetLayer,
-                    Topographical: topoLayer,
-                },
-                undefined,
-                { position: 'bottomright' }
-            )
-            .addTo(map);
 
         L.control
             .scale({
