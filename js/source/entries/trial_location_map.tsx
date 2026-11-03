@@ -97,18 +97,17 @@ export const TrialLocationMap: React.FC<TrialLocationMapProps> = ({
                         <div
                             ref={mapContainerRef}
                             id="trial_location_map"
-                            className="tw:h-70 tw:w-full"
+                            className="tw:h-120 tw:w-full"
                         />
                         {createPortal(
-                            <div className="tw:text-sm tw:leading-snug">
-                                <b>{locationName}</b>
+                            <div>
+                                <h4>{locationName}</h4>
                                 {countryName && (
                                     <>
-                                        <br />
-                                        <span className="text-muted">{countryName}</span>
+                                        <h6>{countryName}</h6>
                                     </>
                                 )}
-                                <hr className="tw:my-1.25" />
+                                <hr />
                                 <b>Latitude:</b> {latitude}
                                 <br />
                                 <b>Longitude:</b> {longitude}
@@ -118,9 +117,10 @@ export const TrialLocationMap: React.FC<TrialLocationMapProps> = ({
                                         <b>Altitude:</b> {altitude} m
                                     </>
                                 )}
-                                <br />
+                                <hr />
                                 <small>
                                     <a
+                                        className="tw:text-sm"
                                         href={`https://www.google.com/maps?q=${latitude},${longitude}`}
                                         target="_blank"
                                         rel="noopener noreferrer"
