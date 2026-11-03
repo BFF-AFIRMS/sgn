@@ -54,6 +54,7 @@
     "d3-sankey": "^0.12.3",
     "d3-shape": "^3.2.0",
     "internmap": "^2.0.3",
+    "leaflet-extra-markers": "^2.0.1",
     "react": "^19.2.5",
     "react-dom": "^19.2.5"
   },

@@ -3,6 +3,8 @@ import { createPortal } from 'react-dom';
 import { createRoot } from 'react-dom/client';
 import { isDefined } from '~/functions';
 
+import * as ExtraMarkers from 'leaflet-extra-markers';
+
 export interface TrialLocationMapProps {
     locationName?: string | null;
     countryName?: string | null;
@@ -10,12 +12,6 @@ export interface TrialLocationMapProps {
     longitude?: number | null;
     altitude?: number | null;
 }
-
-const PIN_SVG =
-    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 42" width="32" height="42">' +
-    '<path d="M16 1 C7.7 1 1 7.7 1 16 C1 26 16 41 16 41 C16 41 31 26 31 16 C31 7.7 24.3 1 16 1 Z" fill="#d9534f" stroke="#b52b27" stroke-width="1.5"/>' +
-    '<circle cx="16" cy="15" r="5.5" fill="#ffffff"/>' +
-    '</svg>';
 
 export const TrialLocationMap: React.FC<TrialLocationMapProps> = ({
     locationName,
@@ -58,12 +54,8 @@ export const TrialLocationMap: React.FC<TrialLocationMapProps> = ({
             })
             .addTo(map);
 
-        const pinIcon = L.divIcon({
-            className: 'trial-map-pin',
-            html: PIN_SVG,
-            iconSize: [32, 42],
-            iconAnchor: [16, 41],
-            popupAnchor: [0, -38],
+        const pinIcon = new ExtraMarkers.Icon({
+            color: 'orange',
         });
 
         const marker = L.marker([latitude, longitude], { icon: pinIcon }).addTo(map);
