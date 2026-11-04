@@ -1,10 +1,8 @@
-import React, { createContext, useContext, useState, useMemo, useCallback } from 'react';
-import { DesignResultResponse, GeneratedDesignPlot } from '../types';
+import React, { createContext, useContext, useState, useMemo } from 'react';
+import { GeneratedDesignPlot } from '../types';
 import { useTrialForm } from './TrialFormContext';
 
 export interface DesignResultContextType {
-    result: DesignResultResponse | null;
-    setResult: React.Dispatch<React.SetStateAction<DesignResultResponse | null>>;
     parsedDesigns: Array<Record<string, GeneratedDesignPlot>>;
     savedTrialId: string | null;
     setSavedTrialId: (id: string | null) => void;
@@ -17,15 +15,8 @@ export interface DesignResultContextType {
 const DesignResultContext = createContext<DesignResultContextType | undefined>(undefined);
 
 export const DesignResultProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const { formData, setFormData } = useTrialForm();
+    const { formData } = useTrialForm();
     const result = formData.designResult ?? null;
-
-    const setResult = useCallback((valOrFn: React.SetStateAction<DesignResultResponse | null>) => {
-        setFormData(prev => ({
-            ...prev,
-            designResult: typeof valOrFn === 'function' ? valOrFn(prev.designResult ?? null) : valOrFn
-        }));
-    }, [setFormData]);
 
     const [savedTrialId, setSavedTrialId] = useState<string | null>(null);
     const [isGenerating, setIsGenerating] = useState(false);
@@ -43,8 +34,6 @@ export const DesignResultProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
     return (
         <DesignResultContext.Provider value={{
-            result,
-            setResult,
             parsedDesigns,
             savedTrialId,
             setSavedTrialId,
