@@ -21,10 +21,8 @@ interface ReviewDesignStepProps {
 
 export const ReviewDesignStep: React.FC<ReviewDesignStepProps> = ({ onSuccess }) => {
     const { formData } = useTrialForm();
-    const {
-        result,
-        parsedDesigns,
-    } = useDesignResult();
+    const result = formData.designResult ?? null;
+    const { parsedDesigns } = useDesignResult();
     const { generate, save, isGenerating, isSaving } = useTrialActions();
     const [showTreatmentModal, setShowTreatmentModal] = useState(false);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);

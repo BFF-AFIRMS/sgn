@@ -46,8 +46,9 @@ const formatTreatmentDate = (val?: string): string => {
 };
 
 export const AddTreatmentsModal: React.FC<AddTreatmentsModalProps> = ({ show = true, onClose }) => {
-    const { formData, serverProps } = useTrialForm();
-    const { result, setResult, parsedDesigns } = useDesignResult();
+    const { formData, setFormData, serverProps } = useTrialForm();
+    const { parsedDesigns } = useDesignResult();
+    const result = formData.designResult ?? null;
 
     const managementFactorTypes = useMemo(() => {
         const types = serverProps.management_factor_types;
@@ -155,10 +156,13 @@ export const AddTreatmentsModal: React.FC<AddTreatmentsModalProps> = ({ show = t
             });
         });
 
-        setResult({
-            ...result,
-            design_json: JSON.stringify(newDesignArray)
-        });
+        setFormData(prev => ({
+            ...prev,
+            designResult: {
+                ...(prev.designResult ?? {}),
+                design_json: JSON.stringify(newDesignArray)
+            }
+        }));
 
         onClose();
     };

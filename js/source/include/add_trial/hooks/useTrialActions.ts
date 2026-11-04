@@ -1,6 +1,7 @@
 import { useCallback } from 'react';
 import { TrialFormData, DesignResultResponse } from '../types';
 import { useDesignResult } from '../contexts/DesignResultContext';
+import { useTrialForm } from '../contexts/TrialFormContext';
 import { fetchListItems } from './useBreedbaseLists';
 import * as trialService from '../services/trialService';
 
@@ -13,13 +14,13 @@ export interface ActionResult<T = void> {
 
 export const useTrialActions = () => {
     const {
-        setResult,
         setSavedTrialId,
         isGenerating,
         setIsGenerating,
         isSaving,
         setIsSaving
     } = useDesignResult();
+    const { setFormData } = useTrialForm();
 
     const generate = useCallback(async (form: TrialFormData): Promise<ActionResult<DesignResultResponse>> => {
         setIsGenerating(true);
@@ -116,7 +117,7 @@ export const useTrialActions = () => {
             });
 
             const designResult = await trialService.requestExperimentalDesign(payload);
-            setResult(designResult);
+            setFormData(prev => ({ ...prev, designResult }));
             return {
                 ok: true,
                 data: designResult,
@@ -132,7 +133,7 @@ export const useTrialActions = () => {
         } finally {
             setIsGenerating(false);
         }
-    }, [setIsGenerating, setResult]);
+    }, [setIsGenerating, setFormData]);
 
     const save = useCallback(async (form: TrialFormData, designJson: string): Promise<ActionResult<string>> => {
         setIsSaving(true);
