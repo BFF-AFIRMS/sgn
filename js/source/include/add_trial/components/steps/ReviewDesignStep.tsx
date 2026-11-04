@@ -24,13 +24,12 @@ export const ReviewDesignStep: React.FC<ReviewDesignStepProps> = ({ onSuccess })
     const {
         result,
         parsedDesigns,
-        selectedLocationIndex,
-        setSelectedLocationIndex,
     } = useDesignResult();
     const { generate, save, isGenerating, isSaving } = useTrialActions();
     const [showTreatmentModal, setShowTreatmentModal] = useState(false);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
+    const [selectedLocationIndex, setSelectedLocationIndex] = useState(0);
     const currentLocationName = formData.locations[selectedLocationIndex] || formData.trialName;
     const currentDesign = parsedDesigns[selectedLocationIndex] || parsedDesigns[0];
 
