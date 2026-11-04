@@ -117,11 +117,5 @@ export const useFormDraft = <T>(
         }
     }, [formData, maxStep, draftKey]);
 
-    const clearDraft = useCallback(() => {
-        try {
-            localStorage.removeItem(draftKey);
-        } catch {}
-    }, [draftKey]);
-
-    return { formData, setFormData, clearDraft, draftId, maxStep, setMaxStep };
+    return { formData, setFormData, draftId, maxStep, setMaxStep };
 };
