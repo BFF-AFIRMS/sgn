@@ -17,22 +17,23 @@ export interface DesignTypeOption {
     value: DesignType;
     label: string;
     description: string;
+    longDescription: string;
 }
 
 export const STANDARD_DESIGN_TYPES: DesignTypeOption[] = [
-    { value: 'CRD', label: 'Completely Randomized', description: 'Completely Randomized Design' },
-    { value: 'RCBD', label: 'Complete Block', description: 'Randomized Complete Block Design' },
-    { value: 'RRC', label: 'Resolvable Row-Column', description: 'Resolvable Row-Column Design' },
-    { value: 'DRRC', label: 'Doubly-Resolvable Row-Column', description: 'Doubly-Resolvable Row-Column Design' },
-    { value: 'URDD', label: 'Un-Replicated Diagonal Design', description: 'Un-Replicated Diagonal Design' },
-    { value: 'Alpha', label: 'Alpha Lattice', description: 'Alpha Lattice Incomplete Block Design' },
-    { value: 'Lattice', label: 'Lattice', description: 'Lattice Design' },
-    { value: 'Augmented', label: 'Augmented', description: 'Augmented Incomplete Block Design' },
-    { value: 'MAD', label: 'Modified Augmented Design', description: 'Modified Augmented Design' },
-    { value: 'greenhouse', label: 'Nursery/Greenhouse', description: 'Greenhouse Design' },
-    { value: 'splitplot', label: 'Split Plot', description: 'Split Plot Design' },
-    { value: 'p-rep', label: 'Partially Replicated', description: 'Partially Replicated Design' },
-    { value: 'Westcott', label: 'Westcott', description: 'Westcott Design' }
+    { value: 'CRD', label: 'Completely Randomized', description: 'Completely Randomized Design', longDescription: 'Generates a Completely Randomized design (CRD) with equal or different repetition, using the methods of random number generation in R. Creates plot entities in the database.' },
+    { value: 'RCBD', label: 'Complete Block', description: 'Randomized Complete Block Design', longDescription: 'Generates a Randomized Complete Block design (RCBD), using the methods of random number generation in R. Creates plot entities in the database.' },
+    { value: 'RRC', label: 'Resolvable Row-Column', description: 'Resolvable Row-Column Design', longDescription: 'Generates a Resolvable Row-Column design (RRC), using the blocksdesign package in R. In addition to the one-way blocks it adds a constraint that no treatment may appear more than once in each row (latinization). Each row becomes an incomplete block.' },
+    { value: 'DRRC', label: 'Doubly-Resolvable Row-Column', description: 'Doubly-Resolvable Row-Column Design', longDescription: 'Generates a Doubly-Resolvable Row-Column design (DRRC), using the blocksdesign package in R. It creates complete blocks in columns and rows. The number of accessions must be divisible by the number of columns and rows.' },
+    { value: 'URDD', label: 'Un-Replicated Diagonal Design', description: 'Un-Replicated Diagonal Design', longDescription: 'Generates an Un-Replicated Diagonal Design (URDD), using the FieldHub package in R. It is an Un-Replicateddesign with an option to create blocks. All checks are distributed in diagonals.' },
+    { value: 'Alpha', label: 'Alpha Lattice', description: 'Alpha Lattice Incomplete Block Design', longDescription: 'Generates an Alpha design starting from design fixing under the 4 series formulated by Patterson and Williams. Creates plot entities in the database.' },
+    { value: 'Lattice', label: 'Lattice', description: 'Lattice Design', longDescription: 'Generates SIMPLE and TRIPLE lattice designs using the design.lattice function from the agricolae R package. Randomizes treatments in K x K lattice. Creates plot entities in the database.' },
+    { value: 'Augmented', label: 'Augmented', description: 'Augmented Incomplete Block Design', longDescription: 'Generates an Augmented design. Some treatments (checks) are replicated r times and other treatments (new) are replicated once. Creates plot entities in the database.' },
+    { value: 'MAD', label: 'Modified Augmented Design', description: 'Modified Augmented Design', longDescription: 'Adjustments are calculated using data from all checks. Creates plot entities in the database.' },
+    { value: 'greenhouse', label: 'Nursery/Greenhouse', description: 'Greenhouse Design', longDescription: 'A greenhouse/nursery houses plants in no particular layout design. The plants can be of named accessions or in the case of seedling nurseries from crosses, the plants can be of named crosses. Creates plot entities with plant entities in the database.' },
+    { value: 'splitplot', label: 'Split Plot', description: 'Split Plot Design', longDescription: 'Split plot designs are useful for applying treatments to subplots of a plot. If you give two treatments with two levels each, there will be four subplots with the four treatment combinations distributed randomly among them. Creates plot entities with subplot entities with plant entities in the database.' },
+    { value: 'p-rep', label: 'Partially Replicated', description: 'Partially Replicated Design', longDescription: 'Has some treatments that are unreplicated and relies on replicated treatments to make the trial analysable. It is recommended that at least 20% of the experimental units are occupied by replicated treatments. Creates plot entities in the database.' },
+    { value: 'Westcott', label: 'Westcott', description: 'Westcott Design', longDescription: 'Generates a fieldplan for an unreplicated design with genotypes randomly allocated within a field with checks following the method described by Westcott (1981).' }
 ];
 
 export const getDesignTypeDescription = (designType: DesignType): string => {

@@ -1,5 +1,6 @@
 import React from 'react';
 import { useBreedbaseLists } from '../../hooks/useBreedbaseLists';
+import { verifyListById } from '../../services/trialService';
 
 interface BreedbaseListSelectProps {
     listType: string;
@@ -22,6 +23,16 @@ export const BreedbaseListSelect: React.FC<BreedbaseListSelectProps> = ({
 }) => {
     const { lists, loading, loadLists } = useBreedbaseLists(listType);
 
+    const handleChange = (listId: string) => {
+        onChange(listId);
+        if (!listId) {
+            return;
+        }
+        verifyListById(listId, listType).catch(err => {
+            alert(err instanceof Error ? err.message : String(err));
+        });
+    };
+
     return (
         <div id={id} className="tw:flex tw:items-center tw:gap-2">
             <select
@@ -29,7 +40,7 @@ export const BreedbaseListSelect: React.FC<BreedbaseListSelectProps> = ({
                 name={selectId}
                 className="form-control"
                 defaultValue={defaultValue}
-                onChange={e => onChange(e.target.value)}
+                onChange={e => handleChange(e.target.value)}
                 disabled={loading && lists.length === 0}
                 required={required}
             >

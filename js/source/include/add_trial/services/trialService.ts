@@ -1,5 +1,6 @@
 import { TrialFormData, DesignResultResponse, StockType } from '../types';
 import { getSplitplotTreatments } from '../utils/designAdapters';
+import { fetchListItems, normalizeListType } from '../hooks/useBreedbaseLists';
 
 export interface GenerateDesignLists {
     stockListItems: string[] | null;
@@ -54,6 +55,23 @@ export const verifyStockItems = async (
     if (json.error) {
         throw new Error(listLabel ? `${listLabel}: ${json.error}` : json.error);
     }
+};
+
+export const verifyListById = async (listId: string, listType: string): Promise<void> => {
+    if (!listId) {
+        return;
+    }
+    const stockTypeMap: Record<string, StockType> = {
+        accessions: 'accession',
+        crosses: 'cross',
+        family_names: 'family_name',
+    };
+    const stockType = stockTypeMap[normalizeListType(listType)];
+    if (!stockType) {
+        return;
+    }
+    const items = await fetchListItems(listId);
+    await verifyStockItems(items, stockType);
 };
 
 export const verifySeedlotList = async (
