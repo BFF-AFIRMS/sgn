@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 interface AccessionAutocompleteProps {
     id?: string;
     name?: string;
-    value: string;
+    defaultValue: string;
     onChange: (val: string) => void;
     placeholder?: string;
     className?: string;
@@ -13,7 +13,7 @@ interface AccessionAutocompleteProps {
 export const AccessionAutocomplete: React.FC<AccessionAutocompleteProps> = ({
     id,
     name,
-    value,
+    defaultValue,
     onChange,
     placeholder,
     className
@@ -22,7 +22,7 @@ export const AccessionAutocomplete: React.FC<AccessionAutocompleteProps> = ({
     const [show, setShow] = useState(false);
 
     useEffect(() => {
-        if (value.length < 1) {
+        if (defaultValue.length < 1) {
             setSuggestions([]);
             return;
         }
@@ -31,7 +31,7 @@ export const AccessionAutocomplete: React.FC<AccessionAutocompleteProps> = ({
 
         const delayDebounce = setTimeout(async () => {
             try {
-                const res = await fetch(`/ajax/stock/accession_autocomplete?term=${encodeURIComponent(value)}`, {
+                const res = await fetch(`/ajax/stock/accession_autocomplete?term=${encodeURIComponent(defaultValue)}`, {
                     signal: controller.signal
                 });
                 if (!res.ok) return;
@@ -59,7 +59,7 @@ export const AccessionAutocomplete: React.FC<AccessionAutocompleteProps> = ({
             clearTimeout(delayDebounce);
             controller.abort();
         };
-    }, [value]);
+    }, [defaultValue]);
 
     return (
         <div className="tw:relative">
@@ -67,7 +67,7 @@ export const AccessionAutocomplete: React.FC<AccessionAutocompleteProps> = ({
                 id={id}
                 name={name}
                 type="text"
-                value={value}
+                defaultValue={defaultValue}
                 onChange={e => { onChange(e.target.value); setShow(true); }}
                 onBlur={() => setTimeout(() => setShow(false), 200)}
                 placeholder={placeholder}

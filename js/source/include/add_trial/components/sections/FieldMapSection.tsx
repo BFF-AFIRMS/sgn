@@ -35,7 +35,7 @@ export const FieldMapSection: React.FC = () => {
                     <input
                         type="checkbox"
                         id="show_field_map_options"
-                        checked={formData.showFieldMapOptions}
+                        defaultChecked={formData.showFieldMapOptions}
                         onChange={e => updateField('showFieldMapOptions', e.target.checked)}
                     />
                 </div>
@@ -54,7 +54,7 @@ export const FieldMapSection: React.FC = () => {
                             id="fieldMap_row_number"
                             name="fieldMap_row_number"
                             placeholder={isFieldMapRowRequired ? "" : "Will use number of blocks by default"}
-                            value={formData.fieldMapRowNumber}
+                            defaultValue={formData.fieldMapRowNumber}
                             onChange={e => updateField('fieldMapRowNumber', e.target.value)}
                         />
                     </div>
@@ -66,7 +66,7 @@ export const FieldMapSection: React.FC = () => {
                             className="form-control"
                             id="plot_layout_format"
                             name="plot_layout_format"
-                            value={formData.plotLayoutFormat}
+                            defaultValue={formData.plotLayoutFormat}
                             onChange={e => updateField('plotLayoutFormat', e.target.value as PlotLayoutFormat)}
                         >
                             <option value="">select plot layout format</option>

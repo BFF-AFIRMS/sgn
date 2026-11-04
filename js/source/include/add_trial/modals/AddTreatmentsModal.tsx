@@ -183,7 +183,7 @@ export const AddTreatmentsModal: React.FC<AddTreatmentsModalProps> = ({ show = t
                                     type="text"
                                     className="form-control"
                                     placeholder="e.g. Inoculation 1"
-                                    value={treatmentName}
+                                    defaultValue={treatmentName}
                                     onChange={e => setTreatmentName(e.target.value)}
                                     required
                                 />
@@ -194,7 +194,7 @@ export const AddTreatmentsModal: React.FC<AddTreatmentsModalProps> = ({ show = t
                                     id="new_treatment_type"
                                     name="new_treatment_type"
                                     className="form-control"
-                                    value={treatmentType}
+                                    defaultValue={treatmentType}
                                     onChange={e => setTreatmentType(e.target.value)}
                                 >
                                     {managementFactorTypes.map(t => (
@@ -209,7 +209,7 @@ export const AddTreatmentsModal: React.FC<AddTreatmentsModalProps> = ({ show = t
                                     name="new_treatment_date"
                                     type="date"
                                     className="form-control"
-                                    value={treatmentDate}
+                                    defaultValue={treatmentDate}
                                     onChange={e => setTreatmentDate(e.target.value)}
                                 />
                             </div>
@@ -220,7 +220,7 @@ export const AddTreatmentsModal: React.FC<AddTreatmentsModalProps> = ({ show = t
                                     name="new_treatment_year"
                                     type="text"
                                     className="form-control"
-                                    value={treatmentYear}
+                                    defaultValue={treatmentYear}
                                     onChange={e => setTreatmentYear(e.target.value)}
                                 />
                             </div>
@@ -231,7 +231,7 @@ export const AddTreatmentsModal: React.FC<AddTreatmentsModalProps> = ({ show = t
                                     name="new_treatment_planting_date"
                                     type="date"
                                     className="form-control"
-                                    value={treatmentPlantingDate}
+                                    defaultValue={treatmentPlantingDate}
                                     onChange={e => setTreatmentPlantingDate(e.target.value)}
                                 />
                             </div>
@@ -242,7 +242,7 @@ export const AddTreatmentsModal: React.FC<AddTreatmentsModalProps> = ({ show = t
                                     name="new_treatment_description"
                                     className="form-control"
                                     rows={3}
-                                    value={treatmentDescription}
+                                    defaultValue={treatmentDescription}
                                     onChange={e => setTreatmentDescription(e.target.value)}
                                 />
                             </div>
@@ -301,7 +301,7 @@ export const AddTreatmentsModal: React.FC<AddTreatmentsModalProps> = ({ show = t
                                                         <input
                                                             type="checkbox"
                                                             name="add_trial_treatment_select_all"
-                                                            checked={allSelected}
+                                                            defaultChecked={allSelected}
                                                             onChange={e => toggleSelectAllTrial(trialIndex, e.target.checked)}
                                                         />]
                                                     </th>
@@ -329,7 +329,7 @@ export const AddTreatmentsModal: React.FC<AddTreatmentsModalProps> = ({ show = t
                                                                     data-trial_treatment={treatmentName}
                                                                     data-plant_names={JSON.stringify(p.plant_names || [])}
                                                                     data-subplot_names={JSON.stringify(p.subplots_names || [])}
-                                                                    checked={isChecked}
+                                                                    defaultChecked={isChecked}
                                                                     onChange={e => togglePlot(trialIndex, p.plot_name, e.target.checked)}
                                                                 />
                                                             </td>

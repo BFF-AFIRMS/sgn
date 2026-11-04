@@ -3,7 +3,7 @@ import { useBreedbaseLists } from '../../hooks/useBreedbaseLists';
 
 interface BreedbaseListSelectProps {
     listType: string;
-    value: string;
+    defaultValue: string;
     onChange: (listId: string) => void;
     placeholder?: string;
     required?: boolean;
@@ -13,7 +13,7 @@ interface BreedbaseListSelectProps {
 
 export const BreedbaseListSelect: React.FC<BreedbaseListSelectProps> = ({
     listType,
-    value,
+    defaultValue,
     onChange,
     placeholder = '-- Select a list --',
     required = false,
@@ -28,7 +28,7 @@ export const BreedbaseListSelect: React.FC<BreedbaseListSelectProps> = ({
                 id={selectId}
                 name={selectId}
                 className="form-control"
-                value={value}
+                defaultValue={defaultValue}
                 onChange={e => onChange(e.target.value)}
                 disabled={loading && lists.length === 0}
                 required={required}
