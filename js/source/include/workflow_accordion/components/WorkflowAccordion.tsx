@@ -2,6 +2,14 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { AccordionWorkflowStep, WorkflowAccordionProps } from '../types';
 import { AccordionPanelContent } from './AccordionPanelContent';
 
+/**
+ * Runs each step's validator in order and reports the first failure.
+ *
+ * @param steps The steps to evaluate.
+ * @returns `valid` (whether every step passed), the `failingIndex` of the first
+ *   failing step (or `steps.length` when all pass), the failure `message` (or
+ *   `null`), and `maxUnlocked`, the highest step index that may be opened.
+ */
 export const evaluateAccordionSync = (steps: AccordionWorkflowStep[]): {
     valid: boolean;
     failingIndex: number;
@@ -30,6 +38,14 @@ export const evaluateAccordionSync = (steps: AccordionWorkflowStep[]): {
     };
 };
 
+/**
+ * Renders a sequence of `AccordionWorkflowStep`s as a panel group.
+ *
+ * Steps unlock (and expand) as their predecessors pass validation. A locked
+ * step's header cannot be opened; clicking it shows the failure message. Pass
+ * `maxUnlocked` / `firstFailingMessage` to override the values derived from the
+ * steps, or `onHeaderClick` to replace the default header behavior entirely.
+ */
 export const WorkflowAccordion: React.FC<WorkflowAccordionProps> = ({
     id = 'workflow_accordion',
     steps,

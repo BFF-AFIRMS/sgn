@@ -3,6 +3,10 @@ import { getSplitplotTreatments } from '../utils/designAdapters';
 import { fetchListItems } from '../hooks/useListItems';
 import { normalizeListType } from '../contexts/BreedbaseListsContext';
 
+/**
+ * The contents of the lists and the stock-to-seedlot mapping the wizard has
+ * collected, used to build a generate-design request.
+ */
 export interface GenerateDesignLists {
     stockListItems: string[] | null;
     controlListItems: string[] | null;
@@ -12,11 +16,20 @@ export interface GenerateDesignLists {
     seedlotHash: Record<string, string>;
 }
 
+/**
+ * The contents of the stock and check lists, used to build a save-design request.
+ */
 export interface SaveDesignLists {
     stockListItems: string[] | null;
     controlListItems: string[] | null;
 }
 
+/**
+ * Verifies that a trial name is available, via `GET /ajax/trial/verify_trial_name`.
+ * Throws if the name is already in use or the request fails.
+ *
+ * @param trialName The trial name to check (trimmed before sending).
+ */
 export const verifyTrialName = async (trialName: string): Promise<void> => {
     const res = await fetch(`/ajax/trial/verify_trial_name?trial_name=${encodeURIComponent(trialName.trim())}`);
     if (!res.ok) {
@@ -28,6 +41,15 @@ export const verifyTrialName = async (trialName: string): Promise<void> => {
     }
 };
 
+/**
+ * Verifies that every stock in `items` exists, posting to the verify endpoint
+ * matching `stockType`. Throws with a `listLabel`-prefixed message on failure.
+ * An empty list is a no-op.
+ *
+ * @param items The stock names to verify.
+ * @param stockType The kind of stock the names refer to.
+ * @param listLabel Optional label prefixed to the error message.
+ */
 export const verifyStockItems = async (
     items: string[],
     stockType: StockType,
@@ -58,6 +80,14 @@ export const verifyStockItems = async (
     }
 };
 
+/**
+ * Verifies the contents of a Breedbase list by loading its items and checking
+ * them against the stock type the list's `listType` maps to. A falsy id or an
+ * unrecognised list type is a no-op.
+ *
+ * @param listId The ID of the list to verify.
+ * @param listType The Breedbase list type (e.g. `accessions`).
+ */
 export const verifyListById = async (listId: string, listType: string): Promise<void> => {
     if (!listId) {
         return;
@@ -75,6 +105,14 @@ export const verifyListById = async (listId: string, listType: string): Promise<
     await verifyStockItems(items, stockType);
 };
 
+/**
+ * Verifies that the seedlots in `seedlotItems` map onto the stocks in
+ * `stockItems`, via `POST /ajax/trial/verify_seedlot_list`. Throws on failure.
+ *
+ * @param stockItems The stock names to match seedlots against.
+ * @param seedlotItems The seedlot names to verify.
+ * @returns The stock-to-seedlot mapping returned by the server.
+ */
 export const verifySeedlotList = async (
     stockItems: string[],
     seedlotItems: string[]
@@ -97,6 +135,14 @@ export const verifySeedlotList = async (
     return json.seedlot_hash || {};
 };
 
+/**
+ * Assembles the form body for the generate-design request, including the
+ * stock/check lists, the seedlot mapping, and the per-design parameters.
+ *
+ * @param form The wizard form data.
+ * @param lists The list contents and seedlot mapping to send.
+ * @returns The request body as `URLSearchParams`.
+ */
 export const buildGenerateDesignPayload = (
     form: TrialFormData,
     lists: GenerateDesignLists
@@ -173,6 +219,14 @@ export const buildGenerateDesignPayload = (
     return payload;
 };
 
+/**
+ * Generates the experimental design by posting `payload` to
+ * `/ajax/trial/generate_experimental_design`. Throws if the request fails or the
+ * response reports an error.
+ *
+ * @param payload The generate-design request body.
+ * @returns The generated design result.
+ */
 export const requestExperimentalDesign = async (payload: URLSearchParams): Promise<DesignResultResponse> => {
     const res = await fetch('/ajax/trial/generate_experimental_design', {
         method: 'POST',
@@ -189,6 +243,15 @@ export const requestExperimentalDesign = async (payload: URLSearchParams): Promi
     return resData;
 };
 
+/**
+ * Assembles the form body for the save-design request, including the serialized
+ * design, the stock/check lists, and the trial metadata.
+ *
+ * @param form The wizard form data.
+ * @param designJson The serialized design layout to save.
+ * @param lists The list contents to send.
+ * @returns The request body as `URLSearchParams`.
+ */
 export const buildSaveDesignPayload = (
     form: TrialFormData,
     designJson: string,
@@ -263,6 +326,14 @@ export const buildSaveDesignPayload = (
     return payload;
 };
 
+/**
+ * Persists the designed trial by posting `payload` to
+ * `/ajax/trial/save_experimental_design`. Throws if the request fails or the
+ * response reports an error.
+ *
+ * @param payload The save-design request body.
+ * @returns The id of the saved trial.
+ */
 export const requestSaveExperimentalDesign = async (payload: URLSearchParams): Promise<string> => {
     const res = await fetch('/ajax/trial/save_experimental_design', {
         method: 'POST',
@@ -279,6 +350,15 @@ export const requestSaveExperimentalDesign = async (payload: URLSearchParams): P
     return String(result.trial_id);
 };
 
+/**
+ * Creates plant entries for a saved trial, via
+ * `POST /ajax/breeders/trial/:trialId/create_plant_entries/`. Failures are
+ * logged and swallowed, since plant creation is non-fatal to the save flow.
+ *
+ * @param trialId The id of the trial to add plants to.
+ * @param form The wizard form data supplying the plant coordinate options.
+ * @param plantCount The number of plants to create per plot.
+ */
 export const createPlantEntries = async (
     trialId: string,
     form: TrialFormData,

@@ -8,6 +8,10 @@ interface AddTreatmentsModalProps {
     onClose: () => void;
 }
 
+/**
+ * Fallback management factor types, used when the server does not supply
+ * `management_factor_types`.
+ */
 const DEFAULT_MANAGEMENT_FACTOR_TYPES = [
     'Fertilizer',
     'Fungicide',
@@ -20,6 +24,7 @@ const DEFAULT_MANAGEMENT_FACTOR_TYPES = [
     'Light treatment'
 ];
 
+// Initial values for the treatment form fields. 
 const DEFAULT_TREATMENT_NAME = '';
 const DEFAULT_TREATMENT_TYPE = 'Fertilizer';
 const DEFAULT_TREATMENT_DATE = new Date().toISOString().slice(0, 10);
@@ -27,6 +32,17 @@ const DEFAULT_TREATMENT_YEAR = String(new Date().getFullYear());
 const DEFAULT_TREATMENT_PLANTING_DATE = '';
 const DEFAULT_TREATMENT_DESCRIPTION = '';
 
+/**
+ * Formats a treatment date as `YYYY/MM/DD HH:mm:ss`, the format expected by the
+ * design result's treatment records.
+ *
+ * A bare `YYYY-MM-DD` value is treated as a calendar date and combined with the
+ * current time of day; any other value is parsed by `Date`. A value that cannot
+ * be parsed is returned unchanged.
+ *
+ * @param val The date to format, e.g. a value from an `<input type="date">`.
+ * @returns The formatted date string.
+ */
 const formatTreatmentDate = (val?: string): string => {
     let d: Date;
     if (val) {
@@ -45,6 +61,18 @@ const formatTreatmentDate = (val?: string): string => {
     return `${d.getFullYear()}/${pad(d.getMonth() + 1)}/${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
 };
 
+/**
+ * Two-step modal for attaching a field treatment to plots in the current design
+ * result.
+ *
+ * The first step collects the treatment's metadata (name, type, date, year,
+ * planting date, description); the second lets the user pick, per trial
+ * location, the plots that receive the treatment.
+ * 
+ * On submit, the selected plots together with their plants and subplots are
+ * recorded under the treatment name in each location's `treatments` map, and the
+ * updated `design_json` is written back to the wizard's form data.
+ */
 export const AddTreatmentsModal: React.FC<AddTreatmentsModalProps> = ({ show = true, onClose }) => {
     const { formData, setFormData, serverProps } = useTrialForm();
     const parsedDesign = useParsedDesign(formData);

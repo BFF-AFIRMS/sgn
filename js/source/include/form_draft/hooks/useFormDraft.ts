@@ -2,9 +2,19 @@ import { useEffect, useCallback, useState, useMemo } from 'react';
 import { DraftData } from '../types';
 import { isFunction } from '~/@generic/utils/functions';
 
+/** Maximum number of drafts to keep in localStorage before pruning the oldest. */
 const MAX_DRAFTS = 10;
+
+/** Prefix for the localStorage keys under which drafts are stored. */
 const DRAFT_PREFIX = 'form_draft';
 
+/**
+ * Type guard narrowing an unknown value to a persisted `DraftData` object by
+ * checking for its required keys.
+ *
+ * @param obj The parsed localStorage value to check.
+ * @returns True if the value has the `DraftData` shape, otherwise false.
+ */
 const isFormDraft = (obj: unknown): obj is DraftData => {
     return typeof obj === 'object' &&
         obj !== null &&
@@ -13,6 +23,12 @@ const isFormDraft = (obj: unknown): obj is DraftData => {
         'data' in obj;
 };
 
+/**
+ * Removes the oldest form drafts from localStorage, keeping at most
+ * `MAX_DRAFTS`. Drafts are ordered by their `last_modified` timestamp, and any
+ * unreadable entry is treated as having no timestamp. Does nothing when
+ * localStorage is unavailable.
+ */
 export const cleanupOldDrafts = (): void => {
     if (typeof window === 'undefined' || !window.localStorage) return;
     try {
@@ -46,6 +62,13 @@ export const cleanupOldDrafts = (): void => {
     }
 };
 
+/**
+ * Resolves the draft id from the URL query parameter, generating and writing a
+ * new one when the parameter is absent.
+ *
+ * @param paramName The query parameter holding the draft id. Defaults to `'draft_id'`.
+ * @returns The draft id from the URL, or a newly generated one.
+ */
 export const initDraftId = (paramName: string = 'draft_id'): string => {
     const createNewId = () =>
         Date.now() + '_' + Math.random().toString(36).substring(2, 7);
@@ -66,6 +89,18 @@ export const initDraftId = (paramName: string = 'draft_id'): string => {
     }
 };
 
+/**
+ * Persists a form's values and workflow step to localStorage under a draft id,
+ * restoring them on initialization so an in-progress form survives a reload.
+ *
+ * The draft id is read from the URL (`draft_id`), so it is stable across
+ * reloads. Restored values are merged over `initialValues`, which lets callers
+ * supply defaults for fields a stored draft predates.
+ *
+ * @param initialValues The default form values, or a function returning them.
+ * @returns The form data and its setter, a `clearDraft` function to remove the
+ *   persisted draft, the `draftId`, and the highest step reached with its setter.
+ */
 export const useFormDraft = <T>(
     initialValues: T | (() => T)
 ) => {

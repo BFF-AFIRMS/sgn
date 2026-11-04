@@ -5,6 +5,16 @@ import { fetchSelectOptions, HtmlSelectOption } from '~/@generic/utils/fetch';
 import { useTrialForm } from '../../contexts/TrialFormContext';
 import { DesignType, StockType } from '../../types';
 
+/**
+ * The "Trial Information" section of the Add Trial wizard.
+ *
+ * Collects the trial's core metadata (breeding program, locations, name, type,
+ * year, dates, plot and field dimensions, description) together with the stock
+ * type and design type.
+ * 
+ * Selecting a breeding program filters the available locations. Trial types are
+ * loaded from `/ajax/html/select/trial_types`.
+ */
 export const TrialInfoSection: React.FC = () => {
     const { formData, setFormData, updateField, serverProps, availableDesignTypes } = useTrialForm();
     const [trialTypes, setTrialTypes] = useState<HtmlSelectOption[]>([

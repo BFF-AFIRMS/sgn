@@ -1,6 +1,10 @@
 import React from 'react';
 import { useDesignResult } from '../../contexts/DesignResultContext';
 
+/**
+ * The final step of the Add Trial wizard. Confirms that the trial was saved and
+ * offers links to the new trial's detail page and to the trials list.
+ */
 export const CompleteStep: React.FC = () => {
     const { savedTrialId } = useDesignResult();
 

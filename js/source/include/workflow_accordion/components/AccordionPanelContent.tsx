@@ -1,11 +1,26 @@
 import React, { useState } from 'react';
 
+/**
+ * Props for `AccordionPanelContent`.
+ */
 export interface AccordionPanelContentProps {
+    /** DOM id of the collapsible wrapper, so callers can target the panel. */
     id: string;
+    /** Whether the panel is expanded. */
     isOpen: boolean;
+    /** The panel's content. */
     children: React.ReactNode;
 }
 
+/**
+ * A single collapsible panel. It animates between collapsed and expanded by
+ * transitioning its CSS `grid-template-rows` (0fr ↔ 1fr), staying visible
+ * through the collapse so the animation plays rather than snapping shut.
+ *
+ * While transitioning or collapsed its content is clipped; once open and
+ * settled the overflow is released so children such as dropdowns are not cut
+ * off.
+ */
 export const AccordionPanelContent: React.FC<AccordionPanelContentProps> = ({ id, isOpen, children }) => {
     const [prevIsOpen, setPrevIsOpen] = useState(isOpen);
     const [isTransitioning, setIsTransitioning] = useState(false);

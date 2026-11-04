@@ -8,9 +8,22 @@ import { useListItems } from '../../hooks/useListItems';
 import { StockType } from '../../types';
 
 interface DesignInfoSectionProps {
+    /**
+     * Called when the user opens the p-rep usage help.
+     */
     onOpenPrepHelp: () => void;
 }
 
+/**
+ * The "Design Information" section of the Add Trial wizard.
+ *
+ * Renders the stock list selection — a single list for most designs, or the
+ * separate unreplicated and replicated lists a p-rep design needs — together
+ * with the checks lists and the numeric parameters that vary by design type
+ * (replicate count, block size, field rows/columns, and so on).
+ * 
+ * Which numeric inputs appear is driven entirely by `formData.designType`.
+ */
 export const DesignInfoSection: React.FC<DesignInfoSectionProps> = ({ onOpenPrepHelp }) => {
     const { formData, updateField } = useTrialForm();
     const { designType, stockType } = formData;

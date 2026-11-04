@@ -7,6 +7,12 @@ interface TrialDesignInformationProps {
     confirmedTreatments: ConfirmedTreatment[];
 }
 
+/**
+ * Summary panel for the review step: renders the generated design's type,
+ * locations, stock/check/block/rep counts, and confirmed field treatments as a
+ * definition list. Count labels adapt to the trial's stock type, and the counts
+ * are derived from the design `plots`.
+ */
 export const TrialDesignInformation: React.FC<TrialDesignInformationProps> = ({
     formData,
     plots,
@@ -14,6 +20,10 @@ export const TrialDesignInformation: React.FC<TrialDesignInformationProps> = ({
 }) => {
     const designDescription = getDesignTypeDescription(formData.designType);
 
+    /**
+     * Plural label for the trial's stock type, used in the count labels
+     * (e.g. "accessions", "cross unique ids", "family names").
+     */
     const stockLabelPlural = useMemo(() => {
         if (formData.stockType === 'cross') return 'cross unique ids';
         if (formData.stockType === 'family_name') return 'family names';
@@ -22,6 +32,12 @@ export const TrialDesignInformation: React.FC<TrialDesignInformationProps> = ({
 
     const numLocations = formData.locations.length || 1;
 
+    /**
+     * Design summary counts derived from `plots`: the number of distinct
+     * non-control stocks (falling back to the plot count when no stock names are
+     * present), the number of distinct checks, a per-block stock count, and the
+     * number of distinct reps.
+     */
     const { uniqueStocks, uniqueChecks, blockCounts, numReps } = useMemo(() => {
         const stocks = new Set<string>();
         const checks = new Set<string>();

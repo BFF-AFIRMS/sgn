@@ -1,5 +1,12 @@
 import { useState, useEffect } from 'react';
 
+/**
+ * Fetches `/list/contents/:listId` and returns the list's items coerced to strings.
+ * A falsy id short-circuits to an empty array, and a failed request is logged and reported as an empty list.
+ * 
+ * @param listId The ID of the list to fetch items for.
+ * @returns A promise that resolves to an array of list items as strings.
+ */
 export const fetchListItems = async (listId: string): Promise<string[]> => {
     if (!listId) return [];
     try {
@@ -20,6 +27,13 @@ export const fetchListItems = async (listId: string): Promise<string[]> => {
     return [];
 };
 
+/**
+ * Loads the items of a Breedbase list, re-fetching whenever `listId` changes.
+ * Delegates to `fetchListItems` and tracks `loading` while the request is in flight.
+ * 
+ * @param listId The ID of the list to load items for; a falsy id clears the items.
+ * @returns The list's items as strings and a loading flag.
+ */
 export const useListItems = (listId?: string): { items: string[]; loading: boolean } => {
     const [items, setItems] = useState<string[]>([]);
     const [loading, setLoading] = useState(false);

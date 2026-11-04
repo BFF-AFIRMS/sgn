@@ -16,9 +16,19 @@ import { TrialDesignLayoutTable } from '../review/TrialDesignLayoutTable';
 import { useParsedDesign } from '~/add_trial/hooks/useParsedDesign';
 
 interface ReviewDesignStepProps {
+    /** Called when the trial is saved successfully. */
     onSuccess: () => void;
 }
 
+/**
+ * The "Review Designed Trial" step of the Add Trial wizard.
+ *
+ * Previews the generated design (field map, layout table, and summary), lets
+ * the user redo the randomization or attach field treatments, and saves the
+ * trial to the database.
+ * 
+ * If the design result is absent, it regenerates the layout once on mount.
+ */
 export const ReviewDesignStep: React.FC<ReviewDesignStepProps> = ({ onSuccess }) => {
     const { formData } = useTrialForm();
     const result = formData.designResult ?? null;

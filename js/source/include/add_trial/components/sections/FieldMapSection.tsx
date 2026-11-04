@@ -2,6 +2,18 @@ import React from 'react';
 import { useTrialForm } from '../../contexts/TrialFormContext';
 import { PlotLayoutFormat } from '../../types';
 
+/**
+ * The "Field Map Information" section of the Add Trial wizard.
+ *
+ * Lets the user opt in to generating a field map for the trial and, when
+ * enabled, choose the number of field rows and the plot layout format
+ * (serpentine or zigzag).
+ * 
+ * The field map display is hidden for designs whose layout is fixed by the
+ * design itself (Alpha, MAD, greenhouse, p-rep, Westcott), the row count is
+ * hidden for designs that do not use it (Augmented, DRRC, URDD), and the row
+ * count is required for RRC.
+ */
 export const FieldMapSection: React.FC = () => {
     const { formData, updateField } = useTrialForm();
     const isWestcott = formData.designType === 'Westcott';

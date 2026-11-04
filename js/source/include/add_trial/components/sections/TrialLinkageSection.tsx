@@ -4,6 +4,13 @@ import { fetchSelectOptions, HtmlSelectOption } from '~/@generic/utils/fetch';
 
 import { useTrialForm } from '../../contexts/TrialFormContext';
 
+/**
+ * The "Trial Linkage" section of the Add Trial wizard.
+ *
+ * Records whether the trial follows up a previous field trial (loading the
+ * candidate preceding trials for the selected breeding program), whether it
+ * will be genotyped, and whether crosses will be performed on it.
+ */
 export const TrialLinkageSection: React.FC = () => {
     const { formData, updateField } = useTrialForm();
     const [precedingTrials, setPrecedingTrials] = useState<HtmlSelectOption[]>([]);

@@ -5,6 +5,13 @@ interface PartialRepHelpModalProps {
     onClose: () => void;
 }
 
+/**
+ * Help modal explaining the parameters of a partially replicated (p-rep)
+ * design.
+ *
+ * Opened from the p-rep stock list section on the design step. Renders nothing
+ * while `show` is false.
+ */
 export const PartialRepHelpModal: React.FC<PartialRepHelpModalProps> = ({ show, onClose }) => {
     if (!show) return null;
 

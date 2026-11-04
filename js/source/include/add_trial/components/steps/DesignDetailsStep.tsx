@@ -13,11 +13,27 @@ import { PlotNamingSection } from '../sections/PlotNamingSection';
 import { WorkflowAccordion, evaluateAccordionSync } from '../../../workflow_accordion';
 
 interface DesignDetailsStepProps {
+    /** Called when the user opens the p-rep usage help. */
     onOpenPrepHelp: () => void;
+    /** Called when the experimental design is generated successfully. */
     onSuccess: () => void;
+    /**
+     * Called on form input or change, so the caller can invalidate a previously
+     * generated design when the form is edited.
+     */
     onLockForward?: () => void;
 }
 
+/**
+ * The "Trial Design Details" step of the Add Trial wizard.
+ *
+ * Renders the accordion of design sections (trial information, design
+ * information, trial linkage, field map, and plot naming) and the Continue
+ * button.
+ * 
+ * Continuing validates every section, generates the experimental design, and
+ * invokes `onSuccess` when generation succeeds.
+ */
 export const DesignDetailsStep: React.FC<DesignDetailsStepProps> = ({ onOpenPrepHelp, onSuccess, onLockForward }) => {
     const { formData } = useTrialForm();
     const { generate, isGenerating } = useTrialActions();

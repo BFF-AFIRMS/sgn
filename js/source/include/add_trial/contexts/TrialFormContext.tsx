@@ -1,33 +1,41 @@
-/**
- * Form state for the Add Trial wizard.
- *
- * Holds the wizard's form data (`formData`) and the workflow's step navigation
- * (`maxStep`), both persisted to localStorage through `useFormDraft` so an
- * in-progress trial survives a page reload. It also exposes the server-provided
- * `serverProps` and the `availableDesignTypes` derived from them.
- *
- * This is the persisted draft, so it also carries the design result itself
- * (`formData.designResult`). The transient request state around generating and
- * saving that result lives in `DesignResultContext` instead.
- */
-
 import React, { createContext, useContext, useMemo, useCallback } from 'react';
 
 import { useFormDraft } from '~/form_draft';
 
 import { TrialFormData, ServerProps, STANDARD_DESIGN_TYPES, DesignType, DesignTypeOption } from '../types';
 
+/**
+ * The Add Trial wizard's form state and the server data it is derived from.
+ *
+ * This is the persisted draft, so it also carries the generated design result
+ * itself (`formData.designResult`); the transient state around generating and
+ * saving that result lives in `DesignResultContext`. The form data and step
+ * navigation are persisted to localStorage through `useFormDraft`, so an
+ * in-progress trial survives a page reload.
+ */
 export interface TrialFormContextType {
+    /** The wizard's form data, including the generated `designResult`. */
     formData: TrialFormData;
+    /** Replaces the form data outright (e.g. for partial-object updates). */
     setFormData: React.Dispatch<React.SetStateAction<TrialFormData>>;
+    /**
+     * Sets a single field. `plantsPerPlot` and `greenhouseDefaultPlants` are
+     * kept in sync, so updating either one updates both.
+     */
     updateField: <K extends keyof TrialFormData>(key: K, val: TrialFormData[K]) => void;
+    /** Identifier of the current draft, used to key the persisted state. */
     draftId: string;
+    /** Highest workflow step reached, used to gate forward navigation. */
     maxStep: number;
+    /** Records the highest workflow step reached. */
     setMaxStep: React.Dispatch<React.SetStateAction<number>>;
+    /** Data provided by the server when the page was rendered. */
     serverProps: ServerProps;
+    /** The design types enabled for this deployment, derived from `serverProps`. */
     availableDesignTypes: DesignTypeOption[];
 }
 
+/** Base form values, before server-derived defaults and any restored draft. */
 const defaultFormData: TrialFormData = {
     trialName: '',
     breedingProgram: '',
@@ -93,6 +101,13 @@ const defaultFormData: TrialFormData = {
 
 const TrialFormContext = createContext<TrialFormContextType | undefined>(undefined);
 
+/**
+ * Provides the wizard's form state to its descendants.
+ *
+ * Derives the available design types and the initial form values from
+ * `serverProps`, then wires the form data and step navigation up to
+ * `useFormDraft` so they persist across reloads.
+ */
 export const TrialFormProvider: React.FC<{ serverProps: ServerProps; children: React.ReactNode }> = ({
     serverProps,
     children
@@ -169,6 +184,10 @@ export const TrialFormProvider: React.FC<{ serverProps: ServerProps; children: R
     );
 };
 
+/**
+ * Accesses the Add Trial wizard's form state. Throws if used outside a
+ * `TrialFormProvider`.
+ */
 export const useTrialForm = () => {
     const ctx = useContext(TrialFormContext);
     if (!ctx) throw new Error('useTrialForm must be used within TrialFormProvider');

@@ -1,6 +1,16 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { WorkflowPagedProps, WorkflowPagedStepController } from '../types';
 
+/**
+ * A multi-step wizard: renders a progress bar of `steps` and the content of the
+ * active step. A step's `content` may be a plain node or a function that
+ * receives a `WorkflowPagedStepController` for programmatic navigation.
+ *
+ * The active step is held internally and, when `urlParam` is set, mirrored into
+ * the URL. The highest step reached gates forward navigation and may be
+ * controlled by the caller (`maxStep`/`onMaxStepChange`) or tracked internally;
+ * steps at or below it are selectable from the progress bar.
+ */
 export const WorkflowPaged: React.FC<WorkflowPagedProps> = ({
     id = 'workflow',
     steps,
