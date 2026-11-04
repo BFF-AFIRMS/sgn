@@ -1,3 +1,20 @@
+/**
+ * Lifecycle state for the design result being created by the Add Trial wizard.
+ *
+ * Tracks the design result through its generation and persistence:
+ *
+ * - `isGenerating`: a design result is currently being generated;
+ * - `isSaving`: the current design result is being saved;
+ * - `savedTrialId`: the trial id produced by saving the design result.
+ *
+ * This is request state, not form data, so it is kept out of the persisted
+ * draft in `TrialFormContext` (which holds the design result itself, in
+ * `formData.designResult`). The writers live in `useTrialActions`, nested
+ * inside the workflow steps, while the readers span the step components and the
+ * enclosing `AddTrialApp`; lifting the state to a shared context makes it
+ * available to all of them.
+ */
+
 import React, { createContext, useContext, useState } from 'react';
 
 export interface DesignResultContextType {

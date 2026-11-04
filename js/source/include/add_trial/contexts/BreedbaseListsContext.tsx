@@ -1,3 +1,21 @@
+/**
+ * Shared, cached access to the Breedbase lists of a given type.
+ *
+ * Lists are fetched from `/list/available` per list type and cached in
+ * `listsByType`, so every consumer of the same type shares one request
+ * (concurrent fetches for a type are de-duplicated) and one result.
+ *
+ * Consumers declare interest in a type through `registerType` /
+ * `unregisterType`, which reference-count the active types. That set is what
+ * the provider re-fetches when lists may have changed: on window focus
+ * (throttled to once every 5s) and when the list-management dialog
+ * (`#list_dialog`) is hidden, so newly created or edited lists appear without a
+ * page reload.
+ *
+ * The data is consumed through `useBreedbaseLists`, which registers the
+ * requested type for the lifetime of the calling component.
+ */
+
 import React, { createContext, useContext, useState, useEffect, useRef, useCallback, useMemo } from 'react';
 
 export interface BreedbaseListItem {
