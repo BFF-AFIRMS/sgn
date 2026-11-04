@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 interface CvtermAutocompleteProps {
     id?: string;
     name?: string;
-    value: string;
+    defaultValue: string;
     onChange: (val: string) => void;
     placeholder?: string;
     className?: string;
@@ -13,7 +13,7 @@ interface CvtermAutocompleteProps {
 export const CvtermAutocomplete: React.FC<CvtermAutocompleteProps> = ({
     id,
     name,
-    value,
+    defaultValue,
     onChange,
     placeholder,
     className,
@@ -23,7 +23,7 @@ export const CvtermAutocomplete: React.FC<CvtermAutocompleteProps> = ({
     const [show, setShow] = useState(false);
 
     useEffect(() => {
-        if (value.length < 1) {
+        if (defaultValue.length < 1) {
             setSuggestions([]);
             return;
         }
@@ -33,7 +33,7 @@ export const CvtermAutocomplete: React.FC<CvtermAutocompleteProps> = ({
         const delayDebounce = setTimeout(async () => {
             try {
                 const params = new URLSearchParams({
-                    term: value,
+                    term: defaultValue,
                     ...(dbName ? { db_name: dbName } : {})
                 });
                 const res = await fetch(`/ajax/cvterm/autocompleteslim?${params.toString()}`, {
@@ -64,7 +64,7 @@ export const CvtermAutocomplete: React.FC<CvtermAutocompleteProps> = ({
             clearTimeout(delayDebounce);
             controller.abort();
         };
-    }, [value, dbName]);
+    }, [defaultValue, dbName]);
 
     return (
         <div className="tw:relative">
@@ -72,7 +72,7 @@ export const CvtermAutocomplete: React.FC<CvtermAutocompleteProps> = ({
                 id={id}
                 name={name}
                 type="text"
-                value={value}
+                defaultValue={defaultValue}
                 onChange={e => { onChange(e.target.value); setShow(true); }}
                 onBlur={() => setTimeout(() => setShow(false), 200)}
                 placeholder={placeholder}

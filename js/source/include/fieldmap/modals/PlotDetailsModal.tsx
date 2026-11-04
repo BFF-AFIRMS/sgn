@@ -178,7 +178,7 @@ export const PlotDetailsModal: React.FC<PlotDetailsModalProps> = ({ }) => {
                             <div className="tw:p-2.5">
                                 <div className="form-group">
                                     <label>New {stockLabel} Name:</label>
-                                    <AccessionAutocomplete value={newAccession} onChange={setNewAccession} className="form-control" />
+                                    <AccessionAutocomplete defaultValue={newAccession} onChange={setNewAccession} className="form-control" />
                                 </div>
                                 <div className="form-group">
                                     <label>New Plot Name (Optional):</label>

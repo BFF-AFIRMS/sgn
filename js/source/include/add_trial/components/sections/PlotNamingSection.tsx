@@ -15,7 +15,7 @@ export const PlotNamingSection: React.FC = () => {
                             <input
                                 id="show_plot_naming_options"
                                 type="checkbox"
-                                checked={formData.showPlotNamingOptions}
+                                defaultChecked={formData.showPlotNamingOptions}
                                 onChange={e => updateField('showPlotNamingOptions', e.target.checked)}
                             />
                         </label>
@@ -32,7 +32,7 @@ export const PlotNamingSection: React.FC = () => {
                                 type="radio"
                                 name="plot_numbering_scheme"
                                 value="block_based"
-                                checked={formData.plotNumberingScheme === 'block_based'}
+                                defaultChecked={formData.plotNumberingScheme === 'block_based'}
                                 onChange={() => updateField('plotNumberingScheme', 'block_based' as PlotNumberingScheme)}
                             />{' '}
                             Block-based plot numbers (increment leading digit for every block, e.g. 101, 201)
@@ -43,7 +43,7 @@ export const PlotNamingSection: React.FC = () => {
                                 type="radio"
                                 name="plot_numbering_scheme"
                                 value="consecutive"
-                                checked={formData.plotNumberingScheme === 'consecutive'}
+                                defaultChecked={formData.plotNumberingScheme === 'consecutive'}
                                 onChange={() => updateField('plotNumberingScheme', 'consecutive' as PlotNumberingScheme)}
                             />{' '}
                             Consecutive plot numbers throughout the blocks (e.g. 1, 2, 3...)
@@ -60,7 +60,7 @@ export const PlotNamingSection: React.FC = () => {
                             type="text"
                             className="form-control"
                             placeholder="Optional prefix"
-                            value={formData.plotPrefix}
+                            defaultValue={formData.plotPrefix}
                             onChange={e => updateField('plotPrefix', e.target.value)}
                         />
                     </div>
@@ -73,7 +73,7 @@ export const PlotNamingSection: React.FC = () => {
                             id="start_number"
                             name="start_number"
                             className="form-control"
-                            value={formData.startNumber}
+                            defaultValue={formData.startNumber}
                             onChange={e => updateField('startNumber', e.target.value)}
                         >
                             <option value="1">1</option>
@@ -92,7 +92,7 @@ export const PlotNamingSection: React.FC = () => {
                             type="text"
                             className="form-control"
                             placeholder="1"
-                            value={formData.increment}
+                            defaultValue={formData.increment}
                             onChange={e => updateField('increment', e.target.value)}
                         />
                     </div>

@@ -75,7 +75,7 @@ export const DesignInfoSection: React.FC<DesignInfoSectionProps> = ({ onOpenPrep
                                     id={unrepDivId}
                                     selectId={unrepSelectId}
                                     listType={stockType}
-                                    value={formData.unrepStockListId}
+                                    defaultValue={formData.unrepStockListId}
                                     onChange={id => updateField('unrepStockListId', id)}
                                     placeholder="Required: e.g. 200"
                                 />
@@ -90,7 +90,7 @@ export const DesignInfoSection: React.FC<DesignInfoSectionProps> = ({ onOpenPrep
                                     id={repDivId}
                                     selectId={repSelectId}
                                     listType={stockType}
-                                    value={formData.repStockListId}
+                                    defaultValue={formData.repStockListId}
                                     onChange={id => updateField('repStockListId', id)}
                                     placeholder="Required: e.g. 119"
                                 />
@@ -117,7 +117,7 @@ export const DesignInfoSection: React.FC<DesignInfoSectionProps> = ({ onOpenPrep
                                     id={stockListDivId}
                                     selectId={stockListSelectId}
                                     listType={stockType}
-                                    value={formData.stockListId}
+                                    defaultValue={formData.stockListId}
                                     onChange={id => updateField('stockListId', id)}
                                     placeholder="select a list"
                                 />
@@ -133,7 +133,7 @@ export const DesignInfoSection: React.FC<DesignInfoSectionProps> = ({ onOpenPrep
                                         id={checkDivId}
                                         selectId={checkSelectId}
                                         listType="accessions"
-                                        value={formData.controlListId}
+                                        defaultValue={formData.controlListId}
                                         onChange={id => updateField('controlListId', id)}
                                         placeholder="select optional check list"
                                     />
@@ -151,7 +151,7 @@ export const DesignInfoSection: React.FC<DesignInfoSectionProps> = ({ onOpenPrep
                                         id={crbdCheckDivId}
                                         selectId={crbdCheckSelectId}
                                         listType="accessions"
-                                        value={formData.crbdControlListId}
+                                        defaultValue={formData.crbdControlListId}
                                         onChange={id => updateField('crbdControlListId', id)}
                                         placeholder={crbdChecksRequired ? 'select a check list' : 'select optional check list'}
                                         required={crbdChecksRequired}
@@ -187,7 +187,7 @@ export const DesignInfoSection: React.FC<DesignInfoSectionProps> = ({ onOpenPrep
                                     name="rep_count"
                                     type="text"
                                     className="form-control"
-                                    value={formData.repCount}
+                                    defaultValue={formData.repCount}
                                     onChange={e => updateField('repCount', e.target.value)}
                                 />
                             </div>
@@ -203,7 +203,7 @@ export const DesignInfoSection: React.FC<DesignInfoSectionProps> = ({ onOpenPrep
                                     name="block_number"
                                     type="text"
                                     className="form-control"
-                                    value={formData.blockNumber}
+                                    defaultValue={formData.blockNumber}
                                     onChange={e => updateField('blockNumber', e.target.value)}
                                 />
                             </div>
@@ -219,7 +219,7 @@ export const DesignInfoSection: React.FC<DesignInfoSectionProps> = ({ onOpenPrep
                                     name="col_number"
                                     type="text"
                                     className="form-control"
-                                    value={formData.colNumber}
+                                    defaultValue={formData.colNumber}
                                     onChange={e => updateField('colNumber', e.target.value)}
                                 />
                             </div>
@@ -235,7 +235,7 @@ export const DesignInfoSection: React.FC<DesignInfoSectionProps> = ({ onOpenPrep
                                     name="block_size"
                                     type="text"
                                     className="form-control"
-                                    value={formData.blockSize}
+                                    defaultValue={formData.blockSize}
                                     onChange={e => updateField('blockSize', e.target.value)}
                                 />
                             </div>
@@ -252,7 +252,7 @@ export const DesignInfoSection: React.FC<DesignInfoSectionProps> = ({ onOpenPrep
                                     name="max_block_size"
                                     type="text"
                                     className="form-control"
-                                    value={formData.maxBlockSize}
+                                    defaultValue={formData.maxBlockSize}
                                     onChange={e => updateField('maxBlockSize', e.target.value)}
                                 />
                             </div>
@@ -265,7 +265,7 @@ export const DesignInfoSection: React.FC<DesignInfoSectionProps> = ({ onOpenPrep
                                         name="row_number_per_block"
                                         type="text"
                                         className="form-control"
-                                        value={formData.rowNumberPerBlock}
+                                        defaultValue={formData.rowNumberPerBlock}
                                         onChange={e => updateField('rowNumberPerBlock', e.target.value)}
                                     />
                                 </div>
@@ -283,7 +283,7 @@ export const DesignInfoSection: React.FC<DesignInfoSectionProps> = ({ onOpenPrep
                                         name="row_number"
                                         type="text"
                                         className="form-control"
-                                        value={formData.rowNumber}
+                                        defaultValue={formData.rowNumber}
                                         onChange={e => updateField('rowNumber', e.target.value)}
                                     />
                                 </div>
@@ -296,7 +296,7 @@ export const DesignInfoSection: React.FC<DesignInfoSectionProps> = ({ onOpenPrep
                                         name="col_number"
                                         type="text"
                                         className="form-control"
-                                        value={formData.colNumber}
+                                        defaultValue={formData.colNumber}
                                         onChange={e => updateField('colNumber', e.target.value)}
                                     />
                                 </div>
@@ -309,7 +309,7 @@ export const DesignInfoSection: React.FC<DesignInfoSectionProps> = ({ onOpenPrep
                                         name="fieldMap_col_number"
                                         type="text"
                                         className="form-control"
-                                        value={formData.colNumberPerBlock}
+                                        defaultValue={formData.colNumberPerBlock}
                                         onChange={e => updateField('colNumberPerBlock', e.target.value)}
                                     />
                                 </div>
@@ -322,7 +322,7 @@ export const DesignInfoSection: React.FC<DesignInfoSectionProps> = ({ onOpenPrep
                                         name="row_number_per_block"
                                         type="text"
                                         className="form-control"
-                                        value={formData.rowNumberPerBlock}
+                                        defaultValue={formData.rowNumberPerBlock}
                                         onChange={e => updateField('rowNumberPerBlock', e.target.value)}
                                     />
                                 </div>
@@ -343,7 +343,7 @@ export const DesignInfoSection: React.FC<DesignInfoSectionProps> = ({ onOpenPrep
                                             type="text"
                                             className="form-control"
                                             placeholder="26"
-                                            value={formData.rowInDesignNumber}
+                                            defaultValue={formData.rowInDesignNumber}
                                             onChange={e => updateField('rowInDesignNumber', e.target.value)}
                                         />
                                     </div>
@@ -360,7 +360,7 @@ export const DesignInfoSection: React.FC<DesignInfoSectionProps> = ({ onOpenPrep
                                             type="text"
                                             className="form-control"
                                             placeholder="26"
-                                            value={formData.colInDesignNumber}
+                                            defaultValue={formData.colInDesignNumber}
                                             onChange={e => updateField('colInDesignNumber', e.target.value)}
                                         />
                                     </div>
@@ -382,7 +382,7 @@ export const DesignInfoSection: React.FC<DesignInfoSectionProps> = ({ onOpenPrep
                                             type="text"
                                             className="form-control"
                                             placeholder="4"
-                                            value={formData.noOfRepTimes}
+                                            defaultValue={formData.noOfRepTimes}
                                             onChange={e => updateField('noOfRepTimes', e.target.value)}
                                         />
                                     </div>
@@ -399,7 +399,7 @@ export const DesignInfoSection: React.FC<DesignInfoSectionProps> = ({ onOpenPrep
                                             type="text"
                                             className="form-control"
                                             placeholder="13, 2"
-                                            value={formData.noOfBlockSequence}
+                                            defaultValue={formData.noOfBlockSequence}
                                             onChange={e => updateField('noOfBlockSequence', e.target.value)}
                                         />
                                     </div>
@@ -416,7 +416,7 @@ export const DesignInfoSection: React.FC<DesignInfoSectionProps> = ({ onOpenPrep
                                             type="text"
                                             className="form-control"
                                             placeholder="13, 1"
-                                            value={formData.noOfSubBlockSequence}
+                                            defaultValue={formData.noOfSubBlockSequence}
                                             onChange={e => updateField('noOfSubBlockSequence', e.target.value)}
                                         />
                                     </div>
@@ -436,7 +436,7 @@ export const DesignInfoSection: React.FC<DesignInfoSectionProps> = ({ onOpenPrep
                                         type="text"
                                         className="form-control"
                                         placeholder="1"
-                                        value={formData.greenhouseDefaultPlants}
+                                        defaultValue={formData.greenhouseDefaultPlants}
                                         onChange={e => updateField('greenhouseDefaultPlants', e.target.value)}
                                     />
                                 </div>
@@ -458,7 +458,7 @@ export const DesignInfoSection: React.FC<DesignInfoSectionProps> = ({ onOpenPrep
                                                     type="text"
                                                     className="form-control input-sm"
                                                     placeholder={formData.greenhouseDefaultPlants || formData.plantsPerPlot || '1'}
-                                                    value={formData.greenhouseCustomPlants[name] || ''}
+                                                    defaultValue={formData.greenhouseCustomPlants[name] || ''}
                                                     onChange={e => {
                                                         const val = e.target.value;
                                                         updateField('greenhouseCustomPlants', {
@@ -487,7 +487,7 @@ export const DesignInfoSection: React.FC<DesignInfoSectionProps> = ({ onOpenPrep
                                             name={`create_trial_with_treatment_name_input${idx + 1}`}
                                             className="form-control treatment-name-input-box"
                                             placeholder={idx === 0 ? "Required Treatment 1 (likely a control value)" : idx === 1 ? "Required Treatment 2" : `Optional Treatment ${idx + 1}`}
-                                            value={t.name}
+                                            defaultValue={t.name}
                                             onChange={val => {
                                                 const updated = [...formData.treatments];
                                                 updated[idx] = { ...updated[idx], name: val };
@@ -501,7 +501,7 @@ export const DesignInfoSection: React.FC<DesignInfoSectionProps> = ({ onOpenPrep
                                             name={`create_trial_with_treatment_value_input${idx + 1}`}
                                             className="form-control"
                                             placeholder="treatment value"
-                                            value={t.value}
+                                            defaultValue={t.value}
                                             onChange={e => {
                                                 const updated = [...formData.treatments];
                                                 updated[idx] = { ...updated[idx], value: e.target.value };
@@ -532,7 +532,7 @@ export const DesignInfoSection: React.FC<DesignInfoSectionProps> = ({ onOpenPrep
                                         name="num_plants_per_treatment"
                                         type="text"
                                         className="form-control"
-                                        value={formData.numPlantsPerTreatment}
+                                        defaultValue={formData.numPlantsPerTreatment}
                                         onChange={e => updateField('numPlantsPerTreatment', e.target.value)}
                                     />
                                 </div>
@@ -548,7 +548,7 @@ export const DesignInfoSection: React.FC<DesignInfoSectionProps> = ({ onOpenPrep
                                     <AccessionAutocomplete
                                         id="westcott_check_1"
                                         name="westcott_check_1"
-                                        value={formData.westcottCheck1}
+                                        defaultValue={formData.westcottCheck1}
                                         onChange={val => updateField('westcottCheck1', val)}
                                         className="form-control"
                                         placeholder="Required"
@@ -561,7 +561,7 @@ export const DesignInfoSection: React.FC<DesignInfoSectionProps> = ({ onOpenPrep
                                     <AccessionAutocomplete
                                         id="westcott_check_2"
                                         name="westcott_check_2"
-                                        value={formData.westcottCheck2}
+                                        defaultValue={formData.westcottCheck2}
                                         onChange={val => updateField('westcottCheck2', val)}
                                         className="form-control"
                                         placeholder="Required"
@@ -577,7 +577,7 @@ export const DesignInfoSection: React.FC<DesignInfoSectionProps> = ({ onOpenPrep
                                         type="text"
                                         className="form-control"
                                         placeholder="Required"
-                                        value={formData.westcottCol}
+                                        defaultValue={formData.westcottCol}
                                         onChange={e => updateField('westcottCol', e.target.value)}
                                     />
                                 </div>
@@ -591,7 +591,7 @@ export const DesignInfoSection: React.FC<DesignInfoSectionProps> = ({ onOpenPrep
                                         type="text"
                                         className="form-control"
                                         placeholder="default is 10"
-                                        value={formData.westcottColBetweenCheck}
+                                        defaultValue={formData.westcottColBetweenCheck}
                                         onChange={e => updateField('westcottColBetweenCheck', e.target.value)}
                                     />
                                 </div>
@@ -617,7 +617,7 @@ export const DesignInfoSection: React.FC<DesignInfoSectionProps> = ({ onOpenPrep
                                         id="select_seedlot_list"
                                         selectId="select_seedlot_list_list_select"
                                         listType="seedlots"
-                                        value={formData.seedlotListId}
+                                        defaultValue={formData.seedlotListId}
                                         onChange={id => updateField('seedlotListId', id)}
                                         placeholder="none"
                                     />
@@ -631,7 +631,7 @@ export const DesignInfoSection: React.FC<DesignInfoSectionProps> = ({ onOpenPrep
                                         className="form-control"
                                         id="num_seed_per_plot"
                                         name="num_seed_per_plot"
-                                        value={formData.numSeedPerPlot}
+                                        defaultValue={formData.numSeedPerPlot}
                                         onChange={e => updateField('numSeedPerPlot', e.target.value)}
                                     />
                                 </div>
