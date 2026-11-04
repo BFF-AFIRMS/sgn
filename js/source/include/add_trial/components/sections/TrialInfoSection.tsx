@@ -31,6 +31,10 @@ export const TrialInfoSection: React.FC = () => {
         });
     }, [serverProps.locations, formData.breedingProgram]);
 
+    const selectedDesignType = useMemo(() => {
+        return availableDesignTypes.find(d => d.value === formData.designType);
+    }, [availableDesignTypes, formData.designType]);
+
     return (
         <div className="tw:flex tw:flex-col tw:gap-3.5">
             <div className="form-group row">
@@ -329,6 +333,13 @@ export const TrialInfoSection: React.FC = () => {
                             <option key={d.value} value={d.value} title={d.label}>{d.label}</option>
                         ))}
                     </select>
+                    <div id="create_trial_design_description_div">
+                        {selectedDesignType?.longDescription && (
+                            <div className="well">
+                                <p>{selectedDesignType.longDescription}</p>
+                            </div>
+                        )}
+                    </div>
                 </div>
             </div>
 
