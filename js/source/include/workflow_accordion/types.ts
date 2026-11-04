@@ -9,7 +9,6 @@ export interface AccordionStepValidationResult {
 export interface AccordionWorkflowStep {
     id: string;
     title: string;
-    component?: React.ReactNode;
     content?: React.ReactNode;
     validate?: () => AccordionStepValidationResult;
 }
