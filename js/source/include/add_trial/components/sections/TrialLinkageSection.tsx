@@ -42,7 +42,7 @@ export const TrialLinkageSection: React.FC = () => {
                             id="add_project_trial_sourced"
                             name="add_project_trial_sourced"
                             className="form-control"
-                            value={formData.trialSourced}
+                            defaultValue={formData.trialSourced}
                             onChange={e => updateField('trialSourced', e.target.value as 'yes' | 'no')}
                         >
                             <option value="no">No</option>
@@ -60,7 +60,7 @@ export const TrialLinkageSection: React.FC = () => {
                                 name="add_project_trial_source_select"
                                 className="form-control"
                                 size={4}
-                                value={formData.sourceTrialIds}
+                                defaultValue={formData.sourceTrialIds}
                                 onChange={e => {
                                     const opts = Array.from(e.target.selectedOptions).map(o => o.value);
                                     updateField('sourceTrialIds', opts);
@@ -89,7 +89,7 @@ export const TrialLinkageSection: React.FC = () => {
                             id="add_project_trial_will_be_genotyped"
                             name="add_project_trial_will_be_genotyped"
                             className="form-control"
-                            value={formData.willBeGenotyped}
+                            defaultValue={formData.willBeGenotyped}
                             onChange={e => updateField('willBeGenotyped', e.target.value as 'yes' | 'no')}
                         >
                             <option value="no">No</option>
@@ -111,7 +111,7 @@ export const TrialLinkageSection: React.FC = () => {
                             id="add_project_trial_will_be_crossed"
                             name="add_project_trial_will_be_crossed"
                             className="form-control"
-                            value={formData.willBeCrossed}
+                            defaultValue={formData.willBeCrossed}
                             onChange={e => updateField('willBeCrossed', e.target.value as 'yes' | 'no')}
                         >
                             <option value="no">No</option>

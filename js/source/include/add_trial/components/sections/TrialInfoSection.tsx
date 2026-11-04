@@ -42,7 +42,7 @@ export const TrialInfoSection: React.FC = () => {
                         id="select_breeding_program"
                         name="select_breeding_program"
                         className="form-control"
-                        value={formData.breedingProgram}
+                        defaultValue={formData.breedingProgram}
                         onChange={e => {
                             const newProgram = e.target.value;
                             const validNames = new Set(
@@ -77,9 +77,10 @@ export const TrialInfoSection: React.FC = () => {
                         name="add_project_location"
                         className="form-control"
                         size={4}
-                        value={formData.locations}
+                        defaultValue={formData.locations}
                         onChange={e => {
                             const opts = Array.from(e.target.selectedOptions).map(o => o.value);
+                            console.log('DEBUG: SELECTED: ', opts)
                             updateField('locations', opts);
                         }}
                     >
@@ -107,7 +108,7 @@ export const TrialInfoSection: React.FC = () => {
                         name="new_trial_name"
                         type="text"
                         className="form-control"
-                        value={formData.trialName}
+                        defaultValue={formData.trialName}
                         onChange={e => updateField('trialName', e.target.value)}
                     />
                     <p className="tw:text-gray-500 tw:mt-1">
@@ -123,7 +124,7 @@ export const TrialInfoSection: React.FC = () => {
                         id="add_project_type"
                         name="add_project_type"
                         className="form-control"
-                        value={formData.trialType}
+                        defaultValue={formData.trialType}
                         onChange={e => updateField('trialType', e.target.value)}
                     >
                         {trialTypes.map(t => (
@@ -142,7 +143,7 @@ export const TrialInfoSection: React.FC = () => {
                         id="add_project_year"
                         name="add_project_year"
                         className="form-control"
-                        value={formData.year}
+                        defaultValue={formData.year}
                         onChange={e => updateField('year', e.target.value)}
                     >
                         {yearOptions.map(y => (
@@ -161,7 +162,7 @@ export const TrialInfoSection: React.FC = () => {
                         title="planting_date"
                         type="date"
                         className="form-control"
-                        value={formData.plantingDate}
+                        defaultValue={formData.plantingDate}
                         onChange={e => updateField('plantingDate', e.target.value)}
                     />
                 </div>
@@ -175,7 +176,7 @@ export const TrialInfoSection: React.FC = () => {
                         name="add_project_plot_width"
                         type="text"
                         className="form-control"
-                        value={formData.plotWidth}
+                        defaultValue={formData.plotWidth}
                         onChange={e => updateField('plotWidth', e.target.value)}
                     />
                 </div>
@@ -189,7 +190,7 @@ export const TrialInfoSection: React.FC = () => {
                         name="add_project_plot_length"
                         type="text"
                         className="form-control"
-                        value={formData.plotLength}
+                        defaultValue={formData.plotLength}
                         onChange={e => updateField('plotLength', e.target.value)}
                     />
                 </div>
@@ -203,7 +204,7 @@ export const TrialInfoSection: React.FC = () => {
                         name="new_trial_field_size"
                         type="text"
                         className="form-control"
-                        value={formData.fieldSize}
+                        defaultValue={formData.fieldSize}
                         onChange={e => updateField('fieldSize', e.target.value)}
                     />
                 </div>
@@ -217,7 +218,7 @@ export const TrialInfoSection: React.FC = () => {
                         name="add_plant_entries"
                         type="text"
                         className="form-control"
-                        value={formData.plantsPerPlot}
+                        defaultValue={formData.plantsPerPlot}
                         onChange={e => updateField('plantsPerPlot', e.target.value)}
                     />
                     <p className="tw:text-gray-500 tw:mt-1">
@@ -230,7 +231,7 @@ export const TrialInfoSection: React.FC = () => {
                                 name="trial_create_plants_per_plot_inherit_treatments"
                                 type="checkbox"
                                 disabled
-                                checked={formData.inheritTreatments}
+                                defaultChecked={formData.inheritTreatments}
                                 onChange={e => updateField('inheritTreatments', e.target.checked)}
                             />{' '}
                             Inherits Treatment(s) From Plots
@@ -240,7 +241,7 @@ export const TrialInfoSection: React.FC = () => {
                                 id="trial_create_rows_and_columns_to_plants"
                                 name="trial_create_rows_and_columns_to_plants"
                                 type="checkbox"
-                                checked={formData.assignRowColToPlants}
+                                defaultChecked={formData.assignRowColToPlants}
                                 onChange={e => updateField('assignRowColToPlants', e.target.checked)}
                             />{' '}
                             Assign row and column coordinates to plants within plots?
@@ -255,7 +256,7 @@ export const TrialInfoSection: React.FC = () => {
                                     name="trial_create_rows_per_plot"
                                     type="number"
                                     className="form-control input-sm"
-                                    value={formData.rowsPerPlot}
+                                    defaultValue={formData.rowsPerPlot}
                                     onChange={e => updateField('rowsPerPlot', e.target.value)}
                                 />
                             </div>
@@ -266,7 +267,7 @@ export const TrialInfoSection: React.FC = () => {
                                     name="trial_create_cols_per_plot"
                                     type="number"
                                     className="form-control input-sm"
-                                    value={formData.colsPerPlot}
+                                    defaultValue={formData.colsPerPlot}
                                     onChange={e => updateField('colsPerPlot', e.target.value)}
                                 />
                             </div>
@@ -285,7 +286,7 @@ export const TrialInfoSection: React.FC = () => {
                         name="add_project_description"
                         className="form-control"
                         rows={3}
-                        value={formData.description}
+                        defaultValue={formData.description}
                         onChange={e => updateField('description', e.target.value)}
                     />
                 </div>
@@ -302,7 +303,7 @@ export const TrialInfoSection: React.FC = () => {
                         id="select_stock_type"
                         name="select_stock_type"
                         className="form-control"
-                        value={formData.stockType}
+                        defaultValue={formData.stockType}
                         onChange={e => updateField('stockType', e.target.value as StockType)}
                     >
                         <option value="accession">Accession</option>
@@ -321,7 +322,7 @@ export const TrialInfoSection: React.FC = () => {
                         id="select_design_method"
                         name="select_design_method"
                         className="form-control"
-                        value={formData.designType}
+                        defaultValue={formData.designType}
                         onChange={e => updateField('designType', e.target.value as DesignType)}
                     >
                         {availableDesignTypes.map(d => (
@@ -341,7 +342,7 @@ export const TrialInfoSection: React.FC = () => {
                                     id="use_same_layout"
                                     name="use_same_layout"
                                     type="checkbox"
-                                    checked={formData.useSameLayout}
+                                    defaultChecked={formData.useSameLayout}
                                     onChange={e => updateField('useSameLayout', e.target.checked)}
                                 />
                             </label>
