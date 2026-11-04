@@ -1,6 +1,7 @@
 import { TrialFormData, DesignResultResponse, StockType } from '../types';
 import { getSplitplotTreatments } from '../utils/designAdapters';
-import { fetchListItems, normalizeListType } from '../hooks/useBreedbaseLists';
+import { fetchListItems } from '../hooks/useListItems';
+import { normalizeListType } from '../contexts/BreedbaseListsContext';
 
 export interface GenerateDesignLists {
     stockListItems: string[] | null;
