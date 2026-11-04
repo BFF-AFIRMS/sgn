@@ -6,8 +6,6 @@ export interface DesignResultContextType {
     result: DesignResultResponse | null;
     setResult: React.Dispatch<React.SetStateAction<DesignResultResponse | null>>;
     parsedDesigns: Array<Record<string, GeneratedDesignPlot>>;
-    selectedLocationIndex: number;
-    setSelectedLocationIndex: (idx: number) => void;
     savedTrialId: string | null;
     setSavedTrialId: (id: string | null) => void;
     isGenerating: boolean;
@@ -29,7 +27,6 @@ export const DesignResultProvider: React.FC<{ children: React.ReactNode }> = ({ 
         }));
     }, [setFormData]);
 
-    const [selectedLocationIndex, setSelectedLocationIndex] = useState(0);
     const [savedTrialId, setSavedTrialId] = useState<string | null>(null);
     const [isGenerating, setIsGenerating] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
@@ -49,8 +46,6 @@ export const DesignResultProvider: React.FC<{ children: React.ReactNode }> = ({ 
             result,
             setResult,
             parsedDesigns,
-            selectedLocationIndex,
-            setSelectedLocationIndex,
             savedTrialId,
             setSavedTrialId,
             isGenerating,
