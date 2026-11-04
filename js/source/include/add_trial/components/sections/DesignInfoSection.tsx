@@ -16,21 +16,6 @@ export const DesignInfoSection: React.FC<DesignInfoSectionProps> = ({ onOpenPrep
     const { designType, stockType } = formData;
     const { items: greenhouseStocks } = useListItems(formData.stockListId);
 
-    const handleSearchSeedlots = () => {
-        const targetListId = formData.stockListId || formData.repStockListId;
-        if (!targetListId) {
-            alert('Please first select a list of accessions above!');
-            return;
-        }
-        const CXGN = (window as any).CXGN;
-        if (typeof CXGN?.List === 'function') {
-            const list = new CXGN.List();
-            list.seedlotSearch(targetListId);
-            return;
-        }
-        alert('List management tool is currently loading or unavailable.');
-    };
-
     const stockTypeLabels: Record<StockType, { singular: string; plural: string }> = {
         accession: { singular: 'Accession', plural: 'Accessions' },
         cross: { singular: 'Cross', plural: 'Crosses' },
