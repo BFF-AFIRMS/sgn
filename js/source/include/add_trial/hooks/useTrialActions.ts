@@ -2,7 +2,7 @@ import { useCallback } from 'react';
 import { TrialFormData, DesignResultResponse } from '../types';
 import { useDesignResult } from '../contexts/DesignResultContext';
 import { useTrialForm } from '../contexts/TrialFormContext';
-import { fetchListItems } from './useBreedbaseLists';
+import { fetchListItems } from './useListItems';
 import * as trialService from '../services/trialService';
 
 export interface ActionResult<T = void> {
