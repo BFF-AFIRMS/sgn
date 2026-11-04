@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { AccordionWorkflowStep, WorkflowAccordionProps } from '../types';
 import { AccordionPanelContent } from './AccordionPanelContent';
 
@@ -35,6 +35,7 @@ export const WorkflowAccordion: React.FC<WorkflowAccordionProps> = ({
     steps,
     maxUnlocked,
     firstFailingMessage,
+    onOpenPanelsChange,
     onHeaderClick,
     className = ''
 }) => {
@@ -62,6 +63,12 @@ export const WorkflowAccordion: React.FC<WorkflowAccordionProps> = ({
     } else if (effectiveMaxUnlocked < prevMaxUnlocked) {
         setPrevMaxUnlocked(effectiveMaxUnlocked);
     }
+
+    useEffect(() => {
+        if (onOpenPanelsChange) {
+            onOpenPanelsChange(openPanels);
+        }
+    }, [openPanels, onOpenPanelsChange]);
 
     const handleHeaderClick = (idx: number) => {
         if (onHeaderClick) {
