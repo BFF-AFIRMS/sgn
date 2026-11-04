@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useTrialForm } from '../contexts/TrialFormContext';
-import { useDesignResult } from '../contexts/DesignResultContext';
 import { getDesignTreatments, extractDesignPlots } from '../utils/designAdapters';
+import { useParsedDesign } from '../hooks/useParsedDesign';
 
 interface AddTreatmentsModalProps {
     show?: boolean;
@@ -47,7 +47,7 @@ const formatTreatmentDate = (val?: string): string => {
 
 export const AddTreatmentsModal: React.FC<AddTreatmentsModalProps> = ({ show = true, onClose }) => {
     const { formData, setFormData, serverProps } = useTrialForm();
-    const { parsedDesigns } = useDesignResult();
+    const parsedDesign = useParsedDesign(formData);
     const result = formData.designResult ?? null;
 
     const managementFactorTypes = useMemo(() => {
@@ -69,8 +69,8 @@ export const AddTreatmentsModal: React.FC<AddTreatmentsModalProps> = ({ show = t
     const [selectedPlots, setSelectedPlots] = useState<Record<number, Set<string>>>({});
 
     const plotsByTrial = useMemo(
-        () => parsedDesigns.map(extractDesignPlots),
-        [parsedDesigns]
+        () => parsedDesign.map(extractDesignPlots),
+        [parsedDesign]
     );
 
     const handleContinue = () => {
@@ -120,11 +120,11 @@ export const AddTreatmentsModal: React.FC<AddTreatmentsModalProps> = ({ show = t
             alert('Please select at least one plot for this treatment.');
             return;
         }
-        if (!result || parsedDesigns.length === 0) return;
+        if (!result || parsedDesign.length === 0) return;
 
         const formattedDate = formatTreatmentDate(treatmentDate);
 
-        const newDesignArray = parsedDesigns.map((design, i) => {
+        const newDesignArray = parsedDesign.map((design, i) => {
             const existingTreatments = { ...getDesignTreatments(design) };
 
             const selectedSet = selectedPlots[i] || new Set();

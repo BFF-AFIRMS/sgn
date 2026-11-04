@@ -4,7 +4,6 @@ import { alertWarnings } from '~/@generic/utils/alert';
 import { FieldMapContainer } from '~/fieldmap';
 
 import { useTrialForm } from '../../contexts/TrialFormContext';
-import { useDesignResult } from '../../contexts/DesignResultContext';
 import { useTrialActions } from '../../hooks/useTrialActions';
 import {
     extractDesignPlots,
@@ -14,6 +13,7 @@ import {
 import { AddTreatmentsModal } from '../../modals/AddTreatmentsModal';
 import { TrialDesignInformation } from '../review/TrialDesignInformation';
 import { TrialDesignLayoutTable } from '../review/TrialDesignLayoutTable';
+import { useParsedDesign } from '~/add_trial/hooks/useParsedDesign';
 
 interface ReviewDesignStepProps {
     onSuccess: () => void;
@@ -22,14 +22,14 @@ interface ReviewDesignStepProps {
 export const ReviewDesignStep: React.FC<ReviewDesignStepProps> = ({ onSuccess }) => {
     const { formData } = useTrialForm();
     const result = formData.designResult ?? null;
-    const { parsedDesigns } = useDesignResult();
+    const parsedDesign = useParsedDesign(formData);
     const { generate, save, isGenerating, isSaving } = useTrialActions();
     const [showTreatmentModal, setShowTreatmentModal] = useState(false);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
     const [selectedLocationIndex, setSelectedLocationIndex] = useState(0);
     const currentLocationName = formData.locations[selectedLocationIndex] || formData.trialName;
-    const currentDesign = parsedDesigns[selectedLocationIndex] || parsedDesigns[0];
+    const currentDesign = parsedDesign[selectedLocationIndex] || parsedDesign[0];
 
     const currentPlots = useMemo(
         () => extractDesignPlots(currentDesign),
@@ -54,8 +54,8 @@ export const ReviewDesignStep: React.FC<ReviewDesignStepProps> = ({ onSuccess })
     }, [result, formData, generate]);
 
     const confirmedTreatments = useMemo(() => {
-        return extractConfirmedTreatments(parsedDesigns);
-    }, [parsedDesigns]);
+        return extractConfirmedTreatments(parsedDesign);
+    }, [parsedDesign]);
 
     const handleRedo = async () => {
         setErrorMessage(null);
