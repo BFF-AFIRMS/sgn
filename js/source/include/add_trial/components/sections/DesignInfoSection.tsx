@@ -598,58 +598,6 @@ export const DesignInfoSection: React.FC<DesignInfoSectionProps> = ({ onOpenPrep
                             </div>
                         </>
                     )}
-
-                    {stockType === 'accession' && (
-                        <div id="trial_design_seedlots_section" className="well well-sm tw:mt-4">
-                            <div className="tw:flex tw:justify-center">
-                                <h4 className="tw:font-bold tw:text-center">
-                                    Which seedlots will you grow in the field? <br />
-                                    <small className="tw:text-gray-500 tw:font-normal">
-                                        This is optional and can be decided later. If you do not know exactly which seedlot packets you will be planting at this time, you can add this information on the Trial Detail Page after the trial has been saved in the database.
-                                    </small>
-                                </h4>
-                            </div>
-                            <hr />
-                            <div className="form-group form-group-sm" id="show_list_of_seedlots_section">
-                                <label className="col-sm-7 control-label">List of seedlots for selected accessions (optional):</label>
-                                <div className="col-sm-5">
-                                    <BreedbaseListSelect
-                                        id="select_seedlot_list"
-                                        selectId="select_seedlot_list_list_select"
-                                        listType="seedlots"
-                                        defaultValue={formData.seedlotListId}
-                                        onChange={id => updateField('seedlotListId', id)}
-                                        placeholder="none"
-                                    />
-                                </div>
-                            </div>
-                            <div className="form-group form-group-sm" id="show_num_seed_per_plot_section">
-                                <label className="col-sm-7 control-label">Number of seeds per plot (required if seedlot list given):</label>
-                                <div className="col-sm-5">
-                                    <input
-                                        type="number"
-                                        className="form-control"
-                                        id="num_seed_per_plot"
-                                        name="num_seed_per_plot"
-                                        defaultValue={formData.numSeedPerPlot}
-                                        onChange={e => updateField('numSeedPerPlot', e.target.value)}
-                                    />
-                                </div>
-                            </div>
-                            <div className="tw:flex tw:justify-center tw:items-center tw:gap-4 tw:mt-3">
-                                <span>Need a list of seedlots for the selected accessions?</span>
-                                <button
-                                    name="convert_accessions_to_seedlots"
-                                    type="button"
-                                    className="btn btn-default btn-sm"
-                                    style={{ margin: '6px 0px 0px 0px' }}
-                                    onClick={handleSearchSeedlots}
-                                >
-                                    Search Seedlots for Accessions
-                                </button>
-                            </div>
-                        </div>
-                    )}
             </div>
         </div>
     );
