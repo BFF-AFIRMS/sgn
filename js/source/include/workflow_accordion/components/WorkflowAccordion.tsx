@@ -127,7 +127,7 @@ export const WorkflowAccordion: React.FC<WorkflowAccordionProps> = ({
                             id={`${id}_collapse_${i}_content`}
                             isOpen={isOpen}
                         >
-                            {sec.component || sec.content}
+                            {sec.content}
                         </AccordionPanelContent>
                     </div>
                 );

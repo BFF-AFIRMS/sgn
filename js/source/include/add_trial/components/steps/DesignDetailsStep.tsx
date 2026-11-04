@@ -27,30 +27,30 @@ export const DesignDetailsStep: React.FC<DesignDetailsStepProps> = ({ onOpenPrep
         {
             id: 'step_trial_info',
             title: 'Trial Information',
-            component: <TrialInfoSection />,
+            content: <TrialInfoSection />,
             validate: () => validateTrialInfoSync(formData)
         },
         {
             id: 'step_design_info',
             title: 'Design Information',
-            component: <DesignInfoSection onOpenPrepHelp={onOpenPrepHelp} />,
+            content: <DesignInfoSection onOpenPrepHelp={onOpenPrepHelp} />,
             validate: () => validateDesignInfoSync(formData)
         },
         {
             id: 'step_trial_linkage',
             title: 'Trial Linkage',
-            component: <TrialLinkageSection />
+            content: <TrialLinkageSection />
         },
         {
             id: 'step_field_map',
             title: 'Field Map Information',
-            component: <FieldMapSection />,
+            content: <FieldMapSection />,
             validate: () => validateFieldMapInfoSync(formData)
         },
         {
             id: 'step_plot_naming',
             title: 'Custom Plot Naming',
-            component: <PlotNamingSection />
+            content: <PlotNamingSection />
         }
     ], [onOpenPrepHelp, formData]);
 
