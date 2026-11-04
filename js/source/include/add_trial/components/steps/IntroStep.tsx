@@ -1,9 +1,14 @@
 import React from 'react';
 
 interface IntroStepProps {
+    /** Called when the user advances from the intro screen. */
     onNext: () => void;
 }
 
+/**
+ * The first step of the Add Trial wizard: an overview of what a field trial is
+ * and what the wizard will ask for.
+ */
 export const IntroStep: React.FC<IntroStepProps> = ({ onNext }) => {
     return (
         <div>

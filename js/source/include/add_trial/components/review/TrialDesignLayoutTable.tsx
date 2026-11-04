@@ -2,11 +2,22 @@ import React, { useMemo } from 'react';
 import { GeneratedDesignPlot, StockType, DesignType } from '../../types';
 
 interface TrialDesignLayoutTableProps {
+    /** The generated design plots to render. */
     plots: GeneratedDesignPlot[];
+    /** The trial's stock type; selects the heading of the stock column. */
     stockType: StockType;
+    /** The trial's design type; controls the extra plant and subplot columns. */
     designType: DesignType;
 }
 
+/**
+ * Renders the generated design's plots as a table for the review step.
+ * 
+ * The columns adapt to the design: greenhouse and split plot designs prepend plant
+ * (and, for split plot, subplot) columns, and the stock column is headed by the
+ * trial's stock type. A plot carrying plant names expands into one row per
+ * plant (or per subplot plant); a plot without them renders as a single row.
+ */
 export const TrialDesignLayoutTable: React.FC<TrialDesignLayoutTableProps> = ({
     plots,
     stockType,
@@ -15,6 +26,7 @@ export const TrialDesignLayoutTable: React.FC<TrialDesignLayoutTableProps> = ({
     const isGreenhouse = designType === 'greenhouse';
     const isSplitplot = designType === 'splitplot';
 
+    // Heading for the stock column, adapted to the trial's stock type.
     const stockColumnTitle = useMemo(() => {
         if (stockType === 'family_name') return 'Family Name';
         if (stockType === 'cross') return 'Cross Unique ID';

@@ -2,6 +2,15 @@ import React from 'react';
 import { useTrialForm } from '../../contexts/TrialFormContext';
 import { PlotNumberingScheme } from '../../types';
 
+/**
+ * The "Custom Plot Naming" section of the Add Trial wizard.
+ *
+ * Lets the user override how plot names and numbers are generated: the
+ * numbering scheme (block-based or consecutive), an optional plot name prefix,
+ * the starting plot number, and the plot number increment.
+ * 
+ * The individual controls are only shown while custom naming is enabled.
+ */
 export const PlotNamingSection: React.FC = () => {
     const { formData, updateField } = useTrialForm();
 

@@ -12,6 +12,15 @@ export interface ActionResult<T = void> {
     warnings?: string[];
 }
 
+/**
+ * Actions for the Add Trial wizard: generating a design result and saving it as
+ * a trial.
+ *
+ * Actions report failures through their returned `ActionResult` rather than
+ * throwing. While a request is in flight the matching `isGenerating` /
+ * `isSaving` flag is set, driving the wizard's working modal and disabled step
+ * buttons.
+ */
 export const useTrialActions = () => {
     const {
         setSavedTrialId,
@@ -22,6 +31,14 @@ export const useTrialActions = () => {
     } = useDesignResult();
     const { setFormData } = useTrialForm();
 
+    /**
+     * Verifies the trial name and the selected lists, assembles the design
+     * request, and stores the response in `TrialFormContext` as
+     * `formData.designResult`.
+     * 
+     * @param form The wizard form data.
+     * @returns The generated design result, or the failure reason.
+     */
     const generate = useCallback(async (form: TrialFormData): Promise<ActionResult<DesignResultResponse>> => {
         setIsGenerating(true);
         const warnings: string[] = [];
@@ -135,6 +152,14 @@ export const useTrialActions = () => {
         }
     }, [setIsGenerating, setFormData]);
 
+    /**
+     * Persists a design result as a trial, optionally creating plant entries,
+     * and records the new trial id in `DesignResultContext`.
+     * 
+     * @param form The wizard form data.
+     * @param designJson The serialized design layout to save.
+     * @returns The saved trial id, or the failure reason.
+     */
     const save = useCallback(async (form: TrialFormData, designJson: string): Promise<ActionResult<string>> => {
         setIsSaving(true);
         try {

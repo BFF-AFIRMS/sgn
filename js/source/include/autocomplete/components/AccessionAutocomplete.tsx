@@ -1,15 +1,32 @@
 import React, { useState, useEffect } from 'react';
 
 interface AccessionAutocompleteProps {
+    /** The id attribute for the `<input>` element. */
     id?: string;
+    /** The name attribute for the `<input>` element. */
     name?: string;
+    /**
+     * The input's value, and the term used to fetch suggestions; changing it
+     * triggers a re-fetch.
+     */
     defaultValue: string;
+    /**
+     * Called with the input's value as the user types, and again with a chosen
+     * suggestion when one is picked.
+     */
     onChange: (val: string) => void;
+    /** The placeholder text for the `<input>` element. */
     placeholder?: string;
+    /** The class attribute for the `<input>` element. */
     className?: string;
-    appendToId?: string;
 }
 
+/**
+ * A text input with a dropdown of accession-name suggestions from
+ * `/ajax/stock/accession_autocomplete`. Suggestions are fetched (debounced) as
+ * the value changes, and the value is reported through `onChange` as the user
+ * types and when a suggestion is picked.
+ */
 export const AccessionAutocomplete: React.FC<AccessionAutocompleteProps> = ({
     id,
     name,
