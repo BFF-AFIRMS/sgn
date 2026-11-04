@@ -1,15 +1,34 @@
 import React, { useState, useEffect } from 'react';
 
 interface CvtermAutocompleteProps {
+    /** The id attribute for the `<input>` element. */
     id?: string;
+    /** The name attribute for the `<input>` element. */
     name?: string;
+    /**
+     * The input's value, and the term used to fetch suggestions; changing it
+     * triggers a re-fetch.
+     */
     defaultValue: string;
+    /**
+     * Called with the input's value as the user types, and again with a chosen
+     * suggestion when one is picked.
+     */
     onChange: (val: string) => void;
+    /** The placeholder text for the `<input>` element. */
     placeholder?: string;
+    /** The class attribute for the `<input>` element. */
     className?: string;
+    /** The cvterm database to search, sent as `db_name`. Defaults to `'_TREATMENT'`. */
     dbName?: string;
 }
 
+/**
+ * A text input with a dropdown of cvterm suggestions from
+ * `/ajax/cvterm/autocompleteslim`, scoped to `dbName`. Suggestions are fetched
+ * (debounced) as the value changes, and the value is reported through
+ * `onChange` as the user types and when a suggestion is picked.
+ */
 export const CvtermAutocomplete: React.FC<CvtermAutocompleteProps> = ({
     id,
     name,

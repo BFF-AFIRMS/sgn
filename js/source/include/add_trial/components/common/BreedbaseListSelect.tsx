@@ -3,15 +3,41 @@ import { verifyListById } from '../../services/trialService';
 import { useBreedbaseLists } from '~/add_trial/contexts/BreedbaseListsContext';
 
 interface BreedbaseListSelectProps {
+    /**
+     * The Breedbase list type to source options from (e.g. `accessions`).
+     */
     listType: string;
+    /**
+     * The initially selected list id.
+     */
     defaultValue: string;
+    /**
+     * Receives the selected list id.
+     */
     onChange: (listId: string) => void;
+    /**
+     * The placeholder text for the `<select>` element.
+     */
     placeholder?: string;
+    /**
+     * Whether the `<select>` element is required.
+     */
     required?: boolean;
+    /**
+     * The id attribute for the container `<div>`.
+     */
     id?: string;
+    /**
+     * The id attribute for the `<select>` element.
+     */
     selectId?: string;
 }
 
+/**
+ * A `<select>` of the Breedbase lists of a given type, paired with a refresh
+ * button. Options are loaded and cached through `useBreedbaseLists`, and the
+ * contents of the selected list are verified on change.
+ */
 export const BreedbaseListSelect: React.FC<BreedbaseListSelectProps> = ({
     listType,
     defaultValue,
@@ -23,6 +49,12 @@ export const BreedbaseListSelect: React.FC<BreedbaseListSelectProps> = ({
 }) => {
     const { lists, loading, loadLists } = useBreedbaseLists(listType);
 
+    /**
+     * Forwards the selection to `onChange` and, for a non-empty id, verifies the
+     * selected list's contents against its list type, alerting on failure.
+     *
+     * @param listId The id of the newly selected list.
+     */
     const handleChange = (listId: string) => {
         onChange(listId);
         if (!listId) {
