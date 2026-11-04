@@ -1,3 +1,16 @@
+/**
+ * Form state for the Add Trial wizard.
+ *
+ * Holds the wizard's form data (`formData`) and the workflow's step navigation
+ * (`maxStep`), both persisted to localStorage through `useFormDraft` so an
+ * in-progress trial survives a page reload. It also exposes the server-provided
+ * `serverProps` and the `availableDesignTypes` derived from them.
+ *
+ * This is the persisted draft, so it also carries the design result itself
+ * (`formData.designResult`). The transient request state around generating and
+ * saving that result lives in `DesignResultContext` instead.
+ */
+
 import React, { createContext, useContext, useMemo, useCallback } from 'react';
 
 import { useFormDraft } from '~/form_draft';
