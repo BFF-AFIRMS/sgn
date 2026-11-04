@@ -1,11 +1,5 @@
 import { useState, useEffect } from 'react';
 
-export {
-    BreedbaseListItem,
-    normalizeListType,
-    useBreedbaseLists
-} from '../contexts/BreedbaseListsContext';
-
 export const fetchListItems = async (listId: string): Promise<string[]> => {
     if (!listId) return [];
     try {

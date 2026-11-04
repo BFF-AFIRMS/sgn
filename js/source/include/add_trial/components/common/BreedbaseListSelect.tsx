@@ -1,6 +1,6 @@
 import React from 'react';
-import { useBreedbaseLists } from '../../hooks/useBreedbaseLists';
 import { verifyListById } from '../../services/trialService';
+import { useBreedbaseLists } from '~/add_trial/contexts/BreedbaseListsContext';
 
 interface BreedbaseListSelectProps {
     listType: string;

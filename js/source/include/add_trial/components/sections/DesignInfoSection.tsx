@@ -4,7 +4,7 @@ import { AccessionAutocomplete, CvtermAutocomplete } from '~/autocomplete';
 
 import { useTrialForm } from '../../contexts/TrialFormContext';
 import { BreedbaseListSelect } from '../common/BreedbaseListSelect';
-import { useListItems } from '../../hooks/useBreedbaseLists';
+import { useListItems } from '../../hooks/useListItems';
 import { StockType } from '../../types';
 
 interface DesignInfoSectionProps {
