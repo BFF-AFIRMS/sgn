@@ -21,7 +21,6 @@ export interface TrialFormContextType {
     formData: TrialFormData;
     setFormData: React.Dispatch<React.SetStateAction<TrialFormData>>;
     updateField: <K extends keyof TrialFormData>(key: K, val: TrialFormData[K]) => void;
-    clearDraft: () => void;
     draftId: string;
     maxStep: number;
     setMaxStep: React.Dispatch<React.SetStateAction<number>>;
@@ -130,7 +129,7 @@ export const TrialFormProvider: React.FC<{ serverProps: ServerProps; children: R
         return initial;
     }, [serverProps.breeding_programs, availableDesignTypes]);
 
-    const { formData, setFormData, clearDraft, draftId, maxStep, setMaxStep } = useFormDraft<TrialFormData>(defaultData);
+    const { formData, setFormData, draftId, maxStep, setMaxStep } = useFormDraft<TrialFormData>(defaultData);
 
     const updateField = useCallback(<K extends keyof TrialFormData>(key: K, val: TrialFormData[K]) => {
         setFormData(prev => {
@@ -159,7 +158,6 @@ export const TrialFormProvider: React.FC<{ serverProps: ServerProps; children: R
             formData,
             setFormData,
             updateField,
-            clearDraft,
             draftId,
             maxStep,
             setMaxStep,
