@@ -23,7 +23,7 @@ export const TrialLocationMap: React.FC<TrialLocationMapProps> = ({
     const mapContainerRef = useRef<HTMLDivElement | null>(null);
     const popupContainer = useMemo(() => document.createElement('div'), []);
     const hasCoords = isDefined(latitude) && isDefined(longitude);
-    const hasAltitude = typeof altitude === 'number' && Number.isFinite(altitude);
+    const hasAltitude = isDefined(altitude);
 
     useEffect(() => {
         if (!mapContainerRef.current || !hasCoords) {
