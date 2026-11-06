@@ -1,5 +1,5 @@
-Rows/Columns,1,2,3,4
-1,"IITA-TMS-IBA980581
+Rows/Columns,,1,2,3,4,
+1,"Border","IITA-TMS-IBA980581
 CASS_6Genotypes_103
 41284
 103","IITA-TMS-IBA980002
@@ -11,8 +11,8 @@ CASS_6Genotypes_105
 105","IITA-TMS-IBA011412
 CASS_6Genotypes_106
 41297
-106"
-2,"IITA-TMS-IBA980002
+106","Border"
+2,"Border","IITA-TMS-IBA980002
 CASS_6Genotypes_203
 41301
 203","TMEB693
@@ -24,8 +24,8 @@ CASS_6Genotypes_201
 201","TMEB693
 CASS_6Genotypes_107
 41298
-107"
-3,"IITA-TMS-IBA980581
+107","Border"
+3,"Border","IITA-TMS-IBA980581
 CASS_6Genotypes_204
 41302
 204","IITA-TMS-IBA011412
@@ -37,8 +37,8 @@ CASS_6Genotypes_206
 206","TMEB419
 CASS_6Genotypes_207
 41287
-207"
-4,"TMEB693
+207","Border"
+4,"Border","TMEB693
 CASS_6Genotypes_304
 41291
 304","IITA-TMS-IBA30572
@@ -50,8 +50,8 @@ CASS_6Genotypes_302
 302","BLANK
 CASS_6Genotypes_301
 41288
-301"
-5,"IITA-TMS-IBA011412
+301","Border"
+5,"Border","IITA-TMS-IBA011412
 CASS_6Genotypes_305
 41292
 305","IITA-TMS-IBA980002
@@ -60,4 +60,5 @@ CASS_6Genotypes_306
 306","IITA-TMS-IBA980581
 CASS_6Genotypes_307
 41294
-307",""
+307","","Border"
+,"Border","Border","Border","Border","Border","Border"
