@@ -580,6 +580,7 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
     my $plot_order = $c->req->param('plot_order');
     my $plot_start = $c->req->param('plot_start');
     my $missing_format = $c->req->param('missing_format') || 'empty';
+    my $include_trait_synonyms = $c->req->param('use_synonyms') eq 'true' || 0;
 
     my $trial = $c->stash->{trial};
     if ($data_level eq 'plants') {
@@ -691,6 +692,7 @@ sub trial_download : Chained('trial_init') PathPart('download') Args(1) {
         plot_order => $plot_order,
         plot_start => $plot_start,
         missing_format => $missing_format,
+        include_trait_synonyms => $include_trait_synonyms,
     });
 
     my $error = $download->download();
