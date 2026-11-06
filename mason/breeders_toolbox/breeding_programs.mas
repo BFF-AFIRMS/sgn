@@ -4,16 +4,28 @@ $breeding_programs
 $user => undef
 </%args>
 
+<%once>
+use JSON;
+</%once>
+
 <%perl>
 my $curator_flag = 0;
 if ($user && $user->check_roles("curator")) {
     $curator_flag = 1;
 }
+
+my $json = JSON->new->allow_nonref;
+my $breeding_programs_json = $json->encode($breeding_programs || []);
 </%perl>
+
+<& /util/import_javascript.mas, entries => ['pages/breeding_programs'] &>
 
 <& /page/page_title.mas, title=>"Manage Breeding Programs" &>
 
 <div class="container-fluid">
+<div id="breeding_programs_container">
+  <!-- React component added here -->
+</div>
 <hr>
 
 <table class="table table-condensed table-striped table-hover">
@@ -91,6 +103,10 @@ if ($user && $user->check_roles("curator")) {
 <script>
 
 jQuery(document).ready(function() {
+
+  window.jsMod['pages/breeding_programs'].init('breeding_programs_container', {
+    data: <% $breeding_programs_json %>
+  });
 
   $("button#new_breeding_program_link").click( function(event) {
       event.preventDefault();
