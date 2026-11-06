@@ -420,10 +420,11 @@ sub retrieve_plot_info {
     my $plots_rs = $schema->resultset('Stock::Stock')
         ->search({'me.stock_id' => { -in => \@plot_ids}});
 
-    # Add basic design info about the plot_id and plot_name
-    while (my $record = $plots_rs->next){
-        my $plot_id = $record->stock_id();
-        my $plot_name = $record->uniquename();
+    my $query = "select plot.stock_id, plot.uniquename from stock as plot where plot.stock_id = any(?)";
+    my $sth = $schema->storage()->dbh()->prepare($query);
+    $sth->execute(\@plot_ids);
+
+    while (my ($plot_id, $plot_name) = $sth->fetchrow_array()) {
         $design_info->{$plot_id}->{plot_id} = $plot_id;
         $design_info->{$plot_id}->{plot_name} = $plot_name;
     }
@@ -431,24 +432,22 @@ sub retrieve_plot_info {
     # -------------------------------------------------------------------------
     # Get parent relationships (accession/cross/family_names)
 
-    # Get accessions/crosses/family_names of plots
+    my $query = "
+    select plot.stock_id, parent.stock_id, parent.uniquename, parent.type_id
+    from stock as plot
+    join stock_relationship as plot_parent on (plot_parent.subject_id = plot.stock_id and plot_parent.type_id = any(?))
+    join stock as parent on (parent.stock_id = plot_parent.object_id and parent.type_id = any(?))
+    where plot.stock_id = any(?);
+    ";
+    my $sth = $schema->storage()->dbh()->prepare($query);
+    $sth->execute(\@$relationship_type_ids, \@$source_primary_stock_type_ids, \@plot_ids);
+
     my $parents;
-    my $parents_rs = $plots_rs
-        ->search_related(
-            'stock_relationship_subjects',
-            {
-                'stock_relationship_subjects.type_id' => { -in => \@$relationship_type_ids },
-                'object.type_id' => { -in => \@$source_primary_stock_type_ids }
-            },
-            { 'join' => 'object' }
-	    );
-    while (my $record = $parents_rs->next){
-        my $plot_id = $record->subject_id();
-        my $parent = $record->object;
+    while (my ($plot_id, $parent_id, $parent_uniquename, $parent_type_id) = $sth->fetchrow_array()) {
         push @{$parents->{$plot_id}}, {
-            name => $parent->uniquename(),
-            id => $parent->stock_id(),
-            type_id => $parent->type_id(),
+            name => $parent_uniquename,
+            id => $parent_id,
+            type_id => $parent_type_id,
         };
     }
     # Validate each plot is linked to exactly one parent (accession/cross/family_name)
@@ -465,24 +464,22 @@ sub retrieve_plot_info {
 
     # -------------------------------------------------------------------------
     # Get intercrop parent relationships (accession/cross/family_names)
- 
-    my $intercrop_parents;
-    my $intercrop_parents_rs = $plots_rs
-        ->search_related(
-            'stock_relationship_subjects',
-            {
-                'stock_relationship_subjects.type_id' => $intercrop_plot_of_cvterm_id,
-                'object.type_id' => { -in => \@$source_primary_stock_type_ids }
-            },
-            { 'join' => 'object' }
-	    );
-    while (my $record = $intercrop_parents_rs->next){
-        my $plot_id = $record->subject_id();
-        my $intercropped_parent = $record->object;
 
+    my $query = "
+    select plot.stock_id, parent.stock_id, parent.uniquename
+    from stock as plot
+    join stock_relationship as plot_parent on (plot_parent.subject_id = plot.stock_id and plot_parent.type_id = ?)
+    join stock as parent on (parent.stock_id = plot_parent.object_id and parent.type_id = any(?))
+    where plot.stock_id = any(?)
+    ";
+    my $sth = $schema->storage()->dbh()->prepare($query);
+    $sth->execute($intercrop_plot_of_cvterm_id, \@$source_primary_stock_type_ids, \@plot_ids);
+
+    my $intercrop_parents;
+    while (my ($plot_id, $parent_id, $parent_uniquename) = $sth->fetchrow_array()) {
         push @{$design_info->{$plot_id}->{intercrop_accessions}}, {
-            accession_name => $intercropped_parent->uniquename(),
-            accession_id => $intercropped_parent->stock_id(),
+            accession_name => $parent_uniquename,
+            accession_id => $parent_id
         };
     }
 
