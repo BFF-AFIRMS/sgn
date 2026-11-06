@@ -34,16 +34,37 @@ export const TrialLocationMap: React.FC<TrialLocationMapProps> = ({
             'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
             {
                 attribution:
-                    'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community',
+                    'Sources: Esri, DigitalGlobe, GeoEye, i-cubed, USDA FSA, USGS, AEX, Getmapping, Aerogrid, IGN, IGP, swisstopo, and the GIS User Community',
                 maxZoom: 19,
             }
         );
-
+        const topoMapLayer = L.tileLayer(
+            'https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}',
+            {
+                attribution:
+                    'Sources: Esri, DeLorme, HERE, TomTom, Intermap, increment P Corp., GEBCO, USGS, FAO, NPS, NRCAN, GeoBase, IGN, Kadaster NL, Ordnance Survey, Esri Japan, METI, Esri China (Hong Kong), swisstopo, MapmyIndia, and the GIS User Community',
+                maxZoom: 19,
+            }
+        );
+        const streetMapLayer = L.tileLayer(
+            'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',
+            {
+                attribution:
+                    'Sources: Esri, DeLorme, HERE, USGS, Intermap, iPC, NRCAN, Esri Japan, METI, Esri China (Hong Kong), Esri (Thailand), MapmyIndia, Tomtom',
+            }
+        );
+        const baseMapLayers = {
+            "Satellite (Default)": satelliteLayer,
+            "Street": streetMapLayer,
+            "Topographical": topoMapLayer,
+        };
         const map = L.map(mapContainerRef.current, {
             center: [latitude, longitude],
             zoom: 10, // 10 ~= 153 m / pixel at equator
             layers: [satelliteLayer],
         });
+
+        L.control.layers(baseMapLayers, undefined, {position: 'bottomright'}).addTo(map);
 
         L.control
             .scale({
