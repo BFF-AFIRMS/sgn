@@ -8,6 +8,15 @@ export const isDefined = <T>(value: T | undefined | null): value is T => {
 };
 
 /**
+ * Checks if a value is a function.
+ * @param value - The value to check.
+ * @returns True if the value is a function, otherwise false.
+ */
+export const isFunction = <T>(value: T | (() => T)): value is (() => T) => {
+    return typeof value === 'function';
+};
+
+/**
  * Converts an object of key-value pairs into URL search parameters.
  * @param mappings - An object containing key-value pairs to be converted into URL search parameters.
  * @returns A URLSearchParams object containing the provided mappings.

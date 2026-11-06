@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { AccessionAutocomplete } from '../components/AccessionAutocomplete';
+import { AccessionAutocomplete } from '../../autocomplete';
 import { useModals } from '../contexts/ModalsContext';
 import { usePlotGrid } from '../contexts/PlotGridContext';
 
@@ -53,7 +53,7 @@ export const DimensionsModal: React.FC<DimensionsModalProps> = ({}) => {
                         </div>
                         <div className="form-group">
                             <label>Filler Accession (Optional):</label>
-                            <AccessionAutocomplete value={fillerAccessionInput} onChange={setFillerAccessionInput} className="form-control" />
+                            <AccessionAutocomplete defaultValue={fillerAccessionInput} onChange={setFillerAccessionInput} className="form-control" />
                         </div>
                         <div className="form-check tw:flex tw:items-center">
                             <label className="form-check-label">

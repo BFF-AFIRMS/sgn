@@ -3,7 +3,7 @@ import { useLayoutConfig } from '../contexts/LayoutConfigContext';
 import { useModals } from '../contexts/ModalsContext';
 import { usePlotGrid } from '../contexts/PlotGridContext';
 import { useView } from '../contexts/ViewContext';
-import { buildParams } from '../../functions';
+import { buildParams } from '~/@generic/utils/functions';
 
 export const useSubmitFieldLayout = () => {
 	const {

@@ -30,7 +30,7 @@ export interface ViewContextType {
 
 const ViewContext = createContext<ViewContextType | undefined>(undefined);
 
-export const ViewProvider: React.FC<FieldMapContextProps> = ({ trialId, authToken, trialStockType, children }) => {
+export const ViewProvider: React.FC<FieldMapContextProps> = ({ trialId = '', authToken, trialStockType, children }) => {
     const [selectedViewLabel, setSelectedViewLabel] = useState<string>('');
     const [selectedView, setSelectedView] = useState<string>('fieldmap');
 
@@ -39,7 +39,7 @@ export const ViewProvider: React.FC<FieldMapContextProps> = ({ trialId, authToke
 
     const [displayLinkedTrials, setDisplayLinkedTrials] = useState(false);
     const [linkedTrialsList, setLinkedTrialsList] = useState<TrialDetails[]>([]);
-    const [activeTrialIds, setActiveTrialIds] = useState<string[]>([trialId]);
+    const [activeTrialIds, setActiveTrialIds] = useState<string[]>(trialId ? [trialId] : []);
 
     const stockLabel = useMemo(() => {
         if (trialStockType === 'cross') return 'Cross';
@@ -48,6 +48,7 @@ export const ViewProvider: React.FC<FieldMapContextProps> = ({ trialId, authToke
     }, [trialStockType]);
 
     const toggleLinkedTrials = useCallback(async (checked: boolean) => {
+        if (!trialId) return;
         setDisplayLinkedTrials(checked);
         if (checked) {
             try {

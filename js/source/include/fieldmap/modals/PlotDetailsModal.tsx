@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { PlotStructureNode } from '../types';
 import { RenderPlantGrid, RenderSubplotGrid } from '../components/PlantSubplotGrids';
-import { AccessionAutocomplete } from '../components/AccessionAutocomplete';
+import { AccessionAutocomplete } from '../../autocomplete';
 import { useModals } from '../contexts/ModalsContext';
 import { useHeatmap } from '../contexts/HeatmapContext';
 import { useView } from '../contexts/ViewContext';
@@ -178,7 +178,7 @@ export const PlotDetailsModal: React.FC<PlotDetailsModalProps> = ({ }) => {
                             <div className="tw:p-2.5">
                                 <div className="form-group">
                                     <label>New {stockLabel} Name:</label>
-                                    <AccessionAutocomplete value={newAccession} onChange={setNewAccession} className="form-control" />
+                                    <AccessionAutocomplete defaultValue={newAccession} onChange={setNewAccession} className="form-control" />
                                 </div>
                                 <div className="form-group">
                                     <label>New Plot Name (Optional):</label>

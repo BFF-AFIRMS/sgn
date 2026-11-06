@@ -272,7 +272,12 @@ sub click_option {
             if (select) {
                 select.scrollIntoView({ block: 'center' });
                 el.selected = true;
-                select.value = el.value;
+                const valSetter = Object.getOwnPropertyDescriptor(window.HTMLSelectElement.prototype, 'value');
+                if (valSetter && valSetter.set) {
+                    valSetter.set.call(select, el.value);
+                } else {
+                    select.value = el.value;
+                }
                 select.dispatchEvent(new Event('input', { bubbles: true }));
                 select.dispatchEvent(new Event('change', { bubbles: true }));
             } else {
@@ -449,10 +454,10 @@ sub accept_alert_ok {
 
 sub get_alert_text {
     my ($self, @args) = @_;
-    my ($timeout) = $self->_extract_basic_args(@args);
+    my $options = $self->_extract_basic_args(@args);
     return wait_until {
         return $self->driver->get_alert_text();
-    } timeout => $timeout;
+    } timeout => $options->{timeout};
 }
 
 sub download_linked_file {
@@ -538,6 +543,7 @@ Waits for an alert to appear
 =cut
 sub wait_for_alert_appear {
     my $self = shift;
+    my $options = $self->_extract_basic_args(@_);
     wait_until {
         my $alert_text;
 
@@ -549,7 +555,7 @@ sub wait_for_alert_appear {
         };
 
         return defined $alert_text;
-    }
+    } timeout => $options->{timeout};
 }
 
 =item wait_for_alert_dismissed($self)
@@ -557,6 +563,7 @@ Waits for an alert to disappear.
 =cut
 sub wait_for_alert_dismissed {
     my $self = shift;
+    my $options = $self->_extract_basic_args(@_);
     wait_until {
         my $alert_text;
 
@@ -568,7 +575,7 @@ sub wait_for_alert_dismissed {
         };
 
         return !defined $alert_text;
-    }
+    } timeout => $options->{timeout};
 }
 
 sub wait_for_network_idle {
@@ -642,15 +649,21 @@ sub screenshot {
     my $timestamp = time() * 100000;
     my $filename = "${timestamp}_${action}";
 
+    my $write_text_file = sub {
+        my ($text) = @_;
+        open my $fh, '>', "$dir/$filename.txt" or die "Could not open file '$dir/$filename.txt' $!";
+        print $fh $text;
+        close $fh;
+    };
+
     try {
         # Screenshots cannot be taken if an alert is present
         my $alert_text = $self->driver->get_alert_text();
 
-        open my $fh, '>', "$dir/$filename.txt" or die "Could not open file '$dir/$filename.txt' $!";
-        print $fh $alert_text;
-        close $fh;
+        $write_text_file->($alert_text);
     } catch {
         if ($alert_expected) {
+            $write_text_file->("Alert expected but not present");
             return;
         }
 
