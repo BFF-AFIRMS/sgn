@@ -5,6 +5,9 @@ $breeding_program_name
 $breeding_program_id
 $location_name
 $country_name
+$location_latitude => undef
+$location_longitude => undef
+$location_altitude => undef
 $year
 $year_0
 $trial_type
@@ -26,6 +29,27 @@ $trial_owner
 $latest_trial_activity => undef
 
 </%args>
+
+<%once>
+use JSON::XS;
+use Scalar::Util qw(looks_like_number);
+use HTML::Entities qw(encode_entities);
+</%once>
+
+<%perl>
+my $map_props_json = JSON::XS->new->ascii->encode({
+    locationName => $location_name,
+    countryName  => $country_name,
+    latitude     => (defined $location_latitude  && looks_like_number($location_latitude))  ? 0 + $location_latitude  : undef,
+    longitude    => (defined $location_longitude && looks_like_number($location_longitude)) ? 0 + $location_longitude : undef,
+    altitude     => (defined $location_altitude  && looks_like_number($location_altitude))  ? 0 + $location_altitude  : undef,
+});
+
+my $map_props_attr = encode_entities($map_props_json, q{<>&"'});
+</%perl>
+
+<& /util/import_css.mas, paths => ['leaflet.css'] &>
+<& /util/import_javascript.mas, entries => ['trial_location_map'], classes => ['leaflet'] &>
 
 <div class="flex-wrap-row">
     <div class="flex-wrap-col">
@@ -64,7 +88,11 @@ $latest_trial_activity => undef
                 <td>
                     <div id="trial_location">
 % if ($location_name) {
-%  print "$location_name ( $country_name )";
+%  if ($country_name) {
+%    print "$location_name ( $country_name )";
+%  } else {
+%    print "$location_name";
+%  }
 % } else {
 %  print "<span class='text-danger'>[No Location]</span>";
 % }
@@ -271,7 +299,15 @@ $latest_trial_activity => undef
                 </td>
             </tr>
         </table>
+
+        <div id="trial_location_map_root" data-props="<% $map_props_attr %>"></div>
     </div>
 </div>
+
+<script type="text/javascript">
+jQuery(document).ready(function() {
+    window.jsMod['trial_location_map'].init('trial_location_map_root');
+});
+</script>
 
 <& /page/project_overview_accordion.mas, project_id => $trial_id, prefix => "trial" &>

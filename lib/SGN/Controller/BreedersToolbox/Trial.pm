@@ -157,6 +157,14 @@ sub trial_info : Chained('trial_init') PathPart('') Args(0) {
     $c->stash->{location_id} = $location_data->[0];
     $c->stash->{location_name} = $location_data->[1];
     $c->stash->{country_name} = $trial->get_location_country_name();
+    if ($location_data->[0]) {
+        my $geolocation = $schema->resultset('NaturalDiversity::NdGeolocation')->find({ nd_geolocation_id => $location_data->[0] });
+        if ($geolocation) {
+            $c->stash->{location_latitude} = $geolocation->latitude();
+            $c->stash->{location_longitude} = $geolocation->longitude();
+            $c->stash->{location_altitude} = $geolocation->altitude();
+        }
+    }
 
     my $breeding_program_data = $program_object->get_breeding_programs_by_trial($c->stash->{trial_id});
     $c->stash->{breeding_program_id} = $breeding_program_data->[0]->[0];
