@@ -1,5 +1,10 @@
+export interface DataTableColumn {
+    key: string | number;
+    label: string;
+}
+
 export interface DataTableProps {
-    columns: { key: string; label: string }[];
+    columns: DataTableColumn[];
     rows: Record<string, any>[];
 
     pageSize?: number;
@@ -7,7 +12,7 @@ export interface DataTableProps {
 
     limitHeight?: number;
 
-    filter: {
+    filter?: {
         global?: boolean;
         column?: boolean;
     }
