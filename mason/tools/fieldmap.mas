@@ -3,7 +3,7 @@ $trial_id => undef
 </%args>
 
 
-<& /util/import_css.mas, paths => ['fieldmap/leaflet-search.min.css', 'fieldmap/leaflet.css'] &>
+<& /util/import_css.mas, paths => ['leaflet-search.min.css', 'leaflet.css'] &>
 
 <& '/util/import_javascript.mas', 
  classes => ['jquery', 'd3.d3v4Min', 'brapi.fieldmap.leaflet', 'brapi.fieldmap.L-Path-Transform', 'brapi.fieldmap.leaflet-search', 'brapi.fieldmap.turf', 'brapi.BrAPI', 'brapi.BrAPIFieldmap']
