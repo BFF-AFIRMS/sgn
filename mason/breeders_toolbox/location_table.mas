@@ -40,6 +40,9 @@ jQuery(document).ready(function() {
     var table;
     var locations;
 
+    // Location name to filter the table on, when one is passed in the URL (e.g. linked from a trial detail page)
+    var initial_location_name = new URLSearchParams(window.location.search).get('location_name') || '';
+
     var lo = new CXGN.List();
     jQuery('#locations_list').html(lo.listSelect('locations_list', [ 'locations' ], 'select', undefined, undefined));
     jQuery('#locations_list').on('change', 'select', updateLocationsTable)
@@ -66,6 +69,9 @@ jQuery(document).ready(function() {
         var export_message = 'Location data from ' + window.location.href;
         table = jQuery('#location_table').DataTable({
             data: [],
+            search: {
+                search: initial_location_name
+            },
             layout: {
                 topStart: 'buttons',
                 topEnd: 'search',
@@ -143,6 +149,19 @@ jQuery(document).ready(function() {
                     listType: 'locations'
                 });
             }
+        });
+
+        // Keep the search box in sync with the URL query string, so a filtered table can be linked to or bookmarked
+        table.on('search.dt', function() {
+            var params = new URLSearchParams(window.location.search);
+            var search_term = table.search();
+            if (search_term) {
+                params.set('location_name', search_term);
+            } else {
+                params.delete('location_name');
+            }
+            var query_string = params.toString();
+            window.history.replaceState(null, '', query_string ? window.location.pathname + '?' + query_string : window.location.pathname);
         });
     }
 

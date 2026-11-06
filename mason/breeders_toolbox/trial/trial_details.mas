@@ -64,7 +64,8 @@ $latest_trial_activity => undef
                 <td>
                     <div id="trial_location">
 % if ($location_name) {
-%  print "$location_name ( $country_name )";
+%  my $location_search_url = '/breeders/locations?location_name=' . uri_escape_utf8($location_name);
+                        <a href="<% $location_search_url %>"><% $location_name %></a> ( <% $country_name %> )
 % } else {
 %  print "<span class='text-danger'>[No Location]</span>";
 % }
@@ -275,3 +276,7 @@ $latest_trial_activity => undef
 </div>
 
 <& /page/project_overview_accordion.mas, project_id => $trial_id, prefix => "trial" &>
+
+<%once>
+  use URI::Escape qw( uri_escape_utf8 );
+</%once>
