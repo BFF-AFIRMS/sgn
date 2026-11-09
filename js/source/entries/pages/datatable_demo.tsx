@@ -1,5 +1,6 @@
 import React, { useCallback, useState } from 'react';
 import { createRoot } from 'react-dom/client';
+import { Button } from '~/@generic';
 
 import {
     DataTable,
@@ -110,24 +111,18 @@ export const DataTableDemoApp: React.FC = () => {
                 limitHeight={420}
                 toolbar={() => (
                     <>
-                        <button
-                            type="button"
-                            className="btn btn-default"
-                        >
+                        <Button>
                             Export to CSV
-                        </button>
-                        <button
-                            type="button"
-                            className="btn btn-default"
-                        >
+                        </Button>
+                        <Button>
                             Export to Excel
-                        </button>
-                        <button type="button" className="btn btn-default" onClick={handleRefresh}>
+                        </Button>
+                        <Button onClick={handleRefresh}>
                             Refresh Table
-                        </button>
-                        <button type="button" className="btn btn-success" onClick={handleAddPerson}>
+                        </Button>
+                        <Button variant="primary" onClick={handleAddPerson}>
                             Add New Person
-                        </button>
+                        </Button>
                     </>
                 )}
             />

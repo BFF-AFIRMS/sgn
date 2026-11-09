@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import type { DataTableRowAction } from '../types';
-import { Button } from '~/@generic';
+import { Button, Ellipses } from '~/@generic';
 
 const MENU_WIDTH = 160;
 
@@ -52,14 +52,13 @@ export function DataTableRowActions<TData extends Record<string, any>>({
         <>
             <Button
                 ref={buttonRef}
-                type="button"
-                className="btn btn-default btn-xs tw:px-2 tw:py-0 tw:leading-5"
+                variant="default-sm"
                 aria-haspopup="true"
                 aria-expanded={menuPosition !== null}
                 aria-label="Row actions"
                 onClick={toggleMenu}
             >
-                &hellip;
+                <Ellipses />
             </Button>
             {menuPosition &&
                 createPortal(

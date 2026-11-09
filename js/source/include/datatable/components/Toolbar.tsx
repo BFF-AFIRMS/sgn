@@ -1,10 +1,11 @@
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { Table } from '@tanstack/react-table';
 
 import type { DataTableFeatures } from '../features';
 import type { DataTableProps } from '../types';
+import { Button } from '~/@generic';
 
-interface DataTableToolbarProps<TData> {
+interface DataTableToolbarProps<TData extends Record<string, any>> {
     table: Table<DataTableFeatures, TData>;
     toolbar: DataTableProps<TData>['toolbar'];
     columnLabels: Record<string, string>;
@@ -27,7 +28,7 @@ export function DataTableToolbar<TData extends Record<string, any>>({
             {globalFilter && (
                 <input
                     type="search"
-                    className="form-control tw:w-[220px]"
+                    className="form-control tw:w-55"
                     placeholder="Search all columns..."
                     aria-label="Search all columns"
                     value={globalFilter.value}
@@ -40,7 +41,7 @@ export function DataTableToolbar<TData extends Record<string, any>>({
     );
 }
 
-interface ColumnVisibilityMenuProps<TData> {
+interface ColumnVisibilityMenuProps<TData extends Record<string, any>> {
     table: Table<DataTableFeatures, TData>;
     columnLabels: Record<string, string>;
 }
@@ -69,15 +70,13 @@ function ColumnVisibilityMenu<TData extends Record<string, any>>({
 
     return (
         <div className="tw:relative tw:inline-block" ref={containerRef}>
-            <button
-                type="button"
-                className="btn btn-default"
+            <Button
                 aria-haspopup="true"
                 aria-expanded={open}
                 onClick={() => setOpen(value => !value)}
             >
                 Column Visibility <span className="caret" />
-            </button>
+            </Button>
             {open && (
                 <div className="dropdown-menu tw:block tw:max-h-80 tw:overflow-y-auto">
                     {hideableColumns.length === 0 ? (
