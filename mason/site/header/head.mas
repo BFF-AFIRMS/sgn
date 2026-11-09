@@ -49,21 +49,6 @@
 
   <!-- <link rel="stylesheet" href="/css/sgn.css" type="text/css" /> -->
   <link rel="search" type="application/opensearchdescription+xml" title="Search Database" href="/documents/sgn_sol_search.xml" />
-  <& /util/import_css.mas, paths => [
-    '/css/new_sgn.css',
-    '/css/jquery-sgn-theme/jquery-ui-1.10.3.custom.css',
-    '/css/jstree/themes/default/style.min.css',
-    '/css/fullcalendar.min.css',
-    '/documents/inc/datatables/jquery.dataTables.css',
-    '/css/bootstrap.min.css',
-    '/css/bootstrap-toggle/bootstrap-toggle.min.css',
-    '/css/ladda-themeless.min.css',
-    '/css/daterangepicker.css',
-    '/css/buttons/buttons.bootstrap.min.css',
-    '/css/bootstrap3-xl-class.css',
-    '/css/bootstrap-select.min.css',
-    '/css/colReorder.dataTables.min.css',
-  ] &>
 
   <!-- <link rel="stylesheet" href="/documents/inc/colorbox/colorbox.css" type="text/css" /> -->
   <!-- <link rel="stylesheet" type="text/css" href="/css/dataTables.bootstrap.min.css"> -->

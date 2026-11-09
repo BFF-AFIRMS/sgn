@@ -1,4 +1,18 @@
-@layer theme, base, components, utilities;
+@layer sgn, theme, base, components, utilities;
+
+@import "../../static/css/new_sgn.css" layer(sgn);
+@import "../../static/css/jquery-sgn-theme/jquery-ui-1.10.3.custom.css" layer(sgn);
+@import "../../static/css/jstree/themes/default/style.min.css" layer(sgn);
+@import "../../static/css/fullcalendar.min.css" layer(sgn);
+@import "../../documents/inc/datatables/jquery.dataTables.css" layer(sgn);
+@import "../../static/css/bootstrap.min.css" layer(sgn);
+@import "../../static/css/bootstrap-toggle/bootstrap-toggle.min.css" layer(sgn);
+@import "../../static/css/ladda-themeless.min.css" layer(sgn);
+@import "../../static/css/daterangepicker.css" layer(sgn);
+@import "../../static/css/buttons/buttons.bootstrap.min.css" layer(sgn);
+@import "../../static/css/bootstrap3-xl-class.css" layer(sgn);
+@import "../../static/css/bootstrap-select.min.css" layer(sgn);
+@import "../../static/css/colReorder.dataTables.min.css" layer(sgn);
 
 @import "tailwindcss/theme" layer(theme) prefix(tw);
 @import "tailwindcss/utilities" layer(utilities);
