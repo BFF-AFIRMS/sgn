@@ -1,4 +1,5 @@
 import React from 'react';
+import { Button } from '~/@generic';
 
 export interface DataTablePaginationProps {
     pageIndex: number;
@@ -40,7 +41,7 @@ export const DataTablePagination: React.FC<DataTablePaginationProps> = ({
             <div className="tw:flex tw:items-center tw:gap-2">
                 <span>Rows per page</span>
                 <select
-                    className="form-control tw:h-[30px]! tw:w-auto! tw:px-2! tw:py-0.5!"
+                    className="form-control tw:h-7.5 tw:w-auto tw:px-2 tw:py-0.5"
                     aria-label="Rows per page"
                     value={pageSize}
                     onChange={event => onPageSizeChange(Number(event.target.value))}
@@ -51,25 +52,23 @@ export const DataTablePagination: React.FC<DataTablePaginationProps> = ({
                         </option>
                     ))}
                 </select>
-                <button
-                    type="button"
-                    className="btn btn-default btn-sm"
+                <Button
+                    variant="default"
                     disabled={!canPreviousPage}
                     onClick={onPreviousPage}
                 >
                     &laquo; Previous
-                </button>
+                </Button>
                 <span className="tw:min-w-16 tw:text-center">
                     {pageIndex + 1} / {Math.max(pageCount, 1)}
                 </span>
-                <button
-                    type="button"
-                    className="btn btn-default btn-sm"
+                <Button
+                    variant="default"
                     disabled={!canNextPage}
                     onClick={onNextPage}
                 >
                     Next &raquo;
-                </button>
+                </Button>
             </div>
         </div>
     );

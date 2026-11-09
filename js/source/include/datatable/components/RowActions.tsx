@@ -2,11 +2,12 @@ import React, { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import type { DataTableRowAction } from '../types';
+import { Button } from '~/@generic';
 
 const MENU_WIDTH = 160;
 
 interface DataTableRowActionsProps<TData> {
-    actions: Array<DataTableRowAction<TData>>;
+    actions: DataTableRowAction<TData>[];
     row: TData;
 }
 
@@ -49,26 +50,26 @@ export function DataTableRowActions<TData extends Record<string, any>>({
 
     return (
         <>
-            <button
+            <Button
                 ref={buttonRef}
                 type="button"
-                className="btn btn-default btn-xs tw:px-2! tw:py-0! tw:leading-5!"
+                className="btn btn-default btn-xs tw:px-2 tw:py-0 tw:leading-5"
                 aria-haspopup="true"
                 aria-expanded={menuPosition !== null}
                 aria-label="Row actions"
                 onClick={toggleMenu}
             >
                 &hellip;
-            </button>
+            </Button>
             {menuPosition &&
                 createPortal(
                     <>
                         <div
-                            className="tw:fixed tw:inset-0 tw:z-[9999]"
+                            className="tw:fixed tw:inset-0 tw:z-9999"
                             onClick={() => setMenuPosition(null)}
                         />
                         <div
-                            className="dropdown-menu tw:block!"
+                            className="dropdown-menu tw:block"
                             style={{
                                 position: 'fixed',
                                 top: menuPosition.top,
@@ -82,7 +83,7 @@ export function DataTableRowActions<TData extends Record<string, any>>({
                                     <a
                                         className={
                                             action.variant === 'danger'
-                                                ? 'tw:cursor-pointer tw:text-[#d9534f]!'
+                                                ? 'tw:cursor-pointer tw:text-[#d9534f]'
                                                 : 'tw:cursor-pointer'
                                         }
                                         onClick={() => {

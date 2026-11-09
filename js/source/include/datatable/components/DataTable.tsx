@@ -198,7 +198,7 @@ export function DataTable<TData extends Record<string, any>>({
                 className="tw:overflow-auto"
                 style={limitHeight ? { maxHeight: limitHeight } : undefined}
             >
-                <table className="table table-hover tw:mb-0!">
+                <table className="table table-hover tw:mb-0">
                     <thead className="tw:sticky tw:top-0 tw:z-2">
                         {headerGroups.map(headerGroup => (
                             <tr key={headerGroup.id}>
@@ -214,7 +214,7 @@ export function DataTable<TData extends Record<string, any>>({
                                             colSpan={header.colSpan}
                                             style={columnStyles[header.column.id]}
                                             className={[
-                                                'tw:bg-[#f5f5f5] tw:align-middle! tw:whitespace-nowrap',
+                                                'tw:bg-[#f5f5f5] tw:align-middle tw:whitespace-nowrap',
                                                 canSort
                                                     ? 'tw:cursor-pointer tw:select-none tw:hover:bg-[#eaeaea]'
                                                     : '',
@@ -262,12 +262,12 @@ export function DataTable<TData extends Record<string, any>>({
                                     <th
                                         key={`filter-${header.id}`}
                                         style={columnStyles[header.column.id]}
-                                        className="tw:bg-white tw:px-2! tw:py-1!"
+                                        className="tw:bg-white tw:px-2 tw:py-2 tw:border-0"
                                     >
                                         {header.column.getCanFilter() ? (
                                             <input
                                                 type="search"
-                                                className="form-control tw:h-7! tw:px-2! tw:py-0.5! tw:text-xs!"
+                                                className="form-control tw:h-7 tw:px-2 tw:py-0.5"
                                                 placeholder="..."
                                                 aria-label={`Filter ${
                                                     columnLabels[header.column.id] ??
@@ -292,7 +292,7 @@ export function DataTable<TData extends Record<string, any>>({
                         {table.getRowModel().rows.length === 0 ? (
                             <tr>
                                 <td
-                                    className="tw:py-6! tw:text-center tw:text-[#888]"
+                                    className="tw:py-6 tw:text-center tw:text-[#888]"
                                     colSpan={table.getVisibleLeafColumns().length}
                                 >
                                     {emptyMessage}

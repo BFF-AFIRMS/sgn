@@ -27,7 +27,7 @@ export function DataTableToolbar<TData extends Record<string, any>>({
             {globalFilter && (
                 <input
                     type="search"
-                    className="form-control tw:w-[220px]!"
+                    className="form-control tw:w-[220px]"
                     placeholder="Search all columns..."
                     aria-label="Search all columns"
                     value={globalFilter.value}
@@ -79,7 +79,7 @@ function ColumnVisibilityMenu<TData extends Record<string, any>>({
                 Column Visibility <span className="caret" />
             </button>
             {open && (
-                <div className="dropdown-menu tw:block! tw:max-h-80 tw:overflow-y-auto">
+                <div className="dropdown-menu tw:block tw:max-h-80 tw:overflow-y-auto">
                     {hideableColumns.length === 0 ? (
                         <span className="tw:block tw:px-4 tw:py-1 tw:whitespace-nowrap tw:text-[#888]">
                             No hideable columns
@@ -88,7 +88,7 @@ function ColumnVisibilityMenu<TData extends Record<string, any>>({
                         hideableColumns.map(column => (
                             <label
                                 key={column.id}
-                                className="tw:m-0! tw:block! tw:cursor-pointer tw:px-4 tw:py-1 tw:font-normal! tw:whitespace-nowrap"
+                                className="tw:m-0 tw:block tw:cursor-pointer tw:px-4 tw:py-1 tw:font-normal tw:whitespace-nowrap"
                             >
                                 <input
                                     type="checkbox"
