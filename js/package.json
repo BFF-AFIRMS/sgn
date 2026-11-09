@@ -46,6 +46,7 @@
   },
   "dependencies": {
     "@solgenomics/brapijs": "git+https://github.com/solgenomics/brapi-js#develop",
+    "@tanstack/react-table": "^9.0.0",
     "BrAPI-BoxPlotter": "git+https://github.com/solgenomics/BrAPI-BoxPlotter.git",
     "core-js": "^3",
     "d3": "^7.9.0",
