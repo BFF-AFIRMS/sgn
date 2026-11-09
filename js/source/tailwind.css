@@ -1,4 +1,4 @@
-@layer sgn, theme, base, components, utilities;
+@layer sgn, bff, theme, base, components, utilities;
 
 @import "../../static/css/new_sgn.css" layer(sgn);
 @import "../../static/css/jquery-sgn-theme/jquery-ui-1.10.3.custom.css" layer(sgn);
@@ -14,8 +14,37 @@
 @import "../../static/css/bootstrap-select.min.css" layer(sgn);
 @import "../../static/css/colReorder.dataTables.min.css" layer(sgn);
 
+@import "../../static/css/treeimprovementbase.css" layer(bff);
+
 @import "tailwindcss/theme" layer(theme) prefix(tw);
 @import "tailwindcss/utilities" layer(utilities);
 
 @source "../../mason/**/*.mas";
 @source "./**/*.{ts,tsx,js,jsx}";
+
+/*
+ * Bootstrap's glyphicon @font-face uses paths relative to the original
+ * /css/bootstrap.min.css. Inlining that sheet here rebases them relative to
+ * this file, and style-loader injects an inline <style>, so the browser then
+ * resolves them against the page URL and they 404. Redeclare the font with
+ * root-relative URLs so it keeps loading from static/fonts/ at /fonts/. The
+ * last @font-face for a family wins, and this unlayered rule outranks the
+ * layered copy from the Bootstrap import, so it replaces it.
+ */
+@font-face {
+  font-family: 'Glyphicons Halflings';
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src:
+    url('/fonts/glyphicons-halflings-regular.woff2') format('woff2'),
+    url('/fonts/glyphicons-halflings-regular.woff') format('woff'),
+    url('/fonts/glyphicons-halflings-regular.ttf') format('truetype');
+}
+
+/** Prevent higher-precedence treeimprovementbase font from overriding Glyphicons */
+.glyphicon {
+  font-family: 'Glyphicons Halflings';
+  font-weight: 400;
+  line-height: 1;
+}
