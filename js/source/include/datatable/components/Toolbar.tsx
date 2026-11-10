@@ -4,6 +4,7 @@ import type { DataTableFeatures } from '../features';
 import type { DataTableProps } from '../types';
 import { Check } from '~/@generic';
 import { Dropdown, DropdownItem } from '~/@generic/components/Dropdown';
+import { TextInput } from '~/@generic/components/Input';
 
 interface DataTableToolbarProps<TData extends Record<string, any>> {
     table: Table<DataTableFeatures, TData>;
@@ -24,19 +25,22 @@ export function DataTableToolbar<TData extends Record<string, any>>({
     const toolbarContent = typeof toolbar === 'function' ? toolbar(table) : toolbar;
 
     return (
-        <div className="tw:flex tw:flex-wrap tw:items-center tw:gap-2">
+        <div className="tw:flex tw:flex-wrap tw:items-center tw:justify-between">
+            <div className="tw:flex tw:items-center tw:gap-2">
+                <ColumnVisibilityMenu table={table} columnLabels={columnLabels} />
+                {toolbarContent}
+            </div>
             {globalFilter && (
-                <input
+                <TextInput
                     type="search"
-                    className="form-control tw:w-55"
+                    fullWidth={false}
+                    className="tw:w-55"
                     placeholder="Search all columns..."
                     aria-label="Search all columns"
-                    value={globalFilter.value}
+                    defaultValue={globalFilter.value}
                     onChange={event => globalFilter.onChange(event.target.value)}
                 />
             )}
-            <ColumnVisibilityMenu table={table} columnLabels={columnLabels} />
-            {toolbarContent}
         </div>
     );
 }

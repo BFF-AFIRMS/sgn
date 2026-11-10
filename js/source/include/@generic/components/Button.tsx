@@ -14,9 +14,9 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 	ref?: React.Ref<HTMLButtonElement>;
 }
 
-export const Button = ({ children, variant = 'default', className, ...props }: ButtonProps) => {
+export const Button = ({ children, variant = 'default', className = '', ...props }: ButtonProps) => {
     return (
-        <button className={`${STYLES[variant]} ${className ?? ''}`} {...props}>
+        <button className={`${STYLES[variant]} ${className}`} {...props}>
             {children}
         </button>
     );

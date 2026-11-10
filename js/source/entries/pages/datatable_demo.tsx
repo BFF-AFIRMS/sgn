@@ -109,6 +109,7 @@ export const DataTableDemoApp: React.FC = () => {
                 rowActions={ROW_ACTIONS}
                 pageSize={10}
                 limitHeight={420}
+                filter={{ global: true, column: true }}
                 toolbar={() => (
                     <>
                         <Button>
