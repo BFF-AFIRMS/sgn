@@ -48,8 +48,6 @@ $selection_traits_ids = join(',', @$selection_pop_analyzed_traits_ids);
 
 </%perl>
 
-<& /util/import_css.mas, paths => ['/static/css/solgs/solgs.css'] &>
-
 <& /util/import_javascript.mas, classes => ["solGS.listTypeSelectionPopulation",
 "solGS.genotypingProtocol", "save-svg-as-png.saveSvgAsPng", "solGS.selectMenu"] &>
 

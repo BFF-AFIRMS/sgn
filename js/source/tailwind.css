@@ -1,5 +1,7 @@
 @layer sgn, bff, theme, base, components, utilities;
 
+@import "../../static/css/solgs/solgs.css" layer(sgn);
+@import "../../static/css/d3-tip.css" layer(sgn);
 @import "../../static/css/new_sgn.css" layer(sgn);
 @import "../../static/css/jquery-sgn-theme/jquery-ui-1.10.3.custom.css" layer(sgn);
 @import "../../static/css/jstree/themes/default/style.min.css" layer(sgn);

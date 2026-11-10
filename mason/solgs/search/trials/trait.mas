@@ -23,10 +23,6 @@ $trait_name
 
 </%perl>
 
-<& /util/import_css.mas, paths => ['/static/css/solgs/solgs.css'] &>
-
-
-
 <& /util/import_javascript.mas, classes => ["solGS.solGS", "solGS.searchTrials", "solGS.combineTrials"] &>
 
 <p>&nbsp</p>
