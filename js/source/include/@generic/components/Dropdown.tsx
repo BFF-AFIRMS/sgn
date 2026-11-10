@@ -5,11 +5,12 @@
  * Adapted to TypeScript by Seth Traverse <setraver@ualberta.ca>
  */
 
-import { ButtonHTMLAttributes, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { ButtonHTMLAttributes, useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import { Button, ButtonProps } from './Button';
 
-export const Dropdown = ({ label, caret = true, children, ...props }: ButtonProps & { label: string | React.ReactNode, caret?: boolean }) => {
+export const Dropdown = ({ label, caret = true, closeOnSelect = true, children, ...props }: ButtonProps & { label: string | React.ReactNode, caret?: boolean, closeOnSelect?: boolean }) => {
     const [menu, setMenu] = useState<"first" | "last" | null>(null);
+    const id = useId();
     const wrapRef = useRef<HTMLDivElement>(null);
     const buttonRef = useRef<HTMLButtonElement>(null);
     const menuRef = useRef<HTMLDivElement>(null);
@@ -39,12 +40,13 @@ export const Dropdown = ({ label, caret = true, children, ...props }: ButtonProp
         if (el.offsetHeight + 12 > below && box.top > below) el.setAttribute("data-side", "top");
         if (box.right - el.offsetWidth < 8) el.setAttribute("data-align", "start");
         const list = items();
-        (menu === "last" ? list[list.length - 1] : list[0]).focus();
+        (menu === "last" ? list[list.length - 1] : list[0])?.focus();
     }, [menu]);
 
     // A click:
     // - outside the menu closes it without restoring focus to the button.
-    // - on an enabled menu item closes the menu and restores focus to the button.
+    // - on an enabled menu item closes the menu and restores focus to the button,
+    //   unless this is a multi-select menu (closeOnSelect = false).
     useEffect(() => {
         if (!menu) return undefined;
         const onClick = (event: MouseEvent) => {
@@ -61,11 +63,11 @@ export const Dropdown = ({ label, caret = true, children, ...props }: ButtonProp
             if (!item || item.getAttribute("aria-disabled") === "true") {
                 return;
             }
-            close(true);
+            if (closeOnSelect) close(true);
         };
         document.addEventListener("click", onClick);
         return () => document.removeEventListener("click", onClick);
-    }, [menu]);
+    }, [menu, closeOnSelect]);
 
     const onButtonKey = (event: React.KeyboardEvent<HTMLButtonElement>) => {
         if (event.key !== "ArrowDown" && event.key !== "ArrowUp") return;
@@ -114,13 +116,13 @@ export const Dropdown = ({ label, caret = true, children, ...props }: ButtonProp
     return (
         <div className="tw:flex tw:items-center tw:gap-2">
             <div ref={wrapRef} className="tw:relative">
-                <Button ref={buttonRef} type="button" onClick={() => (menu ? close(true) : setMenu("first"))} onKeyDown={onButtonKey} aria-haspopup="menu" aria-expanded={menu ? "true" : "false"} aria-controls="dd-actions-menu" className="tw:group" {...props}>
+                <Button ref={buttonRef} id={`${id}-button`} type="button" onClick={() => (menu ? close(true) : setMenu("first"))} onKeyDown={onButtonKey} aria-haspopup="menu" aria-expanded={menu ? "true" : "false"} aria-controls={`${id}-menu`} className="tw:group" {...props}>
                     {label}
                     {caret && (
                         <svg className="tw:size-4 tw:shrink-0 tw:text-neutral-600 tw:transition-transform tw:duration-150 tw:group-aria-expanded:rotate-180 tw:motion-reduce:transition-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
                     )}
                 </Button>
-                <div ref={menuRef} role="menu" aria-labelledby="dd-actions-button" data-open={menu ? "" : undefined} onKeyDown={onMenuKey} onPointerMove={onMenuPointer} className="tw:absolute tw:top-full tw:right-0 tw:z-30 tw:mt-1.5 tw:hidden tw:w-60 tw:origin-top tw:rounded-xl tw:bg-white tw:p-1 tw:shadow-lg tw:ring-1 tw:ring-neutral-950/10 tw:not-data-open:scale-95 tw:not-data-open:opacity-0 tw:data-open:block tw:data-[align=start]:right-auto tw:data-[align=start]:left-0 tw:data-[side=top]:top-auto tw:data-[side=top]:bottom-full tw:data-[side=top]:mt-0 tw:data-[side=top]:mb-1.5 tw:data-[side=top]:origin-bottom tw:motion-safe:transition-[opacity,scale,display] tw:motion-safe:transition-discrete tw:motion-safe:duration-150 tw:motion-safe:ease-out tw:motion-safe:starting:scale-95 tw:motion-safe:starting:opacity-0">
+                <div ref={menuRef} id={`${id}-menu`} role="menu" aria-labelledby={`${id}-button`} data-open={menu ? "" : undefined} onKeyDown={onMenuKey} onPointerMove={onMenuPointer} className="tw:absolute tw:top-full tw:right-0 tw:z-30 tw:mt-1.5 tw:hidden tw:w-60 tw:max-h-80 tw:origin-top tw:overflow-y-auto tw:rounded-xl tw:bg-white tw:p-1 tw:shadow-lg tw:ring-1 tw:ring-neutral-950/10 tw:not-data-open:scale-95 tw:not-data-open:opacity-0 tw:data-open:block tw:data-[align=start]:right-auto tw:data-[align=start]:left-0 tw:data-[side=top]:top-auto tw:data-[side=top]:bottom-full tw:data-[side=top]:mt-0 tw:data-[side=top]:mb-1.5 tw:data-[side=top]:origin-bottom tw:motion-safe:transition-[opacity,scale,display] tw:motion-safe:transition-discrete tw:motion-safe:duration-150 tw:motion-safe:ease-out tw:motion-safe:starting:scale-95 tw:motion-safe:starting:opacity-0">
                     {children}
                 </div>
             </div>

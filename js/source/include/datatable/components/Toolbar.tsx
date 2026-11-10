@@ -1,9 +1,9 @@
-import { useEffect, useRef, useState } from 'react';
 import type { Table } from '@tanstack/react-table';
 
 import type { DataTableFeatures } from '../features';
 import type { DataTableProps } from '../types';
-import { Button } from '~/@generic';
+import { Check } from '~/@generic';
+import { Dropdown, DropdownItem } from '~/@generic/components/Dropdown';
 
 interface DataTableToolbarProps<TData extends Record<string, any>> {
     table: Table<DataTableFeatures, TData>;
@@ -50,56 +50,29 @@ function ColumnVisibilityMenu<TData extends Record<string, any>>({
     table,
     columnLabels,
 }: ColumnVisibilityMenuProps<TData>) {
-    const [open, setOpen] = useState(false);
-    const containerRef = useRef<HTMLDivElement>(null);
-
-    useEffect(() => {
-        if (!open) {
-            return undefined;
-        }
-        const handleMouseDown = (event: MouseEvent) => {
-            if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
-                setOpen(false);
-            }
-        };
-        document.addEventListener('mousedown', handleMouseDown);
-        return () => document.removeEventListener('mousedown', handleMouseDown);
-    }, [open]);
-
     const hideableColumns = table.getAllLeafColumns().filter(column => column.getCanHide());
 
     return (
-        <div className="tw:relative tw:inline-block" ref={containerRef}>
-            <Button
-                aria-haspopup="true"
-                aria-expanded={open}
-                onClick={() => setOpen(value => !value)}
-            >
-                Column Visibility <span className="caret" />
-            </Button>
-            {open && (
-                <div className="dropdown-menu tw:block tw:max-h-80 tw:overflow-y-auto">
-                    {hideableColumns.length === 0 ? (
-                        <span className="tw:block tw:px-4 tw:py-1 tw:whitespace-nowrap tw:text-[#888]">
-                            No hideable columns
+        <Dropdown label="Column Visibility" closeOnSelect={false}>
+            {hideableColumns.length === 0 ? (
+                <span className="tw:block tw:px-2 tw:py-1 tw:whitespace-nowrap tw:text-sm tw:text-[#888]">
+                    No hideable columns
+                </span>
+            ) : (
+                hideableColumns.map(column => (
+                    <DropdownItem
+                        key={column.id}
+                        role="menuitemcheckbox"
+                        aria-checked={column.getIsVisible()}
+                        onClick={column.getToggleVisibilityHandler()}
+                    >
+                        <span className="tw:flex tw:size-4 tw:shrink-0 tw:items-center" aria-hidden="true">
+                            {column.getIsVisible() && <Check />}
                         </span>
-                    ) : (
-                        hideableColumns.map(column => (
-                            <label
-                                key={column.id}
-                                className="tw:m-0 tw:block tw:cursor-pointer tw:px-4 tw:py-1 tw:font-normal tw:whitespace-nowrap"
-                            >
-                                <input
-                                    type="checkbox"
-                                    checked={column.getIsVisible()}
-                                    onChange={column.getToggleVisibilityHandler()}
-                                />{' '}
-                                {columnLabels[column.id] ?? column.id}
-                            </label>
-                        ))
-                    )}
-                </div>
+                        {columnLabels[column.id] ?? column.id}
+                    </DropdownItem>
+                ))
             )}
-        </div>
+        </Dropdown>
     );
 }
