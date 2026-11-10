@@ -653,7 +653,6 @@ Input
 
 input {
     background-color: var(--gray-50);
-    border-radius: var(--border-radius);
     border: 1px solid var(--gray-400);
     outline: none;
 }
