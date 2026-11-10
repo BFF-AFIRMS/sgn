@@ -900,6 +900,11 @@ Table
     box-sizing: border-box;
 }
 
+.dt-empty-footer .dt-scroll-footInner > table,
+.dt-empty-footer .dt-scroll-body {
+    border: none;
+}
+
 .borderless {
     border-width: 0px;
 }
