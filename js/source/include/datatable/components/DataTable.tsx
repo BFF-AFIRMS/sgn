@@ -15,6 +15,7 @@ import type { DataTableProps } from '../types';
 import { DataTablePagination } from './Pagination';
 import { DataTableRowActions } from './RowActions';
 import { DataTableToolbar } from './Toolbar';
+import { TextInput } from '~/@generic/components/Input';
 
 const DEFAULT_PAGE_SIZES = [10, 25, 50, 100];
 
@@ -265,9 +266,8 @@ export function DataTable<TData extends Record<string, any>>({
                                         className="tw:bg-white tw:px-2 tw:py-2 tw:border-0"
                                     >
                                         {header.column.getCanFilter() ? (
-                                            <input
+                                            <TextInput
                                                 type="search"
-                                                className="form-control tw:h-7 tw:px-2 tw:py-0.5"
                                                 placeholder="..."
                                                 aria-label={`Filter ${
                                                     columnLabels[header.column.id] ??

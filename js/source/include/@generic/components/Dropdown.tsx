@@ -6,11 +6,10 @@
  */
 
 import { ButtonHTMLAttributes, useEffect, useLayoutEffect, useRef, useState } from "react";
-import { Button } from './Button';
+import { Button, ButtonProps } from './Button';
 
-export const Dropdown = ({ label, children }: { label: string, children: React.ReactNode }) => {
+export const Dropdown = ({ label, caret = true, children, ...props }: ButtonProps & { label: string | React.ReactNode, caret?: boolean }) => {
     const [menu, setMenu] = useState<"first" | "last" | null>(null);
-    const [note, setNote] = useState("");
     const wrapRef = useRef<HTMLDivElement>(null);
     const buttonRef = useRef<HTMLButtonElement>(null);
     const menuRef = useRef<HTMLDivElement>(null);
@@ -43,11 +42,26 @@ export const Dropdown = ({ label, children }: { label: string, children: React.R
         (menu === "last" ? list[list.length - 1] : list[0]).focus();
     }, [menu]);
 
-    // A click anywhere else closes it.
+    // A click:
+    // - outside the menu closes it without restoring focus to the button.
+    // - on an enabled menu item closes the menu and restores focus to the button.
     useEffect(() => {
         if (!menu) return undefined;
         const onClick = (event: MouseEvent) => {
-            if (!wrapRef.current?.contains(event.target as Node)) setMenu(null);
+            if (!wrapRef.current?.contains(event.target as Node)) {
+                setMenu(null);
+                return;
+            }
+
+            if (!(event.target instanceof Element)) {
+                return;
+            }
+
+            const item = event.target.closest("[role^=menuitem]");
+            if (!item || item.getAttribute("aria-disabled") === "true") {
+                return;
+            }
+            close(true);
         };
         document.addEventListener("click", onClick);
         return () => document.removeEventListener("click", onClick);
@@ -99,9 +113,14 @@ export const Dropdown = ({ label, children }: { label: string, children: React.R
 
     return (
         <div className="tw:flex tw:items-center tw:gap-2">
-            <div ref={wrapRef} id="dd-actions-wrap" className="relative">
-                <Button ref={buttonRef} type="button" id="dd-actions-button" onClick={() => (menu ? close(true) : setMenu("first"))} onKeyDown={onButtonKey} aria-haspopup="menu" aria-expanded={menu ? "true" : "false"} aria-controls="dd-actions-menu" className="group">{label}<svg className="tw:size-4 tw:shrink-0 tw:text-neutral-600 tw:transition-transform tw:duration-150 tw:group-aria-expanded:rotate-180 tw:motion-reduce:transition-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg></Button>
-                <div ref={menuRef} id="dd-actions-menu" role="menu" aria-labelledby="dd-actions-button" data-open={menu ? "" : undefined} onKeyDown={onMenuKey} onPointerMove={onMenuPointer} className="tw:absolute tw:top-full tw:right-0 tw:z-30 tw:mt-1.5 tw:hidden tw:w-60 tw:origin-top tw:rounded-xl tw:bg-white tw:p-1 tw:shadow-lg tw:ring-1 tw:ring-neutral-950/10 tw:not-data-open:scale-95 tw:not-data-open:opacity-0 tw:data-open:block tw:data-[align=start]:right-auto tw:data-[align=start]:left-0 tw:data-[side=top]:top-auto tw:data-[side=top]:bottom-full tw:data-[side=top]:mt-0 tw:data-[side=top]:mb-1.5 tw:data-[side=top]:origin-bottom tw:motion-safe:transition-[opacity,scale,display] tw:motion-safe:transition-discrete tw:motion-safe:duration-150 tw:motion-safe:ease-out tw:motion-safe:starting:scale-95 tw:motion-safe:starting:opacity-0">
+            <div ref={wrapRef} className="tw:relative">
+                <Button ref={buttonRef} type="button" onClick={() => (menu ? close(true) : setMenu("first"))} onKeyDown={onButtonKey} aria-haspopup="menu" aria-expanded={menu ? "true" : "false"} aria-controls="dd-actions-menu" className="tw:group" {...props}>
+                    {label}
+                    {caret && (
+                        <svg className="tw:size-4 tw:shrink-0 tw:text-neutral-600 tw:transition-transform tw:duration-150 tw:group-aria-expanded:rotate-180 tw:motion-reduce:transition-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
+                    )}
+                </Button>
+                <div ref={menuRef} role="menu" aria-labelledby="dd-actions-button" data-open={menu ? "" : undefined} onKeyDown={onMenuKey} onPointerMove={onMenuPointer} className="tw:absolute tw:top-full tw:right-0 tw:z-30 tw:mt-1.5 tw:hidden tw:w-60 tw:origin-top tw:rounded-xl tw:bg-white tw:p-1 tw:shadow-lg tw:ring-1 tw:ring-neutral-950/10 tw:not-data-open:scale-95 tw:not-data-open:opacity-0 tw:data-open:block tw:data-[align=start]:right-auto tw:data-[align=start]:left-0 tw:data-[side=top]:top-auto tw:data-[side=top]:bottom-full tw:data-[side=top]:mt-0 tw:data-[side=top]:mb-1.5 tw:data-[side=top]:origin-bottom tw:motion-safe:transition-[opacity,scale,display] tw:motion-safe:transition-discrete tw:motion-safe:duration-150 tw:motion-safe:ease-out tw:motion-safe:starting:scale-95 tw:motion-safe:starting:opacity-0">
                     {children}
                 </div>
             </div>
@@ -109,12 +128,19 @@ export const Dropdown = ({ label, children }: { label: string, children: React.R
     );
 }
 
-export const DropdownItem = ({ children, ...props }: ButtonHTMLAttributes<HTMLButtonElement>) => (
-    <button type='button' role="menuitem" className="tw:flex tw:h-10 tw:w-full tw:cursor-pointer tw:items-center tw:gap-2 tw:rounded-md tw:px-2 tw:text-left tw:text-sm tw:whitespace-nowrap tw:text-neutral-950 tw:transition-colors tw:duration-150 tw:select-none tw:hover:bg-neutral-100 tw:focus:bg-neutral-100 tw:focus:outline-hidden tw:aria-disabled:cursor-not-allowed tw:aria-disabled:opacity-50 tw:aria-disabled:hover:bg-transparent tw:motion-reduce:transition-none tw:sm:h-8" {...props} >
+export type DropdownVariant = 'default' | 'danger';
+
+const STYLES = {
+    default: 'tw:text-neutral-950',
+    danger: 'tw:text-[#d9534f]',
+};
+
+export const DropdownItem = ({ children, variant = 'default', ...props }: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: DropdownVariant }) => (
+    <button type='button' role="menuitem" className={`tw:flex tw:h-10 tw:w-full tw:cursor-pointer tw:items-center tw:gap-2 tw:rounded-md tw:px-2 tw:border-0 tw:bg-white tw:text-left tw:text-sm tw:whitespace-nowrap tw:transition-colors tw:duration-150 tw:select-none tw:hover:bg-neutral-100 tw:focus:bg-neutral-100 tw:focus:outline-hidden tw:aria-disabled:cursor-not-allowed tw:aria-disabled:opacity-50 tw:aria-disabled:hover:bg-transparent tw:motion-reduce:transition-none tw:sm:h-8 ${STYLES[variant]}`} {...props} >
         {children}
     </button>
 );
 
 export const DropdownSeparator = () => (
-    <div role="separator" className="tw:my-1 tw:h-px tw:bg-neutral-200 dark:tw:bg-neutral-800"></div>
+    <div role="separator" className="tw:my-1 tw:h-px tw:bg-neutral-200"></div>
 );
