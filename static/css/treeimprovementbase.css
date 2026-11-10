@@ -887,7 +887,6 @@ Table
     border-collapse: separate;
     border: var(--well-border);
     border-radius: var(--border-radius);
-    margin: var(--padding-sm) 0;
 }
 
 .table tbody tr td, .table tbody tr th {
