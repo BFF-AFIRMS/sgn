@@ -21,5 +21,7 @@
 		"source/**/*.ts",
 		"source/**/*.tsx",
 		"test/**/*.ts",
+		"test/**/*.tsx",
+		"test_utils/**/*.ts",
 	]
 }
