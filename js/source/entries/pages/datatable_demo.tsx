@@ -68,7 +68,7 @@ const ROWS: DemoPerson[] = [
     { name: 'Patrick Stewart', age: 34, email: 'patrick.stewart@example.com' }
 ].map((row, index) => ({ id: index + 1, ...row }));
 
-const ROW_ACTIONS: Array<DataTableRowAction<DemoPerson>> = [
+const ROW_ACTIONS: DataTableRowAction<DemoPerson>[] = [
     {
         label: 'Edit',
         onClick: person => window.alert(`Edit "${person.name}" (id ${person.id})`),
@@ -81,7 +81,7 @@ const ROW_ACTIONS: Array<DataTableRowAction<DemoPerson>> = [
 ];
 
 export const DataTableDemoApp: React.FC = () => {
-    const [persons, setPersons] = useState<Array<DemoPerson>>(ROWS);
+    const [persons, setPersons] = useState<DemoPerson[]>(ROWS);
 
     // Demo-only stand-in for a refetch: hands the table a fresh array so the
     // row models (and the page index) recompute.

@@ -42,12 +42,12 @@ export interface DataTableRowAction<TData> {
 }
 
 export interface DataTableProps<TData extends Record<string, any> = Record<string, any>> {
-    columns: Array<DataTableColumn<TData>>;
-    rows: Array<TData>;
+    columns: DataTableColumn<TData>[];
+    rows: TData[];
 
     /** Initial page size. Changing this prop after mount has no effect. */
     pageSize?: number;
-    pageSizeOptions?: Array<number>;
+    pageSizeOptions?: number[];
     /** Set to `false` to disable sorting on every column. */
     sortable?: boolean;
     /** Maximum height (px) of the scroll area. Enables the sticky header. */
@@ -65,7 +65,7 @@ export interface DataTableProps<TData extends Record<string, any> = Record<strin
     getRowId?: (row: TData) => string;
     enableRowSelection?: boolean;
     /** Renders a `...` menu with these actions at the end of every row. */
-    rowActions?: Array<DataTableRowAction<TData>>;
+    rowActions?: DataTableRowAction<TData>[];
 
     /**
      * Extra toolbar buttons, rendered next to the built-in Column Visibility

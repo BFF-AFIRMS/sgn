@@ -85,8 +85,8 @@ export function DataTable<TData extends Record<string, any>>({
         return styles;
     }, [columns]);
 
-    const tableColumns = useMemo<Array<ColumnDef<typeof dataTableFeatures, TData>>>(() => {
-        const defs: Array<ColumnDef<typeof dataTableFeatures, TData>> = [];
+    const tableColumns = useMemo<ColumnDef<typeof dataTableFeatures, TData>[]>(() => {
+        const defs: ColumnDef<typeof dataTableFeatures, TData>[] = [];
 
         if (enableRowSelection) {
             defs.push({
