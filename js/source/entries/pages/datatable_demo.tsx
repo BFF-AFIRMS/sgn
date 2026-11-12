@@ -4,6 +4,7 @@ import { Button } from '~/@generic';
 
 import {
     DataTable,
+    DEFAULT_PAGE_SIZES,
     type DataTableColumn,
     type DataTableRowAction,
 } from '~/datatable';
@@ -107,6 +108,7 @@ export const DataTableDemoApp: React.FC = () => {
                 rows={persons}
                 getRowId={person => String(person.id)}
                 rowActions={ROW_ACTIONS}
+                pageSizeOptions={[...DEFAULT_PAGE_SIZES, 'all']}
                 pageSize={10}
                 limitHeight={420}
                 filter={{ global: true, column: true }}

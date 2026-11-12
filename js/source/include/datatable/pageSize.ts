@@ -1,5 +1,7 @@
 import type { DataTablePageSize } from './types';
 
+export const DEFAULT_PAGE_SIZES = [10, 25, 50, 100];
+
 /**
  * TanStack Table's `PaginationState.pageSize` is always a number, so "All" is
  * stored as a sentinel.

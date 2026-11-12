@@ -11,14 +11,12 @@ import {
 } from '@tanstack/react-table';
 
 import { dataTableFeatures } from '../features';
-import { resolvePageSize } from '../pageSize';
+import { DEFAULT_PAGE_SIZES, resolvePageSize } from '../pageSize';
 import type { DataTableProps } from '../types';
 import { DataTablePagination } from './Pagination';
 import { DataTableRowActions } from './RowActions';
 import { DataTableToolbar } from './Toolbar';
 import { TextInput } from '~/@generic/components/Input';
-
-const DEFAULT_PAGE_SIZES = [10, 25, 50, 100];
 
 // Synthetic column ids for the two columns that are not driven by the `columns`
 // prop. They are also used as keys into `columnStyles`.
