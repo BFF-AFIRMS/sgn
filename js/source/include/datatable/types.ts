@@ -41,13 +41,23 @@ export interface DataTableRowAction<TData> {
     variant?: 'default' | 'danger';
 }
 
+/**
+ * A page size preset. `'all'` renders every row that survives filtering on a
+ * single page.
+ */
+export type DataTablePageSize = number | 'all';
+
 export interface DataTableProps<TData extends Record<string, any> = Record<string, any>> {
     columns: DataTableColumn<TData>[];
     rows: TData[];
 
-    /** Initial page size. Changing this prop after mount has no effect. */
-    pageSize?: number;
-    pageSizeOptions?: number[];
+    /**
+     * Initial page size. Changing this prop after mount has no effect.
+     * Pass `'all'` to start with every row on a single page.
+     */
+    pageSize?: DataTablePageSize;
+    /** Presets for the "Rows per page" select. Include `'all'` to offer "All". */
+    pageSizeOptions?: DataTablePageSize[];
     /** Set to `false` to disable sorting on every column. */
     sortable?: boolean;
     /** Maximum height (px) of the scroll area. Enables the sticky header. */

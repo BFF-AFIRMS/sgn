@@ -2,19 +2,26 @@ import React from 'react';
 import { Button } from '~/@generic';
 import { Select } from '~/@generic/components/Select';
 
+import { toPageSizeOption } from '../pageSize';
+import type { DataTablePageSize } from '../types';
+
 export interface DataTablePaginationProps {
     pageIndex: number;
     pageSize: number;
     pageCount: number;
-    pageSizeOptions: Array<number>;
+    pageSizeOptions: DataTablePageSize[];
     selectedRowCount: number;
     totalRowCount: number;
     canPreviousPage: boolean;
     canNextPage: boolean;
-    onPageSizeChange: (pageSize: number) => void;
+    onPageSizeChange: (pageSize: DataTablePageSize) => void;
     onPreviousPage: () => void;
     onNextPage: () => void;
 }
+
+/** `'all'` sorts after every numeric size. */
+const rankPageSize = (size: DataTablePageSize) =>
+    size === 'all' ? Number.POSITIVE_INFINITY : size;
 
 export const DataTablePagination: React.FC<DataTablePaginationProps> = ({
     pageIndex,
@@ -29,10 +36,14 @@ export const DataTablePagination: React.FC<DataTablePaginationProps> = ({
     onPreviousPage,
     onNextPage,
 }) => {
+    const current = toPageSizeOption(pageSize);
+
     // Keep the active page size selectable even when it is not one of the presets.
-    const sizes = pageSizeOptions.includes(pageSize)
+    const sizes = pageSizeOptions.includes(current)
         ? pageSizeOptions
-        : [...pageSizeOptions, pageSize].sort((a, b) => a - b);
+        : [...pageSizeOptions, current].sort(
+              (a, b) => rankPageSize(a) - rankPageSize(b),
+          );
 
     return (
         <div className="tw:flex tw:flex-wrap tw:items-center tw:justify-between tw:gap-2 tw:text-[13px]">
@@ -43,12 +54,18 @@ export const DataTablePagination: React.FC<DataTablePaginationProps> = ({
                 <span>Rows per page</span>
                 <Select
                     aria-label="Rows per page"
-                    defaultValue={pageSize}
-                    onChange={event => onPageSizeChange(Number(event.target.value))}
+                    value={String(current)}
+                    onChange={event =>
+                        onPageSizeChange(
+                            event.target.value === 'all'
+                                ? 'all'
+                                : Number(event.target.value),
+                        )
+                    }
                 >
                     {sizes.map(size => (
-                        <option key={size} value={size}>
-                            {size}
+                        <option key={String(size)} value={String(size)}>
+                            {size === 'all' ? 'All' : size}
                         </option>
                     ))}
                 </Select>

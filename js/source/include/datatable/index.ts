@@ -1,6 +1,7 @@
 export type {
     DataTableCellInfo,
     DataTableColumn,
+    DataTablePageSize,
     DataTableProps,
     DataTableRowAction,
 } from './types';

@@ -11,6 +11,7 @@ import {
 } from '@tanstack/react-table';
 
 import { dataTableFeatures } from '../features';
+import { resolvePageSize } from '../pageSize';
 import type { DataTableProps } from '../types';
 import { DataTablePagination } from './Pagination';
 import { DataTableRowActions } from './RowActions';
@@ -54,7 +55,10 @@ export function DataTable<TData extends Record<string, any>>({
     const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
     const [globalFilter, setGlobalFilter] = useState('');
     const [columnVisibility, setColumnVisibility] = useState<ColumnVisibilityState>({});
-    const [pagination, setPagination] = useState<PaginationState>({ pageIndex: 0, pageSize });
+    const [pagination, setPagination] = useState<PaginationState>({
+        pageIndex: 0,
+        pageSize: resolvePageSize(pageSize),
+    });
     const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
 
     const columnLabels = useMemo(() => {
@@ -333,7 +337,16 @@ export function DataTable<TData extends Record<string, any>>({
                 totalRowCount={table.getPrePaginatedRowModel().rows.length}
                 canPreviousPage={table.getCanPreviousPage()}
                 canNextPage={table.getCanNextPage()}
-                onPageSizeChange={size => table.setPageSize(size)}
+                // The paginated row model does not invoke the page-index
+                // auto-reset hook (only the filtered, grouped and sorted ones
+                // do), so growing the page size can leave pageIndex past the
+                // end of the page list and render an empty body. Reset it here.
+                onPageSizeChange={size =>
+                    table.setPagination({
+                        pageIndex: 0,
+                        pageSize: resolvePageSize(size),
+                    })
+                }
                 onPreviousPage={() => table.previousPage()}
                 onNextPage={() => table.nextPage()}
             />
