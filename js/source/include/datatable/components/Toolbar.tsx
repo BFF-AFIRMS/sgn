@@ -26,7 +26,7 @@ export function DataTableToolbar<TData extends Record<string, any>>({
 
     return (
         <div className="tw:flex tw:flex-wrap tw:items-center tw:justify-between">
-            <div className="tw:flex tw:items-center tw:gap-2">
+            <div className="tw:flex tw:items-center tw:gap-2 tw:flex-wrap tw:mr-2 tw:mb-2">
                 <ColumnVisibilityMenu table={table} columnLabels={columnLabels} />
                 {toolbarContent}
             </div>
@@ -34,7 +34,7 @@ export function DataTableToolbar<TData extends Record<string, any>>({
                 <TextInput
                     type="search"
                     fullWidth={false}
-                    className="tw:w-55"
+                    className="tw:w-55 tw:mb-2"
                     placeholder="Search all columns..."
                     aria-label="Search all columns"
                     defaultValue={globalFilter.value}

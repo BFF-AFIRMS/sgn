@@ -185,7 +185,7 @@ export function DataTable<TData extends Record<string, any>>({
     const showFilterRow = filter?.column !== false;
 
     return (
-        <div className="tw:flex tw:flex-col tw:gap-2">
+        <div className="tw:flex tw:flex-col">
             <DataTableToolbar
                 table={table}
                 toolbar={toolbar}
@@ -201,7 +201,7 @@ export function DataTable<TData extends Record<string, any>>({
                 className="tw:overflow-auto"
                 style={limitHeight ? { maxHeight: limitHeight } : undefined}
             >
-                <table className="table table-hover tw:mb-0">
+                <table className="table table-hover tw:mb-0 tw:mt-0">
                     <thead className="tw:sticky tw:top-0 tw:z-2">
                         {headerGroups.map(headerGroup => (
                             <tr key={headerGroup.id}>

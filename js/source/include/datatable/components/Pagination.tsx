@@ -46,7 +46,7 @@ export const DataTablePagination: React.FC<DataTablePaginationProps> = ({
           );
 
     return (
-        <div className="tw:flex tw:flex-wrap tw:items-center tw:justify-between tw:gap-2 tw:text-[13px]">
+        <div className="tw:flex tw:flex-wrap tw:items-center tw:justify-between tw:gap-2 tw:mt-2 tw:text-[13px]">
             <span className="tw:text-[#666]">
                 {selectedRowCount} of {totalRowCount} row(s) selected.
             </span>
