@@ -653,7 +653,6 @@ Input
 
 input {
     background-color: var(--gray-50);
-    border-radius: var(--border-radius);
     border: 1px solid var(--gray-400);
     outline: none;
 }
@@ -888,7 +887,6 @@ Table
     border-collapse: separate;
     border: var(--well-border);
     border-radius: var(--border-radius);
-    margin: var(--padding-sm) 0;
 }
 
 .table tbody tr td, .table tbody tr th {
@@ -900,6 +898,11 @@ Table
 .table.dataTable {
     /* Include borders in size calculations to avoid unnecessary scrollbars */
     box-sizing: border-box;
+}
+
+.dt-empty-footer .dt-scroll-footInner > table,
+.dt-empty-footer .dt-scroll-body {
+    border: none;
 }
 
 .borderless {

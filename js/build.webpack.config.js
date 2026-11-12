@@ -60,7 +60,18 @@ module.exports = {
                 test: /\.css$/,
                 use: [
                     "style-loader",
-                    "css-loader",
+                    {
+                        loader: "css-loader",
+                        options: {
+                            url: {
+                                filter: (url) => {
+                                    // Prevent webpack from attempting to bundle static assets from the
+                                    // upper sgn project
+                                    return !url.includes("static/") && !url.includes("documents/") && !url.includes('img/') && !url.includes('fonts/');
+                                }
+                            }
+                        }
+                    },
                     {
                         loader: "postcss-loader",
                         options: {

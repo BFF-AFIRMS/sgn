@@ -18,10 +18,6 @@
   white-space:nowrap;
 }
 
-.form-control { 
-  width: 300px;
-}
-
 </style>
 
 <& /page/page_title.mas, title=>"Login" &>

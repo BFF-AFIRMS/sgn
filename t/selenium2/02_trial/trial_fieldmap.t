@@ -2254,6 +2254,9 @@ EOSQL
 	$t->send_keys_ok('add_subplots_per_plot_num', 'id', '1', 'Set number of subplots per plot to 1');
 	$t->click_ok('add_subplots_save_button', 'id', 'Click Save button to create subplots');
 	$t->accept_alert_ok('Accept alert after creating subplots');
+
+	# Full reload here, give the page some time to fire off its requests
+	sleep(3);
 	$t->wait_for_network_idle();
 
 	# Configure subplots with plants (3 rows x 3 columns = 9 plants per subplot)
@@ -2267,6 +2270,9 @@ EOSQL
 	$t->send_keys_ok('cols_per_subplot', 'id', '3', 'Set number of columns per subplot to 3');
 	$t->click_ok('add_plants_subplot_save_button', 'id', 'Click Save button to create plants for subplots');
 	$t->accept_alert_ok('Accept alert after creating plants for subplots');
+
+	# Full reload here, give the page some time to fire off its requests
+	sleep(3);
 	$t->wait_for_network_idle();
 
 	# Open fieldmap to verify plot details modal with subplots

@@ -13,8 +13,6 @@ $trait_id
 
 
 <& /util/import_javascript.mas, classes => ["solGS.solGS", "solGS.combinePopulations", "jquery.cookie"] &>
-<& /util/import_css.mas, paths => ['/static/css/solgs/solgs.css'] &>
-
 
 <& /page/page_title.mas,
     title => "Confirm" ,
