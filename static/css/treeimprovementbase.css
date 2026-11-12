@@ -176,6 +176,11 @@ Default Classes
 -------------------------------------------------------------------------------
 */
 
+html {
+    /* All rem values are based on the root font-size */
+    font-size: var(--font-size-md);
+}
+
 body {
     background-color: var(--background-color);
     color:            var(--text-color-primary);
