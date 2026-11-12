@@ -18,7 +18,25 @@ function GraphicalFilter(brapi_node,trait_accessor,table_col_accessor,table_col_
     var i = 0;
     return function(){return i++;};
   })();
-  
+
+  // Extract trait base name and order
+  var tableColOrder = [];
+  var tableColSeen = {};
+  brapi_node.map(function(d){
+    d.observations.forEach(function(obs){
+      const title = obs.observationVariableSynonym ?? obs.observationVariableName;
+      if (!(title in tableColSeen)){
+        tableColSeen[title] = true;
+        tableColOrder.push({
+          'title': title,
+          'data': `traits.${title}`,
+          'base': obs.observationVariableBaseName,
+          'order': obs.observationVariableOrder,
+        });
+      }
+    });
+  });
+
   // parse data
   var tableCols = table_col_order.map(function(key){
         return {title:key,data:"meta."+key.replace(".","\\.")}
@@ -49,7 +67,6 @@ function GraphicalFilter(brapi_node,trait_accessor,table_col_accessor,table_col_
   });
   
   if (group_key_accessor!=undefined){
-    tableCols.push({title:"Count",data:"count"});
     const reduce_func = function(a,d){ return a.concat(d)};
     data_node = data_node.reduce(reduce_func).fork(function(all){
       var key_map = {};
@@ -129,24 +146,30 @@ function GraphicalFilter(brapi_node,trait_accessor,table_col_accessor,table_col_
       //draw the filter
       gfilter.root.draw(canv.node());
 
+      var sortedCols = [...tableColOrder].sort((a, b) => a.base.localeCompare(b.base) || a.order - b.order);
+      sortedCols.unshift({title:"Count", data:"count"});
+      sortedCols.unshift({title:"Stock", data:"meta.Stock"});
+
       //create the output table
       if (buttons) {
         gfilter.results_table = $(table_selector).DataTable({
               data: data,
               layout: {
-                  topStart: 'buttons',
+                  topStart: 'pageLength',
+                  top: 'buttons',
                   topEnd: 'search',
                   bottomStart: 'info',
-                  bottomEnd: 'paging'
+                  bottomEnd: 'paging',
               },
-              "columns": tableCols,
+              "columns": sortedCols,
               "buttons": buttons,
               "scrollX": true,
+              "lengthMenu": [10,20,50,100],
         });
       } else {
         gfilter.results_table = $(table_selector).DataTable({
             data: data,
-            "columns": tableCols,
+            "columns": sortedCols,
             "scrollX": true,
         });
       }
