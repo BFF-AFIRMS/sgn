@@ -86,6 +86,7 @@ use CXGN::Chado::Organism;
 use JSON;
 use utf8;
 use Encode;
+use Scalar::Util qw(looks_like_number);
 
 has 'bcs_schema' => ( isa => 'Bio::Chado::Schema',
     is => 'rw',
@@ -169,12 +170,12 @@ has 'trait_cvterm_name_list' => (
 );
 
 has 'minimum_phenotype_value' => (
-    isa => 'Num|Undef',
+    isa => 'Num|Str|Undef',
     is => 'rw',
 );
 
 has 'maximum_phenotype_value' => (
-    isa => 'Num|Undef',
+    isa => 'Num|Str|Undef',
     is => 'rw',
 );
 
@@ -388,11 +389,28 @@ sub search {
                 push @{$and_conditions->{ 'observable.name' }}, $_;
             }
         }
-        if ($minimum_phenotype_value) {
-            $and_conditions->{ 'phenotype.value' }  = { '>' => $minimum_phenotype_value };
+
+        # Reminder, the three keys in this section for the and_conditions must have distinct names
+        # ex. (phenotype.value)::text, phenotype.value, (phenotype.value)
+        my $phenotype_is_numeric = 0;
+        if (defined $minimum_phenotype_value || defined $maximum_phenotype_value) {
+            # If at least one of the values is a number, restrict the trait
+            # search to only values that are numeric, otherwise exclude numbers
+            if (looks_like_number($minimum_phenotype_value) || looks_like_number($maximum_phenotype_value)){
+                $phenotype_is_numeric = 1;
+            }
+            my $phenotype_operator = $phenotype_is_numeric ? '~' : '!~';
+            $and_conditions->{ '(phenotype.value)::text' }  = { $phenotype_operator => '^[0-9\.]+$'};
         }
-        if ($maximum_phenotype_value) {
-            $and_conditions->{ 'phenotype.value' }  = { '<' => $maximum_phenotype_value };
+        if (defined $minimum_phenotype_value) {
+            my $phenotype_key = $phenotype_is_numeric ? 'phenotype.value::decimal' : 'phenotype.value';
+            my $phenotype_value = $phenotype_is_numeric ? $minimum_phenotype_value + 0 : $minimum_phenotype_value;
+            $and_conditions->{ $phenotype_key } = { '>=' => $phenotype_value};
+        }
+        if (defined $maximum_phenotype_value) {
+            my $phenotype_key = $phenotype_is_numeric ? '(phenotype.value)::decimal' : '(phenotype.value)';
+            my $phenotype_value = $phenotype_is_numeric ? $maximum_phenotype_value + 0 : $maximum_phenotype_value;
+            $and_conditions->{ $phenotype_key } = { '<=' => $phenotype_value};
         }
     }
 
