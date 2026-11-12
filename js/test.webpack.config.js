@@ -9,9 +9,13 @@ const testBuildPath = path.resolve(__dirname, "test_build/");
 
 // Use the same config as the main build but change the settings below
 module.exports = merge(rootConfig,{
+  mode: 'development',
+  optimization: {
+    minimize: false
+  },
   entry: (() => {
       var entries = {};
-      glob.sync(path.resolve(testPath, "**/*.{js,ts}")).forEach(val => {
+      glob.sync(path.resolve(testPath, "**/*.{js,jsx,ts,tsx}")).forEach(val => {
           var rel = path.relative(__dirname, val);
           entries[rel] = val;
       });

@@ -1,0 +1,9 @@
+<& /util/import_javascript.mas, entries => ['pages/datatable_demo'] &>
+
+<div id="datatable_demo"></div>
+
+<script>
+$(document).ready(function() {
+	jsMod['pages/datatable_demo'].init('datatable_demo');
+});
+</script>
