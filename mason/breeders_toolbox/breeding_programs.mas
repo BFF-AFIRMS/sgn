@@ -4,51 +4,28 @@ $breeding_programs
 $user => undef
 </%args>
 
+<%once>
+use JSON;
+</%once>
+
 <%perl>
 my $curator_flag = 0;
 if ($user && $user->check_roles("curator")) {
     $curator_flag = 1;
 }
+
+my $json = JSON->new->allow_nonref;
+my $breeding_programs_json = $json->encode($breeding_programs || []);
 </%perl>
+
+<& /util/import_javascript.mas, entries => ['pages/breeding_programs'] &>
 
 <& /page/page_title.mas, title=>"Manage Breeding Programs" &>
 
 <div class="container-fluid">
-<hr>
-
-<table class="table table-condensed table-striped table-hover">
-  <thead>
-    <tr>
-
-    <%perl>
-      if ($curator_flag) { print "<th>Name</th><th>Info</th><th>Edit</th><th>Delete</th>"; }
-        else { print "<th>Name</th><th>Info</th>"; }
-    </%perl>
-
-    </tr>
-  </thead>
-  <tbody>
-
-    <%perl>
-      foreach my $bp (@$breeding_programs) {
-
-        print "<tr><td><b><a href=\"/breeders/program/$bp->[0]\" >$bp->[1]</a></b></td><td>$bp->[2]</td>";
-
-  	if ($curator_flag) {
-      print "<td><a title=\"edit this breeding program\" id=\"edit_breeding_program_link\_".$bp->[1]."\" href=\"javascript:edit_breeding_program($bp->[0],'$bp->[1]','$bp->[2]')\" ><span class=\"glyphicon glyphicon-pencil\"></span></a></td>";
-	  print "<td><a title=\"delete this breeding program\" id=\"delete_breeding_program_link\_".$bp->[1]."\" href=\"javascript:delete_breeding_program($bp->[0],'$bp->[1]')\" ><font color=\"red\">X</font></a></td></tr>";
-	} else {
-	  print "</tr>";
-	}
-      }
-    </%perl>
-
-  </tbody>
-</table>
-
-<br/>
-<button type="button" class="btn btn-primary" name="new_breeding_program_link" id="new_breeding_program_link">Add New Program</button>
-
+<div id="breeding_programs_container">
+  <!-- React component added here -->
+</div>
 </div>
 
 <!-- Modal Dialogs Below Here -->
@@ -92,9 +69,9 @@ if ($user && $user->check_roles("curator")) {
 
 jQuery(document).ready(function() {
 
-  $("button#new_breeding_program_link").click( function(event) {
-      event.preventDefault();
-      $("#store_breeding_program_dialog").modal("show");
+  window.jsMod['pages/breeding_programs'].init('breeding_programs_container', {
+    data: <% $breeding_programs_json %>,
+    isCurator: <% $curator_flag ? 'true' : 'false' %>
   });
 
   $('#store_breeding_program_submit').click( function(event) {
