@@ -100,6 +100,11 @@ my $schema = $f->bcs_schema;
 my $mech = Test::WWW::Mechanize->new(timeout=>30000);
 my $response;
 
+# Login
+$mech->post_ok('http://localhost:3010/brapi/v1/token', [ "username"=> "janedoe", "password"=> "secretpw", "grant_type"=> "password" ]);
+my $response = decode_json $mech->content;
+is($response->{'metadata'}->{'status'}->[2]->{'message'}, 'Login Successfull');
+
 $mech->post_ok(
     'http://localhost:3010/ajax/search/stocks',
     [
@@ -637,6 +642,150 @@ is_deeply($response, {
     ['<a href="/stock/38842/view">test_accession3</a>','accession','Solanum lycopersicum','test_accession3_synonym1','organization_name_1']
   ]
 }, 'test stock search 16');
+
+# -----------------------------------------------------------------------------
+# Test minimum trait value filter
+$mech->post_ok(
+  'http://localhost:3010/ajax/search/stocks',
+  [
+    'minimum_trait_value' => 30,
+    'trait' => 'fresh root weight',
+    'stock_type' => 'plot',
+   ],
+  'minimum trait value filter'
+);
+$response = decode_json $mech->content;
+$response = _fix_response_links($response);
+is_deeply($response, {
+  'draw' => undef,
+  'recordsFiltered' => 3,
+  'recordsTotal' => 3,
+  'data' => [
+    ['<a href="/stock/39297/view">KASESE_TP2013_718</a>','plot'],
+    ['<a href="/stock/39428/view">KASESE_TP2013_1475</a>','plot'],
+    ['<a href="/stock/39485/view">KASESE_TP2013_1512</a>','plot']
+  ],
+}, 'test minimum trait value filter');
+
+
+# -----------------------------------------------------------------------------
+# Test maximum trait value filter
+$mech->post_ok(
+  'http://localhost:3010/ajax/search/stocks',
+  [
+    'maximum_trait_value' => 0.05,
+    'trait' => 'fresh root weight',
+    'stock_type' =>'plot',
+  ],
+  'maximum trait value filter'
+);
+$response = decode_json $mech->content;
+$response = _fix_response_links($response);
+is_deeply($response, {
+  'draw' => undef,
+  'recordsFiltered' => 2,
+  'recordsTotal' => 2,
+  'data' => [
+    ['<a href="/stock/39458/view">KASESE_TP2013_1655</a>','plot'],
+    ['<a href="/stock/39582/view">KASESE_TP2013_859</a>','plot']
+  ],
+}, 'test maximum trait value filter');
+
+# -----------------------------------------------------------------------------
+# Test combined minimum and maximum trait value filter
+$mech->post_ok(
+    'http://localhost:3010/ajax/search/stocks',
+    [
+        'minimum_trait_value' => 30,
+        'maximum_trait_value' => 35,
+        'trait' => 'fresh root weight',
+        'stock_type' => 'plot',
+    ],
+    "minimum trait value filter"
+);
+$response = decode_json $mech->content;
+$response = _fix_response_links($response);
+is_deeply($response, {
+  'draw' => undef,
+  'recordsFiltered' => 2,
+  'recordsTotal' => 2,
+  'data' => [
+    ['<a href="/stock/39297/view">KASESE_TP2013_718</a>','plot'],
+    ['<a href="/stock/39485/view">KASESE_TP2013_1512</a>','plot']
+  ],
+}, 'test combined minimum and maximum trait value filter');
+
+# -----------------------------------------------------------------------------
+# Test trait value filter when traits contain non-numeric values
+
+# Change the trait value of plot 'CASS_6Genotypes_103' phenotype for the trait
+# 'cass sink leaf|ADP|ug/g|week 16' from 655.92 to 'blue'.
+$mech->post_ok(
+  'http://localhost:3010/ajax/phenotype/edit/740338',
+  [
+    'trial_id' => 165,
+    'new_observation_value' => 'blue'
+  ]
+);
+$response = decode_json $mech->content;
+is($response->{'success'}, 1, 'Set phenotype to blue success');
+
+# Check that the search query works without errors and that the plot
+# 'CASS_6Genotypes_103' is not present in the results
+$mech->post_ok(
+    'http://localhost:3010/ajax/search/stocks',
+    [
+        'minimum_trait_value' => 600,
+        'trait' => 'cass sink leaf|ADP|ug/g|week 16',
+        'stock_type' => 'plot',
+    ],
+    "trait filter excluding non-numeric values"
+);
+$response = decode_json $mech->content;
+$response = _fix_response_links($response);
+is_deeply($response, {
+  'draw' => undef,
+  'recordsTotal' => 3,
+  'recordsFiltered' => 3,
+  'data' => [
+    ['<a href="/stock/41285/view">CASS_6Genotypes_205</a>','plot'],
+    ['<a href="/stock/41286/view">CASS_6Genotypes_206</a>','plot'],
+    ['<a href="/stock/41297/view">CASS_6Genotypes_106</a>','plot']
+  ],
+}, 'test filter excluding non-numeric values');
+
+
+$mech->post_ok(
+    'http://localhost:3010/ajax/search/stocks',
+    [
+        'minimum_trait_value' => 'blue',
+        'trait' => 'cass sink leaf|ADP|ug/g|week 16',
+        'stock_type' => 'plot',
+    ],
+    "trait filter including non-numeric values"
+);
+$response = decode_json $mech->content;
+$response = _fix_response_links($response);
+
+is_deeply($response, {
+  'draw' => undef,
+  'recordsTotal' => 1,
+  'recordsFiltered' => 1,
+  'data' => [
+    ['<a href="/stock/41284/view">CASS_6Genotypes_103</a>','plot']
+  ],
+}, 'test filter that includes non-numeric values');
+
+# Restore to the original trait value
+$mech->post_ok(
+  'http://localhost:3010/ajax/phenotype/edit/740338',
+  [
+    'trial_id' => 165,
+    'new_observation_value' => 655.92
+  ]
+);
+$response = decode_json $mech->content;
+is($response->{'success'}, 1, 'Set phenotype to 655.92 success');
 
 $f->clean_up_db();
 done_testing();
