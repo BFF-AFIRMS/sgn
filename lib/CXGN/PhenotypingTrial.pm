@@ -336,6 +336,13 @@ sub get_crossing_experiments_from_field_trial {
         }
     }
 
+    # A trial with no plots or plants (e.g. a genotyping plate) cannot have any
+    # associated crossing experiments. Return early rather than building an
+    # invalid "IN ()" clause from an empty candidate list.
+    if (scalar(@related_stock_ids) == 0) {
+        return [];
+    }
+
     my @where_clause;
     my $stock_ids_sql = join (",", @related_stock_ids);
     push @where_clause, "stock_relationship.subject_id IN ($stock_ids_sql)";
@@ -460,12 +467,6 @@ sub add_additional_stocks_for_greenhouse {
             my $new_design = $trial_design_store->store();
         }
 
-        my $new_layout = CXGN::Trial::TrialLayout->new({
-            schema => $schema,
-            trial_id => $trial_id,
-            experiment_type => 'field_layout',
-        });
-        $new_layout->generate_and_cache_layout();
     };
 
     my $error;
@@ -563,12 +564,6 @@ sub add_additional_plants_for_greenhouse {
 
         $greenhouse_trial->save_plant_entries($info,'' ,1 ,$user_id, $phenotype_store_config, $add_additional_plants); #TODO: Add phenotypestore config hash
 
-        my $new_layout = CXGN::Trial::TrialLayout->new({
-            schema => $schema,
-            trial_id => $trial_id,
-            experiment_type => 'field_layout',
-        });
-        $new_layout->generate_and_cache_layout();
     };
 
     my $error;

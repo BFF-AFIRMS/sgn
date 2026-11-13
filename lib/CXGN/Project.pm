@@ -2547,21 +2547,24 @@ sub _delete_field_layout_experiment {
     my $genotyping_layout_type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'genotyping_layout', 'experiment_type')->cvterm_id();
     my $analysis_experiment_type_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'analysis_experiment', 'experiment_type')->cvterm_id();
 
-    my $layout_design = $self->get_layout->get_design;
+    my $nde_rs = $self->bcs_schema()->resultset("NaturalDiversity::NdExperiment")->search(
+        {
+            'me.type_id' => [$field_layout_type_id, $genotyping_layout_type_id, $analysis_experiment_type_id],
+            'project.project_id' => $trial_id
+        },
+        { 'join' => { 'nd_experiment_projects' => 'project' } }
+    );
+
+    # Collect this trial's observation units straight from nd_experiment_stock.
+    # Regenerating the trial layout here is not an option: layout generation
+    # requires every plot to still have a parent accession/cross/family_name,
+    # which would leave a trial undeletable once those parents were removed.
+    my %seen_stock_ids;
     my @all_stock_ids;
-    while( my($plot_num, $design_info) = each %$layout_design){
-	if (! ref($design_info)) {
-	    print STDERR "Design info missing for plot $plot_num. Skipping.\n";
-	    next;
-	}
-        my $plot_id = $design_info->{plot_id}; #this includes the "tissue_sample" in "genotyping_layout"
-        my @plant_ids = $design_info->{plant_ids} ? @{$design_info->{plant_ids}} : ();
-        my @subplot_ids = $design_info->{subplot_ids} ? @{$design_info->{subplot_ids}} : ();
-        my @tissue_sample_ids = $design_info->{tissue_sample_ids} ? @{$design_info->{tissue_sample_ids}} : ();
-        push @all_stock_ids, $plot_id;
-        push @all_stock_ids, @plant_ids;
-        push @all_stock_ids, @tissue_sample_ids;
-        push @all_stock_ids, @subplot_ids;
+    foreach my $nde_stock ($nde_rs->search_related('nd_experiment_stocks')->all) {
+        my $stock_id = $nde_stock->stock_id();
+        next if $seen_stock_ids{$stock_id}++;
+        push @all_stock_ids, $stock_id;
     }
 
     my $phenome_schema = CXGN::Phenome::Schema->connect( sub {
@@ -2602,13 +2605,6 @@ sub _delete_field_layout_experiment {
         $has_tissues_prop->delete();
     }
 
-    my $trial_layout_json_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($self->bcs_schema, 'trial_layout_json', 'project_property')->cvterm_id();
-    my $has_cached_layout_prop = $self->bcs_schema->resultset("Project::Projectprop")->find({ type_id => $trial_layout_json_cvterm_id, project_id => $trial_id });
-    if ($has_cached_layout_prop){
-        $has_cached_layout_prop->delete();
-    }
-
-    my $nde_rs = $self->bcs_schema()->resultset("NaturalDiversity::NdExperiment")->search({ 'me.type_id'=>[$field_layout_type_id, $genotyping_layout_type_id, $analysis_experiment_type_id], 'project.project_id'=>$trial_id }, {'join'=>{'nd_experiment_projects'=>'project'}});
 #    if ($nde_rs->count != 1){
 #        die "Project $trial_id does not have exactly one ndexperiment of type field_layout or genotyping_layout!"
 #    }
@@ -3463,7 +3459,6 @@ sub create_plant_entities {
             }
         }
 
-        $layout->generate_and_cache_layout();
     };
 
     eval {
@@ -3643,7 +3638,6 @@ sub save_plant_entries {
             }
         }
 
-        $layout->generate_and_cache_layout();
     };
 
     eval {
@@ -3845,7 +3839,6 @@ sub create_plant_subplot_entities {
             }
         }
 
-        $layout->generate_and_cache_layout();
     };
 
     eval {
@@ -4048,7 +4041,6 @@ sub save_plant_subplot_entries {
             }
         }
 
-        $layout->generate_and_cache_layout();
     };
 
     eval {
@@ -4417,7 +4409,6 @@ sub create_tissue_samples {
             }
         }
 
-        $layout->generate_and_cache_layout();
     };
 
     eval {
@@ -4645,7 +4636,6 @@ sub create_subplot_entities {
             }
         }
 
-        $layout->generate_and_cache_layout();
     };
 
     eval {
@@ -4811,7 +4801,6 @@ sub save_subplot_entries {
             }
         }
 
-        $layout->generate_and_cache_layout();
     };
 
     eval {
