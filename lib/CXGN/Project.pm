@@ -4473,31 +4473,28 @@ sub create_tissue_samples {
 
 sub has_col_and_row_numbers {
 	my $self = shift;
-	my $chado_schema = $self->bcs_schema();
-    my $design;
-    try {
-        my $layout = CXGN::Trial::TrialLayout->new( { schema => $chado_schema, trial_id => $self->get_trial_id(), experiment_type=>'field_layout' });
-        $design = $layout->get_design();
+    my $schema = $self->bcs_schema();
+    my $dbh = $schema->storage->dbh();
+
+    my $trial_id = $self->get_trial_id();
+    my $row_number_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'row_number', 'stock_property')->cvterm_id();
+    my $col_number_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'col_number', 'stock_property')->cvterm_id();
+
+    my $q = "select plot_id from plotsxtrials join stockprop on (plot_id = stock_id) where trial_id = ? and type_id = ? limit 1";
+    my $h = $dbh->prepare($q);
+    $h->execute($self->get_trial_id(), $row_number_cvterm_id);
+    my $row_number = $h->fetchrow_array();
+
+    my $q = "select plot_id from plotsxtrials join stockprop on (plot_id = stock_id) where trial_id = ? and type_id = ? limit 1";
+    my $h = $dbh->prepare($q);
+    $h->execute($self->get_trial_id(), $col_number_cvterm_id);
+    my $col_number = $h->fetchrow_array();
+
+    if (defined $row_number && defined $col_number){
+        return 1;
+    } else {
+        return 0;
     }
-
-    my (@row_numbers, @col_numbers);
-    foreach my $plot (keys %$design) {
-        my $row_number = $design->{$plot}->{row_number};
-        my $col_number = $design->{$plot}->{col_number};
-        if ($row_number){
-            push @row_numbers, $row_number;
-        }
-        if ($col_number){
-            push @col_numbers, $col_number;
-        }
-    }
-
-    if (scalar(@row_numbers) ne '0' && scalar(@col_numbers) ne '0'){
-		return 1;
-	} else {
-		return 0;
-	}
-
 }
 
 =head2 function has_tissue_sample_entries()
@@ -5046,7 +5043,7 @@ sub get_accessions {
 		JOIN nd_experiment using(nd_experiment_id)
 		JOIN nd_experiment_project using(nd_experiment_id)
 		JOIN project using(project_id)
-		LEFT JOIN organism ON (accession.organism_id = organism.organism_id)
+		LEFT JOIN public.organism ON (accession.organism_id = organism.organism_id)
 		WHERE accession.type_id IN (?, ?, ?)
 		AND stock_relationship.type_id IN (?, ?, ?, ?, ?)
 		AND project.project_id = ?
