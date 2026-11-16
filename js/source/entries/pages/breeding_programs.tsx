@@ -1,13 +1,10 @@
 import { useCallback, useMemo } from 'react';
 import { createRoot } from 'react-dom/client';
-import type { Table } from '@tanstack/react-table';
 
 import { Button } from '~/@generic';
-import { Dropdown, DropdownItem } from '~/@generic/components/Dropdown';
 import {
     DataTable,
     type DataTableColumn,
-    type DataTableFeatures,
     type DataTableRowAction,
 } from '~/datatable';
 
@@ -31,73 +28,18 @@ interface BreedingProgram {
 
 export interface BreedingProgramsProps {
     /** Rows as sent by the server: `[id, name, description]` tuples. */
-    data: string[][];
+    data: [number | string, string, string | null][];
     isCurator: boolean;
 }
 
-type ExportFormat = 'excel' | 'csv' | 'tsv';
-
-const EXPORT_COLUMNS: { key: keyof BreedingProgram; label: string }[] = [
-    { key: 'id', label: 'ID' },
-    { key: 'name', label: 'Name' },
-    { key: 'description', label: 'Description' },
-];
-
-const escapeDelimited = (value: string, delimiter: string): string =>
-    value.includes(delimiter) || value.includes('"') || /[\r\n]/.test(value)
-        ? `"${value.replace(/"/g, '""')}"`
-        : value;
-
-const downloadFile = (filename: string, content: string, mimeType: string): void => {
-    const url = URL.createObjectURL(new Blob([content], { type: mimeType }));
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = filename;
-    link.click();
-    window.setTimeout(() => URL.revokeObjectURL(url), 0);
-};
-
-/**
- * Exports the currently selected rows (across every page, not just the one
- * displayed) as Excel, CSV or TSV.
- *
- * TODO: This is a placeholder. I suspect we might want serverside exporting
- * here depending on if we want additional columns not present in this view.
- */
-const exportPrograms = (
-    format: ExportFormat,
-    table: Table<DataTableFeatures, BreedingProgram>,
-): void => {
-    const rows = table.getSelectedRowModel().rows.map(row => row.original);
-
-    if (format === 'excel') {
-		// TODO: Need a writer for this
-		alert('Excel export is not implemented yet.');
-        return;
-    }
-
-    const delimiter = format === 'csv' ? ',' : '\t';
-    const content = [
-        EXPORT_COLUMNS.map(column => column.label).join(delimiter),
-        ...rows.map(row =>
-            EXPORT_COLUMNS.map(column => escapeDelimited(row[column.key], delimiter)).join(
-                delimiter,
-            ),
-        ),
-    ].join('\r\n');
-
-    downloadFile(
-        `breeding_programs.${format}`,
-        content,
-        format === 'csv'
-            ? 'text/csv;charset=utf-8'
-            : 'text/tab-separated-values;charset=utf-8',
-    );
-};
-
 export const BreedingProgramsApp: React.FC<BreedingProgramsProps> = ({ data, isCurator }) => {
     const programs = useMemo<BreedingProgram[]>(
-        () => data.map(([id, name, description]) => ({ id, name, description })),
+        () =>
+            data.map(([id, name, description]) => ({
+                id: String(id),
+                name: name ?? '',
+                description: description ?? '',
+            })),
         [data],
     );
 
@@ -147,13 +89,8 @@ export const BreedingProgramsApp: React.FC<BreedingProgramsProps> = ({ data, isC
         jQuery('#store_breeding_program_dialog').modal('show');
     }, []);
 
-    const renderToolbar = (table: Table<DataTableFeatures, BreedingProgram>) => (
+    const toolbar = (
         <>
-            <Dropdown label="Export">
-                <DropdownItem onClick={() => exportPrograms('excel', table)}>Excel</DropdownItem>
-                <DropdownItem onClick={() => exportPrograms('csv', table)}>CSV</DropdownItem>
-                <DropdownItem onClick={() => exportPrograms('tsv', table)}>TSV</DropdownItem>
-            </Dropdown>
             <Button onClick={handleRefresh}>Refresh</Button>
             {isCurator && (
                 <Button id="new_breeding_program_link" variant="primary" onClick={handleAddProgram}>
@@ -170,7 +107,8 @@ export const BreedingProgramsApp: React.FC<BreedingProgramsProps> = ({ data, isC
             getRowId={program => program.id}
             rowActions={rowActions}
             filter={{ column: false }}
-            toolbar={renderToolbar}
+            export={{ filename: 'breeding_programs' }}
+            toolbar={toolbar}
         />
     );
 };
