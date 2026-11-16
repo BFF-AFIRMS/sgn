@@ -22,7 +22,6 @@ export const useDownloadLayoutCSV = () => {
 		rightBorder,
 		topBorder,
 		bottomBorder,
-		borderLabel,
 	} = useLayoutConfig();
 
 	const downloadLayoutCSV = useCallback((
@@ -47,7 +46,7 @@ export const useDownloadLayoutCSV = () => {
 
 		let coord_matrix: string[][] = [];
 		const sortedPlots = [...plotList].filter(p => p.type !== 'border');
-		const borderCell = borderLabel === 'empty' ? `""` : `"${borderLabel}"`;
+		const borderCell = csvDownloadOpts.borderLabel === 'empty' ? `""` : `"${csvDownloadOpts.borderLabel}"`;
 
 		sortedPlots.forEach(plot => {
 			const r = Number(plot.observationUnitPosition.positionCoordinateY) - bounds.minRow;
@@ -120,6 +119,6 @@ export const useDownloadLayoutCSV = () => {
 		hiddenElement.target = '_blank';
 		hiddenElement.download = `Trial_${trialId}_spatial_layout.csv`;
 		hiddenElement.click();
-	}, [bounds, plotList, invertCols, invertRows, trialId, axisOrientation, leftBorder, rightBorder, topBorder, bottomBorder, borderLabel]);
+	}, [bounds, plotList, invertCols, invertRows, trialId, axisOrientation, leftBorder, rightBorder, topBorder, bottomBorder]);
 	return { downloadLayoutCSV };
 };

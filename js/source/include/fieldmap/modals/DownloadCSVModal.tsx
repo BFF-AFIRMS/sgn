@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { useModals } from '../contexts/ModalsContext';
 import { CsvDownloadOpts } from '../types';
 import { useDownloadLayoutCSV } from '../hooks/useDownloadLayoutCSV';
-import { useLayoutConfig, BorderLabel } from '../contexts/LayoutConfigContext';
 
 interface DownloadCSVModalProps {
 }
@@ -21,11 +20,8 @@ export const DownloadCSVModal: React.FC<DownloadCSVModalProps> = ({ }) => {
         plotNum: false,
         familyName: false,
         crossName: false,
+        borderLabel: 'Border'
     });
-
-    const {
-        borderLabel, setBorderLabel,
-    } = useLayoutConfig();
 
     const {
         downloadLayoutCSV
@@ -72,8 +68,8 @@ export const DownloadCSVModal: React.FC<DownloadCSVModalProps> = ({ }) => {
                             <label>Border Label:</label>
                             <select
                                 className="form-control"
-                                value={borderLabel}
-                                onChange={e => setBorderLabel(e.target.value as BorderLabel)}
+                                defaultValue={csvDownloadOpts.borderLabel}
+                                onChange={e => setCsvDownloadOpts({ ...csvDownloadOpts, borderLabel: e.target.value })}
                             >
                                 <option value="Border">Border</option>
                                 <option value="empty">Empty Cell</option>
