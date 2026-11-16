@@ -540,7 +540,6 @@ test('buildExcelSheet - creates bold headers, typed cells, and bounded column wi
 
 test('DataTable - export menu respects selection, sorting, filtering, and column visibility', async t => {
     const originalCreateObjectURL = URL.createObjectURL;
-    const originalRevokeObjectURL = URL.revokeObjectURL;
     const originalAnchorClick = HTMLAnchorElement.prototype.click;
 
     let capturedBlob: Blob | null = null;
@@ -602,11 +601,21 @@ test('DataTable - export menu respects selection, sorting, filtering, and column
 
         fireEvent.click(within(exportable.container).getByRole('menuitem', { name: 'CSV' }));
         t.equal(capturedDownload, 'people.csv', 'downloads using configured filename and .csv extension');
+
+        // Blob.text() decodes through TextDecoder, which silently drops a leading
+        // BOM, so the byte order mark has to be asserted on the raw bytes.
+        const csvBytes = new Uint8Array(await capturedBlob!.arrayBuffer());
+        t.deepEqual(
+            Array.from(csvBytes.slice(0, 3)),
+            [0xEF, 0xBB, 0xBF],
+            'prefixes the CSV download with a UTF-8 BOM',
+        );
+
         const csvText = await capturedBlob!.text();
         t.equal(
             csvText,
-            '\uFEFFName,Age\r\nGrace,45\r\nBoris,41\r\nAda,36',
-            'exports all sorted rows across pages with BOM and excludes enableExport:false columns',
+            'Name,Age\r\nGrace,45\r\nBoris,41\r\nAda,36',
+            'exports all sorted rows across pages and excludes enableExport:false columns',
         );
 
         // Hide Age column and select only Grace -> exports only Grace's Name as TSV
@@ -623,7 +632,6 @@ test('DataTable - export menu respects selection, sorting, filtering, and column
         t.equal(tsvText, 'Name\r\nGrace', 'exports only selected rows and visible columns without BOM');
     } finally {
         URL.createObjectURL = originalCreateObjectURL;
-        URL.revokeObjectURL = originalRevokeObjectURL;
         HTMLAnchorElement.prototype.click = originalAnchorClick;
     }
 
