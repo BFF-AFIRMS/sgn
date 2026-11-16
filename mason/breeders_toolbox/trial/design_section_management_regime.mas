@@ -2,6 +2,7 @@
 $trial_id
 $management_factor_types => (),
 $user_can_modify => undef
+$trigger => {}
 </%args>
 
 
@@ -21,11 +22,20 @@ $user_can_modify => undef
 
 <script>
 jQuery(document).ready( function() {
+
+% if (defined $trigger->{id} && $trigger->{action}) {
+    jQuery('#<% $trigger->{id} %>').<% $trigger->{action} %>( function() {
+% }
+
     jQuery('#edit_management_regime').click(function() {
         jQuery('#trial_design_add_management_factor').modal("show");
     });
 
     load_management_regime_table();
+
+% if (defined $trigger->{id} && $trigger->{action}) {
+    });
+% }
 
     jQuery('#new_trial_add_management_factors_submit').on('click',add_management_factor);
 
@@ -176,6 +186,7 @@ jQuery(document).ready( function() {
                     }
                 ],
                 'scrollX': true,
+                'retrieve': true,
             });
 
         } catch (error) {

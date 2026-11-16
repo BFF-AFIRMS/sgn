@@ -1,5 +1,6 @@
 <%args>
 $trial_id
+$trigger => {}
 </%args>
 
 
@@ -13,6 +14,9 @@ $trial_id
 <script defer="defer">
 
 jQuery(document).ready(function () {
+% if (defined $trigger->{id} && $trigger->{action}) {
+    jQuery('#<% $trigger->{id} %>').one("<% $trigger->{action} %>", function(){
+% }
 
     var soil_data_table = jQuery('#soil_data_table').DataTable({
         'searching': false,
@@ -32,6 +36,9 @@ jQuery(document).ready(function () {
         'scrollX': true,
     });
 
+% if (defined $trigger->{id} && $trigger->{action}) {
+    });
+% }
 });
 
 function deleteSoilData(prop_id){

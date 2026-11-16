@@ -4,7 +4,7 @@ $trial_stock_type => undef
 $for_analysis_page => undef
 </%args>
 
-            <&| /page/info_section.mas, title=>"Data Collection Files", is_subsection => 1, collapsible=>1, collapsed=>0, &>
+            <&| /page/info_section.mas, title=>"Data Collection Files", is_subsection => 1, collapsible=>1, collapsed=>1, &>
                 <&| /page/info_section.mas, title=>"Phenotyping Spreadsheets", empty_message=>'', is_subsection => 1, collapsible=>0, collapsed=>0, subtitle=>'<button class="btn btn-sm btn-default" style="margin:3px" name="create_spreadsheet_link">Create Spreadsheet</button>' &>
                 </&>
 %  if (!$for_analysis_page) {
@@ -15,7 +15,7 @@ $for_analysis_page => undef
 %  }
             </&><!-- closes create new phenotyping file section -->
 
-            <&| /page/info_section.mas, title=>"Upload Phenotyping Files", is_subsection => 1, collapsible=>1, collapsed=>0, &>
+            <&| /page/info_section.mas, title=>"Upload Phenotyping Files", is_subsection => 1, collapsible=>1, collapsed=>1, &>
                 <&| /page/info_section.mas, title=>"Phenotyping Spreadsheets", empty_message=>'', is_subsection => 1, collapsible=>0, collapsed=>0, subtitle=>'<button class="btn btn-sm btn-primary" style="margin:3px" id="upload_spreadsheet_phenotypes_link">Upload</button>'&>
                 </&>
 %  if (!$for_analysis_page) {
@@ -26,23 +26,23 @@ $for_analysis_page => undef
 %  }
             </&><!-- closes upload new phenotype file section -->
 
-            <&| /page/info_section.mas, title=>"Uploaded Phenotyping Files", is_subsection => 1, collapsible=>1, collapsed=>0 &>
+            <&| /page/info_section.mas, title=>"Uploaded Phenotyping Files", is_subsection => 1, collapsible=>1, collapsed=>1, id => "upload_phenotyping_files" &>
 
                 <table class="table table-bordered" id="trial_phenotype_files_datatables" alt="">
                 </table>
 
             </&><!-- closes uploaded file section -->
 
-            <&| /page/info_section.mas, title=>"Uploaded Additional Files", is_subsection => 1, collapsible=>1, collapsed=>0, subtitle=>'<button class="btn btn-sm btn-primary" style="margin:3px" id="trial_upload_additional_files_link">Upload Additional Files</button>' &>
+            <&| /page/info_section.mas, title=>"Uploaded Additional Files", is_subsection => 1, collapsible=>1, collapsed=>1, subtitle=>'<button class="btn btn-sm btn-primary" style="margin:3px" id="trial_upload_additional_files_link">Upload Additional Files</button>', id => 'uploaded_additional_files' &>
 
-            <& /breeders_toolbox/trial/upload_additional_file.mas, trial_id => $trial_id &>
+            <& /breeders_toolbox/trial/upload_additional_file.mas, trial_id => $trial_id, trigger => { id => 'uploaded_additional_files_onswitch', action => 'click'} &>
 
             </&><!-- closes uploaded additional file section -->
 
 
 <script>
 jQuery(document).ready(function() {
-    jQuery('#trial_upload_files_onswitch').one("click", function(){
+    jQuery('#upload_phenotyping_files_onswitch').one("click", function(){
 
         jQuery('#trial_phenotype_files_datatables').DataTable({
             'ajax': { 'url': '/ajax/breeders/trial/<% $trial_id %>/phenotype_metadata' },

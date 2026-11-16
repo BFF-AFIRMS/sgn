@@ -14,7 +14,7 @@ $user_can_modify => undef
 </style>
 
 
-    <& /breeders_toolbox/trial/design.mas, trial_id => $trial_id &>
+    <& /breeders_toolbox/trial/design.mas, trial_id => $trial_id, trigger => { id => "trial_design_section_onswitch", action => "click"} &>
 % my $stock_label = '';
 % if ($trial_stock_type eq 'family_name') {
 %     $stock_label = 'Family Names';
@@ -27,11 +27,11 @@ $user_can_modify => undef
 
   <&| /page/info_section.mas, id => "management_regime", title=> 'Management Regime', subtitle => '<div class="col-sm-4"><div id="management_factors">How this trial was managed</div></div>',is_subsection => 1, collapsible=>1, collapsed=>1 &>
 
-      <& /breeders_toolbox/trial/design_section_management_regime.mas, trial_id => $trial_id,management_factor_types => $management_factor_types, user_can_modify => $user_can_modify &>
+      <& /breeders_toolbox/trial/design_section_management_regime.mas, trial_id => $trial_id,management_factor_types => $management_factor_types, user_can_modify => $user_can_modify, trigger => { id => "management_regime_onswitch", action => "click"} &>
 
   </&>
 
-  <& /breeders_toolbox/trial/trial_stocks_count.mas, trial_id => $trial_id &>
+  <!-- & /breeders_toolbox/trial/trial_stocks_count.mas, trial_id => $trial_id & -->
 
   <&| /page/info_section.mas, id => "trial_stocks", title=> $stock_label, subtitle => '<div class="col-sm-4"><div id="stocks_counts"></div></div>',is_subsection => 1, collapsible=>1, collapsed=>1 &>
         <& /breeders_toolbox/trial/trial_stocks.mas, trial_id => $trial_id &>
@@ -41,20 +41,21 @@ $user_can_modify => undef
 
     <&| /page/info_section.mas, id => "trial_seedlots", title=>"Seedlots", subtitle => '<div class="col-sm-4"><div id="seedlots_counts"></div></div>', is_subsection => 1, collapsible=>1, collapsed=>1 &>
         <& /breeders_toolbox/trial/trial_seedlots.mas, trial_id => $trial_id &>
-        <& /breeders_toolbox/trial/trial_seedlots_count.mas, trial_id => $trial_id &>
+        <!-- & /breeders_toolbox/trial/trial_seedlots_count.mas, trial_id => $trial_id & -->
     </&>
 
 
     <&| /page/info_section.mas, id => "trial_controls", title=>"Controls", subtitle => '<div class="col-sm-4"><div id="controls_counts"></div></div>', is_subsection => 1, collapsible=>1, collapsed=>1 &>
         <& /breeders_toolbox/trial/trial_controls.mas, trial_id => $trial_id &>
-        <& /breeders_toolbox/trial/trial_controls_count.mas, trial_id => $trial_id &>
+        <!-- & /breeders_toolbox/trial/trial_controls_count.mas, trial_id => $trial_id & -->
     </&>
 
 
     <&| /page/info_section.mas, id => "trial_plots", title=>"Plots", subtitle => '<div class="col-sm-4"><div id="plots_counts"></div></div>', is_subsection => 1, collapsible=>1, collapsed=>1 &>
         <& /breeders_toolbox/trial/trial_plots.mas, trial_id => $trial_id &>
-        <& /breeders_toolbox/trial/trial_plots_count.mas, trial_id => $trial_id &>
+        <!-- & /breeders_toolbox/trial/trial_plots_count.mas, trial_id => $trial_id &-->
     </&>
+
 
     <&| /page/info_section.mas, id => "trial_subplots", title=>"Subplots",  is_subsection => 1, collapsible=>1, collapsed=>1 &>
 
@@ -121,7 +122,7 @@ $user_can_modify => undef
 
     <&| /page/info_section.mas, id => "summary_of_stock_entries", title=>"Summary of Stock Entries",  is_subsection => 1, collapsible=>1, collapsed=>1 &>
         <div id="summary_entries_section">
-            <& /breeders_toolbox/trial/summary_stock_entries.mas, trial_id => $trial_id, trial_stock_type => $trial_stock_type &>
+            <& /breeders_toolbox/trial/summary_stock_entries.mas, trial_id => $trial_id, trial_stock_type => $trial_stock_type, trigger => { id => "summary_of_stock_entries_onswitch", action => "click"} &>
         </div>
     </&>
 
@@ -130,5 +131,5 @@ $user_can_modify => undef
     </&>
 
     <&| /page/info_section.mas, id=>"trial_entry_numbers", title=>"Entry Numbers", is_subsection=>1, collapsible=>1, collapsed=>1 &>
-        <& /breeders_toolbox/trial/trial_entry_numbers.mas, trial_id => $trial_id, trial_name => $trial_name &>
+        <& /breeders_toolbox/trial/trial_entry_numbers.mas, trial_id => $trial_id, trial_name => $trial_name, trigger => { id => 'trial_entry_numbers_onswitch', action => 'click' } &>
     </&>

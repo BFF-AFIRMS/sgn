@@ -2,6 +2,7 @@
 <%args>
 $trial_id
 $trial_name
+$trigger => {}
 </%args>
 
 <& /util/import_javascript.mas, classes => [ ] &>
@@ -25,7 +26,13 @@ $trial_name
 <script type="text/javascript">
     jQuery(document).ready(function() {
 
+% if (defined $trigger->{id} && $trigger->{action}) {
+        jQuery('#<% $trigger->{id} %>').<% $trigger->{action} %>( function() {
+% }
         loadEntryNumbers();
+% if (defined $trigger->{id} && $trigger->{action}) {
+        });
+% }
 
         jQuery("#set_entry_numbers_template_btn").click(function() {
             jQuery("#set_entry_numbers_template_dialog").modal("show");
@@ -91,7 +98,8 @@ $trial_name
                         orthogonal: 'export'
                     }
                 }
-            ]
+            ],
+            retrieve: true,
         });
     });
 

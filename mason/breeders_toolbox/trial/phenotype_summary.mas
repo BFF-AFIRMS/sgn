@@ -2,6 +2,7 @@
 <%args>
 $trial_id
 $trial_stock_type => undef
+$trigger => {}
 </%args>
 
 <& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form', 'd3.d3v4Min', 'd3.graphers.stackedObservationPhenotypeHistogram'] &>
@@ -175,6 +176,11 @@ input[type="text"] {
     const tzOffset = (new Date()).getTimezoneOffset() * 60000;
 
     jQuery(document).ready(function () {
+
+% if (defined $trigger->{id} && $trigger->{action}) {
+        jQuery('#<% $trigger->{id} %>').<% $trigger->{action} %>( function() {
+% }
+
         var type = "<% $trial_stock_type %>";
         type = type == 'analysis_instance' ? 'accession' : type;
     	jQuery.ajax( {
@@ -275,8 +281,7 @@ input[type="text"] {
             trait_summary_hist_display_change(this.value);
         });
 
-        jQuery('#trial_detail_traits_assayed_onswitch').click( function() {
-            init_summary_table(type);
+        init_summary_table(type);
         
 
 %  if ($trial_stock_type eq 'analysis_instance') {
@@ -284,7 +289,7 @@ input[type="text"] {
 %  } else {
         trait_summary_hist_display_change('plot');
 %  }
-        });
+
         jQuery('#phenotype_summary_data').on('click', 'a[href^="#"]', function(event) {
             //console.log("scrolling histo into view");
             var offset = jQuery(window).height() - jQuery('#raw_data_histogram_well').height() - 40;
@@ -318,6 +323,9 @@ input[type="text"] {
         jQuery('#plants_stock_option').text(plants_stock_text);
         jQuery('#tissue_samples_stock_option').text(tissue_samples_stock_text);
 
+% if (defined $trigger->{id} && $trigger->{action}) {
+        });
+% }
     });
 
     function datatables_display_phenosummary(type) {
