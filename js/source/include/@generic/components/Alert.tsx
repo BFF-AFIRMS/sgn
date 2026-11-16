@@ -7,8 +7,13 @@ export type AlertProps = React.HTMLAttributes<HTMLDivElement> & {
 	variant?: AlertVariant
 };
 
-export const Alert: React.FC<AlertProps> = ({ message, variant: type = 'success', onClose, canClose = true, ...props }) => (
-	<div className={`alert alert-${type}`} role="status" {...props}>
+const STYLES: Record<AlertVariant, string> = {
+	success: 'alert-success',
+	error: 'alert-danger',
+};
+
+export const Alert: React.FC<AlertProps> = ({ message, variant = 'success', onClose, canClose = true, ...props }) => (
+	<div className={`alert ${STYLES[variant]}`} role="status" {...props}>
 		{canClose && (
 			<button
 				type="button"
