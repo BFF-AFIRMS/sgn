@@ -100,11 +100,6 @@ my $schema = $f->bcs_schema;
 my $mech = Test::WWW::Mechanize->new(timeout=>30000);
 my $response;
 
-# Login
-$mech->post_ok('http://localhost:3010/brapi/v1/token', [ "username"=> "janedoe", "password"=> "secretpw", "grant_type"=> "password" ]);
-my $response = decode_json $mech->content;
-is($response->{'metadata'}->{'status'}->[2]->{'message'}, 'Login Successfull');
-
 $mech->post_ok(
     'http://localhost:3010/ajax/search/stocks',
     [
@@ -718,17 +713,10 @@ is_deeply($response, {
 # -----------------------------------------------------------------------------
 # Test trait value filter when traits contain non-numeric values
 
-# Change the trait value of plot 'CASS_6Genotypes_103' phenotype for the trait
-# 'cass sink leaf|ADP|ug/g|week 16' from 655.92 to 'blue'.
-$mech->post_ok(
-  'http://localhost:3010/ajax/phenotype/edit/740338',
-  [
-    'trial_id' => 165,
-    'new_observation_value' => 'blue'
-  ]
-);
-$response = decode_json $mech->content;
-is($response->{'success'}, 1, 'Set phenotype to blue success');
+my $plot_phenotype = $schema->resultset('Phenotype::Phenotype')->find({phenotype_id => 740338});
+my $phenotype_original_value = $plot_phenotype->value();
+$plot_phenotype->value('blue');
+$plot_phenotype->update();
 
 # Check that the search query works without errors and that the plot
 # 'CASS_6Genotypes_103' is not present in the results
@@ -754,7 +742,6 @@ is_deeply($response, {
   ],
 }, 'test filter excluding non-numeric values');
 
-
 $mech->post_ok(
     'http://localhost:3010/ajax/search/stocks',
     [
@@ -777,15 +764,8 @@ is_deeply($response, {
 }, 'test filter that includes non-numeric values');
 
 # Restore to the original trait value
-$mech->post_ok(
-  'http://localhost:3010/ajax/phenotype/edit/740338',
-  [
-    'trial_id' => 165,
-    'new_observation_value' => 655.92
-  ]
-);
-$response = decode_json $mech->content;
-is($response->{'success'}, 1, 'Set phenotype to 655.92 success');
+$plot_phenotype->value($phenotype_original_value);
+$plot_phenotype->update();
 
 $f->clean_up_db();
 done_testing();
