@@ -59,7 +59,7 @@ export const BreedingProgramDialog: React.FC<BreedingProgramDialogProps> = ({
         return null;
     }
 
-    const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    const handleSubmit = async (event: React.SubmitEvent<HTMLFormElement>) => {
         event.preventDefault();
 
         const trimmedName = name.trim();
@@ -241,28 +241,31 @@ export const BreedingProgramsApp: React.FC<BreedingProgramsProps> = ({ data, isC
 
     const rowActions = useMemo<DataTableRowAction<BreedingProgram>[]>(
         () =>
-            isCurator
-                ? [
-                      {
-                          label: 'Edit',
-                          onClick: program => setDialog({ program }),
-                      },
-                      {
-                          label: 'Delete',
-                          variant: 'danger',
-                          onClick: program => {
-                              void handleDelete(program);
-                          },
-                      },
-                  ]
-                : [],
+            isCurator ? [
+                {
+                    label: 'Edit',
+                    onClick: program => setDialog({ program }),
+                },
+                {
+                    label: 'Delete',
+                    variant: 'danger',
+                    onClick: program => {
+                        void handleDelete(program);
+                    },
+                },
+            ] : [],
         [isCurator, handleDelete],
     );
 
-    // The table is rendered from server-side data, so refreshing re-requests the page.
-    const handleRefresh = useCallback(() => window.location.reload(), []);
+    const handleRefresh = useCallback(
+        () => window.location.reload(),
+        []
+    );
 
-    const handleAddProgram = useCallback(() => setDialog({ program: null }), []);
+    const handleAddProgram = useCallback(
+        () => setDialog({ program: null }),
+        []
+    );
 
     const toolbar = (
         <>

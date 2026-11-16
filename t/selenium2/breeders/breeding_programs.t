@@ -5,8 +5,6 @@ use Test::More;
 use SGN::Test::WWW::WebDriver;
 
 
-# The program table is rendered client side, so its per-row controls are
-# targeted by the row's content instead of the anchor ids of the old table.
 sub row_actions_button {
     my $name = shift;
     return "//tr[td[contains(normalize-space(.), '$name')]]//button[\@aria-label='Row actions']";
@@ -30,8 +28,6 @@ $t->while_logged_in_as("curator", sub {
 
     $t->click_ok('store_breeding_program_submit', 'id', 'find store breeding program button');
 
-    # Storing reloads the page once the request completes; the banner on the
-    # reloaded page is the confirmation the old alert used to be.
     $t->find_element_ok('breeding_program_success_banner', 'id', 'find breeding program success banner');
 
     $t->get_ok('/breeders/manage_programs');
