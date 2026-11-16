@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 
 import { Button } from '~/@generic';
+import { Alert } from '~/@generic/components/Alert';
 import { storeBreedingProgram, deleteBreedingProgram } from '~/breeding_programs/fetch';
 import {
     DataTable,
@@ -17,9 +18,8 @@ export interface BreedingProgramsProps {
 
 /**
  * Success messages are handed to the reloaded page through sessionStorage,
- * because storing or deleting a program reloads the page (the table is rendered
- * from server-side data). Session storage is per-tab, so a message never leaks
- * into another tab or a later visit.
+ * because storing or deleting a program reloads the page. Session storage is
+ * per-tab, so a message never leaks into another tab or a later visit.
  */
 const SUCCESS_MESSAGE_KEY = 'breeding_programs_success_message';
 
@@ -278,17 +278,12 @@ export const BreedingProgramsApp: React.FC<BreedingProgramsProps> = ({ data, isC
     return (
         <>
             {successMessage && (
-                <div id="breeding_program_success_banner" className="alert alert-success" role="status">
-                    <button
-                        type="button"
-                        className="close"
-                        aria-label="Dismiss"
-                        onClick={() => setSuccessMessage(null)}
-                    >
-                        &times;
-                    </button>
-                    {successMessage}
-                </div>
+                <Alert
+                    id="breeding_program_success_banner"
+                    message={successMessage}
+                    variant="success"
+                    onClose={() => setSuccessMessage(null)}
+                />
             )}
             <DataTable
                 columns={columns}
