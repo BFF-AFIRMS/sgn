@@ -216,7 +216,8 @@ const downloadBlob = (filename: string, blob: Blob): void => {
  * Exports the table in the requested format and starts the download.
  *
  * Excel is written through `write-excel-file`; CSV and TSV are serialized
- * directly. CSV is prefixed with a BOM so Excel detects the UTF-8 encoding.
+ * directly. CSV and TSV are prefixed with a BOM so Excel detects the UTF-8
+ * encoding when the file is opened by double-clicking it.
  *
  * @param table - The table instance the data is read from.
  * @param columns - The `columns` prop the table was built with.
@@ -242,7 +243,7 @@ export async function exportTableData<TData extends Record<string, any>>(
     }
 
     const delimiter = format === 'csv' ? ',' : '\t';
-    const content = (format === 'csv' ? '\uFEFF' : '') + serializeDelimited(data, delimiter);
+    const content = '\uFEFF' + serializeDelimited(data, delimiter);
     const mimeType =
         format === 'csv'
             ? 'text/csv;charset=utf-8'

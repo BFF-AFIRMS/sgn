@@ -553,6 +553,17 @@ test('DataTable - export menu respects selection, sorting, filtering, and column
         capturedDownload = this.download;
     };
 
+    const assertBom = async (blob: Blob, format: string) => {
+        // Blob.text() decodes through TextDecoder, which silently drops a leading
+        // BOM, so the byte order mark has to be asserted on the raw bytes.
+        const tsvBytes = new Uint8Array(await blob!.arrayBuffer());
+        t.deepEqual(
+            Array.from(tsvBytes.slice(0, 3)),
+            [0xEF, 0xBB, 0xBF],
+            `prefixes the ${format} download with a UTF-8 BOM`,
+        );
+    };
+
     try {
         const plain = render(t, table());
         t.notOk(
@@ -602,14 +613,7 @@ test('DataTable - export menu respects selection, sorting, filtering, and column
         fireEvent.click(within(exportable.container).getByRole('menuitem', { name: 'CSV' }));
         t.equal(capturedDownload, 'people.csv', 'downloads using configured filename and .csv extension');
 
-        // Blob.text() decodes through TextDecoder, which silently drops a leading
-        // BOM, so the byte order mark has to be asserted on the raw bytes.
-        const csvBytes = new Uint8Array(await capturedBlob!.arrayBuffer());
-        t.deepEqual(
-            Array.from(csvBytes.slice(0, 3)),
-            [0xEF, 0xBB, 0xBF],
-            'prefixes the CSV download with a UTF-8 BOM',
-        );
+        await assertBom(capturedBlob!, 'CSV');
 
         const csvText = await capturedBlob!.text();
         t.equal(
@@ -628,8 +632,11 @@ test('DataTable - export menu respects selection, sorting, filtering, and column
         t.ok(within(exportable.container).getByText('1 selected row(s)'), 'shows selected row count');
         fireEvent.click(within(exportable.container).getByRole('menuitem', { name: 'TSV' }));
         t.equal(capturedDownload, 'people.tsv', 'downloads using .tsv extension');
+
+        await assertBom(capturedBlob!, 'TSV');
+
         const tsvText = await capturedBlob!.text();
-        t.equal(tsvText, 'Name\r\nGrace', 'exports only selected rows and visible columns without BOM');
+        t.equal(tsvText, 'Name\r\nGrace', 'exports only selected rows and visible columns');
     } finally {
         URL.createObjectURL = originalCreateObjectURL;
         HTMLAnchorElement.prototype.click = originalAnchorClick;
