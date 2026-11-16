@@ -112,14 +112,9 @@ export const DataTableDemoApp: React.FC = () => {
                 pageSize={10}
                 limitHeight={420}
                 filter={{ global: true, column: true }}
+                export={{ filename: 'datatable_demo' }}
                 toolbar={() => (
                     <>
-                        <Button>
-                            Export to CSV
-                        </Button>
-                        <Button>
-                            Export to Excel
-                        </Button>
                         <Button onClick={handleRefresh}>
                             Refresh Table
                         </Button>
