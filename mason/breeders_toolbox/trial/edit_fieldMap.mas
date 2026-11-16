@@ -251,25 +251,6 @@ jQuery(document).ready(function () {
         });
     }
 
-	jQuery.ajax ( {
-        url : '/ajax/breeders/trial/'+<% $trial_id %>+'/accessions',
-
-	    success: function(response){
-	         //console.log(response);
-
-            var trial_stocks_html = "<select class='form-control' id='trial_stock_table'>";
-            for (i=0; i<response.accessions[0].length; i++) {
-                trial_stocks_html = trial_stocks_html + "<option value=" + response.accessions[0][i].stock_id + ">" + response.accessions[0][i].accession_name + "</option>";
-            }
-            trial_stocks_html = trial_stocks_html + "</select>";
-            jQuery('#stocks_in_trial').empty();
-            jQuery('#stocks_in_trial').html(trial_stocks_html);
-        },
-	    error: function(response){
-            alert("Error retrieving stocks.");
-	    }
-	});
-
 jQuery('#calculate_spatial_correction').click(function() {
     jQuery("#spatial_correction_results_buttons button").hide(); //hide the buttons
     jQuery('#trait_spatial_selector').hide();
@@ -516,6 +497,25 @@ jQuery(document).on('click', '#confirm_store_spatial_correction', async function
 
 
   jQuery('#edit_field_map_link').click(function () {
+
+    jQuery.ajax ( {
+        url : '/ajax/breeders/trial/'+<% $trial_id %>+'/accessions',
+
+        success: function(response){
+            //console.log(response);
+
+            var trial_stocks_html = "<select class='form-control' id='trial_stock_table'>";
+            for (i=0; i<response.accessions[0].length; i++) {
+                trial_stocks_html = trial_stocks_html + "<option value=" + response.accessions[0][i].stock_id + ">" + response.accessions[0][i].accession_name + "</option>";
+            }
+            trial_stocks_html = trial_stocks_html + "</select>";
+            jQuery('#stocks_in_trial').empty();
+            jQuery('#stocks_in_trial').html(trial_stocks_html);
+        },
+        error: function(response){
+            alert("Error retrieving stocks.");
+        }
+    });
 
   	jQuery.ajax( {
   			 url: '/ajax/breeders/trial/'+trial_id+'/coords',

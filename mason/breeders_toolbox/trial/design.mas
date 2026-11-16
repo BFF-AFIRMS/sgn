@@ -1,6 +1,7 @@
 
 <%args>
 $trial_id
+$trigger => {}
 </%args>
 
 <& /util/import_javascript.mas, classes => [  ] &>
@@ -16,6 +17,10 @@ $trial_id
 <script>
 
 jQuery(document).ready(function () {
+
+% if (defined $trigger->{id} && $trigger->{action}) {
+    jQuery('#<% $trigger->{id} %>').<% $trigger->{action} %>( function() {
+% }
 
 	jQuery.ajax ( {
 		url : '/ajax/breeders/trial/'+<% $trial_id %>+'/design',
@@ -35,5 +40,9 @@ jQuery(document).ready(function () {
 		}
 	});
 });
+
+% if (defined $trigger->{id} && $trigger->{action}) {
+    });
+% }
 
 </script>

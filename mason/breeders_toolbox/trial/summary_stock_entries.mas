@@ -1,6 +1,7 @@
 <%args>
 $trial_id
 $trial_stock_type
+$trigger => {}
 </%args>
 
 
@@ -40,12 +41,18 @@ $trial_stock_type
 
 jQuery(document).ready(function () {
 
+% if (defined $trigger->{id} && $trigger->{action}) {
+    jQuery('#<% $trigger->{id} %>').<% $trigger->{action} %>( function() {
+% }
         jQuery('#summary_stock_entry_table').DataTable({
             'destroy': true,
             'ajax':'/ajax/breeders/trial/'+ <% $trial_id %> + '/stock_entry_summary',
             'scrollX': true,
         });
 
+% if (defined $trigger->{id} && $trigger->{action}) {
+    });
+% }
         jQuery('#download_summary_stock_entries_button').click(function() {
             var token = new Date().getTime();
             jQuery('#trial_stock_entries_download_token').val(token);

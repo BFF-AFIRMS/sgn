@@ -1,6 +1,7 @@
 <%args>
 $trial_id
 $trial_stock_type => undef
+$trigger => {}
 </%args>
 
 <& /util/import_javascript.mas, classes => ['jquery.iframe-post-form', 'd3.d3v4Min', 'd3.graphers.lineGraphRepetitiveValues', 'solGS.olsLine'] &>
@@ -102,6 +103,11 @@ const regression = d3.regressionLinear()
 <script>
 
 jQuery(document).ready(function() {
+
+% if (defined $trigger->{id} && $trigger->{action}) {
+    jQuery('#<% $trigger->{id} %>').<% $trigger->{action} %>( function() {
+% }
+
     var trial_id = '<% $trial_id %>';
     let selectedTraitId = '';
     const tzOffset = (new Date()).getTimezoneOffset() * 60000;
@@ -111,12 +117,10 @@ jQuery(document).ready(function() {
         //console.log("Trait ID updated to:", selectedTraitId);
     });
 
-    jQuery('#repetitive_measurements_data_onswitch').click(function() {
         create_menu_for_repetitive_values(trial_id)
         .then((result) => fetch_repetitive_measurement_traits(result.result.searchResultsDbId))
         .then((result) => repetitive_build_menu(result.result))
         .then((final) => {});
-    });
 
     jQuery('#repetitive_measurement_select_button').click(function(event) {
         event.preventDefault();
@@ -218,6 +222,10 @@ jQuery(document).ready(function() {
         //console.error("the status:", xhr.status);
         //console.error("the error:", error);
     })
+
+% if (defined $trigger->{id} && $trigger->{action}) {
+    });
+% }
 
     function create_menu_for_repetitive_values(trial_id) {
         return jQuery.ajax({

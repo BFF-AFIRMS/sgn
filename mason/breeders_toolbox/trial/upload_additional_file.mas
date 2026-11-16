@@ -1,5 +1,6 @@
 <%args>
 $trial_id => undef
+$trigger => {}
 </%args>
 
 
@@ -75,7 +76,13 @@ $trial_id => undef
 
 jQuery(document).ready(function(){
 
+% if (defined $trigger->{id} && $trigger->{action}) {
+    jQuery('#<% $trigger->{id} %>').one("<% $trigger->{action} %>", function(){
+% }
     display_trial_additional_upload_files();
+% if (defined $trigger->{id} && $trigger->{action}) {
+    });
+% }
 
     jQuery('#trial_upload_additional_files_link').click( function(){
         jQuery('#trial_upload_additional_file_dialog').modal('show');

@@ -192,6 +192,7 @@ $propagation_type => undef
 $date => undef
 $logged_in_name => undef
 
+$trigger => {}
 
 </%args>
 
@@ -234,22 +235,22 @@ $logged_in_name => undef
                                 <& /breeders_toolbox/trial/export_trial_to_expression_atlas.mas, trial_id => $trial_id, trial_name=>$trial_name, expression_atlas_url=>$expression_atlas_url, site_project_name=>$site_project_name, sgn_session_id=>$sgn_session_id, user_name=>$user_name, main_production_site_url=>$main_production_site_url &>
 % }
 
-                                <& /breeders_toolbox/trial/phenotype_summary.mas, trial_id => $trial_id, trial_stock_type => $trial_stock_type &>
+                                <& /breeders_toolbox/trial/phenotype_summary.mas, trial_id => $trial_id, trial_stock_type => $trial_stock_type, trigger => $trigger &>
 
 % } #End trial_detail_traits_assayed
 
 % if ($info_section_id eq 'trial_raw_data') {
-   <& /breeders_toolbox/trial/trial_raw_data.mas, trial_id => $trial_id, trial_stock_type => $trial_stock_type, user_can_modify => $user_can_modify &>
+   <& /breeders_toolbox/trial/trial_raw_data.mas, trial_id => $trial_id, trial_stock_type => $trial_stock_type, user_can_modify => $user_can_modify, trigger => $trigger &>
 % }
 
 % if ($info_section_id eq 'repetitive_measurements_data') {
-    <& /breeders_toolbox/trial/repetitive_measurements_data.mas, trial_id => $trial_id, trial_stock_type =>$trial_stock_type &>
+    <& /breeders_toolbox/trial/repetitive_measurements_data.mas, trial_id => $trial_id, trial_stock_type =>$trial_stock_type, trigger => $trigger &>
 % }
 
 % if ($info_section_id eq 'trial_analysis_tools') {
     <& /breeders_toolbox/analysis_tools_section.mas, 
         trial_id => $trial_id, 
-        trial_name => $trial_name 
+        trial_name => $trial_name
     &>
 
 % if ($hidap_enabled) {
@@ -269,7 +270,7 @@ $logged_in_name => undef
 % } #End trial nirs data
 
 % if ($info_section_id eq 'compute_derived_traits'){
-                                <& /breeders_toolbox/trial/derived_trait.mas, trial_id => $trial_id &>
+                                <& /breeders_toolbox/trial/derived_trait.mas, trial_id => $trial_id, trigger => $trigger &>
 % } #End compute_derived_traits
 % if ($info_section_id eq 'trial_upload_files'){
                                 <& /breeders_toolbox/trial/files_section.mas, trial_id => $trial_id, trial_phenotype_files => $trial_phenotype_files, trial_stock_type => $trial_stock_type, for_analysis_page => $for_analysis_page &>
@@ -307,10 +308,10 @@ $logged_in_name => undef
                                 <& /breeders_toolbox/data_agreement.mas, trial_id => $trial_id &>
 % } #End trial_data_agreement_section
 % if ($info_section_id eq 'trial_status_section'){
-                                <& /breeders_toolbox/trial/trial_status.mas, trial_id => $trial_id, trial_name => $trial_name, breeding_program_name => $breeding_program_name, location_name => $location_name, year => $year, trial_type => $trial_type, planting_date => $planting_date, transplanting_date => $transplanting_date, harvest_date => $harvest_date, trial_description => $trial_description, folder_id => $folder_id, design_name => $design_name, has_plant_entries => $has_plant_entries, phenotypes_fully_uploaded => $phenotypes_fully_uploaded, user_can_modify => $user_can_modify, user_name => $user_name &>
+                                <& /breeders_toolbox/trial/trial_status.mas, trigger => $trigger, trial_id => $trial_id, trial_name => $trial_name, breeding_program_name => $breeding_program_name, location_name => $location_name, year => $year, trial_type => $trial_type, planting_date => $planting_date, transplanting_date => $transplanting_date, harvest_date => $harvest_date, trial_description => $trial_description, folder_id => $folder_id, design_name => $design_name, has_plant_entries => $has_plant_entries, phenotypes_fully_uploaded => $phenotypes_fully_uploaded, user_can_modify => $user_can_modify, user_name => $user_name &>
 % } #End trial_status_section
 % if ($info_section_id eq 'trial_soil_data_section'){
-                                <& /breeders_toolbox/trial/trial_soil_data.mas, trial_id => $trial_id &>
+                                <& /breeders_toolbox/trial/trial_soil_data.mas, trial_id => $trial_id, trigger => $trigger &>
 % } #End trial_soil_data_section
 % if ($info_section_id eq 'trial_images_section'){
                                 <& /image/plot_images.mas, trial_id => $trial_id &>
