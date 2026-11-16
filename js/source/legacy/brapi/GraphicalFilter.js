@@ -21,7 +21,7 @@ function GraphicalFilter(brapi_node,trait_accessor,table_col_accessor,table_col_
   
   // parse data
   var tableCols = table_col_order.map(function(key){
-        return {title:key,data:"meta."+key.replace(".","\\.")}
+        return {title:key,data:"traits."+key.replace(".","\\.")}
       }),
       allTraits = {},
       rangeTraits = [];
@@ -49,7 +49,6 @@ function GraphicalFilter(brapi_node,trait_accessor,table_col_accessor,table_col_
   });
   
   if (group_key_accessor!=undefined){
-    tableCols.push({title:"Count",data:"count"});
     const reduce_func = function(a,d){ return a.concat(d)};
     data_node = data_node.reduce(reduce_func).fork(function(all){
       var key_map = {};
@@ -103,13 +102,13 @@ function GraphicalFilter(brapi_node,trait_accessor,table_col_accessor,table_col_
     });
   }
   
-  data_node.all(function(data){
-    for (var key in allTraits) {
-      if (allTraits.hasOwnProperty(key)) {
-        tableCols.push({title:key,data:"traits."+key.replace(".","\\.")});
-      }
-    }
-  });
+  // data_node.all(function(data){
+  //   for (var key in allTraits) {
+  //     if (allTraits.hasOwnProperty(key)) {
+  //       tableCols.push({title:key,data:"traits."+key.replace(".","\\.")});
+  //     }
+  //   }
+  // });
   
   /**  
    * gfilter.draw - creates a new graphical filter and table
@@ -128,6 +127,9 @@ function GraphicalFilter(brapi_node,trait_accessor,table_col_accessor,table_col_
 
       //draw the filter
       gfilter.root.draw(canv.node());
+
+      tableCols.unshift({title:"Count", data:"count"});
+      tableCols.unshift({title:"Accession", data:"meta.Accession"});
 
       //create the output table
       if (buttons) {
