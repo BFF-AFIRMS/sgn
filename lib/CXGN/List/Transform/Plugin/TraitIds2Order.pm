@@ -76,6 +76,7 @@ sub transform {
         $traits->{$trait_id}->{base} = $trait_name;
         $traits->{$trait_id}->{relative_order} = 0;
         $traits->{$trait_id}->{absolute_order} = 0;
+        $traits->{$trait_id}->{display_name} = CXGN::Trait->new({bcs_schema => $schema, cvterm_id => $trait_id})->display_name();
 
         # Check if this is a treatment
         my $trait_cv_id = $record->cv_id();
