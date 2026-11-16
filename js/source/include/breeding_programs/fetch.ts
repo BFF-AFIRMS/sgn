@@ -21,11 +21,14 @@ const readResponseBody = async (response: Response): Promise<BreedingProgramResp
  *
  * `POST /breeders/program/store` keys on the `id` field: no id creates a new
  * program, an existing id updates that program.
+ *
+ * @returns The success message the endpoint answers with, so the caller can
+ *   confirm the store to the user.
  */
 export const storeBreedingProgram = async (
     program: BreedingProgram | null,
     values: BreedingProgramValues,
-): Promise<void> => {
+): Promise<string | undefined> => {
     const body = new URLSearchParams({ name: values.name, desc: values.description });
     if (program) {
         body.set('id', program.id);
@@ -44,6 +47,8 @@ export const storeBreedingProgram = async (
     if (!response.ok) {
         throw new Error(`The server could not save the breeding program (HTTP ${response.status}).`);
     }
+
+    return result.success;
 };
 
 /**

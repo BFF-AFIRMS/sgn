@@ -15,6 +15,14 @@ export interface BreedingProgramsProps {
     isCurator: boolean;
 }
 
+/**
+ * Success messages are handed to the reloaded page through sessionStorage,
+ * because storing or deleting a program reloads the page (the table is rendered
+ * from server-side data). Session storage is per-tab, so a message never leaks
+ * into another tab or a later visit.
+ */
+const SUCCESS_MESSAGE_KEY = 'breeding_programs_success_message';
+
 interface BreedingProgramDialogProps {
     /** The program being edited, or `null` when creating a new one. */
     program: BreedingProgram | null;
@@ -167,6 +175,18 @@ export const BreedingProgramsApp: React.FC<BreedingProgramsProps> = ({ data, isC
         [data],
     );
 
+    // Seeded from the message left behind by the reload that follows a store or
+    // delete; `null` once there is nothing to confirm.
+    const [successMessage, setSuccessMessage] = useState<string | null>(() =>
+        sessionStorage.getItem(SUCCESS_MESSAGE_KEY),
+    );
+
+    // Consume the message as soon as it has been shown, so revisiting this page
+    // in the same tab does not repeat it.
+    useEffect(() => {
+        sessionStorage.removeItem(SUCCESS_MESSAGE_KEY);
+    }, []);
+
     // `null` closes the dialog; `{ program: null }` opens it in create mode.
     const [dialog, setDialog] = useState<{ program: BreedingProgram | null } | null>(null);
 
@@ -187,7 +207,11 @@ export const BreedingProgramsApp: React.FC<BreedingProgramsProps> = ({ data, isC
 
     const handleSubmit = useCallback(
         async (program: BreedingProgram | null, values: BreedingProgramValues) => {
-            await storeBreedingProgram(program, values);
+            const message = await storeBreedingProgram(program, values);
+            sessionStorage.setItem(
+                SUCCESS_MESSAGE_KEY,
+                message ?? 'The breeding program was stored.',
+            );
             // The table is rendered from server-side data, so a reload is what
             // makes the stored program show up.
             window.location.reload();
@@ -205,6 +229,10 @@ export const BreedingProgramsApp: React.FC<BreedingProgramsProps> = ({ data, isC
 
         try {
             await deleteBreedingProgram(program);
+            sessionStorage.setItem(
+                SUCCESS_MESSAGE_KEY,
+                `Breeding program ${program.name} was deleted.`,
+            );
             window.location.reload();
         } catch (e) {
             window.alert(e instanceof Error ? e.message : String(e));
@@ -249,12 +277,24 @@ export const BreedingProgramsApp: React.FC<BreedingProgramsProps> = ({ data, isC
 
     return (
         <>
+            {successMessage && (
+                <div id="breeding_program_success_banner" className="alert alert-success" role="status">
+                    <button
+                        type="button"
+                        className="close"
+                        aria-label="Dismiss"
+                        onClick={() => setSuccessMessage(null)}
+                    >
+                        &times;
+                    </button>
+                    {successMessage}
+                </div>
+            )}
             <DataTable
                 columns={columns}
                 rows={programs}
                 getRowId={program => program.id}
                 rowActions={rowActions}
-                filter={{ column: false }}
                 export={{ filename: 'breeding_programs' }}
                 toolbar={toolbar}
             />
