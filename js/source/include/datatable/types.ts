@@ -15,6 +15,10 @@ export interface DataTableCellInfo<TData> {
     getValue: () => unknown;
 }
 
+export type DataTableExportFormat = 'excel' | 'csv' | 'tsv';
+
+export type DataTableExportValue = string | number | boolean | Date | null | undefined;
+
 export interface DataTableColumn<TData extends Record<string, any> = Record<string, any>> {
     /** Property on the row object that supplies the cell value. */
     key: string;
@@ -31,6 +35,10 @@ export interface DataTableColumn<TData extends Record<string, any> = Record<stri
     enableFiltering?: boolean;
     /** Set to `false` to keep this column out of the visibility menu. */
     enableHiding?: boolean;
+    /** Set to `false` to omit this column from CSV/TSV/Excel exports. */
+    enableExport?: boolean;
+    /** Optional value extractor used when exporting instead of the raw accessor value. */
+    exportValue?: (row: TData) => DataTableExportValue;
 }
 
 /** One entry of the per-row `...` menu. */
@@ -46,6 +54,13 @@ export interface DataTableRowAction<TData> {
  * single page.
  */
 export type DataTablePageSize = number | 'all';
+
+export interface DataTableExportOptions {
+    /** Base filename without extension (defaults to `'export'`). */
+    filename?: string;
+    /** Export formats to include in the toolbar menu (defaults to `['excel', 'csv', 'tsv']`). */
+    formats?: DataTableExportFormat[];
+}
 
 export interface DataTableProps<TData extends Record<string, any> = Record<string, any>> {
     columns: DataTableColumn<TData>[];
@@ -83,6 +98,12 @@ export interface DataTableProps<TData extends Record<string, any> = Record<strin
      * exporting the rows that are currently filtered and sorted.
      */
     toolbar?: ReactNode | ((table: Table<DataTableFeatures, TData>) => ReactNode);
+
+    /**
+     * Enables the built-in Export dropdown (`Excel`, `CSV`, `TSV`) in the toolbar.
+     * Pass `true` for defaults or an options object to customize the filename/formats.
+     */
+    export?: boolean | DataTableExportOptions;
 
     emptyMessage?: string;
 }

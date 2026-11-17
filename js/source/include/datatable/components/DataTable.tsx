@@ -12,7 +12,7 @@ import {
 
 import { dataTableFeatures } from '../features';
 import { DEFAULT_PAGE_SIZES, resolvePageSize } from '../pageSize';
-import type { DataTableProps } from '../types';
+import type { DataTableExportOptions, DataTableProps } from '../types';
 import { DataTablePagination } from './Pagination';
 import { DataTableRowActions } from './RowActions';
 import { DataTableToolbar } from './Toolbar';
@@ -45,6 +45,7 @@ export function DataTable<TData extends Record<string, any>>({
     enableRowSelection = true,
     rowActions,
     toolbar,
+    export: exportProp,
     emptyMessage = 'No rows found.',
 }: DataTableProps<TData>) {
     // All state slices are controlled here so the toolbar, the filter row and
@@ -58,6 +59,13 @@ export function DataTable<TData extends Record<string, any>>({
         pageSize: resolvePageSize(pageSize),
     });
     const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
+
+    const exportOptions = useMemo<DataTableExportOptions | undefined>(() => {
+        if (!exportProp) {
+            return undefined;
+        }
+        return exportProp === true ? {} : exportProp;
+    }, [exportProp]);
 
     const columnLabels = useMemo(() => {
         const labels: Record<string, string> = {};
@@ -188,7 +196,9 @@ export function DataTable<TData extends Record<string, any>>({
         <div className="tw:flex tw:flex-col">
             <DataTableToolbar
                 table={table}
+                columns={columns}
                 toolbar={toolbar}
+                exportOptions={exportOptions}
                 columnLabels={columnLabels}
                 globalFilter={
                     filter?.global

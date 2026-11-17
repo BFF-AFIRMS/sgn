@@ -1,7 +1,9 @@
 import test from 'tape';
 
 import {
+    buildExcelSheet,
     DataTable,
+    serializeDelimited,
     type DataTableColumn,
     type DataTableRowAction,
 } from '../source/include/datatable';
@@ -473,6 +475,172 @@ test('DataTable - limitHeight caps the height of the scroll area', t => {
 
     const scrollArea = container.querySelector<HTMLElement>('div[style*="max-height"]');
     t.equal(scrollArea?.style.maxHeight, '240px', 'sets the max height of the scrolling wrapper');
+
+    t.end();
+});
+
+test('serializeDelimited - escapes quotes, delimiters, newlines, and nullish values', t => {
+    const result = serializeDelimited(
+        {
+            headers: ['Name', 'Notes', 'Count', 'Active', 'Date'],
+            rows: [
+                ['Ada, Lovelace', 'Said "hello"\nworld', 42, true, JOINED_ON],
+                ['Grace', null, undefined, false, ''],
+            ],
+        },
+        ',',
+    );
+
+    t.equal(
+        result,
+        [
+            'Name,Notes,Count,Active,Date',
+            `"Ada, Lovelace","Said ""hello""\nworld",42,true,${JOINED_ON.toISOString()}`,
+            'Grace,,,false,',
+        ].join('\r\n'),
+        'serializes RFC 4180 CSV rows without crashing on numbers, booleans, dates, or nullish values',
+    );
+    t.end();
+});
+
+test('buildExcelSheet - creates bold headers, typed cells, and bounded column widths', t => {
+    const sheet = buildExcelSheet({
+        headers: ['Name', 'Age', 'Active', 'Joined', 'Notes'],
+        rows: [['Ada', 36, true, JOINED_ON, null]],
+    });
+
+    t.deepEqual(
+        sheet.rows[0],
+        [
+            { value: 'Name', type: String, fontWeight: 'bold' },
+            { value: 'Age', type: String, fontWeight: 'bold' },
+            { value: 'Active', type: String, fontWeight: 'bold' },
+            { value: 'Joined', type: String, fontWeight: 'bold' },
+            { value: 'Notes', type: String, fontWeight: 'bold' },
+        ],
+        'marks header cells bold',
+    );
+    t.deepEqual(
+        sheet.rows[1],
+        [
+            { type: String, value: 'Ada' },
+            { type: Number, value: 36 },
+            { type: Boolean, value: true },
+            { type: Date, value: JOINED_ON, format: 'yyyy-mm-dd' },
+            {},
+        ],
+        'assigns cell types and formats appropriately',
+    );
+    t.ok(
+        sheet.columns.every(col => col.width > 0 && col.width <= 50),
+        'computes positive bounded column widths',
+    );
+    t.end();
+});
+
+test('DataTable - export menu respects selection, sorting, filtering, and column visibility', async t => {
+    const originalCreateObjectURL = URL.createObjectURL;
+    const originalAnchorClick = HTMLAnchorElement.prototype.click;
+
+    let capturedBlob: Blob | null = null;
+    let capturedDownload = '';
+    URL.createObjectURL = (blob: Blob) => {
+        capturedBlob = blob;
+        return 'blob:mock-export';
+    };
+    URL.revokeObjectURL = () => {};
+    HTMLAnchorElement.prototype.click = function () {
+        capturedDownload = this.download;
+    };
+
+    const assertBom = async (blob: Blob, format: string) => {
+        // Blob.text() decodes through TextDecoder, which silently drops a leading
+        // BOM, so the byte order mark has to be asserted on the raw bytes.
+        const tsvBytes = new Uint8Array(await blob!.arrayBuffer());
+        t.deepEqual(
+            Array.from(tsvBytes.slice(0, 3)),
+            [0xEF, 0xBB, 0xBF],
+            `prefixes the ${format} download with a UTF-8 BOM`,
+        );
+    };
+
+    try {
+        const plain = render(t, table());
+        t.notOk(
+            within(plain.container).queryByRole('button', { name: 'Export' }),
+            'does not render the Export button unless export is enabled',
+        );
+
+        const exportable = render(
+            t,
+            <DataTable
+                columns={[
+                    {
+                        key: 'name',
+                        label: 'Name',
+                        cell: ({ row }) => <strong>{row.original.name}</strong>,
+                    },
+                    { key: 'age', label: 'Age' },
+                    {
+                        key: 'secret',
+                        label: 'Secret',
+                        enableExport: false,
+                        exportValue: () => 'hidden',
+                    },
+                ]}
+                rows={[
+                    { id: 1, name: 'Ada', age: 36, secret: 'x' },
+                    { id: 2, name: 'Grace', age: 45, secret: 'y' },
+                    { id: 3, name: 'Boris', age: 41, secret: 'z' },
+                ]}
+                getRowId={row => String(row.id)}
+                pageSize={2}
+                export={{ filename: 'people', formats: ['csv', 'tsv'] }}
+            />,
+        );
+
+        // Sort Age descending (Grace 45, Boris 41, Ada 36) across all pages
+        fireEvent.click(within(exportable.container).getByTitle('Sort by Age'));
+
+        // Open Export menu with no rows selected -> exports all 3 sorted rows across pages
+        fireEvent.click(within(exportable.container).getByRole('button', { name: 'Export' }));
+        t.ok(within(exportable.container).getByText('All 3 row(s)'), 'shows total row count');
+        t.notOk(
+            within(exportable.container).queryByRole('menuitem', { name: 'Excel' }),
+            'omits formats excluded by export.formats',
+        );
+
+        fireEvent.click(within(exportable.container).getByRole('menuitem', { name: 'CSV' }));
+        t.equal(capturedDownload, 'people.csv', 'downloads using configured filename and .csv extension');
+
+        await assertBom(capturedBlob!, 'CSV');
+
+        const csvText = await capturedBlob!.text();
+        t.equal(
+            csvText,
+            'Name,Age\r\nGrace,45\r\nBoris,41\r\nAda,36',
+            'exports all sorted rows across pages and excludes enableExport:false columns',
+        );
+
+        // Hide Age column and select only Grace -> exports only Grace's Name as TSV
+        fireEvent.click(within(exportable.container).getByRole('button', { name: 'Column Visibility' }));
+        fireEvent.click(within(exportable.container).getByRole('menuitemcheckbox', { name: 'Age' }));
+        const graceRow = within(exportable.container).getByText('Grace').closest('tr')!;
+        fireEvent.click(within(graceRow).getByLabelText('Select row'));
+
+        fireEvent.click(within(exportable.container).getByRole('button', { name: 'Export' }));
+        t.ok(within(exportable.container).getByText('1 selected row(s)'), 'shows selected row count');
+        fireEvent.click(within(exportable.container).getByRole('menuitem', { name: 'TSV' }));
+        t.equal(capturedDownload, 'people.tsv', 'downloads using .tsv extension');
+
+        await assertBom(capturedBlob!, 'TSV');
+
+        const tsvText = await capturedBlob!.text();
+        t.equal(tsvText, 'Name\r\nGrace', 'exports only selected rows and visible columns');
+    } finally {
+        URL.createObjectURL = originalCreateObjectURL;
+        HTMLAnchorElement.prototype.click = originalAnchorClick;
+    }
 
     t.end();
 });

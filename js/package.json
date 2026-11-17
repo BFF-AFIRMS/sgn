@@ -60,7 +60,8 @@
     "internmap": "^2.0.3",
     "leaflet-extra-markers": "^2.0.1",
     "react": "^19.2.5",
-    "react-dom": "^19.2.5"
+    "react-dom": "^19.2.5",
+    "write-excel-file": "^2.0.0"
   },
   "engines": {
     "node": ">=10.6.0",
