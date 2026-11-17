@@ -27,6 +27,18 @@ sub can_transform {
 #    2. Either base name or base synonym (Tree height / HT)
 #    3. Chronological based on the time ontology (day, month, year)
 # Example: Tree height|year 9|cm should be a lower order than Tree height|year 11|cm
+# This transform function outputs the typical keys 'transform', and 'missing', along
+# with a custom key called 'mapping' which is an array of trait hashes with the
+# following keys:
+#     id:             The cvterm_id of the trait
+#     name:           The name of the trait (ex. Tree height|year 9|cm)
+#     display_name:   The full display name of the trait (ex. Tree height|year 9|cm|COMP:0000001)
+#     base:           The name of the trait base, (ex. Tree height is the base name of Tree height|year 9|cm
+#     is_treatment:   1 if the trait is in a treatment ontology, otherwise 0
+#     synonym:        The synonym of the trait (ex. HT9 is the synonym of Tree height|year 9|cm)
+#     base_synonym:   The synonym of the trait base (ex. HT is the base synonym of Tree height)
+#     relative_order: The chronological order of the trait in days, relative to similar traits
+#     absolute_order: The final sort order, starting at 1
 sub transform {
     my $self = shift;
     my $schema = shift;
@@ -78,6 +90,10 @@ sub transform {
         $traits->{$trait_id}->{absolute_order} = 0;
         $traits->{$trait_id}->{display_name} = CXGN::Trait->new({bcs_schema => $schema, cvterm_id => $trait_id})->display_name();
 
+        my $cvterm = CXGN::Cvterm->new( schema=> $schema, cvterm_id => $trait_id);
+        $traits->{$trait_id}->{synonym} = $cvterm->get_single_synonym();
+        $traits->{$trait_id}->{base_synonym} = $traits->{$trait_id}->{synonym};
+
         # Check if this is a treatment
         my $trait_cv_id = $record->cv_id();
         if ( grep( /^$trait_cv_id$/, @treatment_ontologies ) ) {
@@ -93,8 +109,7 @@ sub transform {
             #     base: Tree height
             #     base_synonym: HT
             if ( grep( /^$trait_cv_id$/, @trait_ontologies ) || $traits->{$trait_id}->{is_treatment} ) {
-                my $cvterm = CXGN::Cvterm->new( schema=> $schema, cvterm_id => $trait_id);
-                $traits->{$trait_id}->{base_synonym} = $cvterm->get_single_synonym();
+                $traits->{$trait_id}->{base_synonym} = $traits->{$trait_id}->{synonym};
             }
         }
         push(@$trait_ids, $trait_id);        
@@ -162,25 +177,6 @@ sub transform {
             if ($method eq 'synonym'){
                 my $base_synonym = $unique_components->{$component_id}->{base_synonym};
                 $traits->{$trait_id}->{base_synonym} = $base_synonym if defined $base_synonym;
-            }
-        }
-    }
-
-    # -------------------------------------------------------------------------
-    # Get synonyms of base names (ex. Tree height = HT)
-
-    if ($method eq 'synonym'){
-
-        my $t = CXGN::List::Transform->new();
-        my $synonym_list = $t->transform($schema, 'trait_ids_2_synonyms', $trait_ids);
-        my $trait_synonyms = {};
-
-        if (!scalar @{$synonym_list->{'missing'}}) {
-            my @trait_synonyms = @{$synonym_list->{'transform'}};
-            for my $i (0 .. $#trait_synonyms) {
-                my $trait_id = @$trait_ids[$i];
-                my $synonym = $trait_synonyms[$i];
-                $traits->{$trait_id}->{synonym} = $synonym;
             }
         }
     }
