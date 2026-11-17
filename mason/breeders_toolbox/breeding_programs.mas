@@ -4,159 +4,39 @@ $breeding_programs
 $user => undef
 </%args>
 
+<%once>
+use JSON;
+</%once>
+
 <%perl>
 my $curator_flag = 0;
 if ($user && $user->check_roles("curator")) {
     $curator_flag = 1;
 }
+
+my $json = JSON->new->allow_nonref;
+my $breeding_programs_json = $json->encode($breeding_programs || []);
 </%perl>
+
+<& /util/import_javascript.mas, entries => ['pages/breeding_programs'] &>
 
 <& /page/page_title.mas, title=>"Manage Breeding Programs" &>
 
 <div class="container-fluid">
-<hr>
-
-<table class="table table-condensed table-striped table-hover">
-  <thead>
-    <tr>
-
-    <%perl>
-      if ($curator_flag) { print "<th>Name</th><th>Info</th><th>Edit</th><th>Delete</th>"; }
-        else { print "<th>Name</th><th>Info</th>"; }
-    </%perl>
-
-    </tr>
-  </thead>
-  <tbody>
-
-    <%perl>
-      foreach my $bp (@$breeding_programs) {
-
-        print "<tr><td><b><a href=\"/breeders/program/$bp->[0]\" >$bp->[1]</a></b></td><td>$bp->[2]</td>";
-
-  	if ($curator_flag) {
-      print "<td><a title=\"edit this breeding program\" id=\"edit_breeding_program_link\_".$bp->[1]."\" href=\"javascript:edit_breeding_program($bp->[0],'$bp->[1]','$bp->[2]')\" ><span class=\"glyphicon glyphicon-pencil\"></span></a></td>";
-	  print "<td><a title=\"delete this breeding program\" id=\"delete_breeding_program_link\_".$bp->[1]."\" href=\"javascript:delete_breeding_program($bp->[0],'$bp->[1]')\" ><font color=\"red\">X</font></a></td></tr>";
-	} else {
-	  print "</tr>";
-	}
-      }
-    </%perl>
-
-  </tbody>
-</table>
-
-<br/>
-<button type="button" class="btn btn-primary" name="new_breeding_program_link" id="new_breeding_program_link">Add New Program</button>
-
+<div id="breeding_programs_container">
+  <!-- React component added here -->
 </div>
-
-<!-- Modal Dialogs Below Here -->
-
-<div class="modal fade" id="store_breeding_program_dialog" name="store_breeding_program_dialog" tabindex="-1" role="dialog" aria-labelledby="storeBreedingProgramDialog">
-  <div class="modal-dialog" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-        <h4 class="modal-title" id="addBreedingProgramDialog">Store Breeding Program Details</h4>
-      </div>
-      <div class="modal-body">
-        <div class="container-fluid">
-	  <form class="form-horizontal" role="form" name="store_breeding_program_form" id="store_breeding_program_form">
-        <div class="form-group" id="store_breeding_program_id" style="display: none"></div>
-	    <div class="form-group">
-      	      <label class="col-sm-2 control-label">Name: </label>
-      	      <div class="col-sm-10">
-		<input class="form-control" name="store_breeding_program_name" id="store_breeding_program_name" type="text" />
-              </div>
-	    </div>
-	    <div class="form-group">
-      	      <label class="col-sm-2 control-label">Description: </label>
-      	      <div class="col-sm-10">
-		<input class="form-control" name="store_breeding_program_desc" id="store_breeding_program_desc" type="text" />
-              </div>
-	    </div>
-	  </form>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-        <button type="button" class="btn btn-primary" name="store_breeding_program_submit" id="store_breeding_program_submit">Store Breeding Program Details</button>
-      </div>
-    </div>
-  </div>
 </div>
-
 
 <script>
 
 jQuery(document).ready(function() {
 
-  $("button#new_breeding_program_link").click( function(event) {
-      event.preventDefault();
-      $("#store_breeding_program_dialog").modal("show");
+  window.jsMod['pages/breeding_programs'].init('breeding_programs_container', {
+    data: <% $breeding_programs_json %>,
+    isCurator: <% $curator_flag ? 'true' : 'false' %>
   });
-
-  $('#store_breeding_program_submit').click( function(event) {
-      event.preventDefault();
-      var id= jQuery('#store_breeding_program_id').val();
-      var name = jQuery('#store_breeding_program_name').val();
-      var desc = jQuery('#store_breeding_program_desc').val();
-      name = name.trim();
-      if ( (name === '') || (desc === '')) {
-          alert("Please enter a name and a description.");
-          return;
-      }
-      // console.log("Name is "+name+" and desc is: "+desc);
-      $.ajax({
-          type: 'POST',
-          url: '/breeders/program/store',
-          data: { 'id': id, 'name': name, 'desc': desc },
-          beforeSend: function()  { jQuery('#working').dialog("open") },
-          success: function(response) {
-              if (response.error) { alert(response.error); }
-              else {
-                  alert(response.success);
-              }
-              jQuery('#working').dialog("close");
-              location.reload();
-          },
-          error: function(response) {
-              alert("An error occurred."+ response.responseText);
-              jQuery('#working').dialog("close");
-          }
-      });
-      $("#store_breeding_program_dialog").modal("hide");
-  });
-
 
 });
-
-function edit_breeding_program(program_id, program_name, program_description) {
-    jQuery('#store_breeding_program_id').val(program_id);
-    jQuery('#store_breeding_program_name').val(program_name);
-    jQuery('#store_breeding_program_desc').val(program_description);
-    $("#store_breeding_program_dialog").modal("show");
-}
-
-
-function delete_breeding_program(program_id, program_name) {
-   if (confirm("Delete breeding program "+program_name+"? The associated trials will not be deleted, but be listed under 'Other'")) {
-      jQuery.ajax( {
-        url: '/breeders/program/delete/'+program_id,
-        error: function(response) {
-        alert("An error occurred.");
-      },
-      success: function(response) {
-        if (response.error) {
-          alert(response.error);
-        }
-        else {
-          location.reload();
-        }
-      }
-    });
-  }
-}
 
 </script>
