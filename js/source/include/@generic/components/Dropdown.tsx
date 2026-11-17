@@ -8,6 +8,13 @@
 import { ButtonHTMLAttributes, useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import { Button, ButtonProps } from './Button';
 
+/** Gap in px between the trigger button and the menu. */
+const MENU_GAP = 6;
+/** Space in px the menu keeps clear of the viewport edges. */
+const VIEWPORT_EDGE = 8;
+
+const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(max, value));
+
 export const Dropdown = ({ label, caret = true, closeOnSelect = true, children, ...props }: ButtonProps & { label: string | React.ReactNode, caret?: boolean, closeOnSelect?: boolean }) => {
     const [menu, setMenu] = useState<"first" | "last" | null>(null);
     const id = useId();
@@ -23,24 +30,57 @@ export const Dropdown = ({ label, caret = true, closeOnSelect = true, children, 
         if (refocus) buttonRef.current?.focus();
     };
 
-    // Opening: below the button when it fits, above it when there is more room there; lined up with
-    // the button's right edge unless that would run off the left of the window. Then focus goes in.
-    useLayoutEffect(() => {
+    // The menu is fixed-positioned instead of absolutely positioned inside the wrapper, so that a
+    // scrolling ancestor (the scroll area of a <DataTable />, for one) cannot clip it. Placement:
+    // below the button when it fits, above it when there is more room there; lined up with the
+    // button's right edge unless that would run off the left of the window.
+    const positionMenu = () => {
         const el = menuRef.current;
-        if (!el) return;
-
-        el.removeAttribute("data-side");
-        el.removeAttribute("data-align");
-        if (!menu) return;
-
         const box = buttonRef.current?.getBoundingClientRect();
-        if (!box) return;
+        if (!el || !box) return;
 
-        const below = window.innerHeight - box.bottom;
-        if (el.offsetHeight + 12 > below && box.top > below) el.setAttribute("data-side", "top");
-        if (box.right - el.offsetWidth < 8) el.setAttribute("data-align", "start");
+        const width = el.offsetWidth;
+        const height = el.offsetHeight;
+        const viewportWidth = window.innerWidth;
+        const viewportHeight = window.innerHeight;
+
+        const below = viewportHeight - box.bottom;
+        const openUp = height + MENU_GAP + VIEWPORT_EDGE > below && box.top > below;
+        const top = openUp ? box.top - height - MENU_GAP : box.bottom + MENU_GAP;
+
+        const rightAligned = box.right - width;
+        const left = rightAligned < VIEWPORT_EDGE ? Math.max(VIEWPORT_EDGE, box.left) : rightAligned;
+
+        el.style.top = `${clamp(top, VIEWPORT_EDGE, viewportHeight - height - VIEWPORT_EDGE)}px`;
+        el.style.left = `${clamp(left, VIEWPORT_EDGE, viewportWidth - width - VIEWPORT_EDGE)}px`;
+
+        // Consumed by the transition-origin classes below; the offsets themselves come from the
+        // inline top/left set above.
+        if (openUp) el.setAttribute("data-side", "top");
+        else el.removeAttribute("data-side");
+        if (rightAligned < VIEWPORT_EDGE) el.setAttribute("data-align", "start");
+        else el.removeAttribute("data-align");
+    };
+
+    // Place the menu on every open, then move the focus into it.
+    useLayoutEffect(() => {
+        if (!menu) return;
+        positionMenu();
         const list = items();
         (menu === "last" ? list[list.length - 1] : list[0])?.focus();
+    }, [menu]);
+
+    // A fixed-position menu does not travel with the button, so re-place it whenever the page or a
+    // scrolling ancestor moves underneath it.
+    useEffect(() => {
+        if (!menu) return undefined;
+        const reposition = () => positionMenu();
+        window.addEventListener("scroll", reposition, true);
+        window.addEventListener("resize", reposition);
+        return () => {
+            window.removeEventListener("scroll", reposition, true);
+            window.removeEventListener("resize", reposition);
+        };
     }, [menu]);
 
     // A click:
@@ -122,7 +162,7 @@ export const Dropdown = ({ label, caret = true, closeOnSelect = true, children, 
                         <svg className="tw:size-4 tw:shrink-0 tw:text-neutral-600 tw:transition-transform tw:duration-150 tw:group-aria-expanded:rotate-180 tw:motion-reduce:transition-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
                     )}
                 </Button>
-                <div ref={menuRef} id={`${id}-menu`} role="menu" aria-labelledby={`${id}-button`} data-open={menu ? "" : undefined} onKeyDown={onMenuKey} onPointerMove={onMenuPointer} className="tw:absolute tw:top-full tw:right-0 tw:z-30 tw:mt-1.5 tw:hidden tw:w-60 tw:max-h-80 tw:origin-top tw:overflow-y-auto tw:rounded-xl tw:bg-white tw:p-1 tw:shadow-lg tw:ring-1 tw:ring-neutral-950/10 tw:not-data-open:scale-95 tw:not-data-open:opacity-0 tw:data-open:block tw:data-[align=start]:right-auto tw:data-[align=start]:left-0 tw:data-[side=top]:top-auto tw:data-[side=top]:bottom-full tw:data-[side=top]:mt-0 tw:data-[side=top]:mb-1.5 tw:data-[side=top]:origin-bottom tw:motion-safe:transition-[opacity,scale,display] tw:motion-safe:transition-discrete tw:motion-safe:duration-150 tw:motion-safe:ease-out tw:motion-safe:starting:scale-95 tw:motion-safe:starting:opacity-0">
+                <div ref={menuRef} id={`${id}-menu`} role="menu" aria-labelledby={`${id}-button`} data-open={menu ? "" : undefined} onKeyDown={onMenuKey} onPointerMove={onMenuPointer} className="tw:fixed tw:z-30 tw:hidden tw:w-60 tw:max-h-80 tw:origin-top tw:overflow-y-auto tw:rounded-xl tw:bg-white tw:p-1 tw:shadow-lg tw:ring-1 tw:ring-neutral-950/10 tw:not-data-open:scale-95 tw:not-data-open:opacity-0 tw:data-open:block tw:data-[side=top]:origin-bottom tw:motion-safe:transition-[opacity,scale,display] tw:motion-safe:transition-discrete tw:motion-safe:duration-150 tw:motion-safe:ease-out tw:motion-safe:starting:scale-95 tw:motion-safe:starting:opacity-0">
                     {children}
                 </div>
             </div>
