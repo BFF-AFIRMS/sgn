@@ -7,8 +7,6 @@
 
 <&| /page/info_section.mas, id=>"stock_search_graphical_filter", title => 'Graphical Filter Accessions By Traits (Includes all Search Criteria From Above Search Form)', collapsible=>1, collapsed=>1&>
 
-<div class="well well-sm">
-
 <div class="panel panel-default">
     <div class="panel-body">
         <div id="stock_search_graphical_filter_div" style="margin:1em">
@@ -34,9 +32,6 @@
 <div style="text-align:right" id="graphical_filter_results_to_list_menu"></div>
 <div id="graphical_filter_result_names" style="display: none;"></div>
 </&>
-
-
-</div>
 
 </&>
 
