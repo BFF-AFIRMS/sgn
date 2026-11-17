@@ -404,7 +404,7 @@ sub get_layout_output {
 
         $traits_2_order_name = $t->transform($schema, 'traits_2_order_name', \@overall_trait_names);
         @overall_trait_order = map { $traits_2_order_name->{mapping}->{$_}->{display_name}} @{$traits_2_order_name->{transform}};
-        @overall_trait_header = @exact_trait_order;
+        @overall_trait_header = @overall_trait_order;
     }
     my @trait_header = (@exact_trait_header,@overall_trait_header);
 
