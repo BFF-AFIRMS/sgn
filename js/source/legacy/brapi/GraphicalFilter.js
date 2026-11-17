@@ -102,14 +102,6 @@ function GraphicalFilter(brapi_node,trait_accessor,table_col_accessor,table_col_
     });
   }
   
-  // data_node.all(function(data){
-  //   for (var key in allTraits) {
-  //     if (allTraits.hasOwnProperty(key)) {
-  //       tableCols.push({title:key,data:"traits."+key.replace(".","\\.")});
-  //     }
-  //   }
-  // });
-  
   /**  
    * gfilter.draw - creates a new graphical filter and table
    *    
