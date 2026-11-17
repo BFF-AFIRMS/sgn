@@ -330,11 +330,12 @@ my @view_column_options = (@{ $editable_stock_props || [] }, 'organism', 'synony
         </div>
     </div>
 
+    <br/>
+    <& /search/stocks_graphicalfiltering.mas &>
+
 </div>
 
 </&>
-
-<& /page/detail_page_2_col_section.mas, info_section_title => "<h4 style='display:inline'>Graphical Filtering on Phenotype Performance</h4>", info_section_subtitle => 'Graphically filter an accessions average performance for combinations of traits', icon_class => "glyphicon glyphicon-equalizer", info_section_id => "stocks_search_graphical_filtering" &>
 
 
 </div>
