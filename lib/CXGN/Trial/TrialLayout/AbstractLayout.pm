@@ -416,9 +416,6 @@ sub retrieve_plot_info {
     foreach my $plot (@$plots){
         push @plot_ids, $plot->stock_id();
     }
-    # Prepare a DB resultset that we can re-use to search for plots
-    my $plots_rs = $schema->resultset('Stock::Stock')
-        ->search({'me.stock_id' => { -in => \@plot_ids}});
 
     my $query = "select plot.stock_id, plot.uniquename from stock as plot where plot.stock_id = any(?)";
     my $sth = $schema->storage()->dbh()->prepare($query);
