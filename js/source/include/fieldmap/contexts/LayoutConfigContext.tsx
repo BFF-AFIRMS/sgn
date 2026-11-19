@@ -1,6 +1,5 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
-import { isDefined } from '../../functions';
 import { FieldMapContextProps } from '../types';
 
 export type PlotLayout = 'serpentine' | 'zigzag';
@@ -53,7 +52,7 @@ export interface LayoutConfigContextType {
 
 const LayoutConfigContext = createContext<LayoutConfigContextType | undefined>(undefined);
 
-export const LayoutConfigProvider: React.FC<FieldMapContextProps> = ({ trialId, children }) => {
+export const LayoutConfigProvider: React.FC<FieldMapContextProps> = ({ trialId, mode = 'full', children }) => {
     const [plotLayout, setPlotLayout] = useState<PlotLayout>('serpentine');
 
     const [invertRows, setInvertRows] = useState(false);
@@ -110,6 +109,7 @@ export const LayoutConfigProvider: React.FC<FieldMapContextProps> = ({ trialId, 
     }, []);
 
     const loadNorthArrowAngle = useCallback(async () => {
+        if (!trialId || mode === 'preview') return;
         try {
             const response = await fetch(`/ajax/breeders/trial/${trialId}/north_arrow_angle`);
             const body = await response.json();
@@ -122,6 +122,7 @@ export const LayoutConfigProvider: React.FC<FieldMapContextProps> = ({ trialId, 
     }, [trialId]);
 
     const loadSecondaryAxis = useCallback(async () => {
+        if (!trialId || mode === 'preview') return;
         try {
             const response = await fetch(`/ajax/breeders/trial/${trialId}/secondary_axis`);
             const body = await response.json();
@@ -148,9 +149,11 @@ export const LayoutConfigProvider: React.FC<FieldMapContextProps> = ({ trialId, 
     ), [secondaryAxis]);
 
     useEffect(() => {
-        loadNorthArrowAngle();
-        loadSecondaryAxis();
-    }, [loadNorthArrowAngle, loadSecondaryAxis]);
+        if (trialId && mode !== 'preview') {
+            loadNorthArrowAngle();
+            loadSecondaryAxis();
+        }
+    }, [loadNorthArrowAngle, loadSecondaryAxis, trialId, mode]);
 
     return (
         <LayoutConfigContext.Provider value={{

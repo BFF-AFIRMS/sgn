@@ -3,7 +3,6 @@ import { useModals } from '../contexts/ModalsContext';
 import { usePlotGrid } from '../contexts/PlotGridContext';
 import { useView } from '../contexts/ViewContext';
 import { Plot } from '../types';
-import { isDefined } from '../../functions';
 import { plotAccessionMutation, plotAccessionName } from '../utils/plot';
 
 export enum ReplaceAccessionResult {
