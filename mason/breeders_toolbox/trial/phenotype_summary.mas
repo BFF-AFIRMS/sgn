@@ -4,7 +4,7 @@ $trial_id
 $trial_stock_type => undef
 </%args>
 
-<& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form', 'd3.d3v4Min', 'd3.graphers.stackedObservationPhenotypeHistogram'] &>
+<& /util/import_javascript.mas, classes => [ 'jquery.iframe-post-form', 'd3.d3v4Min', 'd3.graphers.stackedObservationPhenotypeHistogram'], entries => ['section_lazy'] &>
 <style>
 
 .bar rect {
@@ -44,7 +44,7 @@ input[type="text"] {
 </style>
 
 
-<div class="well well-sm table-responsive">
+<div class="well well-sm table-responsive" id="phenotype_summary_root">
     <center><h4>Raw Data Statistics</h4></center>
     <br/>
 
@@ -275,7 +275,7 @@ input[type="text"] {
             trait_summary_hist_display_change(this.value);
         });
 
-        jQuery('#trial_detail_traits_assayed_onswitch').click( function() {
+        jsMod['section_lazy'].onExpand(document.getElementById('phenotype_summary_root'), function() {
             init_summary_table(type);
         
 

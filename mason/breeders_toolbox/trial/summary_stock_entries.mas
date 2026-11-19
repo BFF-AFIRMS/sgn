@@ -3,6 +3,7 @@ $trial_id
 $trial_stock_type
 </%args>
 
+<& /util/import_javascript.mas, entries => ['section_lazy'] &>
 
 <div class="well well-sm">
     <div class="panel panel-default">
@@ -40,11 +41,15 @@ $trial_stock_type
 
 jQuery(document).ready(function () {
 
+    jsMod['section_lazy'].onExpand(document.getElementById('summary_stock_entry_table'), function () {
+
         jQuery('#summary_stock_entry_table').DataTable({
             'destroy': true,
             'ajax':'/ajax/breeders/trial/'+ <% $trial_id %> + '/stock_entry_summary',
             'scrollX': true,
         });
+
+    });
 
         jQuery('#download_summary_stock_entries_button').click(function() {
             var token = new Date().getTime();
