@@ -13,6 +13,10 @@ $user_can_modify => undef
 
 </style>
 
+<& /util/import_javascript.mas, entries => ['section_lazy'] &>
+
+<!-- Anchor for the design section counts request; carries no content itself. -->
+<div id="design_section_counts"></div>
 
     <& /breeders_toolbox/trial/design.mas, trial_id => $trial_id &>
 % my $stock_label = '';
@@ -31,8 +35,6 @@ $user_can_modify => undef
 
   </&>
 
-  <& /breeders_toolbox/trial/trial_stocks_count.mas, trial_id => $trial_id &>
-
   <&| /page/info_section.mas, id => "trial_stocks", title=> $stock_label, subtitle => '<div class="col-sm-4"><div id="stocks_counts"></div></div>',is_subsection => 1, collapsible=>1, collapsed=>1 &>
         <& /breeders_toolbox/trial/trial_stocks.mas, trial_id => $trial_id &>
   </&>
@@ -41,22 +43,19 @@ $user_can_modify => undef
 
     <&| /page/info_section.mas, id => "trial_seedlots", title=>"Seedlots", subtitle => '<div class="col-sm-4"><div id="seedlots_counts"></div></div>', is_subsection => 1, collapsible=>1, collapsed=>1 &>
         <& /breeders_toolbox/trial/trial_seedlots.mas, trial_id => $trial_id &>
-        <& /breeders_toolbox/trial/trial_seedlots_count.mas, trial_id => $trial_id &>
     </&>
 
 
     <&| /page/info_section.mas, id => "trial_controls", title=>"Controls", subtitle => '<div class="col-sm-4"><div id="controls_counts"></div></div>', is_subsection => 1, collapsible=>1, collapsed=>1 &>
         <& /breeders_toolbox/trial/trial_controls.mas, trial_id => $trial_id &>
-        <& /breeders_toolbox/trial/trial_controls_count.mas, trial_id => $trial_id &>
     </&>
 
 
     <&| /page/info_section.mas, id => "trial_plots", title=>"Plots", subtitle => '<div class="col-sm-4"><div id="plots_counts"></div></div>', is_subsection => 1, collapsible=>1, collapsed=>1 &>
         <& /breeders_toolbox/trial/trial_plots.mas, trial_id => $trial_id &>
-        <& /breeders_toolbox/trial/trial_plots_count.mas, trial_id => $trial_id &>
     </&>
 
-    <&| /page/info_section.mas, id => "trial_subplots", title=>"Subplots",  is_subsection => 1, collapsible=>1, collapsed=>1 &>
+    <&| /page/info_section.mas, id => "trial_subplots", title=>"Subplots", subtitle => '<div class="col-sm-4"><div id="subplots_counts"></div></div>', is_subsection => 1, collapsible=>1, collapsed=>1 &>
 
         <div id="subplot_entries_section">
 
@@ -75,7 +74,7 @@ $user_can_modify => undef
 
     </&>
 
-    <&| /page/info_section.mas, id => "trial_plants", title=>"Plant Entries", is_subsection => 1, collapsible=> 1, collapsed=>1 &>
+    <&| /page/info_section.mas, id => "trial_plants", title=>"Plant Entries", subtitle => '<div class="col-sm-4"><div id="plants_counts"></div></div>', is_subsection => 1, collapsible=> 1, collapsed=>1 &>
 
         <div id="plant_entries_section">
 
@@ -102,7 +101,7 @@ $user_can_modify => undef
 
     </&>
 
-    <&| /page/info_section.mas, id => "trial_tissue_samples", title=>"Tissue Sample Entries", is_subsection => 1, collapsible=> 1, collapsed=>1 &>
+    <&| /page/info_section.mas, id => "trial_tissue_samples", title=>"Tissue Sample Entries", subtitle => '<div class="col-sm-4"><div id="tissue_samples_counts"></div></div>', is_subsection => 1, collapsible=> 1, collapsed=>1 &>
 
         <div id="tissue_sample_entries_section">
 
@@ -132,3 +131,32 @@ $user_can_modify => undef
     <&| /page/info_section.mas, id=>"trial_entry_numbers", title=>"Entry Numbers", is_subsection=>1, collapsible=>1, collapsed=>1 &>
         <& /breeders_toolbox/trial/trial_entry_numbers.mas, trial_id => $trial_id, trial_name => $trial_name &>
     </&>
+
+<script>
+jQuery(document).ready(function () {
+    var stock_label = "<% $stock_label %>";
+
+    jsMod['section_lazy'].onExpand(document.getElementById('design_section_counts'), function () {
+        jQuery.ajax({
+            url: '/ajax/breeders/trial/' + <% $trial_id %> + '/design_section_counts',
+            success: function (response) {
+                if (response.error) {
+                    console.log(response.error);
+                    return;
+                }
+                var units = response.observation_units;
+                jQuery('#stocks_counts').text(response.germplasm + ' ' + stock_label);
+                jQuery('#seedlots_counts').text(response.seedlots + ' Seedlots');
+                jQuery('#controls_counts').text(response.controls + ' Controls');
+                jQuery('#plots_counts').text(units.plots + ' Plots');
+                jQuery('#subplots_counts').text(units.subplots + ' Subplots');
+                jQuery('#plants_counts').text(units.plants + ' Plants');
+                jQuery('#tissue_samples_counts').text(units.tissue_samples + ' Tissue Samples');
+            },
+            error: function () {
+                console.log('Error retrieving design section counts.');
+            }
+        });
+    });
+});
+</script>
