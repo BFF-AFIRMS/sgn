@@ -61,6 +61,7 @@ sub download {
     if ($self->trial_list) {
         push @trial_ids, (@{$self->trial_list});
     }
+    my $use_synonyms = $self->include_trait_synonyms == 1 ? "true" : "false";
 
     open(my $F, ">", $self->filename()) || die "Can't open file ".$self->filename();
 
@@ -79,6 +80,7 @@ sub download {
             plot_order => $self->plot_order,
             plot_start => $self->plot_start,
             missing_format => $self->missing_format,
+            use_synonyms => $use_synonyms,
         });
         my $output = $trial_layout_download->get_layout_output();
         if ($output->{error_messages}){
