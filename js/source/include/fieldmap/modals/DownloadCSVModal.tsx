@@ -20,6 +20,7 @@ export const DownloadCSVModal: React.FC<DownloadCSVModalProps> = ({ }) => {
         plotNum: false,
         familyName: false,
         crossName: false,
+        borderLabel: 'Border'
     });
 
     const {
@@ -62,6 +63,17 @@ export const DownloadCSVModal: React.FC<DownloadCSVModalProps> = ({ }) => {
                         </div>
                         <div className="checkbox">
                             <label><input type="checkbox" checked={csvDownloadOpts.crossName} onChange={e => setCsvDownloadOpts({ ...csvDownloadOpts, crossName: e.target.checked })} /> Cross</label>
+                        </div>
+                        <div className="form-group tw:min-w-45">
+                            <label>Border Label:</label>
+                            <select
+                                className="form-control"
+                                defaultValue={csvDownloadOpts.borderLabel}
+                                onChange={e => setCsvDownloadOpts({ ...csvDownloadOpts, borderLabel: e.target.value })}
+                            >
+                                <option value="Border">Border</option>
+                                <option value="empty">Empty Cell</option>
+                            </select>
                         </div>
                     </div>
                     <div className="modal-footer">

@@ -97,6 +97,7 @@ export interface CsvDownloadOpts {
     plotNum: boolean;
     familyName: boolean;
     crossName: boolean;
+    borderLabel: string;
 }
 
 export interface PlotStructureNode {
