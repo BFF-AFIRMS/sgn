@@ -3,7 +3,7 @@ $trial_id
 $trial_stock_type => undef
 </%args>
 
-<& /util/import_javascript.mas, classes => ['jquery.iframe-post-form', 'd3.d3v4Min', 'd3.graphers.lineGraphRepetitiveValues', 'solGS.olsLine'] &>
+<& /util/import_javascript.mas, classes => ['jquery.iframe-post-form', 'd3.d3v4Min', 'd3.graphers.lineGraphRepetitiveValues', 'solGS.olsLine'], entries => ['section_lazy'] &>
 
 <script>
 
@@ -111,7 +111,7 @@ jQuery(document).ready(function() {
         //console.log("Trait ID updated to:", selectedTraitId);
     });
 
-    jQuery('#repetitive_measurements_data_onswitch').click(function() {
+    jsMod['section_lazy'].onExpand(document.getElementById('select_trait_for_repetitive_data_and_plot'), function() {
         create_menu_for_repetitive_values(trial_id)
         .then((result) => fetch_repetitive_measurement_traits(result.result.searchResultsDbId))
         .then((result) => repetitive_build_menu(result.result))
