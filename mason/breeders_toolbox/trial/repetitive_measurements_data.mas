@@ -111,7 +111,7 @@ jQuery(document).ready(function() {
         //console.log("Trait ID updated to:", selectedTraitId);
     });
 
-    jsMod['section_lazy'].onExpand(document.getElementById('select_trait_for_repetitive_data_and_plot'), function() {
+    jsMod['section_lazy'].onExpand('#select_trait_for_repetitive_data_and_plot', function() {
         create_menu_for_repetitive_values(trial_id)
         .then((result) => fetch_repetitive_measurement_traits(result.result.searchResultsDbId))
         .then((result) => repetitive_build_menu(result.result))

@@ -15,7 +15,7 @@ $trial_id
 
 jQuery(document).ready(function () {
 
-    jsMod['section_lazy'].onExpand(document.getElementById('soil_data_table'), function () {
+    jsMod['section_lazy'].onExpand('#soil_data_table', function () {
 
         var soil_data_table = jQuery('#soil_data_table').DataTable({
             'searching': false,

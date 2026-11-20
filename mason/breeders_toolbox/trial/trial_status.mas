@@ -74,7 +74,7 @@ $user_can_modify => undef
 
 jQuery(document).ready(function () {
 
-    jsMod['section_lazy'].onExpand(document.getElementById('trial_activities_table'), function () {
+    jsMod['section_lazy'].onExpand('#trial_activities_table', function () {
 
         jQuery('#trial_activities_table').DataTable({
             'autoWidth': false,

@@ -136,7 +136,7 @@ $user_can_modify => undef
 jQuery(document).ready(function () {
     var stock_label = "<% $stock_label %>".toLowerCase();
 
-    jsMod['section_lazy'].onExpand(document.getElementById('design_section_counts'), function () {
+    jsMod['section_lazy'].onExpand('#design_section_counts', function () {
         jQuery.ajax({
             url: '/ajax/breeders/trial/' + <% $trial_id %> + '/design_section_counts',
             success: function (response) {
