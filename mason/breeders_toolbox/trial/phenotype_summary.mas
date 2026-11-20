@@ -275,7 +275,7 @@ input[type="text"] {
             trait_summary_hist_display_change(this.value);
         });
 
-        jsMod['section_lazy'].onExpand(document.getElementById('phenotype_summary_root'), function() {
+        jsMod['section_lazy'].onExpand('#phenotype_summary_root', function() {
             init_summary_table(type);
         
 

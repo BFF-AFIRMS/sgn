@@ -190,7 +190,7 @@ function discard_observation_edit(observation_id) {
 
 jQuery(window).ready( function() {
 
-    jsMod['section_lazy'].onExpand(document.getElementById('raw_phenotypic_data'), function() {
+    jsMod['section_lazy'].onExpand('#raw_phenotypic_data', function() {
 
 	    create_trait_menu_for_trial(<% $trial_id %>)
 	    	.then( (result) => fetch_traits(result.result.searchResultsDbId))

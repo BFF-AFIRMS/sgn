@@ -14,7 +14,8 @@
  */
 
 /**
- * Runs `init` the first time the nearest `.collapse` ancestor of `root` opens.
+ * Runs `init` the first time the nearest `.collapse` ancestor of the element
+ * `selector` matches opens.
  *
  * The *innermost* wrapper is the one picked up, so a component placed in a
  * sub-section reacts to the sub-section opening rather than to the outer
@@ -25,11 +26,13 @@
  * (`info_section_collapsed => 0`), so a component never waits for an expansion
  * that is not going to happen.
  *
- * @param root - An element inside the section, used to locate the wrapper.
+ * @param selector - A CSS selector for an element inside the section, used to
+ *   locate the wrapper. A selector that matches nothing behaves like a missing
+ *   wrapper: `init` runs immediately.
  * @param init - The work to run once the section is open.
  */
-export const onExpand = (root: Element | null, init: () => void): void => {
-    const section = root?.closest('.collapse');
+export const onExpand = (selector: string, init: () => void): void => {
+    const section = document.querySelector(selector)?.closest('.collapse');
 
     // `collapser` emits the Bootstrap 3 open marker, `.in`.
     if (!section || section.classList.contains('in')) {

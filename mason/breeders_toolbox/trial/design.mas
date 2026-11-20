@@ -17,7 +17,7 @@ $trial_id
 
 jQuery(document).ready(function () {
 
-	jsMod['section_lazy'].onExpand(document.getElementById('trial_design_html'), function () {
+	jsMod['section_lazy'].onExpand('#trial_design_html', function () {
 		jQuery.ajax ( {
 			url : '/ajax/breeders/trial/'+<% $trial_id %>+'/design',
 			success: function(response){

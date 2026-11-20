@@ -26,7 +26,7 @@ jQuery(document).ready( function() {
         jQuery('#trial_design_add_management_factor').modal("show");
     });
 
-    jsMod['section_lazy'].onExpand(document.getElementById('management_regime_table'), load_management_regime_table);
+    jsMod['section_lazy'].onExpand('#management_regime_table', load_management_regime_table);
 
     jQuery('#new_trial_add_management_factors_submit').on('click',add_management_factor);
 
