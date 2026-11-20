@@ -5,7 +5,7 @@ $trial_stock_type
 $user_can_modify
 </%args>
 
-<& /util/import_javascript.mas, classes => ['CXGN.BreedersToolbox.HTMLSelect'] &>
+<& /util/import_javascript.mas, classes => ['CXGN.BreedersToolbox.HTMLSelect'], entries => ['section_lazy'] &>
 
 <style>
 .form-group {
@@ -190,13 +190,15 @@ function discard_observation_edit(observation_id) {
 
 jQuery(window).ready( function() {
 
-    jQuery('#trial_raw_data_onswitch').click( function() {
+    jsMod['section_lazy'].onExpand('#raw_phenotypic_data', function() {
 
 	    create_trait_menu_for_trial(<% $trial_id %>)
 	    	.then( (result) => fetch_traits(result.result.searchResultsDbId))
 	    	.then( (result) => build_menu(result.result))
 	    	.then( (final) =>  {
 		});
+
+	    update_phenotype_measures_table(<% $trial_id %>);
 	});
 
 	jQuery('#refresh_phenoview_btn').on('click', function() {
@@ -275,7 +277,6 @@ jQuery(window).ready( function() {
 		});
 	*/
     
-	update_phenotype_measures_table(<% $trial_id %>);
     function update_phenotype_measures_table(trial_id) {
      	var observation_levels = ['plot', 'plant', 'subplot', 'tissue_sample'];
     	for (let observation_level of observation_levels) {

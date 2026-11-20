@@ -16,6 +16,7 @@ $phenotypes_fully_uploaded => undef
 $user_can_modify => undef
 </%args>
 
+<& /util/import_javascript.mas, entries => ['section_lazy'] &>
 
 %  if ($user_can_modify) {
 <button class="btn btn-sm btn-primary" style="margin:3px" id="update_trial_status_link">Update Trial Status</button>
@@ -73,13 +74,17 @@ $user_can_modify => undef
 
 jQuery(document).ready(function () {
 
-    jQuery('#trial_activities_table').DataTable({
-        'autoWidth': false,
-        'searching': false,
-        'info': false,
-        'paging': false,
-        'order': false,
-        'ajax':'/ajax/breeders/trial/'+ <% $trial_id %> + '/all_trial_activities',
+    jsMod['section_lazy'].onExpand('#trial_activities_table', function () {
+
+        jQuery('#trial_activities_table').DataTable({
+            'autoWidth': false,
+            'searching': false,
+            'info': false,
+            'paging': false,
+            'order': false,
+            'ajax':'/ajax/breeders/trial/'+ <% $trial_id %> + '/all_trial_activities',
+        });
+
     });
 
     jQuery('#trial_completion_layout_section_onswitch').click( function() {

@@ -2,6 +2,7 @@
 $trial_id => undef
 </%args>
 
+<& /util/import_javascript.mas, entries => ['section_lazy'] &>
 
 <div id="trial_additional_uploaded_files_div">
 [LOADING...]
@@ -75,7 +76,7 @@ $trial_id => undef
 
 jQuery(document).ready(function(){
 
-    display_trial_additional_upload_files();
+    jsMod['section_lazy'].onExpand('#trial_additional_uploaded_files_div', display_trial_additional_upload_files);
 
     jQuery('#trial_upload_additional_files_link').click( function(){
         jQuery('#trial_upload_additional_file_dialog').modal('show');
