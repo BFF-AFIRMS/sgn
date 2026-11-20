@@ -3070,7 +3070,7 @@ sub design_section_counts : Chained('trial') PathPart('design_section_counts') A
         [ @relationship_type{qw| plot_of intercrop_plot_of plant_of subplot_of tissue_sample_of |} ]);
     my ($controls_count) = $controls_h->fetchrow_array();
 
-    # Seedlots planted on the trial's observation units.
+    # Seedlots taken from the trial's observation units.
     my $seedlots_h = $dbh->prepare("
         SELECT count(DISTINCT seedlot.stock_id)
         FROM stock AS seedlot
