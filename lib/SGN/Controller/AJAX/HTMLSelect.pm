@@ -1422,7 +1422,15 @@ sub get_traits_select : Path('/ajax/html/select/traits') Args(0) {
         }
     }
 
-    @traits = sort { $a->[1] cmp $b->[1] } @traits;
+    my @trait_ids = map {$_->[0]} @traits;
+    my $t = CXGN::List::Transform->new();
+    my $traits_2_order_name = $t->transform($schema, 'trait_ids_2_order_name', \@trait_ids);
+    @traits = map {
+        [
+            $traits_2_order_name->{mapping}->{$_}->{id},
+            $traits_2_order_name->{mapping}->{$_}->{name}
+        ]
+    } @{$traits_2_order_name->{transform}};
     if ($empty) { unshift @traits, [ "", "Please select a trait" ]; }
 
     my $html = simple_selectbox_html(
@@ -1467,6 +1475,8 @@ sub get_phenotyped_trait_components_select : Path('/ajax/html/select/phenotyped_
     foreach my $id (keys %unique_trait_components){
         push @unique_components, [$id, $unique_trait_components{$id}];
     }
+
+    @unique_components = sort { $a->[1] cmp $b->[1] } @unique_components;
     #print STDERR Dumper \@unique_components;
 
     my $id = $c->req->param("id") || "html_trait_component_select";

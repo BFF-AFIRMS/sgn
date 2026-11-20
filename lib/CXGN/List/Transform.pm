@@ -62,12 +62,13 @@ sub transform {
     my $schema = shift;
     my $transform_name = shift;
     my $list = shift;
+    my $params = shift;
 
     my $data;
 
     foreach my $p ($self->plugins()) {
         if ($transform_name eq $p->name()) {
-             $data = $p->transform($schema, $list, $self);
+             $data = $p->transform($schema, $list, $self, $params);
         }
     }
     return $data;
