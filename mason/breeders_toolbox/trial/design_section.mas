@@ -134,7 +134,7 @@ $user_can_modify => undef
 
 <script>
 jQuery(document).ready(function () {
-    var stock_label = "<% $stock_label %>";
+    var stock_label = "<% $stock_label %>".toLowerCase();
 
     jsMod['section_lazy'].onExpand(document.getElementById('design_section_counts'), function () {
         jQuery.ajax({
@@ -145,13 +145,13 @@ jQuery(document).ready(function () {
                     return;
                 }
                 var units = response.observation_units;
-                jQuery('#stocks_counts').text(response.germplasm + ' ' + stock_label);
-                jQuery('#seedlots_counts').text(response.seedlots + ' Seedlots');
-                jQuery('#controls_counts').text(response.controls + ' Controls');
-                jQuery('#plots_counts').text(units.plots + ' Plots');
-                jQuery('#subplots_counts').text(units.subplots + ' Subplots');
-                jQuery('#plants_counts').text(units.plants + ' Plants');
-                jQuery('#tissue_samples_counts').text(units.tissue_samples + ' Tissue Samples');
+                jQuery('#stocks_counts').text('Number of ' + stock_label + ': ' + response.germplasm);
+                jQuery('#seedlots_counts').text('Number of seedlots: ' + response.seedlots);
+                jQuery('#controls_counts').text('Number of controls: ' + response.controls);
+                jQuery('#plots_counts').text('Number of plots: ' + units.plots);
+                jQuery('#subplots_counts').text('Number of subplots: ' + units.subplots);
+                jQuery('#plants_counts').text('Number of plants: ' + units.plants);
+                jQuery('#tissue_samples_counts').text('Number of tissue samples: ' + units.tissue_samples);
             },
             error: function () {
                 console.log('Error retrieving design section counts.');
