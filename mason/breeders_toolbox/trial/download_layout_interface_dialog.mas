@@ -470,7 +470,7 @@ function show_available_columns_<% $download_type %>(level){
         var is_checked = is_mandatory || optional_cols_checked.indexOf(c) !== -1;
         var meta = col_meta[c] || { label: c, desc: '' };
 
-        grid_html += '<div class="checkbox tw:m-0">' +
+        grid_html += '<div class="tw:m-0">' +
             '<label class="tw:flex tw:items-center tw:gap-2 tw:font-normal tw:cursor-pointer">' +
             '<input type="checkbox" class="col-chk-<% $download_type %> tw:m-0" data-column="' + c + '" ' + (is_checked ? 'checked' : '') + ' ' + (is_mandatory ? 'disabled' : '') + ' />' +
             '<span class="' + (is_mandatory ? 'tw:font-bold' : '') + '">' + meta.label + '</span>' +
