@@ -416,9 +416,9 @@ sub get_layout_output {
         my $overall_traits_2_order = $t->transform($schema, 'traits_2_order_name', \@overall_trait_names);
 
         @exact_trait_order = map { $exact_traits_2_order->{mapping}->{$_}->{display_name}} @{$exact_traits_2_order->{transform}};
-        @exact_trait_header = @exact_trait_order;
+        @exact_trait_header = map { $exact_traits_2_order->{mapping}->{$_}->{name}} @{$exact_traits_2_order->{transform}};
         @overall_trait_order = map { $overall_traits_2_order->{mapping}->{$_}->{display_name}} @{$overall_traits_2_order->{transform}};
-        @overall_trait_header = @overall_trait_order;
+        @overall_trait_header = map { $overall_traits_2_order->{mapping}->{$_}->{name}} @{$overall_traits_2_order->{transform}};
     }
     my @trait_header = (@exact_trait_header,@overall_trait_header);
 
