@@ -328,12 +328,13 @@ sub get_phenotype_matrix {
             }
         }
 
-        my @sorted_traits = keys(%$unique_traits);
-        my @sorted_traits_header = @sorted_traits;
+        my @unordered_traits = keys(%$unique_traits);
+        my @sorted_traits;
+        my @sorted_traits_header;
         my $t = CXGN::List::Transform->new();
 
         if ($include_trait_synonyms) {
-            my $traits_2_order = $t->transform($self->bcs_schema, 'traits_2_order_synonym', \@sorted_traits);
+            my $traits_2_order = $t->transform($self->bcs_schema, 'traits_2_order_synonym', \@unordered_traits);
             @sorted_traits = map { $traits_2_order->{mapping}->{$_}->{display_name}} @{$traits_2_order->{transform}};
             # Handle traits with missing synonyms for the headers (falling back to name)
             my @missing = @{$traits_2_order->{missing}};
@@ -344,7 +345,7 @@ sub get_phenotype_matrix {
                 $missing_synonym ? $trait_data->{name} : $trait_data->{synonym}
             } @{$traits_2_order->{transform}};
         } else {
-            my $traits_2_order = $t->transform($self->bcs_schema, 'traits_2_order_name', \@sorted_traits);
+            my $traits_2_order = $t->transform($self->bcs_schema, 'traits_2_order_name', \@unordered_traits);
             @sorted_traits = map { $traits_2_order->{mapping}->{$_}->{display_name}} @{$traits_2_order->{transform}};
             @sorted_traits_header = map { $traits_2_order->{mapping}->{$_}->{name}} @{$traits_2_order->{transform}};
         }
@@ -731,12 +732,13 @@ sub get_phenotype_matrix {
 
         my @line = @metadata_headers;
 
-        my @sorted_traits = keys(%traits);
-        my @sorted_traits_header = @sorted_traits;
+        my @unordered_traits = keys(%traits);
+        my @sorted_traits;
+        my @sorted_traits_header;
         my $t = CXGN::List::Transform->new();
 
         if ($include_trait_synonyms) {
-            my $traits_2_order = $t->transform($self->bcs_schema, 'traits_2_order_synonym', \@sorted_traits);
+            my $traits_2_order = $t->transform($self->bcs_schema, 'traits_2_order_synonym', \@unordered_traits);
             my @missing = @{$traits_2_order->{missing}};
             @sorted_traits_header = map {
                 my $trait_id = $_;
@@ -746,7 +748,7 @@ sub get_phenotype_matrix {
             } @{$traits_2_order->{transform}};
             @sorted_traits = map { $traits_2_order->{mapping}->{$_}->{display_name}} @{$traits_2_order->{transform}};
         } else {
-            my $traits_2_order = $t->transform($self->bcs_schema, 'traits_2_order_name', \@sorted_traits);
+            my $traits_2_order = $t->transform($self->bcs_schema, 'traits_2_order_name', \@unordered_traits);
             @sorted_traits_header = map { $traits_2_order->{mapping}->{$_}->{name}} @{$traits_2_order->{transform}};
             @sorted_traits = map { $traits_2_order->{mapping}->{$_}->{display_name}} @{$traits_2_order->{transform}};
         }
