@@ -3019,9 +3019,7 @@ sub design_section_counts : Chained('trial') PathPart('design_section_counts') A
     my ($plots_count) = $plots_h->fetchrow_array();
 
     # Germplasm entries: distinct accessions/crosses/family names placed on the
-    # trial's observation units. This must match CXGN::Project::get_accessions,
-    # which backs the stocks table this subtitle labels, so filler plots are
-    # included as they are there.
+    # trial's observation units. Includes filler plots to match `CXGN::Project::get_accessions`.
     my $germplasm_h = $dbh->prepare("
         SELECT count(DISTINCT germplasm.stock_id)
         FROM stock AS germplasm
@@ -3038,10 +3036,9 @@ sub design_section_counts : Chained('trial') PathPart('design_section_counts') A
         [ @relationship_type{qw| plot_of intercrop_plot_of plant_of subplot_of tissue_sample_of |} ]);
     my ($germplasm_count) = $germplasm_h->fetchrow_array();
 
-    # Controls: germplasm entries whose observation unit carries 'is a control' => 1.
-    # This must match CXGN::Project::get_controls, which backs the controls table
-    # this subtitle labels: only accessions, and only through plot_of, plant_of
-    # and tissue_sample_of.
+    # Controls: accessions where observation unit 'is a control' => 1.
+    # Also filters on plot_of, plant_of and tissue_sample_of relationships
+    # to match `CXGN::Project::get_controls`.
     my $is_a_control_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'is a control', 'stock_property')->cvterm_id();
     my $controls_h = $dbh->prepare("
         SELECT count(DISTINCT germplasm.stock_id)
