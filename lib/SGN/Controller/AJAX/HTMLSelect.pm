@@ -1475,9 +1475,15 @@ sub get_phenotyped_trait_components_select : Path('/ajax/html/select/phenotyped_
     foreach my $id (keys %unique_trait_components){
         push @unique_components, [$id, $unique_trait_components{$id}];
     }
-
-    @unique_components = sort { $a->[1] cmp $b->[1] } @unique_components;
-    #print STDERR Dumper \@unique_components;
+    my @component_ids = map {$_->[0]} @unique_components;
+    my $t = CXGN::List::Transform->new();
+    my $components_2_order = $t->transform($schema, 'trait_component_ids_2_order', \@component_ids);
+    @unique_components = map {
+        [
+            $components_2_order->{mapping}->{$_}->{id},
+            $components_2_order->{mapping}->{$_}->{name}
+        ]
+    } @{$components_2_order->{transform}};
 
     my $id = $c->req->param("id") || "html_trait_component_select";
     my $name = $c->req->param("name") || "html_trait_component_select";
@@ -1598,10 +1604,21 @@ sub get_trait_components_select : Path('/ajax/html/select/trait_components') Arg
 
   my $dbh = $c->dbc->dbh();
   my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
-  my $onto = CXGN::Onto->new( { schema => $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $sp_person_id) } );
+  my $schema = $c->dbic_schema('Bio::Chado::Schema', 'sgn_chado', $sp_person_id);
+  my $onto = CXGN::Onto->new( { schema => $schema } );
   my @components = $onto->get_terms($cv_id);
   #print STDERR Dumper \@components;
   if ($default) { unshift @components, [ '', $default ]; }
+
+  my @component_ids = map {$_->[0]} @components;
+  my $t = CXGN::List::Transform->new();
+  my $components_2_order = $t->transform($schema, 'trait_component_ids_2_order', \@component_ids);
+  @components = map {
+    [
+        $components_2_order->{mapping}->{$_}->{id},
+        $components_2_order->{mapping}->{$_}->{name}
+    ]
+  } @{$components_2_order->{transform}};
 
   my $html = simple_selectbox_html(
     name => $name,

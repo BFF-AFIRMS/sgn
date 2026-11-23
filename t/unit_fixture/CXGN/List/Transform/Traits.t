@@ -6,10 +6,8 @@ use lib 't/lib';
 
 use Test::More;
 use SGN::Test::Fixture;
-
 use CXGN::List::Transform;
 use CXGN::Onto;
-use CXGN::Trait;
 use CXGN::Trait::Treatment;
 
 my $f = SGN::Test::Fixture->new();
@@ -80,7 +78,7 @@ push(@trait_names, @treatment_names);
 my $t = CXGN::List::Transform->new();
 
 my $trait_ids_2_order_name = $t->transform($schema, 'trait_ids_2_order_name', \@trait_ids);
-my @observed_name_order = map { CXGN::Trait->new({bcs_schema=>$schema, cvterm_id=>$_})->name() } @{$trait_ids_2_order_name->{transform}};
+my @observed_name_order = map { $trait_ids_2_order_name->{mapping}->{$_}->{name} } @{$trait_ids_2_order_name->{transform}};
 
 my @expected_name_order = (
     'watered',                    # Treatment -> Wt 
@@ -91,7 +89,7 @@ my @expected_name_order = (
     'root color|year 10|week 5',  # Trait     -> "rtcol" EXACT []
     'root color|year 10|month 2', # Trait     -> "rtcol" EXACT []
     'top yield|year 5',           # Trait     -> RtYld_FreshAerial_tha
-    'top yield|year 10',          # Trait     ->  RtYld_FreshAerial_tha
+    'top yield|year 10',          # Trait     -> RtYld_FreshAerial_tha
 );
 is_deeply(\@observed_name_order, \@expected_name_order, 'Order IDs by Name');
 
@@ -100,7 +98,7 @@ is_deeply(\@observed_name_order, \@expected_name_order, 'Order IDs by Name');
 # Reminder: Treatments always come before traits
 
 my $trait_ids_2_order_synonym = $t->transform($schema, 'trait_ids_2_order_synonym', \@trait_ids);
-my @observed_synonym_order = map { CXGN::Trait->new({bcs_schema=>$schema, cvterm_id=>$_})->name() } @{$trait_ids_2_order_synonym->{transform}};
+my @observed_synonym_order = map { $trait_ids_2_order_synonym->{mapping}->{$_}->{name} } @{$trait_ids_2_order_synonym->{transform}};
 my @expected_synonym_order = (
     'watered',                    # Treatment -> Wt
     'watered|week 5',             # Treatment -> Wt
@@ -118,7 +116,7 @@ is_deeply(\@observed_synonym_order, \@expected_synonym_order, 'Order IDs by Syno
 # Order Names by Name (Plugin: Traits2OrderName)
 
 my $traits_2_order_name = $t->transform($schema, 'traits_2_order_name', \@trait_names);
-my @observed_name_order = map { CXGN::Trait->new({bcs_schema=>$schema, cvterm_id=>$_})->name() } @{$traits_2_order_name->{transform}};
+my @observed_name_order = map { $trait_ids_2_order_name->{mapping}->{$_}->{name} } @{$traits_2_order_name->{transform}};
 is_deeply(\@observed_name_order, \@expected_name_order, 'Order Names by Name');
 
 
@@ -126,7 +124,7 @@ is_deeply(\@observed_name_order, \@expected_name_order, 'Order Names by Name');
 # Order Names by Synonym (Plugin: Traits2OrderSynonym)
 
 my $traits_2_order_synonym = $t->transform($schema, 'traits_2_order_synonym', \@trait_names);
-my @observed_synonym_order = map { CXGN::Trait->new({bcs_schema=>$schema, cvterm_id=>$_})->name() } @{$traits_2_order_synonym->{transform}};
+my @observed_synonym_order = map { $trait_ids_2_order_synonym->{mapping}->{$_}->{name} } @{$traits_2_order_synonym->{transform}};
 is_deeply(\@observed_synonym_order, \@expected_synonym_order, 'Order Names by Synonym');
 
 # -----------------------------------------------------------------------------
