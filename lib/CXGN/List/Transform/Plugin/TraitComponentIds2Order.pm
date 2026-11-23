@@ -90,8 +90,9 @@ sub transform {
     }
 
     @$components_ref = sort {
-           $a->{base} cmp $b->{base}
+           uc($a->{base}) cmp uc($b->{base})
         or $a->{relative_order} <=> $b->{relative_order}
+        or $a->{name} <=> $b->{name}
     } @$components_ref;
 
     # -------------------------------------------------------------------------
@@ -106,8 +107,6 @@ sub transform {
         $components->{$component_id}->{absolute_order} = $order_i;
         $order_i++;
     }
-
-    print STDERR "\n\nmapping: " . Dumper($components) . "\n\n";
 
     return {
         transform => \@transform,

@@ -44,7 +44,10 @@ sub transform {
     my $schema = shift;
     my $list = shift;
     my $other = shift;
-    my $method = shift || 'synonym';
+    my $params = shift || {};
+
+    my $method = defined $params->{method} ? $params->{method} : 'synonym';
+    my $treatment_first = defined $params->{treatment_first} ? $params->{treatment_first} : 1;
 
     # -------------------------------------------------------------------------
     # Identify the trait, treatment, and time ontologies.
@@ -199,11 +202,20 @@ sub transform {
     # Sort traits by preferred method (synonym or name)
     my $name_key = $method eq 'synonym' ? 'base_synonym' : 'base';
 
-    @$traits_ref = sort {
-           $b->{is_treatment} <=> $a->{is_treatment}
-        or $a->{$name_key} cmp $b->{$name_key}
-        or $a->{relative_order} <=> $b->{relative_order}
-    } @$traits_ref;
+    if ($treatment_first){
+        @$traits_ref = sort {
+            $b->{is_treatment} <=> $a->{is_treatment}
+            or uc($a->{$name_key}) cmp uc($b->{$name_key})
+            or $a->{relative_order} <=> $b->{relative_order}
+            or uc($a->{name}) cmp uc($b->{name})
+        } @$traits_ref;
+    } else {
+        @$traits_ref = sort {
+            uc($a->{$name_key}) cmp uc($b->{$name_key})
+            or $a->{relative_order} <=> $b->{relative_order}
+            or uc($a->{name}) cmp uc($b->{name})
+        } @$traits_ref;
+    }
 
     # -------------------------------------------------------------------------
     # Final return value

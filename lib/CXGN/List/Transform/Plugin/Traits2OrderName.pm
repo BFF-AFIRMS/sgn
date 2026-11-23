@@ -36,7 +36,8 @@ sub transform {
     my @trait_ids = @{$traits_2_trait_ids->{'transform'}};
 
     # Transform trait ids to order (both relative and absolute)
-    my $trait_ids_2_order = $t->transform($schema, 'trait_ids_2_order', \@trait_ids, 'name');
+    my $params = {method => 'name'};
+    my $trait_ids_2_order = $t->transform($schema, 'trait_ids_2_order', \@trait_ids, $params);
     my @missing_order = @{$trait_ids_2_order ->{'missing'}};
     my @missing = (@missing_traits, @missing_order);
     $trait_ids_2_order->{missing} = \@missing;

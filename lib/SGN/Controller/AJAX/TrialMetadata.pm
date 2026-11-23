@@ -595,7 +595,7 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
 
     my @trait_ids = map {$_->[0]} @phenotype_data;
     my $t = CXGN::List::Transform->new();
-    my $trait_ids_2_order = $t->transform($schema, 'trait_ids_2_order', \@trait_ids, 'name');
+    my $trait_ids_2_order = $t->transform($schema, 'trait_ids_2_order', \@trait_ids, { method => 'name'});
     @phenotype_data = map {
         my @data = @$_;
         my $trait_id = $data[0];

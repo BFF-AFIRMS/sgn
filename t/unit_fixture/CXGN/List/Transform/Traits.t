@@ -76,8 +76,7 @@ push(@trait_names, @treatment_names);
 # Reminder: Treatments always come before traits
 
 my $t = CXGN::List::Transform->new();
-
-my $trait_ids_2_order_name = $t->transform($schema, 'trait_ids_2_order_name', \@trait_ids);
+my $trait_ids_2_order_name = $t->transform($schema, 'trait_ids_2_order', \@trait_ids, {method => 'name'});
 my @observed_name_order = map { $trait_ids_2_order_name->{mapping}->{$_}->{name} } @{$trait_ids_2_order_name->{transform}};
 
 my @expected_name_order = (
@@ -97,7 +96,7 @@ is_deeply(\@observed_name_order, \@expected_name_order, 'Order IDs by Name');
 # Order IDs by Synonym (Plugin: TraitIds2OrderSynonym)
 # Reminder: Treatments always come before traits
 
-my $trait_ids_2_order_synonym = $t->transform($schema, 'trait_ids_2_order_synonym', \@trait_ids);
+my $trait_ids_2_order_synonym = $t->transform($schema, 'trait_ids_2_order', \@trait_ids,  {method => 'synonym'});
 my @observed_synonym_order = map { $trait_ids_2_order_synonym->{mapping}->{$_}->{name} } @{$trait_ids_2_order_synonym->{transform}};
 my @expected_synonym_order = (
     'watered',                    # Treatment -> Wt
@@ -115,7 +114,7 @@ is_deeply(\@observed_synonym_order, \@expected_synonym_order, 'Order IDs by Syno
 # -----------------------------------------------------------------------------
 # Order Names by Name (Plugin: Traits2OrderName)
 
-my $traits_2_order_name = $t->transform($schema, 'traits_2_order_name', \@trait_names);
+my $traits_2_order_name = $t->transform($schema, 'traits_2_order', \@trait_names, {method => 'name'});
 my @observed_name_order = map { $trait_ids_2_order_name->{mapping}->{$_}->{name} } @{$traits_2_order_name->{transform}};
 is_deeply(\@observed_name_order, \@expected_name_order, 'Order Names by Name');
 
@@ -123,7 +122,7 @@ is_deeply(\@observed_name_order, \@expected_name_order, 'Order Names by Name');
 # -----------------------------------------------------------------------------
 # Order Names by Synonym (Plugin: Traits2OrderSynonym)
 
-my $traits_2_order_synonym = $t->transform($schema, 'traits_2_order_synonym', \@trait_names);
+my $traits_2_order_synonym = $t->transform($schema, 'traits_2_order', \@trait_names, {method => 'synonym'});
 my @observed_synonym_order = map { $trait_ids_2_order_synonym->{mapping}->{$_}->{name} } @{$traits_2_order_synonym->{transform}};
 is_deeply(\@observed_synonym_order, \@expected_synonym_order, 'Order Names by Synonym');
 

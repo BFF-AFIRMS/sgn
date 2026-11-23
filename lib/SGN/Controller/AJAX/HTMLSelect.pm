@@ -1424,13 +1424,14 @@ sub get_traits_select : Path('/ajax/html/select/traits') Args(0) {
 
     my @trait_ids = map {$_->[0]} @traits;
     my $t = CXGN::List::Transform->new();
-    my $traits_2_order_name = $t->transform($schema, 'trait_ids_2_order_name', \@trait_ids);
+    my $params = {method => 'name', treatment_first => 0 };
+    my $traits_2_order = $t->transform($schema, 'trait_ids_2_order', \@trait_ids, $params);
     @traits = map {
         [
-            $traits_2_order_name->{mapping}->{$_}->{id},
-            $traits_2_order_name->{mapping}->{$_}->{name}
+            $traits_2_order->{mapping}->{$_}->{id},
+            $traits_2_order->{mapping}->{$_}->{name}
         ]
-    } @{$traits_2_order_name->{transform}};
+    } @{$traits_2_order->{transform}};
     if ($empty) { unshift @traits, [ "", "Please select a trait" ]; }
 
     my $html = simple_selectbox_html(

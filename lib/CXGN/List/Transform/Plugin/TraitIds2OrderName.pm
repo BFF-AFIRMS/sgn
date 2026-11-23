@@ -30,7 +30,8 @@ sub transform {
     my $list = shift;
 
     my $t = CXGN::List::Transform->new();
-    return $t->transform($schema, 'trait_ids_2_order', $list, 'name');
+    my $params = {method => 'name'};
+    return $t->transform($schema, 'trait_ids_2_order', $list, $params);
 }
 
 

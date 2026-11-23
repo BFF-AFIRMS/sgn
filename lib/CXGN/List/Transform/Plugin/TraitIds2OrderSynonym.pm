@@ -30,9 +30,8 @@ sub transform {
     my $list = shift;
 
     my $t = CXGN::List::Transform->new();
-    #my $t = CXGN::List::Transform::Plugin::TraitIds2Order->new();
-    #return $t->transform($schema, $list, 'synonym');
-    return $t->transform($schema, 'trait_ids_2_order', \@$list, 'synonym');
+    my $params = {method => 'synonym'};
+    return $t->transform($schema, 'trait_ids_2_order', \@$list, $params);
 }
 
 
