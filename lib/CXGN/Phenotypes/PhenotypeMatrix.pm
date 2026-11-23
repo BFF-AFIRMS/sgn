@@ -346,7 +346,7 @@ sub get_phenotype_matrix {
         } else {
             my $traits_2_order = $t->transform($self->bcs_schema, 'traits_2_order_name', \@sorted_traits);
             @sorted_traits = map { $traits_2_order->{mapping}->{$_}->{display_name}} @{$traits_2_order->{transform}};
-            @sorted_traits_header = @sorted_traits;
+            @sorted_traits_header = map { $traits_2_order->{mapping}->{$_}->{name}} @{$traits_2_order->{transform}};
         }
         foreach my $trait (@sorted_traits_header) {
             push @line, $trait;
@@ -738,16 +738,17 @@ sub get_phenotype_matrix {
         if ($include_trait_synonyms) {
             my $traits_2_order = $t->transform($self->bcs_schema, 'traits_2_order_synonym', \@sorted_traits);
             my @missing = @{$traits_2_order->{missing}};
-            if (scalar @missing ){
-                print STDERR "Falling back to trait ordering by name because of missing synonyms: " . join(',', @missing) . "\n";
-                $traits_2_order = $t->transform($self->bcs_schema, 'traits_2_order_name', \@sorted_traits);
-            }
-            @sorted_traits_header = map { $traits_2_order->{mapping}->{$_}->{synonym}} @{$traits_2_order->{transform}};
+            @sorted_traits_header = map {
+                my $trait_id = $_;
+                my $trait_data = $traits_2_order->{mapping}->{$trait_id};
+                my $missing_synonym = grep{$trait_id eq $_} @missing;
+                $missing_synonym ? $trait_data->{name} : $trait_data->{synonym}
+            } @{$traits_2_order->{transform}};
             @sorted_traits = map { $traits_2_order->{mapping}->{$_}->{display_name}} @{$traits_2_order->{transform}};
         } else {
             my $traits_2_order = $t->transform($self->bcs_schema, 'traits_2_order_name', \@sorted_traits);
-            @sorted_traits_header = map { $traits_2_order->{mapping}->{$_}->{display_name}} @{$traits_2_order->{transform}};
-            @sorted_traits = @sorted_traits_header;
+            @sorted_traits_header = map { $traits_2_order->{mapping}->{$_}->{name}} @{$traits_2_order->{transform}};
+            @sorted_traits = map { $traits_2_order->{mapping}->{$_}->{display_name}} @{$traits_2_order->{transform}};
         }
         foreach my $trait (@sorted_traits_header) {
             push @line, $trait;
