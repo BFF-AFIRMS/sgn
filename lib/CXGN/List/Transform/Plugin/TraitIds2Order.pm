@@ -116,16 +116,6 @@ sub transform {
     }
 
     # -------------------------------------------------------------------------
-    # Note any missing traits for the final return value
-
-    my @missing = ();
-    foreach my $trait_id (@$list){
-        if (! defined $traits->{$trait_id}){
-            push(@missing, $trait_id);
-        }
-    }
-
-    # -------------------------------------------------------------------------
     # Parse the components of composed traits
     # this includes pull out the time ontology pieces (ex. year 10, month 1, etc.)
     # the base name and base synonym name (ex. Tree height, HT)
@@ -197,6 +187,21 @@ sub transform {
         or $a->{$name_key} cmp $b->{$name_key}
         or $a->{relative_order} <=> $b->{relative_order}
     } @$traits_ref;
+
+    # -------------------------------------------------------------------------
+    # Note any missing traits for the final return value
+
+    my @missing = ();
+    foreach my $trait_id (@$list){
+        if (! defined $traits->{$trait_id}){
+            push(@missing, $trait_id);
+            next;
+        }
+        if ( $method eq 'synonym' && ! defined $traits->{$trait_id}->{synonym}){
+            push(@missing, $trait_id);
+            next;
+        }
+    }
 
     # -------------------------------------------------------------------------
     # Final return value
