@@ -7,6 +7,13 @@
 
 <&| /page/info_section.mas, id=>"stock_search_graphical_filter", title => 'Graphical Filter Accessions By Traits (Includes all Search Criteria From Above Search Form)', collapsible=>1, collapsed=>1&>
 
+<style>
+    table[aria-describedby="stock_search_graphical_filter_results_div_info"] th,
+    table[aria-describedby="stock_search_graphical_filter_results_div_info"] td {
+        white-space: nowrap;
+    }
+</style>
+
 <div class="panel panel-default">
     <div class="panel-body">
         <div id="stock_search_graphical_filter_div" style="margin:1em">
@@ -86,9 +93,11 @@ function loadBrAPIData(server,parameters){
     });
     const traitOrder = []
     traitIds2OrderName.responseJSON.transform.forEach((traitId) => {
-        const displayName = traitIds2OrderName.responseJSON.mapping[traitId]["display_name"];
-        traitOrder.push(displayName);
+        const synonym = traitIds2OrderName.responseJSON.mapping[traitId]["synonym"];
+        const traitName = synonym === null ? traitIds2OrderName.responseJSON.mapping[traitId]["name"] : synonym;
+        traitOrder.push(traitName);
     });
+    const traitMapping = traitIds2OrderName.responseJSON.mapping;
 
     var brapi_Data = BrAPI("/brapi/v2",'v2.0',auth_token).search_observationunits(data);
 
@@ -99,10 +108,13 @@ function loadBrAPIData(server,parameters){
 
     currentGFilter = GraphicalFilter(
         brapi_Data,
-        function(d) { // traits/values
+        function(d, trait_mapping) { // traits/values
           var traits = {}
           d.observations.forEach(function(obs){
-            traits[obs.observationVariableName] = obs.value;
+            const observationVariableDbId = parseInt(obs.observationVariableDbId);
+            const synonym = trait_mapping[observationVariableDbId]['synonym'];
+            const variableName = synonym === null ? trait_mapping[observationVariableDbId]['name'] : synonym;
+            traits[variableName] = obs.value;
           });
           return traits;
         },
@@ -114,7 +126,8 @@ function loadBrAPIData(server,parameters){
         traitOrder,
         function(d) {
           return d.germplasmDbId
-        }
+        },
+        traitMapping,
       );
 
     currentGFilter.draw("#stock_search_graphical_filter_div","#stock_search_graphical_filter_results_div");

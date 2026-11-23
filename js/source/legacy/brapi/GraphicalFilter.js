@@ -6,7 +6,7 @@
 
 const MISSING_DATA_SYMBOL = 'NA';
 
-function GraphicalFilter(brapi_node,trait_accessor,table_col_accessor,table_col_order,group_key_accessor){
+function GraphicalFilter(brapi_node,trait_accessor,table_col_accessor,table_col_order,group_key_accessor, trait_mapping){
   "use strict";
   
   //statics
@@ -26,7 +26,7 @@ function GraphicalFilter(brapi_node,trait_accessor,table_col_accessor,table_col_
       allTraits = {},
       rangeTraits = [];
   var data_node = brapi_node.map(function(d){
-    var traits = trait_accessor(d);
+    var traits = trait_accessor(d, trait_mapping);
     for (var key in traits) {
       if (traits.hasOwnProperty(key)) {
         allTraits[key]=null;
