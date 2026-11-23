@@ -211,7 +211,7 @@ $t->while_logged_in_as("curator", sub {
     my $phenotype_value = "10";
     $t->click_ok("direct_phenotyping_link", "id", "Open direct phenotyping page");
     $t->click_ok("//select[\@id='plot_name']/option[\@value='DownloadParentsPlot$suffix']", 'xpath', "Select plot name");
-    $t->click_ok('//select[@id="select_traits_for_trait_file"]/option[@title="fresh root weight|CO_334:0000012"]', 'xpath', "Select fresh root weight");
+    $t->click_ok('//select[@id="select_traits_for_trait_file"]/option[contains(@title, "fresh root weight")]', 'xpath', "Select fresh root weight");
     $t->send_keys_ok("select_pheno_value", "id", $phenotype_value, "enter phenotype value");
     $t->click_ok("pagetitle", "id", "click elsewhere to finalize entry");
     $t->find_element_ok('//div[@id="success-trial-phenotype" and not(contains(@style, "display: none"))]', "xpath", "wait for success indicator");
