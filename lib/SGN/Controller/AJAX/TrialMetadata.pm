@@ -2988,9 +2988,9 @@ sub replace_trial_stock : Chained('trial') PathPart('replace_stock') Args(0) {
 
 =head2 design_section_counts
 
-Count the observation units, germplasm entries, seedlots and controls of a
-trial. Used for the summary subtitles of the trial's design section, so the
-counts are available without opening (and querying) every subsection.
+Count the plots, germplasm entries, seedlots and controls of a trial. Used for
+the summary subtitles of the trial's design section, so the counts are
+available without opening (and querying) every subsection.
 
 =cut
 
@@ -3004,31 +3004,19 @@ sub design_section_counts : Chained('trial') PathPart('design_section_counts') A
     my $trial_id = $c->stash->{trial_id};
 
     my %stock_type = map { $_ => SGN::Model::Cvterm->get_cvterm_row($schema, $_, 'stock_type')->cvterm_id() }
-        qw| plot subplot plant tissue_sample accession cross family_name seedlot |;
+        qw| plot accession cross family_name seedlot |;
     my %relationship_type = map { $_ => SGN::Model::Cvterm->get_cvterm_row($schema, $_, 'stock_relationship')->cvterm_id() }
         ('plot_of', 'intercrop_plot_of', 'plant_of', 'subplot_of', 'tissue_sample_of', 'seed transaction');
 
-    # Observation units: one grouped count rather than one query per level.
-    my %observation_unit_name = (
-        $stock_type{plot}          => 'plots',
-        $stock_type{subplot}       => 'subplots',
-        $stock_type{plant}         => 'plants',
-        $stock_type{tissue_sample} => 'tissue_samples',
-    );
-    my $observation_units = { plots => 0, subplots => 0, plants => 0, tissue_samples => 0 };
-
-    my $observation_unit_h = $dbh->prepare("
-        SELECT stock.type_id, count(DISTINCT stock.stock_id)
+    my $plots_h = $dbh->prepare("
+        SELECT count(DISTINCT stock.stock_id)
         FROM stock
         JOIN nd_experiment_stock USING (stock_id)
         JOIN nd_experiment_project USING (nd_experiment_id)
         WHERE nd_experiment_project.project_id = ?
-          AND stock.type_id = ANY (?)
-        GROUP BY stock.type_id");
-    $observation_unit_h->execute($trial_id, [ keys %observation_unit_name ]);
-    while (my ($type_id, $count) = $observation_unit_h->fetchrow_array()) {
-        $observation_units->{ $observation_unit_name{$type_id} } = $count;
-    }
+          AND stock.type_id = ?");
+    $plots_h->execute($trial_id, $stock_type{plot});
+    my ($plots_count) = $plots_h->fetchrow_array();
 
     # Germplasm entries: distinct accessions/crosses/family names placed on the
     # trial's observation units. This must match CXGN::Project::get_accessions,
@@ -3088,7 +3076,7 @@ sub design_section_counts : Chained('trial') PathPart('design_section_counts') A
     my ($seedlots_count) = $seedlots_h->fetchrow_array();
 
     $c->stash->{rest} = {
-        observation_units => $observation_units,
+        plots => $plots_count // 0,
         germplasm => $germplasm_count // 0,
         controls => $controls_count // 0,
         seedlots => $seedlots_count // 0,

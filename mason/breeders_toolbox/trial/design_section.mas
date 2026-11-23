@@ -55,7 +55,7 @@ $user_can_modify => undef
         <& /breeders_toolbox/trial/trial_plots.mas, trial_id => $trial_id &>
     </&>
 
-    <&| /page/info_section.mas, id => "trial_subplots", title=>"Subplots", subtitle => '<div class="col-sm-4"><div id="subplots_counts"></div></div>', is_subsection => 1, collapsible=>1, collapsed=>1 &>
+    <&| /page/info_section.mas, id => "trial_subplots", title=>"Subplots",  is_subsection => 1, collapsible=>1, collapsed=>1 &>
 
         <div id="subplot_entries_section">
 
@@ -74,7 +74,7 @@ $user_can_modify => undef
 
     </&>
 
-    <&| /page/info_section.mas, id => "trial_plants", title=>"Plant Entries", subtitle => '<div class="col-sm-4"><div id="plants_counts"></div></div>', is_subsection => 1, collapsible=> 1, collapsed=>1 &>
+    <&| /page/info_section.mas, id => "trial_plants", title=>"Plant Entries", is_subsection => 1, collapsible=> 1, collapsed=>1 &>
 
         <div id="plant_entries_section">
 
@@ -101,7 +101,7 @@ $user_can_modify => undef
 
     </&>
 
-    <&| /page/info_section.mas, id => "trial_tissue_samples", title=>"Tissue Sample Entries", subtitle => '<div class="col-sm-4"><div id="tissue_samples_counts"></div></div>', is_subsection => 1, collapsible=> 1, collapsed=>1 &>
+    <&| /page/info_section.mas, id => "trial_tissue_samples", title=>"Tissue Sample Entries", is_subsection => 1, collapsible=> 1, collapsed=>1 &>
 
         <div id="tissue_sample_entries_section">
 
@@ -144,14 +144,10 @@ jQuery(document).ready(function () {
                     console.log(response.error);
                     return;
                 }
-                var units = response.observation_units;
                 jQuery('#stocks_counts').text('Number of ' + stock_label + ': ' + response.germplasm);
                 jQuery('#seedlots_counts').text('Number of seedlots: ' + response.seedlots);
                 jQuery('#controls_counts').text('Number of controls: ' + response.controls);
-                jQuery('#plots_counts').text('Number of plots: ' + units.plots);
-                jQuery('#subplots_counts').text('Number of subplots: ' + units.subplots);
-                jQuery('#plants_counts').text('Number of plants: ' + units.plants);
-                jQuery('#tissue_samples_counts').text('Number of tissue samples: ' + units.tissue_samples);
+                jQuery('#plots_counts').text('Number of plots: ' + response.plots);
             },
             error: function () {
                 console.log('Error retrieving design section counts.');
