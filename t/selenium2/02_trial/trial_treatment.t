@@ -1,7 +1,7 @@
 
 use strict;
 use lib 't/lib';
-use Test::More 'tests' => 27;
+use Test::More;
 use SGN::Test::Fixture;
 use SGN::Test::WWW::WebDriver;
 use Selenium::Waiter;
@@ -88,7 +88,8 @@ $w->while_logged_in_as("curator", sub {
     $w->click_ok('//div[@data-toggle][input/@id = "create_fieldbook_include_measured_TrialLayout"]', 'xpath', 'enable phenotypes download');
     $w->click_ok('create_fieldbook_ok_button_TrialLayout', 'id', 'click submit button');
 
-    sleep(2);
+    my $download_file_path = "/selenium/downloads/test_trial_layout.csv";
+    ok((wait_until { -e $download_file_path ; } timeout => 15, interval => 1), "Wait for file '$download_file_path ' to be downloaded");
     # Compare observed download to expected output.
     # Reminder: the path /downloads on the selenium host is mapped to /selenium/downloads on the breedbase host
     my $result = compare("/home/production/cxgn/sgn/t/data/trial/download_layout_expected.csv", "/selenium/downloads/test_trial_layout.csv");
