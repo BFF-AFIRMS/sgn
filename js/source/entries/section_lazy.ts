@@ -8,14 +8,10 @@
  *     <div id="<section id>_content" class="collapse [in]"> ... </div>
  *
  * and Bootstrap's collapse plugin fires `shown.bs.collapse` on that element
- * when it opens. That event is the only contract this module relies on: no
- * section ids are named, and nothing is threaded down from the page that owns
- * the section.
- */
-
-/**
- * Runs `init` the first time the nearest `.collapse` ancestor of the element
- * `selector` matches opens.
+ * when it opens.
+ *
+ * This utility runs `init` the first time the nearest `.collapse` ancestor
+ * of the element matched by `selector` opens.
  *
  * The *innermost* wrapper is the one picked up, so a component placed in a
  * sub-section reacts to the sub-section opening rather than to the outer
@@ -26,9 +22,10 @@
  * (`info_section_collapsed => 0`), so a component never waits for an expansion
  * that is not going to happen.
  *
- * @param selector - A CSS selector for an element inside the section, used to
- *   locate the wrapper. A selector that matches nothing behaves like a missing
- *   wrapper: `init` runs immediately.
+ * @param selector - A CSS selector for an element inside the section. The
+ *   wrapper is located by walking up the DOM from that element, so the caller
+ *   does not have to know or pass in the section's id. A selector that matches
+ *   nothing behaves like a missing wrapper: `init` runs immediately.
  * @param init - The work to run once the section is open.
  */
 export const onExpand = (selector: string, init: () => void): void => {
