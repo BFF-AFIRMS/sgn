@@ -3031,8 +3031,9 @@ sub design_section_counts : Chained('trial') PathPart('design_section_counts') A
     }
 
     # Germplasm entries: distinct accessions/crosses/family names placed on the
-    # trial's observation units. Filler plots are not germplasm entries, matching
-    # CXGN::Project::get_trial_stock_count.
+    # trial's observation units. This must match CXGN::Project::get_accessions,
+    # which backs the stocks table this subtitle labels, so filler plots are
+    # included as they are there.
     my $germplasm_h = $dbh->prepare("
         SELECT count(DISTINCT germplasm.stock_id)
         FROM stock AS germplasm
@@ -3042,8 +3043,7 @@ sub design_section_counts : Chained('trial') PathPart('design_section_counts') A
         JOIN nd_experiment_project USING (nd_experiment_id)
         WHERE nd_experiment_project.project_id = ?
           AND germplasm.type_id = ANY (?)
-          AND stock_relationship.type_id = ANY (?)
-          AND germplasm.uniquename <> 'Filler'");
+          AND stock_relationship.type_id = ANY (?)");
     $germplasm_h->execute(
         $trial_id,
         [ @stock_type{qw| accession cross family_name |} ],
@@ -3051,6 +3051,9 @@ sub design_section_counts : Chained('trial') PathPart('design_section_counts') A
     my ($germplasm_count) = $germplasm_h->fetchrow_array();
 
     # Controls: germplasm entries whose observation unit carries 'is a control' => 1.
+    # This must match CXGN::Project::get_controls, which backs the controls table
+    # this subtitle labels: only accessions, and only through plot_of, plant_of
+    # and tissue_sample_of.
     my $is_a_control_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'is a control', 'stock_property')->cvterm_id();
     my $controls_h = $dbh->prepare("
         SELECT count(DISTINCT germplasm.stock_id)
@@ -3066,8 +3069,8 @@ sub design_section_counts : Chained('trial') PathPart('design_section_counts') A
     $controls_h->execute(
         $is_a_control_type_id,
         $trial_id,
-        [ @stock_type{qw| accession cross family_name |} ],
-        [ @relationship_type{qw| plot_of intercrop_plot_of plant_of subplot_of tissue_sample_of |} ]);
+        [ $stock_type{accession} ],
+        [ @relationship_type{qw| plot_of plant_of tissue_sample_of |} ]);
     my ($controls_count) = $controls_h->fetchrow_array();
 
     # Seedlots taken from the trial's observation units.
