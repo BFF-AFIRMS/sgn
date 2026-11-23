@@ -172,6 +172,23 @@ sub transform {
     }
 
     # -------------------------------------------------------------------------
+    # Note any missing traits for the final return value
+
+    my @missing = ();
+    foreach my $trait_id (@$list){
+        if (! defined $traits->{$trait_id}){
+            push(@missing, $trait_id);
+            next;
+        }
+        if ( $method eq 'synonym' && ! defined $traits->{$trait_id}->{synonym}){
+            push(@missing, $trait_id);
+            $traits->{$trait_id}->{synonym} = $traits->{$trait_id}->{name};
+            $traits->{$trait_id}->{base_synonym} = $traits->{$trait_id}->{base};
+            next;
+        }
+    }
+
+    # -------------------------------------------------------------------------
     # Sort elements
 
     my $traits_ref = [];
@@ -187,21 +204,6 @@ sub transform {
         or $a->{$name_key} cmp $b->{$name_key}
         or $a->{relative_order} <=> $b->{relative_order}
     } @$traits_ref;
-
-    # -------------------------------------------------------------------------
-    # Note any missing traits for the final return value
-
-    my @missing = ();
-    foreach my $trait_id (@$list){
-        if (! defined $traits->{$trait_id}){
-            push(@missing, $trait_id);
-            next;
-        }
-        if ( $method eq 'synonym' && ! defined $traits->{$trait_id}->{synonym}){
-            push(@missing, $trait_id);
-            next;
-        }
-    }
 
     # -------------------------------------------------------------------------
     # Final return value
