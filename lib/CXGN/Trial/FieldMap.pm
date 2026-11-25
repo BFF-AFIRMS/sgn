@@ -288,8 +288,6 @@ sub delete_fieldmap {
     my $h = $dbh->prepare("delete from stockprop where stockprop.stockprop_id IN (select stockprop.stockprop_id from project join nd_experiment_project using(project_id) join nd_experiment_stock using(nd_experiment_id) join stock using(stock_id) join stockprop on(stock.stock_id=stockprop.stock_id) where (stockprop.type_id IN (select cvterm_id from cvterm where name='col_number') or stockprop.type_id IN (select cvterm_id from cvterm where name='row_number')) and project.project_id=? and stock.type_id IN (select cvterm_id from cvterm join cv using(cv_id) where cv.name = 'stock_type' and cvterm.name ='plot'));");
     $h->execute($trial_id);
 
-    $self->_regenerate_trial_layout_cache();
-
     return $error;
 }
 
@@ -374,8 +372,6 @@ sub substitute_accession_fieldmap {
         $h2->execute($plot_2_objectIDs[$n],$plot_1_objectIDs[$n],$plot_1_id);
     }
 
-    $self->_regenerate_trial_layout_cache();
-
     return $error;
 }
 
@@ -453,8 +449,6 @@ sub replace_plot_accession_fieldMap {
         }
     }
 
-    # $self->_regenerate_trial_layout_cache();
-
     return $error;
 
 }
@@ -506,8 +500,6 @@ sub replace_plot_name_fieldMap {
         });
     }
 
-    # $self->_regenerate_trial_layout_cache();
-
     return $error;
 }
 
@@ -553,8 +545,6 @@ sub replace_trial_stock_fieldMap {
     else {
         $h_update->execute($new_stock_id,$accession_cvterm_id,$plot_of_cvterm_id,$plant_of_cvterm_id,$subplot_of_cvterm_id,$tissue_sample_of_cvterm_id,$trial_id,$field_trial_cvterm_id,$old_stock_id);
     }
-
-    # $self->_regenerate_trial_layout_cache();
 
     return $error;
 }
@@ -604,17 +594,6 @@ sub rebuild_trial_plot_replicates {
             $i += 1;
         } 
     }
-}
-
-sub _regenerate_trial_layout_cache {
-    my $self = shift;
-    my $experiment_type = $self->experiment_type() ? $self->experiment_type() : 'field_layout';
-    my $layout = CXGN::Trial::TrialLayout->new({
-        schema => $self->bcs_schema,
-        trial_id => $self->trial_id,
-        experiment_type => $experiment_type
-    });
-    $layout->generate_and_cache_layout();
 }
 
 1;

@@ -177,7 +177,7 @@ sub _lookup_trial_id {
     }
 
     $self->_set_design_type($self->_get_design_type_from_project());
-    $self->_set_design($self->_get_design_from_trial());
+    $self->_set_design($self->generate_layout());
     # print STDERR "DESIGN: ".Dumper($design)."\n";
 
     $self->_set_plot_names($self->_get_plot_info_fields_from_trial("plot_name") || []);
@@ -335,109 +335,23 @@ sub _get_plot_info_fields_from_trial {
     return \@field_values;
 }
 
-
-sub _get_design_from_trial {
-    print STDERR "Check 2.3.4.1: ".localtime()."\n";
-    my $self = shift;
-    my $schema = $self->get_schema();
-    my $project = $self->get_project();
-
-    #Try to retrieve layout from cached json
-    #my $trial_layout_json_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'trial_layout_json', 'project_property')->cvterm_id;
-    #my $trial_has_plants_cvterm_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'project_has_plant_entries', 'project_property')->cvterm_id;
-    my $trial_layout_json = $project->projectprops->find({ 'type_id' => $self->cvterm_id('trial_layout_json') });
-    my $trial_has_plants = $project->projectprops->find({ 'type_id' => $self->cvterm_id('project_has_plant_entries') });
-
-    my $design;
-
-    if ($trial_layout_json) {
-        $design = decode_json $trial_layout_json->value;
-    }
-    # print STDERR "\n_get_design_from_trial design: ".Dumper($design)."\n";
-    if (keys(%$design)) {
-        # print STDERR "WE HAVE TRIAL LAYOUT JSON!\n";
-	    # print STDERR "TRIAL LAYOUT JSON IS: ".$trial_layout_json->value()."\n";
-
-	    #Plant index number needs to be in the cached layout of trials that have plants. this serves a check to assure this.
-	    if ($trial_has_plants){
-		my @plot_values = values %$design;
-		if (!exists($plot_values[0]->{plant_index_numbers})) {
-		    print STDERR "Regenerating cache to include plants...\n";
-		    $self->generate_and_cache_layout();
-		} else {
-		    print STDERR "TrialLayout from cache ".localtime."\n";
-		    return $design;
-		}
-	    } else {
-            print STDERR "TrialLayout from cache ".localtime."\n";
-            return $design;
-	    }
-	} else {
-	print STDERR "Regenerating cache...\n";
-        my $design = $self->generate_and_cache_layout();
-	    # print STDERR "_get_design_from_trial Generated DESIGN (and cached) : ".Dumper($design);
-	return $design;
-    }
-}
-
-sub generate_and_cache_layout {
+sub generate_layout {
     my $self = shift;
     print STDERR "TrialLayout generate layout ".localtime."\n";
-    my $schema = $self->get_schema();
-    my $plots_ref;
-    my @plots;
-    my %unique_accessions;
-    my %unique_controls;
-    my $project = $self->get_project();
 
-    $plots_ref = $self->_get_plots();
+    my $plots_ref = $self->_get_plots();
     if (!$plots_ref) {
-      print STDERR "_get_design_from_trial: not plots provided... returning.\n";
-      return { error => "Something went wrong retrieving plots for this trial. This should not happen, so please contact us." };
-  }
-#print STDERR "Check 2.3.4.2: ".localtime()."\n";
-
-    # my $genotyping_user_id;
-    # my $genotyping_project_name;
-    # if ($self->get_experiment_type eq 'genotyping_trial'){
-    #     my $genotyping_user_id_row = $project
-    #         ->search_related("nd_experiment_projects")
-    #         ->search_related("nd_experiment")
-    #         ->search_related("nd_experimentprops")
-    #         ->find({ 'type.name' => 'genotyping_user_id' }, {join => 'type' });
-    #     $genotyping_user_id = $genotyping_user_id_row->get_column("value") || "unknown";
-
-    #     my $genotyping_project_name_row = $project
-    #         ->search_related("nd_experiment_projects")
-    #         ->search_related("nd_experiment")
-    #         ->search_related("nd_experimentprops")
-    #         ->find({ 'type.name' => 'genotyping_project_name' }, {join => 'type' });
-    #     $genotyping_project_name = $genotyping_project_name_row->get_column("value") || "unknown";
-    # }
-
-    @plots = @{$plots_ref};
-
-    my %design;
-
-    #print STDERR "PLOTS: ".Dumper(\@plots);
-    my ($design, $verify_errors) = $self->retrieve_plot_info(\@plots);
-
-    #print STDERR "DESIGN IN generate_and_cache_layout: ".Dumper(\%design);
-
-    my $trial_layout_json_rs = $project->search_related('projectprops',{ 'type_id' => $self->cvterm_id('trial_layout_json') });
-    while (my $t = $trial_layout_json_rs->next) {
-        $t->delete();
+        print STDERR "generate_layout: no plots provided... returning.\n";
+        return { error => "Something went wrong retrieving plots for this trial. This should not happen, so please contact us." };
     }
 
-    $project->create_projectprops({
-        'trial_layout_json' => encode_json($design)
-				  });
+    my @plots = @{$plots_ref};
+
+    my ($design, $verify_errors) = $self->retrieve_plot_info(\@plots);
 
     if ($self->get_verify_layout || $self->get_verify_physical_map){
         return $verify_errors;
     }
-
-    #print STDERR "DESIGN AS READ : ".Dumper(\%design);
 
     return $design;
 }
@@ -502,14 +416,12 @@ sub retrieve_plot_info {
     foreach my $plot (@$plots){
         push @plot_ids, $plot->stock_id();
     }
-    # Prepare a DB resultset that we can re-use to search for plots
-    my $plots_rs = $schema->resultset('Stock::Stock')
-        ->search({'me.stock_id' => { -in => \@plot_ids}});
 
-    # Add basic design info about the plot_id and plot_name
-    while (my $record = $plots_rs->next){
-        my $plot_id = $record->stock_id();
-        my $plot_name = $record->uniquename();
+    my $query = "select plot.stock_id, plot.uniquename from stock as plot where plot.stock_id = any(?)";
+    my $sth = $schema->storage()->dbh()->prepare($query);
+    $sth->execute(\@plot_ids);
+
+    while (my ($plot_id, $plot_name) = $sth->fetchrow_array()) {
         $design_info->{$plot_id}->{plot_id} = $plot_id;
         $design_info->{$plot_id}->{plot_name} = $plot_name;
     }
@@ -517,24 +429,22 @@ sub retrieve_plot_info {
     # -------------------------------------------------------------------------
     # Get parent relationships (accession/cross/family_names)
 
-    # Get accessions/crosses/family_names of plots
+    my $query = "
+    select plot.stock_id, parent.stock_id, parent.uniquename, parent.type_id
+    from stock as plot
+    join stock_relationship as plot_parent on (plot_parent.subject_id = plot.stock_id and plot_parent.type_id = any(?))
+    join stock as parent on (parent.stock_id = plot_parent.object_id and parent.type_id = any(?))
+    where plot.stock_id = any(?);
+    ";
+    my $sth = $schema->storage()->dbh()->prepare($query);
+    $sth->execute(\@$relationship_type_ids, \@$source_primary_stock_type_ids, \@plot_ids);
+
     my $parents;
-    my $parents_rs = $plots_rs
-        ->search_related(
-            'stock_relationship_subjects',
-            {
-                'stock_relationship_subjects.type_id' => { -in => \@$relationship_type_ids },
-                'object.type_id' => { -in => \@$source_primary_stock_type_ids }
-            },
-            { 'join' => 'object' }
-	    );
-    while (my $record = $parents_rs->next){
-        my $plot_id = $record->subject_id();
-        my $parent = $record->object;
+    while (my ($plot_id, $parent_id, $parent_uniquename, $parent_type_id) = $sth->fetchrow_array()) {
         push @{$parents->{$plot_id}}, {
-            name => $parent->uniquename(),
-            id => $parent->stock_id(),
-            type_id => $parent->type_id(),
+            name => $parent_uniquename,
+            id => $parent_id,
+            type_id => $parent_type_id,
         };
     }
     # Validate each plot is linked to exactly one parent (accession/cross/family_name)
@@ -551,24 +461,22 @@ sub retrieve_plot_info {
 
     # -------------------------------------------------------------------------
     # Get intercrop parent relationships (accession/cross/family_names)
- 
-    my $intercrop_parents;
-    my $intercrop_parents_rs = $plots_rs
-        ->search_related(
-            'stock_relationship_subjects',
-            {
-                'stock_relationship_subjects.type_id' => $intercrop_plot_of_cvterm_id,
-                'object.type_id' => { -in => \@$source_primary_stock_type_ids }
-            },
-            { 'join' => 'object' }
-	    );
-    while (my $record = $intercrop_parents_rs->next){
-        my $plot_id = $record->subject_id();
-        my $intercropped_parent = $record->object;
 
+    my $query = "
+    select plot.stock_id, parent.stock_id, parent.uniquename
+    from stock as plot
+    join stock_relationship as plot_parent on (plot_parent.subject_id = plot.stock_id and plot_parent.type_id = ?)
+    join stock as parent on (parent.stock_id = plot_parent.object_id and parent.type_id = any(?))
+    where plot.stock_id = any(?)
+    ";
+    my $sth = $schema->storage()->dbh()->prepare($query);
+    $sth->execute($intercrop_plot_of_cvterm_id, \@$source_primary_stock_type_ids, \@plot_ids);
+
+    my $intercrop_parents;
+    while (my ($plot_id, $parent_id, $parent_uniquename) = $sth->fetchrow_array()) {
         push @{$design_info->{$plot_id}->{intercrop_accessions}}, {
-            accession_name => $intercropped_parent->uniquename(),
-            accession_id => $intercropped_parent->stock_id(),
+            accession_name => $parent_uniquename,
+            accession_id => $parent_id
         };
     }
 
