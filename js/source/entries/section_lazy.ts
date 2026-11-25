@@ -11,11 +11,8 @@
  * when it opens.
  *
  * This utility runs `init` the first time the nearest `.collapse` ancestor
- * of the element matched by `selector` opens.
- *
- * The *innermost* wrapper is the one picked up, so a component placed in a
- * sub-section reacts to the sub-section opening rather than to the outer
- * section opening.
+ * of the element matched by `selector` first becomes visible. This is either
+ * because the section itself is expanded, or because a parent section is expanded.
  *
  * `init` runs straight away when there is no wrapper at all
  * (`collapsible => 0`) or when the wrapper is already open
@@ -31,22 +28,57 @@
 export const onExpand = (selector: string, init: () => void): void => {
     const section = document.querySelector(selector)?.closest('.collapse');
 
-    // `collapser` emits the Bootstrap 3 open marker, `.in`.
-    if (!section || section.classList.contains('in')) {
+    if (!section || !isCollapsed(section)) {
         init();
         return;
     }
 
-    const handler = (event: JQuery.TriggeredEvent) => {
-        // `collapser` stops the propagation of `show`/`hide` on nested
-        // sections but not of `shown`, so a nested section opening reaches
-        // this wrapper too. Only react when this wrapper is the one opening.
-        if (event.target !== section) {
+    const handler = () => {
+        if (isCollapsed(section)) {
             return;
         }
-        jQuery(section).off('shown.bs.collapse', handler);
+
+        walkUpSections(section, (el) => {
+            jQuery(el).off('shown.bs.collapse', handler);
+        });
+
         init();
     };
 
-    jQuery(section).on('shown.bs.collapse', handler);
+    walkUpSections(section, (el) => {
+        jQuery(el).on('shown.bs.collapse', handler);
+    });
+};
+
+/**
+ * `collapser` emits the Bootstrap 3 open marker, `.in`.
+ * 
+ * Walk the DOM upwards from the given element, checking if the element OR
+ * any ancestor contains the "collapse" class but NOT the "in" class.
+ * 
+ * @param element - The starting element for the upward walk.
+ * @returns `true` if any ancestor has the "collapse" class but not the "in" class, `false` otherwise.
+ */
+const isCollapsed = (element: Element | null | undefined): boolean => {
+    return walkUpSections(element, (el) => {
+        return !el.classList.contains('in');
+    });
+};
+
+/**
+ * Walks up the DOM tree from the given element, calling the callback on each element with the "collapse" class.
+ * Stops if the callback returns `true`.
+ * 
+ * @param element - The starting element for the upward walk.
+ * @param callback - The function to call on each element with the "collapse" class. Should return `true` to stop walking up.
+ * @returns `true` if the callback returned `true` for any element, `false` otherwise.
+ */
+const walkUpSections = (element: Element | null | undefined, callback: (el: Element) => boolean | undefined): boolean => {
+    while (element) {
+        if (element.classList.contains('collapse') && callback(element)) {
+            return true;
+        }
+        element = element.parentElement;
+    }
+    return false;
 };
