@@ -26,28 +26,31 @@
  * @param init - The work to run once the section is open.
  */
 export const onExpand = (selector: string, init: () => void): void => {
-    const section = document.querySelector(selector)?.closest('.collapse');
+    // Wrap in document ready so this can be called top-level
+    jQuery(() => {
+        const section = document.querySelector(selector)?.closest('.collapse');
 
-    if (!section || !isCollapsed(section)) {
-        init();
-        return;
-    }
-
-    const handler = () => {
-        if (isCollapsed(section)) {
+        if (!section || !isCollapsed(section)) {
+            init();
             return;
         }
 
+        const handler = () => {
+            if (isCollapsed(section)) {
+                return;
+            }
+
+            walkUpSections(section, (el) => {
+                jQuery(el).off('shown.bs.collapse', handler);
+            });
+
+            init();
+        };
+
         walkUpSections(section, (el) => {
-            jQuery(el).off('shown.bs.collapse', handler);
+            jQuery(el).on('shown.bs.collapse', handler);
         });
-
-        init();
-    };
-
-    walkUpSections(section, (el) => {
-        jQuery(el).on('shown.bs.collapse', handler);
-    });
+    })
 };
 
 /**
