@@ -56,6 +56,52 @@ has 'display_name' => (isa => 'Str',
 		       }
     );
 
+has 'base_trait' => ( isa => 'CXGN::Trait',
+		is => 'ro',
+		lazy => 1,
+		default => sub {
+		    my $self = shift;
+			my $schema = $self->bcs_schema();
+			my @trait_ontologies = ();
+			my $trait_ontology_cvterm_id = $schema->resultset('Cv::Cvterm')->find({name => 'trait_ontology'})->cvterm_id();
+			my $trait_ontologies_rs = $schema->resultset('Cv::Cvprop')->search({type_id => $trait_ontology_cvterm_id});
+			while (my $record = $trait_ontologies_rs->next()) {
+				push(@trait_ontologies, $record->cv_id());
+			}
+		    my $components = SGN::Model::Cvterm->get_components_from_trait($schema, $self->cvterm_id());
+			foreach my $component_id (@$components){
+				my $component_cvterm = $schema->resultset('Cv::Cvterm')->find({cvterm_id => $component_id});
+				my $component_cv = $component_cvterm->cv_id();
+                if ( grep( /^$component_cv$/, @trait_ontologies ) ) {
+					return CXGN::Trait->new({bcs_schema=>$schema, cvterm_id=>$component_id});
+                }
+			}
+			return $self;
+		},
+    );
+
+
+has 'is_treatment' => (
+	isa => 'Bool',
+	is  => 'ro',
+	lazy => 1,
+	default => sub {
+		my $self = shift;
+		my $schema = $self->bcs_schema();
+		my @treatment_ontologies = ();
+		my $treatment_ontology_cvterm_id = $schema->resultset('Cv::Cvterm')->find({name => 'experiment_treatment_ontology'})->cvterm_id();
+		my $treatment_ontologies_rs = $schema->resultset('Cv::Cvprop')->search({type_id => $treatment_ontology_cvterm_id});
+		while (my $record = $treatment_ontologies_rs->next()) {
+			push(@treatment_ontologies, $record->cv_id());
+		}
+		my $cv_id = $self->base_trait()->cvterm->cv_id();
+		if ( grep( /^$cv_id$/, @treatment_ontologies ) ) {
+			return 1;
+		}
+		return 0;
+	}
+);
+
 has 'accession' => (isa => 'Str',
 		    is => 'rw',
 		    lazy => 1,
@@ -344,6 +390,27 @@ has 'uri' => (isa => 'Str',
 has 'ontology_id' => (
 	isa => 'Maybe[Int]',
 	is => 'rw',
+);
+
+has 'synonym' => (
+	isa => 'Maybe[Str]',
+	is  => 'ro',
+	lazy => 1,
+	default => sub {
+		my $self = shift;
+		my $cvterm = CXGN::Cvterm->new( schema=> $self->bcs_schema(), cvterm_id => $self->cvterm_id());
+		return $cvterm->get_single_synonym();
+	}
+);
+
+has 'base_synonym' => (
+	isa => 'Maybe[Str]',
+	is  => 'ro',
+	lazy => 1,
+	default => sub {
+		my $self = shift;
+		return $self->base_trait()->synonym();
+	}
 );
 
 has 'synonyms' => (

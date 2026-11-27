@@ -17,6 +17,7 @@ export const FieldMapHeaderPanel: React.FC<FieldMapHeaderPanelProps> = ({
     const {
         setHeatmapData,
         variables,
+        variableOrder,
         spatialAdjustments,
         fetchHeatmapObservations,
     } = useHeatmap();
@@ -50,7 +51,7 @@ export const FieldMapHeaderPanel: React.FC<FieldMapHeaderPanelProps> = ({
                                 <option value="geofieldmap">View Geo Field Layout</option>
                             </optgroup>
                             <optgroup label="Assayed Traits">
-                                {Object.keys(variables).sort().map(name => (
+                                {variableOrder.map(name => (
                                     <option key={variables[name]} value={variables[name]}>{name}</option>
                                 ))}
                             </optgroup>

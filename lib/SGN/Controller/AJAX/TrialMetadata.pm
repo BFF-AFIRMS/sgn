@@ -510,6 +510,7 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
     my $q1 = "$treatment_with
     SELECT
         (((cvterm.name::text || '|'::text) || db.name::text) || ':'::text) || dbxref.accession::text AS trait,
+        cvterm.name::text as trait_name,
         cvterm.cvterm_id,
         count(phenotype.value)                             AS n_obs,
         to_char(avg(phenotype.value::real), 'FM999990.990') AS avg_val,
@@ -551,7 +552,7 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
     my @phenotype_data;
     my %numeric_trait_ids;
 
-    while (my ($trait, $trait_id, $count, $average, $max, $min, $stddev, $stock_name, $stock_id, $treatment, $treatment_id) = $h1->fetchrow_array()) {
+    while (my ($trait, $trait_name, $trait_id, $count, $average, $max, $min, $stddev, $stock_name, $stock_id, $treatment, $treatment_id) = $h1->fetchrow_array()) {
 
         next if ($trait =~ m/_TREATMENT/);
 
@@ -587,9 +588,19 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
             $percent_missing = "0%";
         }
 
-        push @return_array, ( qq{<a href="/cvterm/$trait_id/view">$trait</a>}, $average, $min, $max, $stddev, $cv, $count, $percent_missing, qq{<a href="#raw_data_histogram_well" onclick="trait_summary_hist_change($trait_id)"><span class="glyphicon glyphicon-stats"></span></a>} );
+        push @return_array, ( $trait_id, qq{<a href="/cvterm/$trait_id/view">$trait_name</a>}, $average, $min, $max, $stddev, $cv, $count, $percent_missing, qq{<a href="#raw_data_histogram_well" onclick="trait_summary_hist_change($trait_id)"><span class="glyphicon glyphicon-stats"></span></a>} );
         push @phenotype_data, \@return_array;
 
+    }
+
+    # Sort traits
+    my @trait_ids = map {$_->[0]} @phenotype_data;
+    my $t = CXGN::List::Transform->new();
+    my $trait_ids_2_order = $t->transform($schema, 'trait_ids_2_order', \@trait_ids, { method => 'name', treatment_first => 0});
+    # Set first column of each element of phenotype_data to the trait order
+    foreach my ($i) (0..$#phenotype_data){
+        my $trait_id = $phenotype_data[$i][0];
+        $phenotype_data[$i][0] = $trait_ids_2_order->{mapping}->{$trait_id}->{absolute_order};
     }
 
     # get data from the non-numeric trait ids

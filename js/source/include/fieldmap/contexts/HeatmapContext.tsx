@@ -10,6 +10,8 @@ export interface HeatmapContextType {
     setHeatmapData: React.Dispatch<React.SetStateAction<Record<string, HeatmapValue>>>;
     variables: Record<string, string>;
     setVariables: React.Dispatch<React.SetStateAction<Record<string, string>>>;
+    variableOrder: string[];
+    setVariableOrder: React.Dispatch<React.SetStateAction<string[]>>;
     spatialAdjustments: Record<string, Record<string, number>>;
     setSpatialAdjustments: React.Dispatch<React.SetStateAction<Record<string, Record<string, number>>>>;
 	valueColorScale: {
@@ -37,6 +39,7 @@ export const HeatmapProvider: React.FC<FieldMapContextProps> = ({ trialId, authT
 
     const [heatmapData, setHeatmapData] = useState<Record<string, HeatmapValue>>({});
     const [variables, setVariables] = useState<Record<string, string>>({});
+    const [variableOrder, setVariableOrder] = useState<string[]>([]);
     const [spatialAdjustments, setSpatialAdjustments] = useState<Record<string, Record<string, number>>>({});
 
     const valueColorScale = useMemo(() => {
@@ -128,12 +131,22 @@ export const HeatmapProvider: React.FC<FieldMapContextProps> = ({ trialId, authT
             const body = await response.json();
             const data = body?.result?.data || [];
             const vars: Record<string, string> = {};
+            let variableIds: number[] = [];
             data.forEach((v: any) => {
                 if (v.observationVariableName && v.observationVariableDbId) {
                     vars[v.observationVariableName] = v.observationVariableDbId;
+                    variableIds.push(parseInt(v.observationVariableDbId));
                 }
             });
             setVariables(vars);
+
+            const sortParams = JSON.stringify({method: "name", treatment_first: 0});
+            const sortItems = JSON.stringify(variableIds);
+            const sortResponse = await fetch(`/list/transform/temp?type=traits_2_order&items=${sortItems}&params=${sortParams}`);
+            const sortBody = await sortResponse.json();
+            let sortedTraits: string[] = sortBody?.transform || [];
+            setVariableOrder(sortedTraits);
+
         } catch (e) {
 			console.error('Error loading variables:', e);
         }
@@ -157,6 +170,8 @@ export const HeatmapProvider: React.FC<FieldMapContextProps> = ({ trialId, authT
             setHeatmapData,
             variables,
             setVariables,
+            variableOrder,
+            setVariableOrder,
             spatialAdjustments,
             setSpatialAdjustments,
 			valueColorScale,

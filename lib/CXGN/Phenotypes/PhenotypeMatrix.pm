@@ -328,16 +328,30 @@ sub get_phenotype_matrix {
             }
         }
 
-        my @sorted_traits = sort keys(%$unique_traits);
-        foreach my $trait (@sorted_traits) {
-            my $trait_id = $unique_traits->{$trait};
-            my $trait_syn = $trait_synonyms->{$trait_id};
+        my @unsorted_traits = keys(%$unique_traits);
+        my @sorted_traits;
+        my @sorted_traits_header;
+        my $t = CXGN::List::Transform->new();
 
-            push @line, defined $trait_syn && $include_trait_synonyms ? "$trait_syn = $trait" : $trait;
+        if ($include_trait_synonyms) {
+            my $traits_2_order = $t->transform($self->bcs_schema, 'traits_2_order', \@unsorted_traits, {method => 'synonym', treatment_first => 1});
+            my @sorted_trait_ids = @{$traits_2_order->{transform}};
+            @sorted_traits_header = map { $traits_2_order->{mapping}->{$_}->{synonym} } @sorted_trait_ids;
+            @sorted_traits = map { $traits_2_order->{mapping}->{$_}->{display_name}} @sorted_trait_ids;
+        } else {
+            my $traits_2_order = $t->transform($self->bcs_schema, 'traits_2_order', \@unsorted_traits, {method => 'name', treatment_first => 1});
+            my @sorted_trait_ids = @{$traits_2_order->{transform}};
+            @sorted_traits_header = map { $traits_2_order->{mapping}->{$_}->{name}} @sorted_trait_ids;
+            @sorted_traits = map { $traits_2_order->{mapping}->{$_}->{display_name}} @sorted_trait_ids;
+        }
+
+        foreach my $trait (@sorted_traits_header) {
+            push @line, $trait;
             if ($include_phenotype_primary_key) {
                 push @line, $trait.'_phenotype_id';
             }
         }
+
         push @line, 'notes';
 
         # retrieve treatments and add treatment names to header
@@ -714,10 +728,24 @@ sub get_phenotype_matrix {
 
         my @line = @metadata_headers;
 
-        my @sorted_traits = sort keys(%traits);
-        foreach my $trait (@sorted_traits) {
-            my $syn = $trait_synonyms{$trait};
-            push @line, defined $syn && $include_trait_synonyms ? "$syn = $trait" : $trait;
+        my @unsorted_traits = keys(%traits);
+        my @sorted_traits;
+        my @sorted_traits_header;
+        my $t = CXGN::List::Transform->new();
+
+        if ($include_trait_synonyms) {
+            my $traits_2_order = $t->transform($self->bcs_schema, 'traits_2_order', \@unsorted_traits, {method => 'synonym', treatment_first => 1});
+            my @sorted_trait_ids = @{$traits_2_order->{transform}};
+            @sorted_traits_header = map { $traits_2_order->{mapping}->{$_}->{synonym} } @sorted_trait_ids;
+            @sorted_traits = map { $traits_2_order->{mapping}->{$_}->{display_name}} @sorted_trait_ids;
+        } else {
+            my $traits_2_order = $t->transform($self->bcs_schema, 'traits_2_order', \@unsorted_traits, {method => 'name', treatment_first => 1});
+            my @sorted_trait_ids = @{$traits_2_order->{transform}};
+            @sorted_traits_header = map { $traits_2_order->{mapping}->{$_}->{name}} @sorted_trait_ids;
+            @sorted_traits = map { $traits_2_order->{mapping}->{$_}->{display_name}} @sorted_trait_ids;
+        }
+        foreach my $trait (@sorted_traits_header) {
+            push @line, $trait;
         }
         push @line, 'notes';
 

@@ -129,6 +129,24 @@ function GraphicalFilter(brapi_node,trait_accessor,table_col_accessor,table_col_
       //draw the filter
       gfilter.root.draw(canv.node());
 
+      // Order traits and rename to synonyms where possible
+      const traitNames = tableCols.map(function(record) { return record.title; });
+      let sortedCols = traitNames;
+      const params = JSON.stringify({method: "synonym", treatment_first: 1});
+      jQuery.ajax({
+        async: false,
+        url: `/list/transform/temp?type=traits_2_order&items=${JSON.stringify(sortedCols)}&params=${params}`,
+          success: function(response){
+            const sortedTraits = response.missing.concat(response.transform);
+            tableCols.forEach(function(col, i){
+              const mappedData = response.mapping[col.title];
+              tableCols[i].order = sortedTraits.indexOf(col.title) + 1;
+              tableCols[i].title = mappedData?.synonym ? mappedData?.synonym : (mappedData?.name ? mappedData?.name : col.title);
+            });
+          }
+      });
+      tableCols.sort((a, b) => a.order - b.order);
+
       //create the output table
       if (buttons) {
         gfilter.results_table = $(table_selector).DataTable({

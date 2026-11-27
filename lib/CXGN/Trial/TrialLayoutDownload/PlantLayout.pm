@@ -48,6 +48,8 @@ sub retrieve {
     my $trait_header = $self->trait_header || [];
     my $exact_performance_hash = $self->exact_performance_hash || {};
     my $overall_performance_hash = $self->overall_performance_hash || {};
+    my $exact_trait_order = $self->exact_trait_order;
+    my $overall_trait_order = $self->overall_trait_order;
     my $all_stats = $self->all_stats;
     my @output;
     my $trial_stock_type = $self->trial_stock_type();
@@ -151,8 +153,8 @@ sub retrieve {
     }
     #print STDERR Dumper \@plant_design;
 
-    my @overall_trait_names = sort keys %$overall_performance_hash;
-    my @exact_trait_names = sort keys %$exact_performance_hash;
+    my @exact_trait_order = defined $exact_trait_order ? @$exact_trait_order : sort keys %$exact_performance_hash;
+    my @overall_trait_order = defined $overall_trait_order ? @$overall_trait_order : sort keys %$overall_performance_hash;
 
     # sort plots by plot order, if requested, otherwise plot number then subplot and plant
     no warnings 'uninitialized';
@@ -182,8 +184,8 @@ sub retrieve {
                 }
             }
         }
-        $line = $self->_add_exact_performance_to_line(\@exact_trait_names, $line, $exact_performance_hash, $design_info->{plant_name});
-        $line = $self->_add_overall_performance_to_line(\@overall_trait_names, $line, $overall_performance_hash, $design_info, $all_stats);
+        $line = $self->_add_exact_performance_to_line(\@exact_trait_order, $line, $exact_performance_hash, $design_info->{plant_name});
+        $line = $self->_add_overall_performance_to_line(\@overall_trait_order, $line, $overall_performance_hash, $design_info, $all_stats);
         push @output, $line;
     }
 

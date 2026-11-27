@@ -163,9 +163,19 @@ has 'exact_performance_hash' => (
     is => 'rw',
 );
 
+has 'exact_trait_order'=> (
+    is => 'rw',
+    isa => 'ArrayRef[Str]|Undef',
+);
+
 has 'overall_performance_hash' => (
     isa => 'HashRef',
     is => 'rw',
+);
+
+has 'overall_trait_order'=> (
+    is => 'rw',
+    isa => 'ArrayRef[Str]|Undef',
 );
 
 has 'include_plot_order' => (
@@ -371,28 +381,32 @@ sub get_layout_output {
     $exact_performance_hash = $new_exact_hash;
 
     #combine sorted exact and overall trait names and if requested convert to synonyms
-    my @exact_trait_names = sort keys %$exact_performance_hash;
-    my @overall_trait_names = sort keys %overall_performance_hash;
-    my @traits = (@exact_trait_names,@overall_trait_names);
+    my @exact_trait_names = keys %$exact_performance_hash;
+    my @overall_trait_names = keys %overall_performance_hash;
+
+    my @exact_trait_header;
+    my @exact_trait_order;
+    my @overall_trait_header;
+    my @overall_trait_order;
 
     if ($use_synonyms eq 'true') {
-        print STDERR "Getting synonyms\n";
-
-        my $trait_id_list = $t->transform($schema, 'traits_2_trait_ids', [@traits]);
-        my @trait_ids = @{$trait_id_list->{'transform'}};
-        my $synonym_list = $t->transform($schema, 'trait_ids_2_synonyms', $trait_id_list->{'transform'});
-        my @missing = @{$synonym_list->{'missing'}};
-
-        if (scalar @missing) {
-            #print STDERR "Traits @missing don't have synonyms. Sticking with full trait names instead\n";
-
-            #push @error_messages, "Traits @missing don't have synonyms. Please turn off synonym option before proceeding\n";
-            #$errors{'error_messages'} = \@error_messages;
-            #return \%errors;
-        } else {
-            @traits = @{$synonym_list->{'transform'}};
-        }
+        my $params = {method => "synonym", treatment_first => 1};
+        my $exact_traits_2_order = $t->transform($schema, 'traits_2_order', \@exact_trait_names, $params);
+        my $overall_traits_2_order = $t->transform($schema, 'traits_2_order', \@overall_trait_names, $params);
+        @exact_trait_order = map { $exact_traits_2_order->{mapping}->{$_}->{display_name}} @{$exact_traits_2_order->{transform}};
+        @exact_trait_header = map { $exact_traits_2_order->{mapping}->{$_}->{synonym}} @{$exact_traits_2_order->{transform}};
+        @overall_trait_order = map { $overall_traits_2_order->{mapping}->{$_}->{display_name}} @{$overall_traits_2_order->{transform}};
+        @overall_trait_header = map { $overall_traits_2_order->{mapping}->{$_}->{synonym}} @{$overall_traits_2_order->{transform}};
+    } else {
+        my $params = {method => "name", treatment_first => 1};
+        my $exact_traits_2_order = $t->transform($schema, 'traits_2_order_name', \@exact_trait_names, $params);
+        my $overall_traits_2_order = $t->transform($schema, 'traits_2_order_name', \@overall_trait_names, $params);
+        @exact_trait_order = map { $exact_traits_2_order->{mapping}->{$_}->{display_name}} @{$exact_traits_2_order->{transform}};
+        @exact_trait_header = map { $exact_traits_2_order->{mapping}->{$_}->{name}} @{$exact_traits_2_order->{transform}};
+        @overall_trait_order = map { $overall_traits_2_order->{mapping}->{$_}->{display_name}} @{$overall_traits_2_order->{transform}};
+        @overall_trait_header = map { $overall_traits_2_order->{mapping}->{$_}->{name}} @{$overall_traits_2_order->{transform}};
     }
+    my @trait_header = (@exact_trait_header,@overall_trait_header);
 
     my $layout_build = {
         schema => $schema,
@@ -401,9 +415,11 @@ sub get_layout_output {
         selected_columns => \%selected_cols,
         design => $design,
         trial => $selected_trial,
-        trait_header => \@traits,
+        trait_header => \@trait_header,
         exact_performance_hash => $exact_performance_hash,
+        exact_trait_order => \@exact_trait_order,
         overall_performance_hash => \%overall_performance_hash,
+        overall_trait_order => \@overall_trait_order,
         all_stats => $all_stats,
         trial_stock_type => $trial_stock_type,
         include_plot_order => $self->include_plot_order(),
