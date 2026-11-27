@@ -1,9 +1,9 @@
 import React, { useEffect, useMemo, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { createRoot } from 'react-dom/client';
-import { isDefined } from '~/functions';
-
 import * as ExtraMarkers from 'leaflet-extra-markers';
+
+import { isDefined } from '~/@generic/utils/functions';
 
 export interface TrialLocationMapProps {
     locationName?: string | null;

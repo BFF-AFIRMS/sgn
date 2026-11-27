@@ -124,7 +124,7 @@ sub create_design {
   }
   
   ## Handling with errors
-  my $error_file = $tempfile . "design.error";
+  my $error_file = $tempfile . ".design.error";
 
   if (-e $error_file) {
       my $error_msg = do {
