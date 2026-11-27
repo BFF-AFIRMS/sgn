@@ -807,10 +807,11 @@ sub temp_transform :Path('/list/transform/temp') Args(0) {
     my $c = shift;
     my $type = $c->req->param("type");
     my $items = $c->req->param("items") ? decode_json $c->req->param("items") : [];
+    my $params = $c->req->param("params")  ? decode_json $c->req->param("params") : {};
 
     my $t = CXGN::List::Transform->new();
     my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
-    my $result = $t->transform($c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id), $type, $items);
+    my $result = $t->transform($c->dbic_schema("Bio::Chado::Schema", undef, $sp_person_id), $type, $items, $params);
 
     if (exists($result->{missing}) && (scalar(@{$result->{missing}}) > 0)) {
        $result->{error}  =  "Warning. This temporary list contains elements that cannot be converted.";
