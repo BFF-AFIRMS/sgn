@@ -1,6 +1,7 @@
 package CXGN::List::Transform::Plugin::TraitIds2Order;
 
 use Moose;
+use CXGN::Trait;
 
 sub name {
     return "trait_ids_2_order";
@@ -23,22 +24,10 @@ sub can_transform {
 
 # Order traits and treatments.
 # The order is determined by:
-#    1. Is a treatment or trait (treatments get listed first)
-#    2. Either base name or base synonym (Tree height / HT)
+#    1. Is a treatment or trait (ex. if you want treatments listed first)
+#    2. Either base trait name or base trait synonym (Tree height vs. HT)
 #    3. Chronological based on the time ontology (day, month, year)
 # Example: Tree height|year 9|cm should be a lower order than Tree height|year 11|cm
-# This transform function outputs the typical keys 'transform', and 'missing', along
-# with a custom key called 'mapping' which is an array of trait hashes with the
-# following keys:
-#     id:             The cvterm_id of the trait
-#     name:           The name of the trait (ex. Tree height|year 9|cm)
-#     display_name:   The full display name of the trait (ex. Tree height|year 9|cm|COMP:0000001)
-#     base:           The name of the trait base, (ex. Tree height is the base name of Tree height|year 9|cm
-#     is_treatment:   1 if the trait is in a treatment ontology, otherwise 0
-#     synonym:        The synonym of the trait (ex. HT9 is the synonym of Tree height|year 9|cm)
-#     base_synonym:   The synonym of the trait base (ex. HT is the base synonym of Tree height)
-#     relative_order: The chronological order of the trait in days, relative to similar traits
-#     absolute_order: The final sort order, starting at 1
 sub transform {
     my $self = shift;
     my $schema = shift;
@@ -46,13 +35,11 @@ sub transform {
     my $other = shift;
     my $params = shift || {};
 
-    my $method = defined $params->{method} ? $params->{method} : 'synonym';
-    my $treatment_first = defined $params->{treatment_first} ? $params->{treatment_first} : 1;
+    # Parse parameter values
+    my $method = defined $params->{method} ? $params->{method} : 'name';
+    my $treatment_first = defined $params->{treatment_first} ? $params->{treatment_first} : 0;
 
-    # -------------------------------------------------------------------------
-    # Identify the trait, treatment, and time ontologies.
-    # These are the key pieces we will need to order the traits
-
+    # Identify the time ontologies
     my @time_ontologies = [];
     my $time_ontology_cvterm_id = $schema->resultset('Cv::Cvterm')->find({name => 'time_ontology'})->cvterm_id();
     my $time_ontologies_rs = $schema->resultset('Cv::Cvprop')->search({type_id => $time_ontology_cvterm_id});
@@ -60,93 +47,37 @@ sub transform {
         push(@time_ontologies, $record->cv_id());
     }
 
-    my @trait_ontologies = [];
-    my $trait_ontology_cvterm_id = $schema->resultset('Cv::Cvterm')->find({name => 'trait_ontology'})->cvterm_id();
-    my $trait_ontologies_rs = $schema->resultset('Cv::Cvprop')->search({type_id => $trait_ontology_cvterm_id});
-    while (my $record = $trait_ontologies_rs->next()) {
-        push(@trait_ontologies, $record->cv_id());
-    }
-
-    my @treatment_ontologies = [];
-    my $treatment_ontology_cvterm_id = $schema->resultset('Cv::Cvterm')->find({name => 'experiment_treatment_ontology'})->cvterm_id();
-    my $treatment_ontologies_rs = $schema->resultset('Cv::Cvprop')->search({type_id => $treatment_ontology_cvterm_id});
-    while (my $record = $treatment_ontologies_rs->next()) {
-        push(@treatment_ontologies, $record->cv_id());
-    }
-
-    # -------------------------------------------------------------------------
-    # Initialize basic information about each trait without looking at
-    # composed components. Such as full name (Tree height|year 9|cm) and base
-    # name (Tree height), as well as whether this is a treatment (0/1).
-
+    # Initialize basic information about each trait (name, synonym, treatment, etc.)
+    my @traits = map {CXGN::Trait->new({bcs_schema=>$schema, cvterm_id=>$_})} @$list;
     my $traits = {};
-    my $trait_ids = [];
-    my $trait_names_rs = $schema->resultset('Cv::Cvterm')->search({cvterm_id => {-in => \@$list}});
+    my $unique_components = {};
 
-    while (my $record = $trait_names_rs->next()) {
-        my $trait_id = $record->cvterm_id();
-        my $trait_name = $record->name();
-        $traits->{$trait_id}->{name} = $trait_name;
-        $traits->{$trait_id}->{id} = $trait_id;
-        $traits->{$trait_id}->{base} = $trait_name;
+    foreach my $trait (@traits){
+        my $trait_id = $trait->cvterm_id();
         $traits->{$trait_id}->{relative_order} = 0;
-        $traits->{$trait_id}->{absolute_order} = 0;
-        $traits->{$trait_id}->{display_name} = CXGN::Trait->new({bcs_schema => $schema, cvterm_id => $trait_id})->display_name();
-
-        my $cvterm = CXGN::Cvterm->new( schema=> $schema, cvterm_id => $trait_id);
-        $traits->{$trait_id}->{synonym} = $cvterm->get_single_synonym();
-        $traits->{$trait_id}->{base_synonym} = $traits->{$trait_id}->{synonym};
-
-        # Check if this is a treatment
-        my $trait_cv_id = $record->cv_id();
-        if ( grep( /^$trait_cv_id$/, @treatment_ontologies ) ) {
-            $traits->{$trait_id}->{is_treatment} = 1;
-        } else {
-            $traits->{$trait_id}->{is_treatment} = 0;
-        }
+        $traits->{$trait_id}->{full_name} = $trait->name();
+        $traits->{$trait_id}->{name} = $trait->base_trait()->name();
+        $traits->{$trait_id}->{id} = $trait_id + 0;
 
         if ($method eq 'synonym'){
-            # Check if this is a plain trait/treatment (ie. not composed)
-            # If so, we can directly the pull the base synonym here
-            #     name: Tree height|year 9|cm
-            #     base: Tree height
-            #     base_synonym: HT
-            if ( grep( /^$trait_cv_id$/, @trait_ontologies ) || $traits->{$trait_id}->{is_treatment} ) {
-                $traits->{$trait_id}->{base_synonym} = $traits->{$trait_id}->{synonym};
-            }
+            my $synonym = $trait->base_trait()->synonym();
+            # Fallback if no synonym, just use name
+            $traits->{$trait_id}->{synonym} = defined $synonym ? $synonym : $traits->{$trait_id}->{name};
         }
-        push(@$trait_ids, $trait_id);        
-    }
+        if ($treatment_first){
+            $traits->{$trait_id}->{is_treatment} = $trait->is_treatment();
+        }
 
-    # -------------------------------------------------------------------------
-    # Parse the components of composed traits
-    # this includes pull out the time ontology pieces (ex. year 10, month 1, etc.)
-    # the base name and base synonym name (ex. Tree height, HT)
-    # as well as detecting whether it is a treatment
-
-    my $unique_components;
-    foreach my $trait_id (@$trait_ids){
-        my $components = SGN::Model::Cvterm->get_components_from_trait($schema, $trait_id);  
+        my $components = SGN::Model::Cvterm->get_components_from_trait($schema, $trait_id);
         foreach my $component_id (@$components){
-            # Check whether we've already encountered this component before
+            # Check whether we've already encountered this component before to save on db calls
             # for example, we may see the 'year 10' component across multiple traits
             if (!$unique_components->{$component_id}){
                 my $component_cvterm = $schema->resultset('Cv::Cvterm')->find({cvterm_id => $component_id});
                 my $component_cv = $component_cvterm->cv_id();
-                my $component_name = $component_cvterm->name();
                 my $component_order = 0;
-
-                if ( grep( /^$component_cv$/, @treatment_ontologies ) ) {
-                    $unique_components->{$component_id}->{is_treatment} = 1;
-                }
-                if ( grep( /^$component_cv$/, @trait_ontologies ) || $unique_components->{$component_id}->{is_treatment} ) {
-                    $unique_components->{$component_id}->{base} = $component_name;
-                    if ($method eq 'synonym'){
-                        my $cvterm = CXGN::Cvterm->new( schema=> $schema, cvterm_id => $component_id);
-                        $unique_components->{$component_id}->{base_synonym} = $cvterm->get_single_synonym();
-                    }
-                }
                 if ( grep( /^$component_cv$/, @time_ontologies ) ) {
+                    my $component_name = $component_cvterm->name();
                     my @component_split = split(' ', $component_name);
                     my ($time_unit, $time_value) = ($component_split[0], $component_split[1] + 0);
                     if ($component_name =~ /day /) { $component_order = $time_value; }
@@ -156,84 +87,42 @@ sub transform {
                 $unique_components->{$component_id}->{order} = $component_order;
             }
             # It's possible there are multiple time components (ex. Tree height|year 9|month 3)
-            # So sum all the time components for a trait            
+            # So sum all the time components for a trait
             my $component_order = $unique_components->{$component_id}->{order};
             my $relative_order = $traits->{$trait_id}->{relative_order};
             $traits->{$trait_id}->{relative_order} = $relative_order + $component_order;
-
-            my $component_base = $unique_components->{$component_id}->{base};
-            $traits->{$trait_id}->{base} = $component_base if defined $component_base;
-
-            my $component_treatment = $unique_components->{$component_id}->{is_treatment};
-            $traits->{$trait_id}->{is_treatment} = $component_treatment if defined $component_treatment;
-
-            if ($method eq 'synonym'){
-                my $base_synonym = $unique_components->{$component_id}->{base_synonym};
-                $traits->{$trait_id}->{base_synonym} = $base_synonym if defined $base_synonym;
-            }
         }
     }
 
-    # -------------------------------------------------------------------------
-    # Note any missing traits for the final return value
-
-    my @missing = ();
-    foreach my $trait_id (@$list){
-        if (! defined $traits->{$trait_id}){
-            push(@missing, $trait_id);
-            next;
-        }
-        if ( $method eq 'synonym' && ! defined $traits->{$trait_id}->{synonym}){
-            push(@missing, $trait_id);
-            $traits->{$trait_id}->{synonym} = $traits->{$trait_id}->{name};
-            $traits->{$trait_id}->{base_synonym} = $traits->{$trait_id}->{base};
-            next;
-        }
-    }
-
-    # -------------------------------------------------------------------------
     # Sort elements
-
-    my $traits_ref = [];
-    foreach my $trait_id (@$trait_ids){
-        push(@$traits_ref, $traits->{$trait_id});
-    }
-
-    # Sort traits by preferred method (synonym or name)
-    my $name_key = $method eq 'synonym' ? 'base_synonym' : 'base';
+    my $name_key = $method eq 'synonym' ? 'synonym' : 'name';
+    my @unsorted_traits = map {$traits->{$_}} keys %$traits;
+    my @sorted_traits;
 
     if ($treatment_first){
-        @$traits_ref = sort {
+        @sorted_traits = sort {
             $b->{is_treatment} <=> $a->{is_treatment}
             or uc($a->{$name_key}) cmp uc($b->{$name_key})
             or $a->{relative_order} <=> $b->{relative_order}
             or uc($a->{name}) cmp uc($b->{name})
-        } @$traits_ref;
+        } @unsorted_traits;
     } else {
-        @$traits_ref = sort {
+        @sorted_traits = sort {
             uc($a->{$name_key}) cmp uc($b->{$name_key})
             or $a->{relative_order} <=> $b->{relative_order}
             or uc($a->{name}) cmp uc($b->{name})
-        } @$traits_ref;
+        } @unsorted_traits;
     }
 
     # -------------------------------------------------------------------------
     # Final return value
 
-    # Convert to the final transformed order
-    my @transform = ();
-    my $order_i = 1;
-    foreach my $trait (@$traits_ref){
-        my $trait_id = $trait->{id};
-        push (@transform, $trait_id);
-        $traits->{$trait_id}->{absolute_order} = $order_i;
-        $order_i++;
-    }
+    my @transform = map { $_->{id} } @sorted_traits;
+    my @missing = map {! defined $traits->{$_} ? $_ : () } @$list;
 
     return {
         transform => \@transform,
         missing => \@missing,
-        mapping => $traits,
     };
 }
 

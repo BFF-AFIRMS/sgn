@@ -43,7 +43,6 @@ sub transform {
     # Initialize basic information about each component
 
     my $components = {};
-    my @component_ids = ();
     my $component_names_rs = $schema->resultset('Cv::Cvterm')->search({cvterm_id => {-in => \@$list}});
 
     while (my $record = $component_names_rs->next()) {
@@ -51,8 +50,6 @@ sub transform {
         my $component_name = $record->name();
         my $component_cv = $record->cv_id();
 
-        push(@component_ids, $component_id);
-    
         $components->{$component_id}->{name} = $component_name;
         $components->{$component_id}->{id} = $component_id;
 
@@ -71,47 +68,24 @@ sub transform {
     }
 
     # -------------------------------------------------------------------------
-    # Note any missing traits for the final return value
-
-    my @missing = ();
-    foreach my $component_id (@$list){
-        if (! defined $components->{$component_id}){
-            push(@missing, $component_id);
-            next;
-        }
-    }
-
-    # -------------------------------------------------------------------------
     # Sort elements
 
-    my $components_ref = [];
-    foreach my $component_id (@component_ids){
-        push(@$components_ref, $components->{$component_id});
-    }
-
-    @$components_ref = sort {
+    my @unsorted_components = map {$components->{$_}} keys %$components;
+    my @sorted_components = sort {
            uc($a->{base}) cmp uc($b->{base})
         or $a->{relative_order} <=> $b->{relative_order}
         or $a->{name} <=> $b->{name}
-    } @$components_ref;
+    } @unsorted_components;
 
     # -------------------------------------------------------------------------
     # Final return value
 
-    # Convert to the final transformed order
-    my @transform = ();
-    my $order_i = 1;
-    foreach my $component (@$components_ref){
-        my $component_id = $component->{id};
-        push (@transform, $component_id);
-        $components->{$component_id}->{absolute_order} = $order_i;
-        $order_i++;
-    }
+    my @transform = map { $_->{id} } @sorted_components;
+    my @missing = map {! defined $components->{$_} ? $_ : () } @$list;
 
     return {
         transform => \@transform,
         missing => \@missing,
-        mapping => $components,
     };
 }
 
