@@ -4,7 +4,7 @@ $trial_id
 $trial_name
 </%args>
 
-<& /util/import_javascript.mas, classes => [ ] &>
+<& /util/import_javascript.mas, classes => [ ], entries => ['section_lazy'] &>
 
 <& /breeders_toolbox/trial/trial_entry_numbers_template_dialog.mas, trial_id=>$trial_id, trial_name=>$trial_name &>
 <& /breeders_toolbox/trial/trial_entry_numbers_upload_dialog.mas, trial_id=>$trial_id, trial_name=>$trial_name &>
@@ -25,7 +25,7 @@ $trial_name
 <script type="text/javascript">
     jQuery(document).ready(function() {
 
-        loadEntryNumbers();
+        jsMod['section_lazy'].onExpand('#trial_entry_numbers_table', loadEntryNumbers);
 
         jQuery("#set_entry_numbers_template_btn").click(function() {
             jQuery("#set_entry_numbers_template_dialog").modal("show");

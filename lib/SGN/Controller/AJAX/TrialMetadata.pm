@@ -2986,6 +2986,101 @@ sub replace_trial_stock : Chained('trial') PathPart('replace_stock') Args(0) {
   $c->stash->{rest} = { success => 1};
 }
 
+=head2 design_section_counts
+
+Count the plots, germplasm entries, seedlots and controls of a trial. Used for
+the summary subtitles of the trial's design section, so the counts are
+available without opening (and querying) every subsection.
+
+=cut
+
+sub design_section_counts : Chained('trial') PathPart('design_section_counts') Args(0) {
+    my $self = shift;
+    my $c = shift;
+
+    my $sp_person_id = $c->user() ? $c->user->get_object()->get_sp_person_id() : undef;
+    my $schema = $c->dbic_schema('Bio::Chado::Schema', undef, $sp_person_id);
+    my $dbh = $schema->storage->dbh();
+    my $trial_id = $c->stash->{trial_id};
+
+    my %stock_type = map { $_ => SGN::Model::Cvterm->get_cvterm_row($schema, $_, 'stock_type')->cvterm_id() }
+        qw| plot accession cross family_name seedlot |;
+    my %relationship_type = map { $_ => SGN::Model::Cvterm->get_cvterm_row($schema, $_, 'stock_relationship')->cvterm_id() }
+        ('plot_of', 'intercrop_plot_of', 'plant_of', 'subplot_of', 'tissue_sample_of', 'seed transaction');
+
+    my $plots_h = $dbh->prepare("
+        SELECT count(DISTINCT stock.stock_id)
+        FROM stock
+        JOIN nd_experiment_stock USING (stock_id)
+        JOIN nd_experiment_project USING (nd_experiment_id)
+        WHERE nd_experiment_project.project_id = ?
+          AND stock.type_id = ?");
+    $plots_h->execute($trial_id, $stock_type{plot});
+    my ($plots_count) = $plots_h->fetchrow_array();
+
+    # Germplasm entries: distinct accessions/crosses/family names placed on the
+    # trial's observation units. Includes filler plots to match `CXGN::Project::get_accessions`.
+    my $germplasm_h = $dbh->prepare("
+        SELECT count(DISTINCT germplasm.stock_id)
+        FROM stock AS germplasm
+        JOIN stock_relationship ON (germplasm.stock_id = stock_relationship.object_id)
+        JOIN stock AS observation_unit ON (observation_unit.stock_id = stock_relationship.subject_id)
+        JOIN nd_experiment_stock ON (observation_unit.stock_id = nd_experiment_stock.stock_id)
+        JOIN nd_experiment_project USING (nd_experiment_id)
+        WHERE nd_experiment_project.project_id = ?
+          AND germplasm.type_id = ANY (?)
+          AND stock_relationship.type_id = ANY (?)");
+    $germplasm_h->execute(
+        $trial_id,
+        [ @stock_type{qw| accession cross family_name |} ],
+        [ @relationship_type{qw| plot_of intercrop_plot_of plant_of subplot_of tissue_sample_of |} ]);
+    my ($germplasm_count) = $germplasm_h->fetchrow_array();
+
+    # Controls: accessions where observation unit 'is a control' => 1.
+    # Also filters on plot_of, plant_of and tissue_sample_of relationships
+    # to match `CXGN::Project::get_controls`.
+    my $is_a_control_type_id = SGN::Model::Cvterm->get_cvterm_row($schema, 'is a control', 'stock_property')->cvterm_id();
+    my $controls_h = $dbh->prepare("
+        SELECT count(DISTINCT germplasm.stock_id)
+        FROM stock AS germplasm
+        JOIN stock_relationship ON (germplasm.stock_id = stock_relationship.object_id)
+        JOIN stock AS observation_unit ON (observation_unit.stock_id = stock_relationship.subject_id)
+        JOIN stockprop AS control ON (observation_unit.stock_id = control.stock_id AND control.type_id = ? AND control.value = '1')
+        JOIN nd_experiment_stock ON (observation_unit.stock_id = nd_experiment_stock.stock_id)
+        JOIN nd_experiment_project USING (nd_experiment_id)
+        WHERE nd_experiment_project.project_id = ?
+          AND germplasm.type_id = ANY (?)
+          AND stock_relationship.type_id = ANY (?)");
+    $controls_h->execute(
+        $is_a_control_type_id,
+        $trial_id,
+        [ $stock_type{accession} ],
+        [ @relationship_type{qw| plot_of plant_of tissue_sample_of |} ]);
+    my ($controls_count) = $controls_h->fetchrow_array();
+
+    # Seedlots taken from the trial's observation units.
+    my $seedlots_h = $dbh->prepare("
+        SELECT count(DISTINCT seedlot.stock_id)
+        FROM stock AS seedlot
+        JOIN stock_relationship ON (seedlot.stock_id = stock_relationship.object_id)
+        JOIN stock AS observation_unit ON (observation_unit.stock_id = stock_relationship.subject_id)
+        JOIN nd_experiment_stock ON (observation_unit.stock_id = nd_experiment_stock.stock_id)
+        JOIN nd_experiment_project USING (nd_experiment_id)
+        WHERE nd_experiment_project.project_id = ?
+          AND seedlot.type_id = ?
+          AND stock_relationship.type_id = ?");
+    $seedlots_h->execute($trial_id, $stock_type{seedlot}, $relationship_type{'seed transaction'});
+    my ($seedlots_count) = $seedlots_h->fetchrow_array();
+
+    $c->stash->{rest} = {
+        plots => $plots_count // 0,
+        germplasm => $germplasm_count // 0,
+        controls => $controls_count // 0,
+        seedlots => $seedlots_count // 0,
+    };
+}
+
+
 sub replace_plot_accession : Chained('trial') PathPart('replace_plot_accessions') Args(0) {
     my $self = shift;
     my $c = shift;

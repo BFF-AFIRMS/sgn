@@ -4,6 +4,8 @@ $trial_name
 $trial_stock_type => undef
 </%args>
 
+<& /util/import_javascript.mas, entries => ['section_lazy'] &>
+
 <& /analyses/store_new_analysis_values_and_model.mas &>
 
 <div class="modal  fade" id="edit_field_map_dialog" name="edit_field_map_dialog" tabindex="-1" role="dialog" aria-labelledby="EditFieldMapDialog">
@@ -230,7 +232,7 @@ $trial_stock_type => undef
 
 <script>
 
-jQuery(document).ready(function () {
+jsMod['section_lazy'].onExpand('#edit_field_map_link', function () {
 
     var trial_stock_type = "<% $trial_stock_type %>";
 

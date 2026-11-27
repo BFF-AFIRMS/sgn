@@ -3,7 +3,7 @@ $trial_id
 $trial_stock_type => undef
 </%args>
 
-<& /util/import_javascript.mas, classes => ['jquery.iframe-post-form', 'd3.d3v4Min', 'd3.graphers.lineGraphRepetitiveValues', 'solGS.olsLine'] &>
+<& /util/import_javascript.mas, classes => ['jquery.iframe-post-form', 'd3.d3v4Min', 'd3.graphers.lineGraphRepetitiveValues', 'solGS.olsLine'], entries => ['section_lazy'] &>
 
 <script>
 
@@ -101,7 +101,7 @@ const regression = d3.regressionLinear()
 
 <script>
 
-jQuery(document).ready(function() {
+jsMod['section_lazy'].onExpand('#select_trait_for_repetitive_data_and_plot', function() {
     var trial_id = '<% $trial_id %>';
     let selectedTraitId = '';
     const tzOffset = (new Date()).getTimezoneOffset() * 60000;
@@ -111,12 +111,10 @@ jQuery(document).ready(function() {
         //console.log("Trait ID updated to:", selectedTraitId);
     });
 
-    jQuery('#repetitive_measurements_data_onswitch').click(function() {
-        create_menu_for_repetitive_values(trial_id)
+    create_menu_for_repetitive_values(trial_id)
         .then((result) => fetch_repetitive_measurement_traits(result.result.searchResultsDbId))
         .then((result) => repetitive_build_menu(result.result))
         .then((final) => {});
-    });
 
     jQuery('#repetitive_measurement_select_button').click(function(event) {
         event.preventDefault();
