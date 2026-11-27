@@ -1,7 +1,6 @@
 package CXGN::List::Transform::Plugin::TraitComponentIds2Order;
 
 use Moose;
-use Data::Dumper;
 
 sub name {
     return "trait_component_ids_2_order";
@@ -77,6 +76,11 @@ sub transform {
         or $a->{name} <=> $b->{name}
     } @unsorted_components;
 
+    foreach my $i (0..$#sorted_components){
+        my $component_id = $sorted_components[$i]->{id};
+        $components->{$component_id}->{absolute_order} = $i + 1;
+    }
+
     # -------------------------------------------------------------------------
     # Final return value
 
@@ -86,6 +90,7 @@ sub transform {
     return {
         transform => \@transform,
         missing => \@missing,
+        mapping => $components,
     };
 }
 

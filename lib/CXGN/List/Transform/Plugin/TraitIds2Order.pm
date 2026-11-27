@@ -113,6 +113,11 @@ sub transform {
         } @unsorted_traits;
     }
 
+    foreach my $i (0..$#sorted_traits){
+        my $trait_id = $sorted_traits[$i]->{id};
+        $traits->{$trait_id}->{absolute_order} = $i + 1;
+    }
+
     # -------------------------------------------------------------------------
     # Final return value
 

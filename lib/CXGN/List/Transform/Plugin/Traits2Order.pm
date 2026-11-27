@@ -2,28 +2,28 @@ package CXGN::List::Transform::Plugin::Traits2Order;
 
 use Moose;
 
-sub name { 
+sub name {
     return "traits_2_order";
 }
 
-sub display_name { 
+sub display_name {
     return "Traits to order";
 }
 
-sub can_transform { 
+sub can_transform {
     my $self = shift;
     my $type1 = shift;
     my $type2 = shift;
 
-    if (($type1 eq "traits") and ($type2 eq "order")) { 
+    if (($type1 eq "traits") and ($type2 eq "order")) {
         return 1;
     } else {
         return 0;
     }
 }
-    
 
-sub transform { 
+
+sub transform {
     my $self = shift;
     my $schema = shift;
     my $list = shift;
@@ -33,7 +33,7 @@ sub transform {
     my $t = CXGN::List::Transform->new();
 
     # Transform full trait names to trait ids (cvterm_id)
-    my $traits_2_trait_ids = $t->transform($schema, 'traits_2_trait_ids', $list, $params);   
+    my $traits_2_trait_ids = $t->transform($schema, 'traits_2_trait_ids', $list, $params);
     my @missing_traits = @{$traits_2_trait_ids->{'missing'}};
     my @trait_ids = @{$traits_2_trait_ids->{'transform'}};
 
