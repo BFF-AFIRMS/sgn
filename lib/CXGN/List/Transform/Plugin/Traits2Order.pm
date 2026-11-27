@@ -45,6 +45,11 @@ sub transform {
     # Transform ordered trait ids back to names
     my $trait_ids_2_name = $t->transform($schema, 'trait_ids_2_trait_names', \@trait_ids, $params);
     my @missing_name = @{$trait_ids_2_name ->{'missing'}};
+    my %mapping = map {
+        my $display_name = $trait_ids_2_order->{'mapping'}->{$_}->{display_name};
+        $display_name => $trait_ids_2_order->{'mapping'}->{$_}
+    } @trait_ids;
+    $trait_ids_2_name->{mapping} = \%mapping;
 
     # Summarize missing
     my @missing = (@missing_traits, @missing_order, @missing_name);

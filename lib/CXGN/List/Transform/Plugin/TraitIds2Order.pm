@@ -54,19 +54,17 @@ sub transform {
 
     foreach my $trait (@traits){
         my $trait_id = $trait->cvterm_id();
-        $traits->{$trait_id}->{relative_order} = 0;
-        $traits->{$trait_id}->{full_name} = $trait->name();
-        $traits->{$trait_id}->{name} = $trait->base_trait()->name();
         $traits->{$trait_id}->{id} = $trait_id + 0;
+        $traits->{$trait_id}->{relative_order} = 0;
+        $traits->{$trait_id}->{name} = $trait->name();
+        $traits->{$trait_id}->{display_name} = $trait->display_name();
+        $traits->{$trait_id}->{base_name} = $trait->base_trait()->name();
+        $traits->{$trait_id}->{is_treatment} = $trait->is_treatment();
 
-        if ($method eq 'synonym'){
-            my $synonym = $trait->base_trait()->synonym();
-            # Fallback if no synonym, just use name
-            $traits->{$trait_id}->{synonym} = defined $synonym ? $synonym : $traits->{$trait_id}->{name};
-        }
-        if ($treatment_first){
-            $traits->{$trait_id}->{is_treatment} = $trait->is_treatment();
-        }
+        my $synonym = $trait->synonym();
+        my $base_synonym = $trait->base_trait()->synonym();
+        $traits->{$trait_id}->{synonym} = defined $synonym ? $synonym : $traits->{$trait_id}->{name};
+        $traits->{$trait_id}->{base_synonym} = defined $base_synonym ? $base_synonym : $traits->{$trait_id}->{base_name};
 
         my $components = SGN::Model::Cvterm->get_components_from_trait($schema, $trait_id);
         foreach my $component_id (@$components){
@@ -95,6 +93,7 @@ sub transform {
     }
 
     # Sort elements
+    my $base_key = $method eq 'synonym' ? 'base_synonym' : 'base_name';
     my $name_key = $method eq 'synonym' ? 'synonym' : 'name';
     my @unsorted_traits = map {$traits->{$_}} keys %$traits;
     my @sorted_traits;
@@ -102,15 +101,15 @@ sub transform {
     if ($treatment_first){
         @sorted_traits = sort {
             $b->{is_treatment} <=> $a->{is_treatment}
-            or uc($a->{$name_key}) cmp uc($b->{$name_key})
+            or uc($a->{$base_key}) cmp uc($b->{$base_key})
             or $a->{relative_order} <=> $b->{relative_order}
-            or uc($a->{name}) cmp uc($b->{name})
+            or uc($a->{$name_key}) cmp uc($b->{$name_key})
         } @unsorted_traits;
     } else {
         @sorted_traits = sort {
-            uc($a->{$name_key}) cmp uc($b->{$name_key})
+            uc($a->{$base_key}) cmp uc($b->{$base_key})
             or $a->{relative_order} <=> $b->{relative_order}
-            or uc($a->{name}) cmp uc($b->{name})
+            or uc($a->{$name_key}) cmp uc($b->{$name_key})
         } @unsorted_traits;
     }
 
@@ -123,6 +122,7 @@ sub transform {
     return {
         transform => \@transform,
         missing => \@missing,
+        mapping => $traits,
     };
 }
 
