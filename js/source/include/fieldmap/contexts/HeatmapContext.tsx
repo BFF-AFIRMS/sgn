@@ -140,21 +140,12 @@ export const HeatmapProvider: React.FC<FieldMapContextProps> = ({ trialId, authT
             });
             setVariables(vars);
 
-            // Sort traits, which returns an array of sorted trait Ids
             const sortParams = JSON.stringify({method: "name", treatment_first: 0});
             const sortItems = JSON.stringify(variableIds);
-            console.log("sortUrl: ", `/list/transform/temp?type=trait_ids_2_order&items=${sortItems}&params=${sortParams}`);
-            const sortResponse = await fetch(`/list/transform/temp?type=trait_ids_2_order&items=${sortItems}&params=${sortParams}`);
+            const sortResponse = await fetch(`/list/transform/temp?type=traits_2_order&items=${sortItems}&params=${sortParams}`);
             const sortBody = await sortResponse.json();
-            let sortedTraitIds: Number[] = sortBody?.transform || [];
-
-            // Convert sorted trait Ids to names
-            const nameItems = JSON.stringify(sortedTraitIds);
-            const nameResponse = await fetch(`/list/transform/temp?type=trait_ids_2_trait_names&items=${nameItems}`);
-            const nameBody = await nameResponse.json();
-            let sortedTraitNames: string[] = nameBody?.transform || [];
-
-            setVariableOrder(sortedTraitNames);
+            let sortedTraits: string[] = sortBody?.transform || [];
+            setVariableOrder(sortedTraits);
 
         } catch (e) {
 			console.error('Error loading variables:', e);
