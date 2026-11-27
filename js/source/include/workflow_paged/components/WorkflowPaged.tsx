@@ -166,7 +166,7 @@ export const WorkflowPaged: React.FC<WorkflowPagedProps> = ({
                                     />
                                 )}
                                 <div
-                                    className={`tw:relative tw:z-10 tw:flex tw:items-center tw:justify-center tw:w-12 tw:h-12 tw:rounded-full tw:border-4 tw:border-solid tw:text-[14px] tw:leading-none ${
+                                    className={`tw:relative tw:z-10 tw:flex tw:items-center tw:justify-center tw:w-8 tw:h-8 tw:rounded-full tw:border-4 tw:border-solid tw:text-[14px] tw:leading-none ${
                                         isComplete
                                             ? 'tw:border-[#5fba7d] tw:bg-[#5fba7d] tw:text-white'
                                             : isFocus
