@@ -64,41 +64,7 @@ function loadBrAPIData(server,parameters){
     d3.entries(parameters).forEach(function(entry){
         data[entry.key] = data[entry.key]||entry.value;
     });
-
-    var observationUnits = jQuery.ajax({
-        url: '/brapi/v2/observationunits',
-        method: 'GET',
-        async: false,
-        data: data,
-    });
-
-    var traitIds = [];
-    observationUnits.responseJSON.result.data.forEach((unit) => {
-        unit.observations.forEach((obs) => {
-            const traitId = parseInt(obs.observationVariableDbId);
-            if (traitIds.indexOf(traitId) < 0){
-                traitIds.push(traitId);
-            }
-        });
-    });
-
-    var traitIds2OrderName = jQuery.ajax({
-        url: '/list/transform/temp',
-        method: 'GET',
-        async: false,
-        data: {
-            type: 'trait_ids_2_order_name',
-            items: JSON.stringify(traitIds)
-        }
-    });
-    const traitOrder = []
-    traitIds2OrderName.responseJSON.transform.forEach((traitId) => {
-        const synonym = traitIds2OrderName.responseJSON.mapping[traitId]["synonym"];
-        const traitName = synonym === null ? traitIds2OrderName.responseJSON.mapping[traitId]["name"] : synonym;
-        traitOrder.push(traitName);
-    });
-    const traitMapping = traitIds2OrderName.responseJSON.mapping;
-
+    
     var brapi_Data = BrAPI("/brapi/v2",'v2.0',auth_token).search_observationunits(data);
 
     if (currentGFilter!=null){
@@ -108,13 +74,10 @@ function loadBrAPIData(server,parameters){
 
     currentGFilter = GraphicalFilter(
         brapi_Data,
-        function(d, trait_mapping) { // traits/values
+        function(d) { // traits/values
           var traits = {}
           d.observations.forEach(function(obs){
-            const observationVariableDbId = parseInt(obs.observationVariableDbId);
-            const synonym = trait_mapping[observationVariableDbId]['synonym'];
-            const variableName = synonym === null ? trait_mapping[observationVariableDbId]['name'] : synonym;
-            traits[variableName] = obs.value;
+            traits[obs.observationVariableName] = obs.value;
           });
           return traits;
         },
@@ -123,11 +86,10 @@ function loadBrAPIData(server,parameters){
             'Accession':d.germplasmName
           }
         },
-        traitOrder,
+        ["Accession"],
         function(d) {
           return d.germplasmDbId
-        },
-        traitMapping,
+        }
       );
 
     currentGFilter.draw("#stock_search_graphical_filter_div","#stock_search_graphical_filter_results_div");

@@ -6,7 +6,7 @@
 
 const MISSING_DATA_SYMBOL = 'NA';
 
-function GraphicalFilter(brapi_node,trait_accessor,table_col_accessor,table_col_order,group_key_accessor, trait_mapping){
+function GraphicalFilter(brapi_node,trait_accessor,table_col_accessor,table_col_order,group_key_accessor){
   "use strict";
   
   //statics
@@ -21,12 +21,12 @@ function GraphicalFilter(brapi_node,trait_accessor,table_col_accessor,table_col_
   
   // parse data
   var tableCols = table_col_order.map(function(key){
-        return {title:key,data:"traits."+key.replace(".","\\.")}
+        return {title:key,data:"meta."+key.replace(".","\\.")}
       }),
       allTraits = {},
       rangeTraits = [];
   var data_node = brapi_node.map(function(d){
-    var traits = trait_accessor(d, trait_mapping);
+    var traits = trait_accessor(d);
     for (var key in traits) {
       if (traits.hasOwnProperty(key)) {
         allTraits[key]=null;
@@ -49,6 +49,7 @@ function GraphicalFilter(brapi_node,trait_accessor,table_col_accessor,table_col_
   });
   
   if (group_key_accessor!=undefined){
+    tableCols.push({title:"Count",data:"count"});
     const reduce_func = function(a,d){ return a.concat(d)};
     data_node = data_node.reduce(reduce_func).fork(function(all){
       var key_map = {};
@@ -102,6 +103,14 @@ function GraphicalFilter(brapi_node,trait_accessor,table_col_accessor,table_col_
     });
   }
   
+  data_node.all(function(data){
+    for (var key in allTraits) {
+      if (allTraits.hasOwnProperty(key)) {
+        tableCols.push({title:key,data:"traits."+key.replace(".","\\.")});
+      }
+    }
+  });
+  
   /**  
    * gfilter.draw - creates a new graphical filter and table
    *    
@@ -120,8 +129,35 @@ function GraphicalFilter(brapi_node,trait_accessor,table_col_accessor,table_col_
       //draw the filter
       gfilter.root.draw(canv.node());
 
-      tableCols.unshift({title:"Count", data:"count"});
-      tableCols.unshift({title:"Accession", data:"meta.Accession"});
+      // Order traits
+      const traitNames = tableCols.map(function(record) { return record.title; });
+      let sortedCols = traitNames;
+      const params = JSON.stringify({method: "synonym", treatment_first: 1});
+      jQuery.ajax({
+        async: false,
+        url: `/list/transform/temp?type=traits_2_order&items=${JSON.stringify(sortedCols)}&params=${params}`,
+          success: function(response){
+            sortedCols = response.missing.concat(response.transform);
+          }
+      });
+      const colOrder = Object.fromEntries(sortedCols.map(function(col, i) { return [col, i]}));
+      // Order table columns
+      tableCols.forEach(function(col, i){ tableCols[i].order = colOrder[col.title]; });
+      tableCols.sort((a, b) => a.order - b.order);
+
+      // Convert traits to synonyms
+      let synonyms = Object.fromEntries(traitNames.map(function(name) {return [name, name]}));
+      jQuery.ajax({
+        async: false,
+        url: `/list/transform/temp?type=traits_2_synonyms&items=${JSON.stringify(sortedCols)}`,
+          success: function(response){
+            const traitNames = sortedCols;
+            sortedCols = response.missing.concat(response.transform);
+            traitNames.forEach(function(name, i){ synonyms[name] = sortedCols[i] })
+          }
+      });
+      // Rename table columns to synonyms
+      tableCols.forEach(function(col, i){ tableCols[i].title = synonyms[col.title]; });
 
       //create the output table
       if (buttons) {
