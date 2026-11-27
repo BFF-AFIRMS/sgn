@@ -390,31 +390,17 @@ sub get_layout_output {
     my @overall_trait_order;
 
     if ($use_synonyms eq 'true') {
-        my $exact_traits_2_order = $t->transform($schema, 'traits_2_order_synonym', \@exact_trait_names);
-        my $overall_traits_2_order = $t->transform($schema, 'traits_2_order_synonym', \@overall_trait_names);
+        my $params = {method => "synonym", treatment_first => 1};
+        my $exact_traits_2_order = $t->transform($schema, 'traits_2_order', \@exact_trait_names, $params);
+        my $overall_traits_2_order = $t->transform($schema, 'traits_2_order', \@overall_trait_names, $params);
         @exact_trait_order = map { $exact_traits_2_order->{mapping}->{$_}->{display_name}} @{$exact_traits_2_order->{transform}};
+        @exact_trait_header = map { $exact_traits_2_order->{mapping}->{$_}->{synonym}} @{$exact_traits_2_order->{transform}};
         @overall_trait_order = map { $overall_traits_2_order->{mapping}->{$_}->{display_name}} @{$overall_traits_2_order->{transform}};
-
-        # Handle traits with missing synonyms for the headers (falling back to name)
-        my @exact_missing = (@{$exact_traits_2_order->{missing}}, @{$exact_traits_2_order->{missing}});
-        my @overall_missing = (@{$overall_traits_2_order->{missing}}, @{$overall_traits_2_order->{missing}});
-
-        @exact_trait_header = map {
-            my $trait_id = $_;
-            my $trait_data = $exact_traits_2_order->{mapping}->{$trait_id};
-            my $missing_synonym = grep{$trait_id eq $_} @exact_missing;
-            $missing_synonym ? $trait_data->{name} : $trait_data->{synonym}
-        } @{$exact_traits_2_order->{transform}};
-        @overall_trait_header = map {
-            my $trait_id = $_;
-            my $trait_data = $overall_traits_2_order->{mapping}->{$trait_id};
-            my $missing_synonym = grep{$trait_id eq $_} @overall_missing;
-            $missing_synonym ? $trait_data->{name} : $trait_data->{synonym}
-        } @{$overall_traits_2_order->{transform}};
+        @overall_trait_header = map { $overall_traits_2_order->{mapping}->{$_}->{synonym}} @{$overall_traits_2_order->{transform}};
     } else {
-        my $exact_traits_2_order = $t->transform($schema, 'traits_2_order_name', \@exact_trait_names);
-        my $overall_traits_2_order = $t->transform($schema, 'traits_2_order_name', \@overall_trait_names);
-
+        my $params = {method => "name", treatment_first => 1};
+        my $exact_traits_2_order = $t->transform($schema, 'traits_2_order_name', \@exact_trait_names, $params);
+        my $overall_traits_2_order = $t->transform($schema, 'traits_2_order_name', \@overall_trait_names, $params);
         @exact_trait_order = map { $exact_traits_2_order->{mapping}->{$_}->{display_name}} @{$exact_traits_2_order->{transform}};
         @exact_trait_header = map { $exact_traits_2_order->{mapping}->{$_}->{name}} @{$exact_traits_2_order->{transform}};
         @overall_trait_order = map { $overall_traits_2_order->{mapping}->{$_}->{display_name}} @{$overall_traits_2_order->{transform}};

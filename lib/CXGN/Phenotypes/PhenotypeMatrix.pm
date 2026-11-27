@@ -328,27 +328,23 @@ sub get_phenotype_matrix {
             }
         }
 
-        my @unordered_traits = keys(%$unique_traits);
+        my @unsorted_traits = keys(%$unique_traits);
         my @sorted_traits;
         my @sorted_traits_header;
         my $t = CXGN::List::Transform->new();
 
         if ($include_trait_synonyms) {
-            my $traits_2_order = $t->transform($self->bcs_schema, 'traits_2_order_synonym', \@unordered_traits);
-            @sorted_traits = map { $traits_2_order->{mapping}->{$_}->{display_name}} @{$traits_2_order->{transform}};
-            # Handle traits with missing synonyms for the headers (falling back to name)
-            my @missing = @{$traits_2_order->{missing}};
-            @sorted_traits_header = map {
-                my $trait_id = $_;
-                my $trait_data = $traits_2_order->{mapping}->{$trait_id};
-                my $missing_synonym = grep{$trait_id eq $_} @missing;
-                $missing_synonym ? $trait_data->{name} : $trait_data->{synonym}
-            } @{$traits_2_order->{transform}};
+            my $traits_2_order = $t->transform($self->bcs_schema, 'traits_2_order', \@unsorted_traits, {method => 'synonym', treatment_first => 1});
+            my @sorted_trait_ids = @{$traits_2_order->{transform}};
+            @sorted_traits_header = map { $traits_2_order->{mapping}->{$_}->{synonym} } @sorted_trait_ids;
+            @sorted_traits = map { $traits_2_order->{mapping}->{$_}->{display_name}} @sorted_trait_ids;
         } else {
-            my $traits_2_order = $t->transform($self->bcs_schema, 'traits_2_order_name', \@unordered_traits);
-            @sorted_traits = map { $traits_2_order->{mapping}->{$_}->{display_name}} @{$traits_2_order->{transform}};
-            @sorted_traits_header = map { $traits_2_order->{mapping}->{$_}->{name}} @{$traits_2_order->{transform}};
+            my $traits_2_order = $t->transform($self->bcs_schema, 'traits_2_order', \@unsorted_traits, {method => 'name', treatment_first => 1});
+            my @sorted_trait_ids = @{$traits_2_order->{transform}};
+            @sorted_traits_header = map { $traits_2_order->{mapping}->{$_}->{name}} @sorted_trait_ids;
+            @sorted_traits = map { $traits_2_order->{mapping}->{$_}->{display_name}} @sorted_trait_ids;
         }
+
         foreach my $trait (@sorted_traits_header) {
             push @line, $trait;
             if ($include_phenotype_primary_key) {
@@ -732,25 +728,21 @@ sub get_phenotype_matrix {
 
         my @line = @metadata_headers;
 
-        my @unordered_traits = keys(%traits);
+        my @unsorted_traits = keys(%traits);
         my @sorted_traits;
         my @sorted_traits_header;
         my $t = CXGN::List::Transform->new();
 
         if ($include_trait_synonyms) {
-            my $traits_2_order = $t->transform($self->bcs_schema, 'traits_2_order_synonym', \@unordered_traits);
-            my @missing = @{$traits_2_order->{missing}};
-            @sorted_traits_header = map {
-                my $trait_id = $_;
-                my $trait_data = $traits_2_order->{mapping}->{$trait_id};
-                my $missing_synonym = grep{$trait_id eq $_} @missing;
-                $missing_synonym ? $trait_data->{name} : $trait_data->{synonym}
-            } @{$traits_2_order->{transform}};
-            @sorted_traits = map { $traits_2_order->{mapping}->{$_}->{display_name}} @{$traits_2_order->{transform}};
+            my $traits_2_order = $t->transform($self->bcs_schema, 'traits_2_order', \@unsorted_traits, {method => 'synonym', treatment_first => 1});
+            my @sorted_trait_ids = @{$traits_2_order->{transform}};
+            @sorted_traits_header = map { $traits_2_order->{mapping}->{$_}->{synonym} } @sorted_trait_ids;
+            @sorted_traits = map { $traits_2_order->{mapping}->{$_}->{display_name}} @sorted_trait_ids;
         } else {
-            my $traits_2_order = $t->transform($self->bcs_schema, 'traits_2_order_name', \@unordered_traits);
-            @sorted_traits_header = map { $traits_2_order->{mapping}->{$_}->{name}} @{$traits_2_order->{transform}};
-            @sorted_traits = map { $traits_2_order->{mapping}->{$_}->{display_name}} @{$traits_2_order->{transform}};
+            my $traits_2_order = $t->transform($self->bcs_schema, 'traits_2_order', \@unsorted_traits, {method => 'name', treatment_first => 1});
+            my @sorted_trait_ids = @{$traits_2_order->{transform}};
+            @sorted_traits_header = map { $traits_2_order->{mapping}->{$_}->{name}} @sorted_trait_ids;
+            @sorted_traits = map { $traits_2_order->{mapping}->{$_}->{display_name}} @sorted_trait_ids;
         }
         foreach my $trait (@sorted_traits_header) {
             push @line, $trait;

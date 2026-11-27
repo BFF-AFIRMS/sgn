@@ -593,16 +593,15 @@ sub phenotype_summary : Chained('trial') PathPart('phenotypes') Args(0) {
 
     }
 
+    # Sort traits
     my @trait_ids = map {$_->[0]} @phenotype_data;
     my $t = CXGN::List::Transform->new();
-    my $trait_ids_2_order = $t->transform($schema, 'trait_ids_2_order', \@trait_ids, { method => 'name'});
-    @phenotype_data = map {
-        my @data = @$_;
-        my $trait_id = $data[0];
-        $data[0] = $trait_ids_2_order->{mapping}->{$trait_id}->{absolute_order};
-        \@data
-    } @phenotype_data;
-
+    my $trait_ids_2_order = $t->transform($schema, 'trait_ids_2_order', \@trait_ids, { method => 'name', treatment_first => 0});
+    # Set first column of each element of phenotype_data to the trait order
+    foreach my ($i) (0..$#phenotype_data){
+        my $trait_id = $phenotype_data[$i][0];
+        $phenotype_data[$i][0] = $trait_ids_2_order->{mapping}->{$trait_id}->{absolute_order};
+    }
 
     # get data from the non-numeric trait ids
     #
