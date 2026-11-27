@@ -129,7 +129,7 @@ function GraphicalFilter(brapi_node,trait_accessor,table_col_accessor,table_col_
       //draw the filter
       gfilter.root.draw(canv.node());
 
-      // Order traits
+      // Order traits and rename to synonyms where possible
       const traitNames = tableCols.map(function(record) { return record.title; });
       let sortedCols = traitNames;
       const params = JSON.stringify({method: "synonym", treatment_first: 1});
@@ -137,27 +137,15 @@ function GraphicalFilter(brapi_node,trait_accessor,table_col_accessor,table_col_
         async: false,
         url: `/list/transform/temp?type=traits_2_order&items=${JSON.stringify(sortedCols)}&params=${params}`,
           success: function(response){
-            sortedCols = response.missing.concat(response.transform);
+            const sortedTraits = response.missing.concat(response.transform);
+            tableCols.forEach(function(col, i){
+              const mappedData = response.mapping[col.title];
+              tableCols[i].order = sortedTraits.indexOf(col.title) + 1;
+              tableCols[i].title = mappedData?.synonym ? mappedData?.synonym : (mappedData?.name ? mappedData?.name : col.title);
+            });
           }
       });
-      const colOrder = Object.fromEntries(sortedCols.map(function(col, i) { return [col, i]}));
-      // Order table columns
-      tableCols.forEach(function(col, i){ tableCols[i].order = colOrder[col.title]; });
       tableCols.sort((a, b) => a.order - b.order);
-
-      // Convert traits to synonyms
-      let synonyms = Object.fromEntries(traitNames.map(function(name) {return [name, name]}));
-      jQuery.ajax({
-        async: false,
-        url: `/list/transform/temp?type=traits_2_synonyms&items=${JSON.stringify(sortedCols)}`,
-          success: function(response){
-            const traitNames = sortedCols;
-            sortedCols = response.missing.concat(response.transform);
-            traitNames.forEach(function(name, i){ synonyms[name] = sortedCols[i] })
-          }
-      });
-      // Rename table columns to synonyms
-      tableCols.forEach(function(col, i){ tableCols[i].title = synonyms[col.title]; });
 
       //create the output table
       if (buttons) {
